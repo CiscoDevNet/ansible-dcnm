@@ -1,0 +1,57 @@
+# CANDIDATE — READY GROUP. Parallel line WP98-GIE-PASSTHROUGH-PARALLEL-001.
+# VALIDATED_AGAINST_SNAPSHOT — REVALIDATION_REQUIRED_BEFORE_INTEGRATION
+#
+# Group: READY (no DSL dependency). 2 of the 9 integrable candidates.
+# Neither binding carries an IsShow condition — verified in the DSL, not assumed.
+#
+# These are 2 of the 8 inline_passthrough DISABLE_LLDP bindings. The other 6 (PC/vPC
+# *_member_11_1 templates) are DEFERRED, not registered: see DEFERRED_pc_vpc_member_lldp.yaml.
+#
+# DISABLE_LLDP is one of the six mixed-mechanism names: inline_passthrough on
+# int_access_host/int_trunk_host but child_pti on int_routed_host, int_vpc_*_host and
+# int_port_channel_*_host. Only the inline parents appear here — mechanism is resolved per
+# binding, never extrapolated from the parameter name.
+#
+# CORRECCION (slice 0b_15): la frase de arriba usa `child_pti` en el sentido del TEMPLATE --
+# "el padre reparte el valor a un hijo" -- que es cierto para vPC. Pero `mechanism` en el
+# motor significa otra cosa: quien es dueño de la validacion, del guardia de parent invalido,
+# del prof_spec generico, del carry-forward y de la conversion a forma de cable. vPC no tiene
+# maquinaria propia para ninguna de esas, asi que sus bindings se registraron como
+# `passthrough`, igual que int_port_channel_trunk_host::DISABLE_LLDP, que tambien delega.
+# Verificado en vivo antes de registrar: ver registry_slice_0b_15.yaml.
+#
+# default_template is template metadata ONLY; NEVER emitted when the user omits the field.
+
+- parent_template: int_access_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: boolean
+  default_template: false          # native boolean; decl int_access_host.template#L86
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []                 # inline CLI on the parent; no child PTI
+  evidence_ref: "int_access_host.template#L556"
+
+- parent_template: int_trunk_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: boolean
+  default_template: false          # native boolean; decl int_trunk_host.template#L101
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_trunk_host.template#L624"

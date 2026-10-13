@@ -1,0 +1,123 @@
+# Registry slice 0b_12 — SPANNING_TREE_PORT_TYPE sobre interfaces ethernet de host.
+#
+# Catalogo: WP98_TEMPLATE_PARAMETER_CATALOG.csv lo marca como
+# dcnm_interface_gap_vs_nd43 = TRUE, familia "Spanning-tree/guard", en los dos parents.
+#
+# DECLARACION (identica en ambos templates)
+#   int_trunk_host:56   enum SPANNING_TREE_PORT_TYPE { validValues=no,network,normal;
+#   int_access_host:46                                 defaultValue=no; }
+#
+# ------------------------------------------------------------------------------------
+# ESTE CAMPO NO ES INDEPENDIENTE. Es el primero del registry que no lo es.
+# ------------------------------------------------------------------------------------
+#
+# El template lo RECHAZA cuando PORTTYPE_FAST_ENABLED esta en true:
+#
+#   int_trunk_host:534
+#     if PORTTYPE_FAST_ENABLED == "true" and spanningTreePortType not in ("", "no"):
+#         errMsg = "'Spanning-tree port type' cannot be set to '%s' when
+#                   'Enable port type fast' is enabled"
+#         -> setFailureRetCode()
+#
+# Y `true` es el DEFAULT en los dos lados -- el template (PORTTYPE_FAST_ENABLED
+# defaultValue=true) y el modulo (port_type_fast=dict(type="bool", default=True)). Asi que
+# el caso de rechazo es el camino por omision, no un borde.
+#
+# En la practica: para usar este campo hay que mandar tambien `port_type_fast: false` en el
+# MISMO payload.
+#
+# POR QUE NO SE REGISTRA ESA RELACION
+#   Seria un campo de esquema nuevo (tipo `conditional_requirement`) para un solo caso, y ya
+#   descartamos `depends_on` por especulativo en la migracion de la clave OSPF. Ademas la
+#   precondicion vive en PORTTYPE_FAST_ENABLED, que NO esta en el registry: lo maneja la ruta
+#   legacy del modulo. Un campo del registry no puede expresar una dependencia hacia algo que
+#   el registry no conoce.
+#
+#   La decision es registrarlo plano y MEDIR como se manifiesta el rechazo del template en la
+#   respuesta de NDFC. Si el error llega claro al usuario, no hace falta codigo. Si llega
+#   enterrado, se justifica un validador dedicado en el modulo -- con evidencia, no por
+#   suposicion. Hay una etapa negativa explicita en la matriz para eso.
+#
+# GENERACION DE CLI (tres ramas, int_trunk_host:605)
+#   if  spanningTreePortType not in ("", "no")  ->  'spanning-tree port type <valor>'
+#   elif PORTTYPE_FAST_ENABLED == "true"        ->  'spanning-tree port type edge trunk'
+#   elif isHif                                  ->  'spanning-tree port type edge'
+#
+#   Es decir: "no" NO significa "sin configuracion". Significa "deja que decidan las otras
+#   ramas". Distinto de flowcontrol, donde "off" si es ausencia de CLI.
+#
+# Sin `default_template`: el default del template es "no", pero registrarlo convertiria la
+# omision en "poner no" en lugar de "preservar". Al ser passthrough el campo entra al
+# carry-forward, y preservar es el comportamiento correcto (medido para flowcontrol).
+
+- parent_template: int_trunk_host
+  parent_nvpair: spanningTreePortType
+  reset_wire: "no"
+  profile_key: spanning_tree_port_type
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: enum
+  valid_values:
+    - "no"
+    - network
+    - normal
+  default_template: "no"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_trunk_host.template#L56
+  catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_trunk_host/SPANNING_TREE_PORT_TYPE
+  effect_rules:
+    - predicate: value_network_or_normal
+      ndfc_effect: inline_config
+      cli: spanning-tree port type <value>
+      phase: current
+      evidence_ref: int_trunk_host.template#L605
+    - predicate: value_no_and_port_type_fast_true
+      ndfc_effect: inline_config
+      cli: spanning-tree port type edge trunk
+      phase: current
+      # "no" cede a la rama del port-type-fast; NO es ausencia de configuracion.
+      evidence_ref: int_trunk_host.template#L607
+    - predicate: value_set_and_port_type_fast_true
+      ndfc_effect: template_rejects
+      phase: current
+      # El template devuelve error y aborta. Comportamiento a MEDIR en vivo antes de decidir
+      # si el modulo debe adelantarse a validarlo.
+      evidence_ref: int_trunk_host.template#L534
+
+- parent_template: int_access_host
+  parent_nvpair: spanningTreePortType
+  reset_wire: "no"
+  profile_key: spanning_tree_port_type
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: enum
+  valid_values:
+    - "no"
+    - network
+    - normal
+  default_template: "no"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_access_host.template#L46
+  catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_access_host/SPANNING_TREE_PORT_TYPE
+  effect_rules:
+    - predicate: value_network_or_normal
+      ndfc_effect: inline_config
+      cli: spanning-tree port type <value>
+      phase: current
+      evidence_ref: int_access_host.template#L605
+    - predicate: value_set_and_port_type_fast_true
+      ndfc_effect: template_rejects
+      phase: current
+      evidence_ref: int_access_host.template#L534

@@ -1,0 +1,230 @@
+# Phase 0B — slice 3: ARP_TIMEOUT. 3 bindings, un campo x tres padres.
+# Keyed by (parent_template, parent_nvpair). applicable_interface_type/mode from module
+# pol_types[12]: int_routed_host=eth/routed, int_subif=sub_int/subint, int_vlan=svi/vlan.
+#
+# =====================================================================================
+# CORRECCION 2026-09-20 — registrado por fin, con dos cambios sobre lo escrito en la fase 0B
+# =====================================================================================
+#
+# Estas tres llevaban escritas aqui desde la fase 0B y NUNCA llegaron a la tabla: no estaban
+# en COMMITTED_BINDINGS, y el generador salta en silencio una fila fuera de esa lista. Es la
+# TERCERA vez que aparece este patron -- antes fueron las ocho de BFD (0b_4/0b_5) y las siete
+# de dampening (0b_6).
+#
+# Y es la ultima. Auditadas TODAS las filas de TODOS los slices contra COMMITTED_BINDINGS,
+# quedan 9 sin registrar y las 9 lo estan a proposito:
+#     1  int_fabric_loopback_11_1 ENABLE_OSPF_AUTH_MESSAGE_DIGEST  -> capacidad retirada; hay
+#        un test que asserta que NO esta registrada ni guardada.
+#     8  DISABLE_LLDP en ocho padres -> el nvPair ya no existe en los cuerpos vigentes,
+#        sustituido por DISABLE_LLDP_TRANSMIT/RECEIVE, que si estan registrados.
+# La deuda de "slices escritos que nunca se registraron" queda cerrada aqui.
+#
+# CAMBIO 1: child_pti -> passthrough
+#   El modulo escribe ARP_TIMEOUT en los nvPairs del PADRE y es el DSL del padre quien
+#   instancia `interface_ip_arp_timeout_11_1` con el. El modulo no construye el hijo. Mismo
+#   razonamiento que en BFD y dampening. Los effect_rules de abajo se conservan porque
+#   describen el efecto que el TEMPLATE produce -- que sigue siendo cierto -- no el mecanismo
+#   del modulo.
+#
+# CAMBIO 2: min 1 (sin max) -> min 60, max 28800, PORQUE LA DECLARACION CAMBIO
+#   El `min: 1` original NO fue un descuido: era la lectura correcta del cuerpo de entonces.
+#   Medido comparando la copia previa a la batch del 14sep con el cuerpo vigente:
+#
+#       antes_int_routed_host.template    integer ARP_TIMEOUT;
+#       cuerpo vigente                    integer ARP_TIMEOUT { min = 60; max = 28800; }
+#
+#   Cuando se escribio esta fila la declaracion no tenia limites, asi que la unica cota que
+#   existia era la del cuerpo del DSL (`int(arpTimeout) <= 0`) y `min: 1` la reflejaba bien.
+#   La batch del 14sep le puso min/max a la declaracion y la fila quedo obsoleta sin que nada
+#   avisara. Por eso evidence_ref lleva el hash del cuerpo: es la unica forma de saber contra
+#   que se midio una fila.
+#
+#   Comprobado que ARP_TIMEOUT es la UNICA declaracion preexistente que cambio en esa batch:
+#   de las 54 declaraciones del cuerpo anterior, las otras 53 estan identicas (el cuerpo pasó
+#   a 77 porque las 23 nuevas son las de los lotes que hemos ido registrando). Asi que esta
+#   obsolescencia no arrastra a ninguna otra fila del registro.
+#
+#   Ahora el limite vive en TRES capas, con DOS umbrales distintos:
+#
+#       declaracion del padre    min=60  max=28800
+#       declaracion del hijo     min=60  max=28800
+#       bloque del DSL           solo `int(arpTimeout) <= 0`  ->  "ARP timeout must be a
+#                                                                 positive integer."
+#
+#   Se toma la DECLARACION porque el registry declara el CONTRATO DE ENTRADA -- lo que un
+#   operador puede escribir -- y ese contrato lo publica la declaracion, que es tambien lo que
+#   el hijo repite. Con min: 1 el modulo aceptaria hoy un 30 y un 50000 y los mandaria al
+#   nvPair de un template que los declara fuera de rango.
+#
+#   Consecuencia asumida: la regla del DSL queda INALCANZABLE desde el modulo, porque el
+#   registry rechaza antes todo lo que ella rechazaria. Se anota como etapa saltada con su
+#   razon, no como PASS -- igual que el gate viejo de redirects en routed y subif.
+#
+#   Lo que NO esta medido: si el POST de NDFC impone el 60..28800 de la declaracion o si solo
+#   lo hace la GUI. Si no lo impone, el registry es la unica defensa. La ronda lo mide
+#   mandando un 30 por los dos caminos: por el modulo (debe rechazar) y directo a la API.
+#
+# MEDIDO CONTRA LOS CUERPOS QUE EL CONTROLADOR CORRE HOY, bajados antes de leerles un atributo:
+#     int_routed_host.template@65426107b3d1cdcf
+#     int_subif.template@a66388c2f21c5507
+#     int_vlan.template@0efb09af7f837b30
+#     interface_ip_arp_timeout_11_1.template@7272fb1b587be658
+#
+#   El hash de int_routed_host es NUEVO -- los slices anteriores citan b9b50077cf49f8cb; el
+#   2026-09-20 otra sesion subio los templates de PIM BFD. Comprobado que ese cambio no toca
+#   ninguna linea de ARP (diff vacio sobre `grep -i arp`).
+#
+#   int_loopback NO declara ARP_TIMEOUT: tres de los cuatro padres.
+#
+# LA DECLARACION ES IDENTICA EN LOS TRES, SIN defaultValue Y SIN IsShow
+#   Las dos ausencias importan:
+#     * sin IsShow -> siempre visible. No hay compuerta que abrir para observarlo, que es lo
+#       que el caso vlan de redirects necesitaba.
+#     * sin defaultValue -> NDFC devuelve "" cuando nunca se puso. Esa es la forma que hizo
+#       abortar el lote de redirects al registrarse, y aqui NO hace falta tocar el engine: la
+#       exencion (3) de gie_validate_binding_value ya acepta "" para un integer leido de HAVE,
+#       por el mismo camino que OSPF_COST. Verificado leyendo el codigo ANTES de registrar.
+#
+# EL CASO MAS SIMPLE DEL REGISTRO
+#   Un campo, un hijo, una linea (`ip arp timeout $$ARP_TIMEOUT$$`), sin gate booleano y sin
+#   dependencias entre campos. Cada lote anterior fundia campos en una linea (BFD tres, HSRP
+#   dos mas un nativo, dampening seis) o los escondia detras de una compuerta.
+#
+# NO ES NATIVO: `arp_timeout` da 0 usos en dcnm_interface.py y `ARP_TIMEOUT` da 0 -> libre.
+#
+# SOPORTE EN EL EQUIPO: MEDIDO Y POSITIVO. La sonda de la fase 33 mando `ip arp timeout 300`
+#   por NDFC y la linea aterrizo en la interfaz. Contrasta con dampening, cuyo CLI no existe
+#   en esta plataforma. Nota de esa fase que aplica aqui: `show running-config all` NO expande
+#   `ip arp timeout 1500`, el default documentado, asi que la AUSENCIA de la linea en ese
+#   comando no prueba nada; la presencia con nuestro valor si.
+#
+# PREDICCION SOBRE EL BORRADO, A MEDIR -- NO ES UNA CONCLUSION
+#   Los unicos deleteChildTemplate de los tres cuerpos son los dos de redirects. Este hijo NO
+#   se retira explicitamente en ninguno, y el gate de emision es `if arpTimeout != ""`: mandar
+#   "" no instancia el hijo, pero tampoco pide quitar el que ya existe.
+#
+#   Es el mecanismo del residuo que la ronda de EIGRP dejo en una fisica
+#   (FINDING_negative_form_residue.md) y encaja con lo que la fase 38 acoto: el residuo no es
+#   propiedad de toda negacion, sino de las que el template no retira. Si se confirma, ARP es
+#   el caso mas limpio para demostrarlo. Por eso removal_semantics sigue en `unresolved`: la
+#   omision preserva por el contrato explicit_only, pero lo que hace un "" EXPLICITO es otra
+#   pregunta, y es la que la ronda mide.
+- parent_template: int_routed_host
+  parent_nvpair: arpTimeout
+  profile_key: arp_timeout
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: integer
+  # G37 P1-arp-probe: MEDIDO EN VIVO en leaf-A Ethernet1/22, 2026-09-24, NDFC 12.6.0.267 /
+  # NX-OS 10.5(5). Primer reset de un ENTERO en este registro, y contesta justo la pregunta que
+  # la nota de arriba dejaba abierta: lo que hace un "" EXPLICITO es RETIRAR.
+  #
+  # El entero publico sigue rechazando "" antes de construir peticion ("must be a native
+  # integer (range 60..28800), given a string"), asi que el valor de alambre NO se pudo medir
+  # con un clear explicito del modulo. Se midio con un POST raw de bulk modify preservante:
+  # array de 1 DTO, 70 nvPairs tomados del readback fresco -- base documentada en la ruta real
+  # del propio modulo -- y solo ARP_TIMEOUT cambiado a "". Respuesta 207 Multi-Status con un
+  # unico SUCCESS para <lab-serial>~Ethernet1/22.
+  #
+  # LA REPRESENTACION DEL READBACK ES STRING VACIO: no ausente, no null, no un default
+  # materializado. Los cuatro casos se distinguieron y este es el observado. Todo el resto de
+  # los nvPairs quedo identico (84 <-> 84) y en el equipo desaparecio `ip arp timeout 900`,
+  # con la configuracion normalizada completa igual a B0 y compliance In-Sync.
+  reset_wire: ""
+  min: 60
+  max: 28800
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  removal_semantics: unresolved
+  evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1467"
+  effect_rules:
+    - predicate: value_present
+      ndfc_effect: create_or_update
+      child_template: interface_ip_arp_timeout_11_1
+      value_bindings:
+        - source_parent_nvpair: arpTimeout
+          target_child_nvpair: ARP_TIMEOUT
+          transform: identity
+      relationship: base
+      phase: current
+      evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1467"
+
+- parent_template: int_subif
+  parent_nvpair: arpTimeout
+  profile_key: arp_timeout
+  applicable_interface_type: sub_int
+  applicable_mode: subint
+  type: integer
+  # G39 P-arptimeout: MEDIDO EN VIVO sobre int_subif, leaf-A Ethernet1/21.3001, 2026-09-24, con
+  # contexto SIN OSPF: la subinterfaz se borro y se recreo para esta fila, asi que no hereda
+  # residuo de los seis casos OSPF. DTO derivado de este padre (56 nvPairs, envelope con
+  # `skipResourceCheck`). 207 Multi-Status con un unico SUCCESS.
+  #
+  # READBACK = STRING VACIO ("900" -> ""). Desaparecio `ip arp timeout 900`, sobrevivio
+  # `encapsulation dot1q 3001`, ninguna linea OSPF aparecio, resto de nvPairs identico, In-Sync.
+  reset_wire: ""
+  min: 60
+  max: 28800
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  removal_semantics: unresolved
+  evidence_ref: "int_subif.template@a66388c2f21c5507#L953"
+  effect_rules:
+    - predicate: value_present
+      ndfc_effect: create_or_update
+      child_template: interface_ip_arp_timeout_11_1
+      value_bindings:
+        - source_parent_nvpair: arpTimeout
+          target_child_nvpair: ARP_TIMEOUT
+          transform: identity
+      relationship: base
+      phase: current
+      evidence_ref: "int_subif.template@a66388c2f21c5507#L953"
+
+- parent_template: int_vlan
+  parent_nvpair: arpTimeout
+  profile_key: arp_timeout
+  applicable_interface_type: svi
+  applicable_mode: vlan
+  # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+  # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo ARP_TIMEOUT -> "".
+  # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+  # READBACK MEDIDO = STRING VACIO ("900" -> ""), no predeterminado por la propuesta.
+  # Desaparecio `ip arp timeout 900`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+  # Contexto SIN OSPF (ENABLE_OSPF 'false') y sin residuo del grupo A.
+  # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+  # Resuelve removal_semantics para esta fila sobre ESTE padre.
+  reset_wire: ""
+  type: integer
+  min: 60
+  max: 28800
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  removal_semantics: unresolved
+  evidence_ref: "int_vlan.template@0efb09af7f837b30#L1629"
+  effect_rules:
+    - predicate: value_present
+      ndfc_effect: create_or_update
+      child_template: interface_ip_arp_timeout_11_1
+      value_bindings:
+        - source_parent_nvpair: arpTimeout
+          target_child_nvpair: ARP_TIMEOUT
+          transform: identity
+      relationship: base
+      phase: current
+      evidence_ref: "int_vlan.template@0efb09af7f837b30#L1629"

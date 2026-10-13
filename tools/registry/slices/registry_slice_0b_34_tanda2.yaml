@@ -1,0 +1,251 @@
+# WP98 — tanda 2. TRES filas en DOS padres, y los tres campos tienen poco que ver entre si.
+# Se tratan como tres mini-lotes en un slice, no como una familia.
+#
+#     IPV4_ACL_IN            int_vlan                      string 1..64
+#     PRIVATE_VLAN_MAPPING   int_vlan                      integerRange -> string
+#     ENABLE_VPC_PEER_LINK   int_port_channel_trunk_host    boolean, defaultValue=false
+#
+# MEDIDO CONTRA LOS CUERPOS QUE EL CONTROLADOR CORRE HOY:
+#     int_vlan.template@0efb09af7f837b30
+#     int_port_channel_trunk_host.template@840029af16a406cf
+#     interface_ip_access_group_in_11_1.template@617432cc71988a99
+#
+# =====================================================================================
+# 1. IPV4_ACL_IN — la trampa del nombre, por tercera vez
+# =====================================================================================
+#
+#   El PADRE declara `IPV4_ACL_IN` y se lo pasa al hijo como `IPV4_ACL`:
+#       {"INTF_NAME": intfName, "IPV4_ACL": ipv4AclIn}      (int_vlan:1641)
+#
+#   Esta fila lleva la forma del PADRE. Tercera vez que aparece este patron, tras
+#   IPv6_LINK_LOCAL (v minuscula en el padre) y los cuatro de MACSEC (prefijo MACSEC_ que el
+#   hijo no lleva). Copiar la del hijo haria que NDFC guardara una clave que nadie lee.
+#
+#   Y HAY UNA SEGUNDA TRAMPA, esta en la VERIFICACION: NDFC pasa el nombre de la ACL a
+#   MINUSCULAS, y el `include` de NX-OS distingue mayusculas. Medido en una fase anterior.
+#   Buscar el nombre tal como se escribio en el playbook da VACIO aunque la linea este ahi.
+#
+#   El hijo ya estaba registrado en int_routed_host (slice 0b_16); esto anade int_vlan.
+#
+# =====================================================================================
+# 2. PRIVATE_VLAN_MAPPING — tercer tipo que el registry no conoce, y las cotas NO viajan
+# =====================================================================================
+#
+#       integerRange PRIVATE_VLAN_MAPPING { min = 1; max = 4094; }
+#
+#   `integerRange` no esta en _TYPE_TO_VALIDATOR (boolean/enum/string/integer), asi que
+#   registrarlo asi dejaria el binding INALCANZABLE por fail-closed. Tercer caso de la misma
+#   familia: `long` en PIM_DR_PRIORITY, `ipV6Address` en IPv6_LINK_LOCAL, `integerRange` aqui.
+#
+#   Va como `string`. Y LAS COTAS NO SE TRASLADAN, porque el valor NO es un numero: el propio
+#   Description del template lo dice -- "Secondary VLAN IDs for private-vlan mapping.
+#   Example: 3194,3196 or 3194-3196". Es una LISTA o un RANGO.
+#
+#   Poner min: 1 / max: 4094 en el registry seria un error de categoria: el engine compararia
+#   una cadena contra un entero. El 1..4094 es la cota de CADA VLAN ID dentro de la lista, y eso
+#   lo valida NDFC. Aqui van min_length/max_length, que es lo que se puede afirmar de una cadena.
+#
+#   max_length 64: no lo declara el template, se toma el mismo limite que los otros strings de
+#   este padre. Una lista de VLANs mas larga que eso seria inusual, y si aparece, el limite es
+#   revisable -- lo que NO se puede es dejar la cadena sin cota alguna.
+#
+# =====================================================================================
+# 3. ENABLE_VPC_PEER_LINK — el binding es trivial; lo que hace no
+# =====================================================================================
+#
+#   DOS REGLAS DURAS en el cuerpo, que son dos negativas:
+#       "vPC peer-link and vPC orphan port cannot both be enabled on the same port-channel."
+#       "vPC peer-link requires default MTU. Set MTU to default before enabling vPC peer-link."
+#       (int_port_channel_trunk_host:450 y :457)
+#
+#   Y UN EFECTO COLATERAL que no es obvio y hay que verificar (:653-655):
+#       if enableVpcPeerLink == "true":
+#           config_builder.add_config('spanning-tree port type network', ...)
+#       elif BPDUGUARD_ENABLED == "true":
+#           ...
+#
+#   Activar el peer-link NO emite una linea: emite DOS -- `vpc peer-link` (:686) y
+#   `spanning-tree port type network` -- y ademas DESPLAZA la rama del BPDU guard.
+#
+#   NO ES COLISION: ES PRECEDENCIA, Y EL DESCARTE ES SILENCIOSO
+#     Medido sobre el cuerpo instalado. El template lo resuelve el mismo con un `pass` explicito:
+#
+#         if enableVpcPeerLink == "true":
+#             pass                                          # :670
+#         elif spanningTreePortType != "" and ...:
+#             add_config('spanning-tree port type {}')
+#
+#     El peer-link emite su `network` arriba (:654) y aqui IGNORA el campo del operador.
+#     BPDUFILTER_ENABLED corre la misma suerte.
+#
+#     Pero el descarte importa y no avisa: quien mande `spanning_tree_port_type: edge` junto con
+#     `enable_vpc_peer_link: true` recibe changed=True, ve `network` en el equipo, y nunca se
+#     entera de que su `edge` se ignoro.
+#
+#     Es la forma del `1` mudo de PIM_DR_PRIORITY, con un agravante: alli el valor callado era el
+#     default del propio DSL; aqui es algo que el operador PIDIO explicitamente. Queda anotado
+#     como etapa `p` -- comportamiento esperado del template, no fallo -- para cuando el
+#     peer-link se pueda probar en vivo.
+#
+#   CORRECCION 2026-09-20 — LA PRIMERA CONCLUSION AQUI ERA FALSA, Y EL ERROR FUE DE MUESTREO
+#
+#     Esta nota decia que la capa de dispositivo no era alcanzable, y lo apoyaba en tres
+#     medidas ciertas... del switch EQUIVOCADO:
+#         `show vpc brief` en leaf-A   ->  "% Invalid command" (feature vpc apagado)
+#         `show port-channel summary`    ->  vacio
+#         <lab-ip>                  ->  unreachable
+#
+#     Todo eso es verdad de leaf-A, y leaf-A NO ES PAR vPC. La eleccion del switch salio de
+#     que un documento de trabajo interno menciona leaf-X/103 en topology_vpc.nac.yaml, y no se comprobo cual es el
+#     par real antes de concluir. Medir bien un switch que no es el sujeto de la pregunta
+#     produce una conclusion falsa con evidencia impecable, que es la peor clase.
+#
+#     EL PAR REAL ES leaf-B / leaf-C, Y ESTA SANO. Medido en los dos:
+#         vPC domain id                     : 105
+#         Peer status                       : peer adjacency formed ok
+#         vPC keep-alive status             : peer is alive
+#         Configuration consistency status  : success
+#         Per-vlan / Type-2 consistency     : success
+#         Number of vPCs configured         : 2
+#         peer-link                         : Po500 (Eth1/3, Eth1/4), up
+#
+#     Los dos estan en inventory.yaml (.105 y .106).
+#
+#     Y Po500 LLEVA EXACTAMENTE LAS DOS LINEAS QUE ESTE BINDING PRODUCE:
+#         interface port-channel500
+#           spanning-tree port type network
+#           vpc peer-link
+#     O sea que el efecto del template esta confirmado gratis por el peer-link vivo, aunque el
+#     binding aun no se haya ejercitado.
+#
+#   ESTADO (actualizado 2026-09-20, fase 46): VALIDADO EN VIVO hasta donde el lab permite.
+#   Paso de `Registered, untested` a validado. La ronda completa esta en
+#   <internal evidence record>; lo esencial:
+#
+#     - NX-OS RECHAZA un segundo peer-link en el dominio y NDFC no lo comprueba:
+#         ERROR: Operation failed: [vPC Peer-link has already been configured on po500]
+#       nombrado por switch, deploy con 500. La coherencia la valida el EQUIPO, no el
+#       controlador -- complemento de la serie keychain/ACL/link-local, donde nadie validaba.
+#     - EL CORTE ES PARCIAL: la linea de :654 aterriza y la de :686 no (falla el comando #12),
+#       asi que el binding SI llego al equipo y genero CLI.
+#     - EL DESCARTE SILENCIOSO ES DOBLE y esta medido CON CONTROL: con el peer-link apagado
+#       salen `port type normal` y `bpduguard enable`; con el peer-link en true, ninguna de las
+#       dos y `port type network` en su lugar. Sin el control, "lo pedido no sale" tambien se
+#       explicaria por un campo que no hace nada.
+#     - Y NO ES DETECTABLE: NDFC GUARDA "normal" y su propio pendingConfig emite `network`, asi
+#       que controlador y equipo coincidirian y la interfaz saldria In-Sync con el valor pedido
+#       guardado y nunca aplicado. Medido con forceShowRun=true.
+#     - `replaced: []` al reenviar (idempotente en la capa de intencion), la omision preserva el
+#       "true" guardado, y el vPC quedo identico linea por linea en los dos peers.
+#
+#   Lo unico que el lab NO puede medir es un `vpc peer-link` ACEPTADO: el dominio ya tiene el
+#   suyo y hay un solo par. Limite de TOPOLOGIA, no hueco del binding -- y distinto de
+#   `Controller-only`, que es para limites del hardware como dampening, cuyo CLI no existe.
+#
+#   CLASIFICACION (2026-09-21): CAMINO PARALELO AL DEL DATA-MODEL. NaC no emite este nvPair
+#   NUNCA. Medido: el peer-link que construye `vpc_peers` corre OTRA plantilla
+#   (int_vpc_peer_link_po) y en sus nvPairs ENABLE_VPC_PEER_LINK esta AUSENTE -- la plantilla
+#   dedicada no tiene la casilla porque ella misma ES el peer-link. Y el esquema de NaC solo
+#   admite interfaces fisicas (schema.yaml:319,321), sin campo de port-channel.
+#
+#   La casilla vive en la plantilla de los port-channels DE USUARIO, y el modulo dcnm_vpc_pair
+#   dice donde importa: `templateName` es OBLIGATORIO en fabrics LANClassic/External y opcional
+#   en los demas. Ahi el peer-link es del operador, no de NDFC.
+#
+#   Asi que el caso de uso no es "alguien lo usa hoy": es el REQUISITO PREVIO de una funcion de
+#   NaC que no existe -- NaC no puede exponer lo que el modulo no puede mandar. Para un usuario
+#   de NaC este campo no aparece jamas, y eso cambia como se prioriza.
+#
+#   Detalle completo, con lo medido separado de lo inferido, en
+#   phase46-peerlink/FINDING_peerlink_is_a_parallel_path.md
+#
+#   EL ORDEN DE LA RONDA, cuando se haga: preguntar primero al CONTROLADOR, porque es informacion
+#   gratis. Mandar el binding sobre un port-channel nuevo y ver si NDFC rechaza un SEGUNDO
+#   peer-link en el dominio antes del deploy. Si lo rechaza, es la negativa perfecta sin tocar
+#   nada; si lo acepta, adelante -- y que el vPC se parta seria en si un resultado que vale
+#   documentar, porque significa que NDFC deja armar un segundo peer-link sin avisar.
+#
+#   El par entero esta declarado en host_vars/FAB1/topology_switches.nac.yaml (vpc_peers,
+#   domain_id 105), asi que un `vxlan.yaml` sobre FAB1 lo reconstruye. Lo unico que NO se usa
+#   como cobaya es Po55 ni Po56: estan en el data-model y mezclarian la prueba con config
+#   declarada. La ronda crea el suyo -- Po510 sobre Eth1/7 y Eth1/8, que estan libres en los dos
+#   peers ("Link not connected", sin port-channel).
+#
+# NINGUNO ES NATIVO
+#   ipv4_acl_in da 0 usos en dcnm_interface.py -- ya estaba registrado para int_routed_host, y su
+#   clave publica se reutiliza aqui, que es el punto de llavear por (parent, nvpair).
+#   private_vlan_mapping: 0. enable_vpc_peer_link: 0.
+
+shared_effects: []
+
+bindings:
+
+  # ============================================================== 1. IPV4_ACL_IN en int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: ipv4AclIn
+    profile_key: ipv4_acl_in
+    reset_wire: ''
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#L1636"
+
+  # ======================================================= 2. PRIVATE_VLAN_MAPPING en int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: privateVlanMapping
+    profile_key: private_vlan_mapping
+    # MEDIDO en el laboratorio, no deducido del template ni de la GUI.
+    # BETA_EIGRP / L1-F4 (<lab-serial>) / Vlan2222, etapa rC:
+    # `private_vlan_mapping: ""` explicito sobre un mapping configurado
+    # '3214,3216' deja el controlador en '' y la linea
+    # `private-vlan mapping 3214,3216` desaparece del running-config, con la
+    # primaria, las tres secundarias y HSRP intactos y el leaf In-Sync.
+    # El clear publico pasa porque `""` sale antes del control de `min_length`.
+    reset_wire: ''
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # `integerRange` en el template. Va string porque el valor es una lista o un rango
+    # ("3194,3196" / "3194-3196"), no un numero -- ver la nota de arriba.
+    type: string
+    string_compare: case_irrelevant
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#PRIVATE_VLAN_MAPPING"
+
+  # ============================== 3. ENABLE_VPC_PEER_LINK en int_port_channel_trunk_host
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: ENABLE_VPC_PEER_LINK
+    smu_unsupported: true   # no counterpart in the installed SMU build (capture-S2)
+    profile_key: enable_vpc_peer_link
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host.template@840029af16a406cf#L686"

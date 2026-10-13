@@ -1,0 +1,256 @@
+# WP98 — redirects partidos y ND suppress-RA. Nueve filas: tres campos x tres padres.
+#
+# MEDIDO CONTRA LOS CUERPOS INSTALADOS, verificados byte-identicos a la copia local antes de
+# leerles un solo atributo:
+#
+#     int_routed_host.template@b9b50077cf49f8cb
+#     int_subif.template@a66388c2f21c5507
+#     int_vlan.template@0efb09af7f837b30
+#
+#   int_loopback NO declara ninguno de los tres, asi que no entra.
+#
+# LOS TRES CAMPOS SON IDENTICOS EN LOS TRES PADRES -- Y ESO SE COMPROBO, NO SE SUPUSO
+#   boolean los tres. IPV6_ND_SUPPRESS_RA con defaultValue=false y sin IsShow; los dos split
+#   SIN default y ambos con IsShow="DISABLE_IP_REDIRECTS!=true". Igual en routed, subif y vlan.
+#
+# LO QUE NO ES UNIFORME ES EL CAMPO QUE LOS GATEA
+#   DISABLE_IP_REDIRECTS -- que es NATIVO del modulo (`disable_ip_redirects`, 6 usos) y por eso
+#   no se registra aqui -- tiene default distinto segun el padre:
+#
+#       int_routed_host   defaultValue=false
+#       int_subif         defaultValue=false
+#       int_vlan          defaultValue=true      <-- el que causo el blocker del SVI
+#
+#   Como el gate de los split es `!= true`, en int_vlan estan OCULTOS por defecto: una ronda que
+#   no mande `disable_ip_redirects: false` en ese padre no puede observarlos, y no porque el
+#   binding falle. El caso vlan necesita ese paso extra.
+#
+# COMO SE COMBINAN: OR CON EL NATIVO, NO SUSTITUCION
+#       effectiveDisableIpv4Redirects = "true" si disableIpRedirects=="true" O disableIpv4=="true"
+#       effectiveDisableIpv6Redirects = "true" si disableIpRedirects=="true" O disableIpv6=="true"
+#
+#   El viejo es el "backward-compatible option to disable both" segun su propia descripcion. Los
+#   dos nuevos permiten apagar solo uno, que es lo que el viejo no sabe hacer.
+#
+# LA REGLA NEGATIVA, PRESENTE EN LOS TRES PADRES
+#       "DISABLE_IP_REDIRECTS disables both IPv4 and IPv6 redirects; do not combine it with
+#        split redirect knobs set to false."
+#
+#   Se dispara con disableIpRedirects=="true" y alguno de los split en "false". Es una relacion
+#   entre un campo NATIVO y dos registrados -- la segunda de este tipo en el registro, despues de
+#   la de lower/upper en HSRP. No se duplica aqui: NDFC la impone y falla ruidosamente.
+#
+# CADA CAMPO TIENE SU PROPIA LINEA, a diferencia de BFD y HSRP
+#   El hijo routed_interface_redirects_disable es condicional por dentro:
+#
+#       if ($$DISABLE_IPV4_REDIRECTS$$ == "true") { no ip redirects }
+#       if ($$DISABLE_IPV6_REDIRECTS$$ == "true") { no ipv6 redirects }
+#
+#   asi que los dos split son observables por separado, y "una linea se movio" vuelve a ser una
+#   asercion util. El tercero va por interface_ipv6_nd_suppress_ra_11_1 -> `ipv6 nd suppress-ra`.
+#
+#   Los tres hijos estan INSTALADOS, verificado contra el controlador antes de escribir esto.
+#   Tambien lo esta routed_interface_no_ip_redirects, el viejo, que el DSL borra explicitamente.
+#
+# POR QUE NO SE REGISTRA DISABLE_IP_REDIRECTS
+#   La regla que el fallo de IPv6 dejo: grepear el nombre publico en dcnm_interface.py.
+#   disable_ip_redirects da 6 usos -> lo sirve el arg spec nativo y registrarlo haria que
+#   gie_guarded_keys() -- un set sin padre -- lo reclamara globalmente. disable_ipv4_redirects,
+#   disable_ipv6_redirects e ipv6_nd_suppress_ra dan 0 -> libres.
+
+bindings:
+
+  # ---------------------------------------------------------------- int_routed_host
+  - parent_template: int_routed_host
+    parent_nvpair: ipv4Redirects
+    profile_key: disable_ipv4_redirects
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # G31 C1-s2: medido en vivo, apply+clear IPv4 en leaf-A Ethernet1/20, 2026-09-23.
+    # Con el companero DISABLE_IPV6_REDIRECTS explicito en "true" y el nativo
+    # DISABLE_IP_REDIRECTS en "false" -- el gate `!= true` de este padre -- el clear dejo
+    # el nvPair en "false" y sobrevivio UNICAMENTE `no ipv6 redirects` en el equipo.
+    reset_wire: "false"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ipv6Redirects
+    profile_key: disable_ipv6_redirects
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # G31 C2-s2: medido en vivo, apply+clear IPv6 en leaf-A Ethernet1/20, 2026-09-23.
+    # Con el companero DISABLE_IPV4_REDIRECTS explicito en "true" y el nativo
+    # DISABLE_IP_REDIRECTS en "false", el clear dejo el nvPair en "false" y sobrevivio
+    # UNICAMENTE `no ip redirects` en el equipo. Las dos direcciones son independientes.
+    reset_wire: "false"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ipv6NdSuppressRa
+    profile_key: ipv6_nd_suppress_ra
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-alpha
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  # ---------------------------------------------------------------- int_subif
+  - parent_template: int_subif
+    parent_nvpair: ipv4Redirects
+    profile_key: disable_ipv4_redirects
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # G35 M1-s2: medido en vivo SOBRE ESTE PADRE, apply+clear IPv4 en leaf-A
+    # Ethernet1/21.3001 (encapsulation dot1q 3001, sin IP), 2026-09-23. NO se copio el
+    # resultado de int_routed_host: esta subinterfaz se creo, se midio y se borro aparte.
+    # Con el companero DISABLE_IPV6_REDIRECTS explicito en "true" y el nativo
+    # DISABLE_IP_REDIRECTS en "false" (default del template en este padre), el clear dejo el
+    # nvPair en "false" y sobrevivio UNICAMENTE `no ipv6 redirects` en el equipo.
+    reset_wire: "false"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ipv6Redirects
+    profile_key: disable_ipv6_redirects
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # G35 M2-s2: medido en vivo SOBRE ESTE PADRE, apply+clear IPv6 en leaf-A
+    # Ethernet1/21.3001, 2026-09-23. Con el companero DISABLE_IPV4_REDIRECTS explicito en
+    # "true", el clear dejo el nvPair en "false" y sobrevivio UNICAMENTE `no ip redirects`.
+    # Las dos direcciones son independientes tambien en este padre.
+    reset_wire: "false"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ipv6NdSuppressRa
+    profile_key: ipv6_nd_suppress_ra
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-alpha
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  # ---------------------------------------------------------------- int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: ipv4Redirects
+    profile_key: disable_ipv4_redirects
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo DISABLE_IPV4_REDIRECTS -> "false".
+    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+    # READBACK MEDIDO = STRING 'false' ("true" -> "false"), no predeterminado por la propuesta.
+    # Desaparecio `no ip redirects`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+    # El knob GLOBAL DISABLE_IP_REDIRECTS quedo en 'false' y el OTRO split knob en 'true' durante
+    # todo el caso: desaparecio solo la linea de esta fila y SOBREVIVIO la del companero.
+    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: "false"
+    type: boolean
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: ipv6Redirects
+    profile_key: disable_ipv6_redirects
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
+    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo DISABLE_IPV6_REDIRECTS -> "false".
+    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
+    # READBACK MEDIDO = STRING 'false' ("true" -> "false"), no predeterminado por la propuesta.
+    # Desaparecio `no ipv6 redirects`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
+    # El knob GLOBAL DISABLE_IP_REDIRECTS quedo en 'false' y el OTRO split knob en 'true' durante
+    # todo el caso: desaparecio solo la linea de esta fila y SOBREVIVIO la del companero.
+    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
+    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    reset_wire: "false"
+    type: boolean
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: ipv6NdSuppressRa
+    profile_key: ipv6_nd_suppress_ra
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30

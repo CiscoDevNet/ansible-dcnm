@@ -1,0 +1,263 @@
+# WP98 — OSPF on int_routed_host, lot 2: the nine non-authentication fields.
+#
+# Extends slice 0b_18, which registered the gate and three value fields and was validated on
+# hardware (leaf-A Ethernet1/5, canary s0-s4 + R1, 2026-09-17).
+#
+# WHY THESE NINE TOGETHER
+#   Every one is IsShow="ENABLE_OSPF==true" and IsMandatory=false. They are independent value
+#   fields behind the same gate, each with its own child template, so once the gate is on they
+#   are individually settable and can be exercised as a lot rather than one slice per field.
+#
+# WHY THE FIVE AUTHENTICATION FIELDS ARE NOT HERE
+#   ENABLE_OSPF_AUTH, OSPF_AUTH_KEY, OSPF_AUTHENTICATION_KEY, OSPF_AUTH_KEY_ID and
+#   OSPF_AUTHENTICATION_KEY_TYPE carry or gate secrets, and three of them already exist as
+#   child_pti on int_fabric_loopback_11_1 with a dedicated validator. Registering them on a
+#   second parent is a mechanism decision per (parent, nvpair), not a copy, and the key value
+#   must never be printed or logged. They go in their own lot.
+#
+# MECHANISM IS passthrough FOR ALL NINE
+#   None owns a dedicated validation path in the module. Delegating to a child template inside
+#   NDFC does not change that -- see test_gie_mechanism_contract.py, which now fails if a
+#   child_pti binding is registered without an implementation that actually guards it.
+#
+# ON THE no_change ENUMS
+#   OSPF_PASSIVE_MODE, OSPF_NETWORK_TYPE and OSPF_BFD_MODE default to "no_change", a sentinel
+#   meaning "leave the device alone". That is NDFC's semantics, not the engine's: the engine
+#   validates enum membership and transports the string, exactly as it already does for
+#   GUARD_MODE (valid root/none/loop/no, default "no") and SPANNING_TREE_PORT_TYPE. No new
+#   handling is needed, and none is added -- an earlier draft of this analysis claimed
+#   otherwise and was wrong.
+#
+# RANGES ARE REAL AND NOW ENFORCED
+#   The template declares min/max on all four integers. Since a794d959 the generator carries
+#   them as min_value/max_value and the engine enforces them on explicit input only -- a
+#   controller value outside the range is carried, never rejected.
+#
+# REMOVAL SEMANTICS
+#   unresolved on all nine, for the same reason as lot 1: the template creates a child per
+#   field and never deletes one. Withdrawal is contract A per the architect, pending s5.
+
+bindings:
+  - parent_template: int_routed_host
+    parent_nvpair: ospfMtuIgnore
+    profile_key: ospf_mtu_ignore
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-alpha
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfShutdown
+    profile_key: ospf_shutdown
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-alpha
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfHelloInterval
+    profile_key: ospf_hello_interval
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # G37 P-hellointerval: MEDIDO EN VIVO en leaf-A Ethernet1/20, 2026-09-24, NDFC 12.6.0.267 /
+    # NX-OS 10.5(5). El entero publico rechaza "" antes de construir peticion, asi que el valor de
+    # alambre se midio con un POST raw de bulk modify preservante (array de 1 DTO, 70 nvPairs del
+    # readback fresco, solo este campo a ""), respuesta 207 Multi-Status con un unico SUCCESS.
+    #
+    # LA REPRESENTACION DEL READBACK ES STRING VACIO ("11" -> ""), no ausente ni null ni un
+    # default materializado. En el equipo desaparecio `ip ospf hello-interval 11` y SOBREVIVIO
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, no se
+    # apago la feature para retirar el valor. Todos los demas nvPairs identicos, In-Sync.
+    #
+    # ESTO RESUELVE removal_semantics PARA ESTA FILA. El template crea un hijo por campo y nunca
+    # llama deleteChildTemplate para OSPF, que es la razon registrada de "unresolved"; medido,
+    # limpiar el nvPair del padre a "" SI retira la linea del hijo.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfDeadInterval
+    profile_key: ospf_dead_interval
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # G37 P-deadinterval: MEDIDO EN VIVO en leaf-A Ethernet1/20, 2026-09-24, NDFC 12.6.0.267 /
+    # NX-OS 10.5(5). El entero publico rechaza "" antes de construir peticion, asi que el valor de
+    # alambre se midio con un POST raw de bulk modify preservante (array de 1 DTO, 70 nvPairs del
+    # readback fresco, solo este campo a ""), respuesta 207 Multi-Status con un unico SUCCESS.
+    #
+    # LA REPRESENTACION DEL READBACK ES STRING VACIO ("44" -> ""), no ausente ni null ni un
+    # default materializado. En el equipo desaparecio `ip ospf dead-interval 44` y SOBREVIVIO
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, no se
+    # apago la feature para retirar el valor. Todos los demas nvPairs identicos, In-Sync.
+    #
+    # ESTO RESUELVE removal_semantics PARA ESTA FILA. El template crea un hijo por campo y nunca
+    # llama deleteChildTemplate para OSPF, que es la razon registrada de "unresolved"; medido,
+    # limpiar el nvPair del padre a "" SI retira la linea del hijo.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfTransmitDelay
+    profile_key: ospf_transmit_delay
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # G37 P-transmitdelay: MEDIDO EN VIVO en leaf-A Ethernet1/20, 2026-09-24, NDFC 12.6.0.267 /
+    # NX-OS 10.5(5). El entero publico rechaza "" antes de construir peticion, asi que el valor de
+    # alambre se midio con un POST raw de bulk modify preservante (array de 1 DTO, 70 nvPairs del
+    # readback fresco, solo este campo a ""), respuesta 207 Multi-Status con un unico SUCCESS.
+    #
+    # LA REPRESENTACION DEL READBACK ES STRING VACIO ("3" -> ""), no ausente ni null ni un
+    # default materializado. En el equipo desaparecio `ip ospf transmit-delay 3` y SOBREVIVIO
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, no se
+    # apago la feature para retirar el valor. Todos los demas nvPairs identicos, In-Sync.
+    #
+    # ESTO RESUELVE removal_semantics PARA ESTA FILA. El template crea un hijo por campo y nunca
+    # llama deleteChildTemplate para OSPF, que es la razon registrada de "unresolved"; medido,
+    # limpiar el nvPair del padre a "" SI retira la linea del hijo.
+    reset_wire: ""
+    min: 1
+    max: 450
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfPriority
+    profile_key: ospf_priority
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # G37 P-priority: MEDIDO EN VIVO en leaf-A Ethernet1/20, 2026-09-24, NDFC 12.6.0.267 /
+    # NX-OS 10.5(5). El entero publico rechaza "" antes de construir peticion, asi que el valor de
+    # alambre se midio con un POST raw de bulk modify preservante (array de 1 DTO, 70 nvPairs del
+    # readback fresco, solo este campo a ""), respuesta 207 Multi-Status con un unico SUCCESS.
+    #
+    # LA REPRESENTACION DEL READBACK ES STRING VACIO ("77" -> ""), no ausente ni null ni un
+    # default materializado. En el equipo desaparecio `ip ospf priority 77` y SOBREVIVIO
+    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, no se
+    # apago la feature para retirar el valor. Todos los demas nvPairs identicos, In-Sync.
+    #
+    # ESTO RESUELVE removal_semantics PARA ESTA FILA. El template crea un hijo por campo y nunca
+    # llama deleteChildTemplate para OSPF, que es la razon registrada de "unresolved"; medido,
+    # limpiar el nvPair del padre a "" SI retira la linea del hijo.
+    reset_wire: ""
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfPassiveMode
+    wire_values: {no_change: noChange, passive: passive, no_passive: noPassive}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_passive_mode
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    valid_values: [no_change, passive, no_passive]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    reset_wire: "noChange"   # B3: retiro verificado por omision
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfNetworkType
+    wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_network_type
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    valid_values: [no_change, broadcast, point_to_point]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    reset_wire: "noChange"   # B3: retiro verificado por omision
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfBfdMode
+    wire_values: {no_change: noChange, enable: enable, disable: disable}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_bfd_mode
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, enable, disable]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
