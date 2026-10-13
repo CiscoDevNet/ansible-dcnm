@@ -37,7 +37,7 @@ def lines(result):
 
 
 def cause(serial, stage, reason):
-    return "{0} on {1}: {2} {3} could not be read authoritatively ({4})".format(V.VPC, serial, stage, serial, reason)
+    return "{0} on {1}: {2} {1} could not be read authoritatively ({3})".format(V.VPC, serial, stage, reason)
 
 
 def refused(ctrl, items=None):
