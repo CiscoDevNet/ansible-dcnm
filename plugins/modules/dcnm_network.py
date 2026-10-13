@@ -1322,6 +1322,13 @@ class DcnmNetwork:
         match = (d for d in search if d[key] == value)
         return next(match, None)
 
+    def get_no_deploy_net_names(self):
+        """Return names whose first playbook entry sets deploy: false."""
+        config_by_name = {}
+        for cfg in self.config or []:
+            config_by_name.setdefault(cfg["net_name"], cfg)
+        return {name for name, cfg in config_by_name.items() if cfg.get("deploy") is False}
+
     @staticmethod
     def merge_port_lists(port_lists):
         """
@@ -3469,6 +3476,10 @@ class DcnmNetwork:
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
 
+        diff_attach_by_name = {}
+        for d_attach in diff_attach:
+            diff_attach_by_name.setdefault(d_attach["networkName"], d_attach)
+
         for have_a in self.have_attach:
             r_net_list = []
             h_in_w = False
@@ -3516,29 +3527,22 @@ class DcnmNetwork:
                         r_net_list.append(a_h)
 
             if r_net_list:
-                in_diff = False
-                for d_attach in self.diff_attach:
-                    if have_a["networkName"] == d_attach["networkName"]:
-                        in_diff = True
-                        d_attach["lanAttachList"].extend(r_net_list)
-                        break
-
-                if not in_diff:
+                d_attach = diff_attach_by_name.get(have_a["networkName"])
+                if d_attach is not None:
+                    d_attach["lanAttachList"].extend(r_net_list)
+                else:
                     r_net_dict = {
                         "networkName": have_a["networkName"],
                         "lanAttachList": r_net_list,
                     }
                     diff_attach.append(r_net_dict)
+                    diff_attach_by_name[have_a["networkName"]] = r_net_dict
                     all_nets += have_a["networkName"] + ","
 
         if all_nets:
-            modified_all_nets = copy.deepcopy(all_nets[:-1].split(","))
             # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
-            for net in all_nets[:-1].split(","):
-                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
-                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
-                    modified_all_nets.remove(net)
-            all_nets = ",".join(modified_all_nets)
+            no_deploy_nets = self.get_no_deploy_net_names()
+            all_nets = ",".join(net for net in all_nets[:-1].split(",") if net not in no_deploy_nets)
 
         if not all_nets:
             self.diff_create = diff_create
@@ -3821,11 +3825,8 @@ class DcnmNetwork:
         modified_all_nets = copy.deepcopy(all_nets)
         if all_nets:
             # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
-            for net in all_nets:
-                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
-                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
-                    modified_all_nets.remove(net)
-            modified_all_nets = list(set(modified_all_nets))
+            no_deploy_nets = self.get_no_deploy_net_names()
+            modified_all_nets = list(set(net for net in all_nets if net not in no_deploy_nets))
             final_count = len(modified_all_nets)
 
         if modified_all_nets:
