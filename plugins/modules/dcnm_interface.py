@@ -2745,6 +2745,7 @@ EXAMPLES = """
           - "192.172.1.1"
 """
 
+import collections
 import copy
 import inspect
 import ipaddress
@@ -8955,43 +8956,58 @@ class DcnmIntf:
         A read that cannot be made authoritative is recorded as a problem and as "unreadable"/None, never as absence.
         `causes`: the same failures once per read stage of this peer (no interface names), with the reader's controlled reason, so a
         refusal can name the read that failed without repeating one cause per interface or per member."""
-        snap = {"serial": serial, "problems": [], "causes": [], "summary": {"po": [], "member": [], "vpc": []}, "summary_ok": False,
+        return self.dcnm_intf_pvlan_vpc_read_serial(serial, [(vpc_name, po_name, member)])[(vpc_name.lower(), po_name.lower(), member.lower())]
+
+    def dcnm_intf_pvlan_vpc_read_serial(self, serial, legs):
+        """VPC-READS: the fresh SNAPSHOTS of several legs of ONE peer serial from ONE summary, ONE forced bulk refresh and ONE policy-list
+        read of that serial (all three are switch-wide). `legs`: [(vpc_name, po_name, member)]; returns {(vpc, po, member) lower: snap},
+        each snap exactly as dcnm_intf_pvlan_vpc_read_leg builds it (problems / causes per leg, "unreadable"/None, never absence)."""
+        snaps = {}
+        for vpc_name, po_name, member in legs:
+            snaps[(vpc_name.lower(), po_name.lower(), member.lower())] = {
+                "serial": serial, "problems": [], "causes": [], "summary": {"po": [], "member": [], "vpc": []}, "summary_ok": False,
                 "po": "unreadable", "member": "unreadable", "policies": None}
         if self.dcnm_intf_get_have_all_with_sno(serial):
-            snap["summary_ok"] = True
-            for label, name in (("po", po_name), ("member", member), ("vpc", vpc_name)):
-                for h in self.have_all:
-                    if str(h.get("ifName", "")).lower() != name.lower():
-                        continue
-                    parts = [x.casefold() for x in (self._dcnm_intf_serial_parts(h.get("serialNo", "")) or ())]
-                    if serial.casefold() in parts and (label == "vpc") == (len(parts) == 2):
-                        snap["summary"][label].append(copy.deepcopy(h))
+            for vpc_name, po_name, member in legs:
+                snap = snaps[(vpc_name.lower(), po_name.lower(), member.lower())]
+                snap["summary_ok"] = True
+                for label, name in (("po", po_name), ("member", member), ("vpc", vpc_name)):
+                    for h in self.have_all:
+                        if str(h.get("ifName", "")).lower() != name.lower():
+                            continue
+                        parts = [x.casefold() for x in (self._dcnm_intf_serial_parts(h.get("serialNo", "")) or ())]
+                        if serial.casefold() in parts and (label == "vpc") == (len(parts) == 2):
+                            snap["summary"][label].append(copy.deepcopy(h))
         else:
             cause = "the interface summary of {0} could not be read authoritatively{1}".format(
                 serial, read_reason_suffix(self, "summary", serial))
-            snap["problems"].append(cause)
-            snap["causes"].append(cause)
+            for snap in snaps.values():
+                snap["problems"].append(cause)
+                snap["causes"].append(cause)
         self.dcnm_intf_bulk_fetch_intf_info(serial, refresh=True)
-        for key, name, kind in (("po", po_name, "INTERFACE_PORT_CHANNEL"), ("member", member, "INTERFACE_ETHERNET")):
-            if self.dcnm_intf_detail_unavailable(name, serial):
-                reason = read_reason_suffix(self, "detail", serial)
-                snap["problems"].append("the detail of {0} on {1} could not be read authoritatively{2}".format(name, serial, reason))
-                cause = "the interface detail of {0} could not be read authoritatively{1}".format(serial, reason)
-                if cause not in snap["causes"]:
-                    snap["causes"].append(cause)
-                continue
-            found = self.dcnm_intf_get_intf_info(name, serial, kind)
-            snap[key] = copy.deepcopy(found) if isinstance(found, dict) else None  # None: authoritatively absent
+        for vpc_name, po_name, member in legs:
+            snap = snaps[(vpc_name.lower(), po_name.lower(), member.lower())]
+            for key, name, kind in (("po", po_name, "INTERFACE_PORT_CHANNEL"), ("member", member, "INTERFACE_ETHERNET")):
+                if self.dcnm_intf_detail_unavailable(name, serial):
+                    reason = read_reason_suffix(self, "detail", serial)
+                    snap["problems"].append("the detail of {0} on {1} could not be read authoritatively{2}".format(name, serial, reason))
+                    cause = "the interface detail of {0} could not be read authoritatively{1}".format(serial, reason)
+                    if cause not in snap["causes"]:
+                        snap["causes"].append(cause)
+                    continue
+                found = self.dcnm_intf_get_intf_info(name, serial, kind)
+                snap[key] = copy.deepcopy(found) if isinstance(found, dict) else None  # None: authoritatively absent
         self.pvlan_policies.pop(serial, None)
         policies = self.dcnm_intf_pvlan_read_policies(serial)
-        if policies is None:
-            cause = "the switch policy list of {0} could not be read authoritatively{1}".format(
-                serial, read_reason_suffix(self, "policies", serial))
-            snap["problems"].append(cause)
-            snap["causes"].append(cause)
-        else:
-            snap["policies"] = copy.deepcopy(policies)
-        return snap
+        for snap in snaps.values():
+            if policies is None:
+                cause = "the switch policy list of {0} could not be read authoritatively{1}".format(
+                    serial, read_reason_suffix(self, "policies", serial))
+                snap["problems"].append(cause)
+                snap["causes"].append(cause)
+            else:
+                snap["policies"] = copy.deepcopy(policies)
+        return snaps
 
     @staticmethod
     def dcnm_intf_pvlan_vpc_nv(detail):
@@ -9503,6 +9519,34 @@ class DcnmIntf:
             return "refuse", problems
         return ("converged", []) if all(d == "converged" for d in decisions) else ("deploy", [])
 
+    def dcnm_intf_pvlan_vpc_batch_scope(self, target, items, which):
+        """VPC-BATCH-GATE: ({serial: interface names}, {serial: withdrawn lines}) owned on each PHYSICAL serial by the OTHER PVLAN vPCs
+        that are items of this same deploy batch (`items`, matched by pair serial + vPC name against this run's targets). A target that is
+        registered but not in the batch contributes nothing; names are scoped per serial, never merged across switches. The legs a vPC
+        removes count only in the pre / post gates (they are part of that update); a deleted vPC contributes its children, members and
+        `no interface <child>` only in the delete gate. Membership only stops the pending from being called foreign: each of those
+        vPCs is still judged by its own gate call."""
+        names, withdrawn = {}, {}
+        targets = self.dcnm_intf_pvlan_target_map()
+        own = (target["sno"], target["name"].lower())
+        seen = set()
+        for it in items or []:
+            key = (it.get("serialNumber"), str(it.get("ifName", "")).lower())
+            other = targets.get(key)
+            if key == own or key in seen or not other or other.get("kind") != "vpc":
+                continue
+            seen.add(key)
+            if bool(other.get("deletes")) != (which == "delete"):
+                continue
+            legs = list(self.dcnm_intf_pvlan_vpc_legs(other))
+            if which in ("pre", "post"):
+                legs += list(other.get("removed_legs") or [])
+            for leg in legs:
+                names.setdefault(leg["serial"], set()).update((leg["po_name"].lower(), leg["member"].lower()))
+                if which == "delete":
+                    withdrawn.setdefault(leg["serial"], set()).add("no interface " + leg["po_name"].lower())
+        return names, withdrawn
+
     def dcnm_intf_pvlan_vpc_gate(self, target, items, site, which, after_deploy=False):
         """(decision, problems) for ONE vPC: one fresh forced preview PER PEER (each judged against ITS serial's models, both always
         evaluated), then ONE combined decision (vpc_combine). `which`: "pre" (the current state, no write yet), "post" (the intent just
@@ -9515,6 +9559,9 @@ class DcnmIntf:
         batch = {}
         for it in items or []:
             batch.setdefault(it.get("serialNumber"), set()).add(str(it.get("ifName", "")).lower())
+        # VPC-BATCH-GATE: the other vPCs that are really in THIS batch own their children / members / withdrawn port-channels on each
+        # physical serial; their pending is theirs, not foreign. Each of them is still judged by its own gate call.
+        peer_names, peer_withdrawn = self.dcnm_intf_pvlan_vpc_batch_scope(target, items, which)
         problems, decisions = [], []
         previews = {}
         for leg in legs:
@@ -9528,11 +9575,12 @@ class DcnmIntf:
                 blocks, global_lines = pvlan_split_blocks(entry["pendingConfig"])
                 record["status"] = entry["status"]
                 withdrawn = set(["no interface " + leg["po_name"].lower()]) if which == "delete" else set()
+                withdrawn |= peer_withdrawn.get(sno, set())
                 if [line for line in global_lines if line.lower() not in withdrawn]:
                     problems.append("peer {0} ({1}): pending carries commands outside interface scope".format(leg["index"] + 1, sno))
                 allowed = set(batch.get(sno, set())) | set(
                     name.lower() for peer_leg in legs if peer_leg["serial"] == sno
-                    for name in (peer_leg["po_name"], peer_leg["member"]))
+                    for name in (peer_leg["po_name"], peer_leg["member"])) | peer_names.get(sno, set())
                 outside = sorted(set(blocks) - allowed)
                 if outside:
                     problems.append("peer {0} ({1}): pending exists for interfaces outside this deploy batch: {2}".format(
@@ -9593,24 +9641,87 @@ class DcnmIntf:
             return False
         return pvlan_vpc_response_class(resp, target["sno"], target["name"]) == "accepted"
 
-    def dcnm_intf_pvlan_vpc_verify(self, target):
-        """Bounded, non-mutating readback of a deployed vPC, PER PEER: compliance In-Sync of the child Po and the member, then the
-        intent of the parent, of each child Po and of each member. Any difference on any peer fails the run with a per-peer table."""
-        name, sno, legs = target["name"], target["sno"], self.dcnm_intf_pvlan_vpc_legs(target)
-        observed = {}
+    def dcnm_intf_pvlan_vpc_verify_rounds(self, targets):
+        """VPC-READS: the reads of the post-deploy vPC verification, planned per vPC PAIR and poll round for every vPC target of the call.
+
+        Each round, every pair that is not finished has BOTH of its peer serials read ONCE (summary, forced bulk refresh, policy list:
+        dcnm_intf_pvlan_vpc_read_serial) and the legs of all its vPCs are judged on those same answers. A pair is finished only when every
+        leg of every one of its vPCs is In-Sync and readable IN THE SAME ROUND; until then both serials are re-read, so a converged peer is
+        re-confirmed with its peer and no snapshot of an earlier round replaces a failed or newer read. At most 6 rounds and one 5 s wait
+        between rounds. After the rounds, ONE forced bulk refresh of each pair with a fully readable, In-Sync vPC supplies its parents.
+        Returns {(pair serial, vpc name lower): {"observed": {(serial, member lower): (snap, states)}, "parent": detail or None}} for this
+        call only, keyed by dcnm_intf_pvlan_vpc_plan_key (the same identity as pvlan_targets, so one vPC name on two pairs never shares an
+        entry): nothing is kept for another phase or invocation, and nothing read before the deploy is used."""
+        groups = collections.OrderedDict()
+        for target in targets:
+            groups.setdefault(target["sno"], [])
+            if all(t["name"].lower() != target["name"].lower() for t in groups[target["sno"]]):
+                groups[target["sno"]].append(target)
+        plan = dict((self.dcnm_intf_pvlan_vpc_plan_key(t), {"observed": {}, "parent": None}) for tgts in groups.values() for t in tgts)
+        pending = list(groups)
         for attempt in range(6):
-            observed = {}
-            for leg in legs:
-                snap = self.dcnm_intf_pvlan_vpc_read_leg(leg["serial"], name, leg["po_name"], leg["member"])
-                states = []
-                for label, key in (("child", "po"), ("member", "member")):
-                    entries = snap["summary"][key]
-                    states.append((label, entries[0].get("complianceStatus") if len(entries) == 1 else None))
-                observed[(leg["serial"], leg["member"].lower())] = (snap, states)
-            if all(status == "In-Sync" for _s, states in observed.values() for _l, status in states) and not any(s["problems"] for s, _x in observed.values()):
+            for pair in list(pending):
+                by_serial = collections.OrderedDict()
+                for target in groups[pair]:
+                    for leg in self.dcnm_intf_pvlan_vpc_legs(target):
+                        by_serial.setdefault(leg["serial"], []).append((target["name"], leg["po_name"], leg["member"]))
+                snaps = {}
+                for serial, legs in by_serial.items():
+                    for key, snap in self.dcnm_intf_pvlan_vpc_read_serial(serial, legs).items():
+                        snaps[(serial,) + key] = snap
+                finished = True
+                for target in groups[pair]:
+                    observed = {}
+                    for leg in self.dcnm_intf_pvlan_vpc_legs(target):
+                        snap = snaps[(leg["serial"], target["name"].lower(), leg["po_name"].lower(), leg["member"].lower())]
+                        states = []
+                        for label, key in (("child", "po"), ("member", "member")):
+                            entries = snap["summary"][key]
+                            states.append((label, entries[0].get("complianceStatus") if len(entries) == 1 else None))
+                        observed[(leg["serial"], leg["member"].lower())] = (snap, states)
+                    plan[self.dcnm_intf_pvlan_vpc_plan_key(target)]["observed"] = observed
+                    finished = finished and self.dcnm_intf_pvlan_vpc_observed_ok(observed)
+                if finished:
+                    pending.remove(pair)
+            if not pending:
                 break
             if attempt < 5:
                 time.sleep(5)
+        for pair, tgts in groups.items():
+            ready = [t for t in tgts if self.dcnm_intf_pvlan_vpc_observed_ok(plan[self.dcnm_intf_pvlan_vpc_plan_key(t)]["observed"])]
+            if not ready:
+                continue
+            self.dcnm_intf_bulk_fetch_intf_info(pair, refresh=True)
+            for target in ready:
+                plan[self.dcnm_intf_pvlan_vpc_plan_key(target)]["parent"] = self.dcnm_intf_get_intf_info(target["name"], pair, "INTERFACE_VPC")
+        return plan
+
+    @staticmethod
+    def dcnm_intf_pvlan_vpc_plan_key(target):
+        """Identity of a vPC in the post-deploy plan: its pair serial as registered (the controller's vpc_pair_sn order, never re-sorted)
+        and its name, lower-cased, exactly as the key of pvlan_targets."""
+        return (target["sno"], target["name"].lower())
+
+    @staticmethod
+    def dcnm_intf_pvlan_vpc_observed_ok(observed):
+        return bool(observed) and all(status == "In-Sync" for _s, states in observed.values() for _l, status in states) and not any(
+            s["problems"] for s, _x in observed.values())
+
+    def dcnm_intf_pvlan_vpc_verify(self, target):
+        """Bounded, non-mutating readback of a deployed vPC, PER PEER: compliance In-Sync of the child Po and the member, then the
+        intent of the parent, of each child Po and of each member. Any difference on any peer fails the run with a per-peer table.
+        VPC-READS: the snapshots come from ONE plan (dcnm_intf_pvlan_vpc_verify_rounds) over every vPC of the current
+        dcnm_intf_pvlan_verify_after_deploy call, made when its first vPC is verified and kept only for that call; a vPC verified outside
+        such a call is planned alone. The judgement and its messages are unchanged."""
+        name, sno, legs = target["name"], target["sno"], self.dcnm_intf_pvlan_vpc_legs(target)
+        call = getattr(self, "_pvlan_vpc_call", None)
+        if call is not None and any(t is target for t in call["targets"]):
+            if call["plan"] is None:
+                call["plan"] = self.dcnm_intf_pvlan_vpc_verify_rounds(call["targets"])
+            plan = call["plan"]
+        else:
+            plan = self.dcnm_intf_pvlan_vpc_verify_rounds([target])
+        observed = plan[self.dcnm_intf_pvlan_vpc_plan_key(target)]["observed"]
         table = []
         for leg in legs:
             snap, states = observed[(leg["serial"], leg["member"].lower())]
@@ -9621,12 +9732,12 @@ class DcnmIntf:
             self.module.fail_json(
                 msg="vPC {0} was deployed but not every peer reached In-Sync or could be read back: {1}. No further deployment was sent.".format(
                     name, "; ".join(table)), **self.result)
-        self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
-        detail = self.dcnm_intf_get_intf_info(name, sno, "INTERFACE_VPC")
+        detail = plan[self.dcnm_intf_pvlan_vpc_plan_key(target)]["parent"]
         post_nv = target["post"][1]
         mismatch = []
         if not isinstance(detail, dict) or detail.get("policy") != VPC_HOST_POLICY:
-            mismatch.append("the parent no longer holds {0}".format(VPC_HOST_POLICY))
+            # the parent has no peer: its differences name the PAIR (one vPC name may exist on two pairs)
+            mismatch.append("the parent on {0} no longer holds {1}".format(sno, VPC_HOST_POLICY))
         else:
             have_nv = self.dcnm_intf_pvlan_vpc_nv(detail) or {}
             try:
@@ -9634,10 +9745,10 @@ class DcnmIntf:
                             "PEER1_MEMBER_INTERFACES", "PEER2_MEMBER_INTERFACES", "ASSOCIATION_LIST", "MAPPING_LIST",
                             "PEER1_PVLAN_NATIVE_VLAN", "PEER2_PVLAN_NATIVE_VLAN", "PEER1_PVLAN_ALLOWED_VLANS", "PEER2_PVLAN_ALLOWED_VLANS"):
                     if not pvlan_vpc_same(key, have_nv.get(key, ""), post_nv.get(key, "")):
-                        mismatch.append("parent {0}".format(key))
+                        mismatch.append("parent {0} on {1}".format(key, sno))
                 # DUPLEX (F3): the shared duplex of the parent is read back too (an absent key is the template's `auto`; a null is a mismatch).
                 if not pvlan_vpc_same("PORT_DUPLEX_MODE", have_nv.get("PORT_DUPLEX_MODE", "auto"), post_nv.get("PORT_DUPLEX_MODE", "auto")):
-                    mismatch.append("parent PORT_DUPLEX_MODE")
+                    mismatch.append("parent PORT_DUPLEX_MODE on {0}".format(sno))
             except PvlanError as exc:
                 mismatch.append(str(exc))
         for leg in legs:
@@ -10565,6 +10676,16 @@ class DcnmIntf:
         reached and kept only for this call; every target is still judged here, in item order, with the same checks and messages. vPC
         targets keep their own verifier at their own position."""
         pv = self.dcnm_intf_pvlan_items(items)
+        # VPC-READS: the vPC targets of THIS call; their verifier plans their shared reads once, after the deploy, for this call only.
+        self._pvlan_vpc_call = {"targets": [t for t in (self.pvlan_targets[(i["serialNumber"], str(i["ifName"]).lower())] for i in pv)
+                                            if t.get("kind") == "vpc"], "plan": None}
+        try:
+            self.dcnm_intf_pvlan_verify_after_deploy_items(pv)
+        finally:
+            self._pvlan_vpc_call = None
+
+    def dcnm_intf_pvlan_verify_after_deploy_items(self, pv):
+        """The per-target judgement of dcnm_intf_pvlan_verify_after_deploy, in item order."""
         rounds = None
         for it in pv:
             target = self.pvlan_targets[(it["serialNumber"], str(it["ifName"]).lower())]
