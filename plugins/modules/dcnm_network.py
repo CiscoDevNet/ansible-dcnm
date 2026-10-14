@@ -6217,9 +6217,10 @@ class DcnmNetwork:
         if self.fabric_type in ["multisite_child", "multicluster_child"]:
             return
 
+        have_names = {have["networkName"] for have in self.have_create}
+
         for net in self.want_create:
-            match_have = [have for have in self.have_create if net["networkName"] == have["networkName"]]
-            if match_have:
+            if net["networkName"] in have_names:
                 continue
 
             template_conf = json.loads(net["networkTemplateConfig"])
