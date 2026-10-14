@@ -312,11 +312,22 @@ def test_stray_live_policy_on_an_absent_port_channel_is_refused():
 
 
 # ------------------------------------------------------------------ members: baseline, conflicts, direct mutation (D4)
-def test_member_that_is_not_administratively_down_is_refused():
+@pytest.mark.parametrize("admin", ["", None, "0", "yes", "up"])
+def test_member_whose_administrative_state_is_unknown_is_refused(admin):
+    # ADMIN-UP-JOIN: only an explicit true/false is modeled; absence, null or any other value is never inferred.
     nv = trunk_host_nv(IF7)
-    nv["ADMIN_STATE"] = "true"
-    status, result = run(baseline_ctrl(nv), [po_item()])
-    assert status == "fail" and "administratively down" in result["msg"]
+    nv["ADMIN_STATE"] = admin
+    ctrl = baseline_ctrl(nv)
+    status, result = run(ctrl, [po_item()])
+    assert status == "fail" and "administrative state is unknown" in result["msg"] and ctrl.writes() == [], result
+
+
+def test_member_without_admin_state_is_refused():
+    nv = trunk_host_nv(IF7)
+    nv.pop("ADMIN_STATE")
+    ctrl = baseline_ctrl(nv)
+    status, result = run(ctrl, [po_item()])
+    assert status == "fail" and "administrative state is unknown" in result["msg"] and ctrl.writes() == [], result
 
 
 def test_member_with_freeform_conf_is_refused():

@@ -122,12 +122,12 @@ def test_trunk_secondary_creation_from_the_measured_trunk_member_is_the_known_in
     [
         ("A", "ACCESS_VLAN", "10"),
         ("A", "ENABLE_STORM_CONTROL", "true"),
-        ("A", "ADMIN_STATE", "true"),
+        ("A", "ADMIN_STATE", ""),  # ADMIN-UP-ALL-MODES: "true" now joins; an unknown state is still outside the contract
         ("A", "CONF", "lldp transmit"),
         ("R", "IP", "192.0.2.1"),
         ("R", "INTF_VRF", "blue"),
         ("R", "ospf", "true"),
-        ("R", "ADMIN_STATE", "true"),
+        ("R", "ADMIN_STATE", "yes"),
     ],
 )
 def test_a_prepared_member_with_configuration_outside_the_contract_is_refused_before_any_write(b, key, value):

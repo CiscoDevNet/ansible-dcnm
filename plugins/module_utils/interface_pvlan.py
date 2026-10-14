@@ -2474,6 +2474,21 @@ RELEASED_MEMBER_POLICIES = (TRUNK_HOST_POLICY, PO_ROUTED_BASELINE_POLICY)
 # `no_shut_interface` is configuration that would bring the port up and is refused.
 PO_ROUTED_RELEASE_CHILDREN_UP = frozenset(("routed_interface", "interface_mtu", "no_shut_interface"))
 PO_ROUTED_RELEASE_CHILDREN_DOWN = PO_ROUTED_SELF_CHILDREN
+
+
+def po_routed_member_self_children(nv):
+    """The own child policies a member PREPARED as int_routed_host may hold when it joins, by ITS administrative state: the measured
+    down set (EXP-1: shut_interface) for "false", the measured up set (Q56: no_shut_interface) for "true", nothing otherwise (an unknown
+    state is refused earlier by po_member_baseline_problems). The other state's child is never set aside: it would mean an intent that
+    contradicts the member's own ADMIN_STATE."""
+    admin = str((nv or {}).get("ADMIN_STATE", "")).strip().lower()
+    if admin == "false":
+        return PO_ROUTED_RELEASE_CHILDREN_DOWN
+    if admin == "true":
+        return PO_ROUTED_RELEASE_CHILDREN_UP
+    return frozenset()
+
+
 # The neutral values of every writable nvPair of the MEASURED released int_routed_host (84 keys; GF from the measured routed baseline), minus
 # the keys rendered by _render_routed_released (ADMIN_STATE, MTU, SPEED, DESC, CONF) and the metadata. A released routed member is modeled
 # only while every one of these holds its neutral value; any other value -- an address, VRF, routing protocol, ACL, QoS, freeform -- is
@@ -2601,9 +2616,18 @@ PO_TS_TRUNK_MEMBER_INCIDENT = (
 
 def po_member_baseline_problems(baseline_policy, baseline_nv, mode=None):
     """Reasons an existing Ethernet policy cannot be the baseline of a PVLAN member in this
-    delivery. The member template would turn the port ADMIN-UP when it inherits no `false`.
+    delivery. The host template copies the member's own ADMIN_STATE into the member policy (default "true" when it reads none),
+    and the member template renders `no shutdown` / `shutdown` from it.
     G6: for pvlan_mode trunk secondary ONLY, a member explicitly PREPARED as access or routed is admitted (EXP-1 measured), with
-    its rendering nvPairs neutral; a trunk member is refused as the known incident. The other modes keep the trunk-only contract."""
+    its rendering nvPairs neutral; a trunk member is refused as the known incident. The other modes keep the trunk-only contract.
+    ADMIN-UP-JOIN (MEASURED, NDFC 12.6.0.267 / NX-OS 10.5(5), host mode: a regular Po with the parent down and up, and a vPC with one
+    member per peer): an int_trunk_host member whose ADMIN_STATE is an explicit "true" joins and KEEPS it -- the member policy holds
+    "true", the member pending is `channel-group N force mode M` / `no shutdown`, the running holds no `shutdown`. So an explicit true
+    or false is admitted and each member keeps its own value; a missing, null or other value stays unknown and is refused (never
+    inferred). ADMIN-UP-ALL-MODES (user decision, OFFLINE; first live evidence expected from the user's own tests): the same holds for
+    promiscuous, trunk promiscuous and, on the access/routed bases PREPARED for trunk secondary, for trunk secondary -- the four
+    parent templates copy ADMIN_STATE from int_trunk_host, int_access_host and int_routed_host alike (HOST:399-407, VPC HOST:594-624).
+    The admitted BASE per mode is unchanged: a trunk member stays the trunk secondary incident whatever its admin state."""
     if mode == MODE_TRUNK_SECONDARY:
         if baseline_policy == TRUNK_HOST_POLICY:
             return [PO_TS_TRUNK_MEMBER_INCIDENT]
@@ -2618,10 +2642,12 @@ def po_member_baseline_problems(baseline_policy, baseline_nv, mode=None):
     for key, neutral in _PO_PREPARED_NEUTRAL.get(baseline_policy, ()):
         if str(baseline_nv.get(key, "") if baseline_nv.get(key) is not None else "").strip() not in neutral:
             problems.append("the prepared member carries %s=%r, configuration this contract does not model" % (key, baseline_nv.get(key)))
-    if str(baseline_nv.get("ADMIN_STATE", "")).strip().lower() != "false":
+    admin = baseline_nv.get("ADMIN_STATE")
+    admin = None if admin is None else str(admin).strip().lower()
+    if admin not in ("true", "false"):
         problems.append(
-            "the member is not administratively down (ADMIN_STATE %r); the PVLAN member template inherits "
-            "the member's state and would leave or bring it up" % (baseline_nv.get("ADMIN_STATE"),))
+            "the member's administrative state is unknown (ADMIN_STATE %r); the PVLAN member template inherits it, so only an "
+            "explicit true or false is modeled" % (baseline_nv.get("ADMIN_STATE"),))
     if str(baseline_nv.get("CONF", "") or "").strip():
         problems.append("the member carries freeform CONF, which the member template would drop")
     return problems

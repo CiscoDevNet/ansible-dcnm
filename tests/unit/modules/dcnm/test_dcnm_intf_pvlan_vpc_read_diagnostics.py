@@ -251,14 +251,14 @@ def test_join_names_the_joining_peer_cause_once():
 def test_mixed_po_and_vpc_invocation_keeps_every_refusal_and_names_the_vpc_cause():
     ctrl = V.baseline_ctrl()
     nv = trunk_host_nv("Ethernet1/5")
-    nv["ADMIN_STATE"] = "true"
+    nv["ADMIN_STATE"] = None  # ADMIN-UP-JOIN: "true" now joins; an unknown administrative state is still refused
     ctrl.nodes[SN1]["Ethernet1/5"] = {"policy": TRUNK, "nvPairs": nv}
     ctrl.read_failures.add(SUMMARY + SN2)
     po = {"name": "port-channel50", "type": "pc", "switch": [V.IP1], "deploy": True,
           "profile": {"mode": "pvlan", "pvlan_mode": "host", "members": ["Ethernet1/5"], "admin_state": False,
                       "pvlan_association": [{"primary_vlan": V.PRIMARY, "secondary_vlan": V.SECONDARY}]}}
     got = refused(ctrl, [po, V.vpc_item()])
-    assert any(l.startswith("Ethernet1/5 on %s: the member is not administratively down" % SN1) for l in got)
+    assert any(l.startswith("Ethernet1/5 on %s: the member's administrative state is unknown" % SN1) for l in got)
     assert generic(SN2, M2) <= folded(got)
     assert cause(SN2, "the interface summary of", "HTTP 500 after 3 attempt(s)") in got
     assert not any(l.startswith("%s on %s" % (V.VPC, SN1)) for l in got)

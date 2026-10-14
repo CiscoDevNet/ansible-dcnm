@@ -440,7 +440,7 @@ def test_trunk_secondary_refuses_a_trunk_member_on_one_peer_before_any_write():
 
 @pytest.mark.parametrize(
     "key, value, needle",
-    [("ACCESS_VLAN", "10", "does not model"), ("ADMIN_STATE", "true", "not administratively down"), ("CONF", "lldp transmit", "freeform CONF")],
+    [("ACCESS_VLAN", "10", "does not model"), ("ADMIN_STATE", "", "administrative state is unknown"), ("CONF", "lldp transmit", "freeform CONF")],
 )
 def test_trunk_secondary_refuses_a_prepared_member_outside_the_contract_on_either_peer(key, value, needle):
     ctrl = baseline_ctrl(TS)
