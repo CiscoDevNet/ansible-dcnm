@@ -2585,6 +2585,53 @@ class TestDcnmNetworkModule(TestDcnmModule):
         dcnm_net.module.fail_json.assert_called_once()
         self.run_dcnm_send.assert_not_called()
 
+    def test_dcnm_net_secgw_compat_g5_lifecycle_finalize_scale_scans_have_once(self):
+        """finalize_secondary_gws_compat() skips existing networks via a single
+        pass over have_create, while new networks are still validated."""
+
+        class CountingList(list):
+            iter_count = 0
+
+            def __iter__(self):
+                self.iter_count += 1
+                return super().__iter__()
+
+        count = 3200
+        dcnm_net = self._build_secgw_merged_lifecycle_network(
+            fabric_type="standalone", ndfc_version=self.NDFC_VERSION_COMPATIBLE_MINIMUM
+        )
+        dcnm_net.module.fail_json.side_effect = RuntimeError("fail_json called")
+
+        # Non-prefix gateways would fail validation, so any existing network that is not skipped fails the test.
+        existing = [
+            dcnm_net.update_create_params(
+                self._secgw_merged_config(
+                    net_name=f"net-{i}", secondary_ip_gw1="192.166.88.1/24", secondary_ip_gw4="192.169.88.1/24"
+                )
+            )
+            for i in range(count)
+        ]
+        new = [
+            dcnm_net.update_create_params(self._secgw_merged_config(net_name=f"new-{i}", secondary_ip_gw1="10.0.0.1/24"))
+            for i in range(3)
+        ]
+        existing_templates = [net["networkTemplateConfig"] for net in existing]
+
+        dcnm_net.want_create = existing + new
+        dcnm_net.have_create = CountingList({"networkName": f"net-{i}"} for i in range(count))
+
+        dcnm_net.finalize_secondary_gws_compat()
+
+        dcnm_net.module.fail_json.assert_not_called()
+        self.assertEqual(dcnm_net.have_create.iter_count, 1)
+        self.assertEqual([net["networkTemplateConfig"] for net in existing], existing_templates)
+        for net in new:
+            template = json.loads(net["networkTemplateConfig"])
+            self.assertEqual(
+                json.loads(template["secondaryGWs"]),
+                {"secondaryGWs": [{"gatewayIpAddress": "10.0.0.1/24"}]},
+            )
+
     def test_dcnm_net_secgw_compat_g5_query_update_create_params_never_mutates_or_fails(self):
         """G5-QUERY (architect finding): state: query is read-only and must
         never apply the mutating secondaryGWs capability/prefix policy to
