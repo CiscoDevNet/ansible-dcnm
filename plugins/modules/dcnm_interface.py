@@ -9467,10 +9467,11 @@ class DcnmIntf:
             return "refuse", problems
         return ("converged", []) if all(d == "converged" for d in decisions) else ("deploy", [])
 
-    def dcnm_intf_pvlan_vpc_gate(self, target, items, site, which):
+    def dcnm_intf_pvlan_vpc_gate(self, target, items, site, which, after_deploy=False):
         """(decision, problems) for ONE vPC: one fresh forced preview PER PEER (each judged against ITS serial's models, both always
         evaluated), then ONE combined decision (vpc_combine). `which`: "pre" (the current state, no write yet), "post" (the intent just
-        written/updated) or "delete". A leg that is fine never makes the vPC fine."""
+        written/updated) or "delete". A leg that is fine never makes the vPC fine. `after_deploy`: this vPC's deploy was already sent and
+        accepted in this invocation (check_deploy_resend): a peer it applied may be converged (vpc_combine)."""
         legs = self.dcnm_intf_pvlan_vpc_legs(target)
         # MM-B: the members an update removes are judged too: as existing legs in the prior gate, as releases in the post gate.
         removed = list(target.get("removed_legs") or []) if which in ("pre", "post") else []
@@ -9530,15 +9531,16 @@ class DcnmIntf:
             elif mode == "repeat" and len(set(values)) != 1:
                 per_peer.append("refuse")
                 problems.append("peer {0}: members have inconsistent pre-existing deployment states".format(index + 1))
-            elif mode in ("create", "delete") and len(set(values)) != 1:
+            elif mode in ("create", "delete") and len(set(values)) != 1 and not (after_deploy and mode == "create"):
                 per_peer.append("refuse")
             else:
                 per_peer.append("deploy" if "deploy" in values else "converged")
             if expected is not None:
-                if any(decisions[i] != expected[i] for i in positions):
+                if any(decisions[i] != expected[i] and not (after_deploy and expected[i] == "deploy" and decisions[i] == "converged")
+                       for i in positions):
                     problems.append("peer {0}: a member does not match its expected deployment state".format(index + 1))
                 per_peer_expected.append("deploy" if any(expected[i] == "deploy" for i in positions) else "converged")
-        decision, found = pvlan_vpc_combine(mode, per_peer, per_peer_expected if expected is not None else None)
+        decision, found = pvlan_vpc_combine(mode, per_peer, per_peer_expected if expected is not None else None, after_deploy=after_deploy)
         problems.extend(found)
         if problems and decision != "refuse":
             decision = "refuse"
@@ -10350,7 +10352,7 @@ class DcnmIntf:
             if (it.get("serialNumber"), str(it.get("ifName", "")).lower()) in targets
         ]
 
-    def dcnm_intf_pvlan_deploy_gate(self, items, site, intent_changed):
+    def dcnm_intf_pvlan_deploy_gate(self, items, site, intent_changed, sent=None):
         """Immediately before a deploy attempt: one legacy forced recompute per serial, then one
         decision per PVLAN target from THAT fresh entry (pvlan_assess_target): the device's
         runningConfig, the controller's expectedConfig and the pending block.
@@ -10358,7 +10360,8 @@ class DcnmIntf:
         Returns the items still to deploy: PVLAN targets whose verified convergence makes the
         attempt redundant are dropped; every other item (including non-PVLAN members of the batch)
         is kept in order. Any refusal, outside-target or global pending stops the whole batch with
-        nothing sent. Every call -- primary, resend, status retry -- recomputes again."""
+        nothing sent. Every call -- primary, resend, status retry -- recomputes again. `sent`: the (serial, name) items the primary
+        deploy of this invocation already sent and the controller accepted; only a vPC among them is judged as "after its deploy"."""
         pv_all = self.dcnm_intf_pvlan_items(items)
         if not pv_all:
             return list(items or [])
@@ -10421,7 +10424,8 @@ class DcnmIntf:
         for it in pv_vpc:
             # VPC-HOST-E1-OFFLINE: BOTH peers are previewed and judged before ANY decision, and the vPC gets ONE decision.
             target = self.pvlan_targets[(it["serialNumber"], str(it["ifName"]).lower())]
-            decision, found = self.dcnm_intf_pvlan_vpc_gate(target, items, site, "delete" if target.get("deletes") else "post")
+            after = sent is not None and (it["serialNumber"], str(it["ifName"]).lower()) in sent
+            decision, found = self.dcnm_intf_pvlan_vpc_gate(target, items, site, "delete" if target.get("deletes") else "post", after_deploy=after)
             if decision == "converged":
                 converged.add((it["serialNumber"], target["name"].lower()))
             problems.extend("{0} on {1}: {2}".format(target["name"], target["sno"], f) for f in found)
@@ -13758,7 +13762,8 @@ class DcnmIntf:
             # is skipped because the caller does not require deployment
             # verification anyway.
 
-            resend_items = self.dcnm_intf_pvlan_deploy_gate(self.diff_deploy, "check_deploy_resend", True)
+            sent = set((it.get("serialNumber"), str(it.get("ifName", "")).lower()) for it in deploy_items)
+            resend_items = self.dcnm_intf_pvlan_deploy_gate(self.diff_deploy, "check_deploy_resend", True, sent=sent)
             if resend_items:
                 resp = dcnm_send(self.module, "POST", path, json.dumps(resend_items))
                 self.dcnm_intf_pvlan_deploy_attempt(resend_items, "check_deploy_resend", resp, True)
