@@ -199,8 +199,9 @@ def _peer2_member_owned_by_an_overlay(c):
     ]
 
 
-def _peer2_member_up(c):
-    c.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] = "true"
+def _peer2_member_admin_unknown(c):
+    # ADMIN-UP-JOIN: an explicit "true" now joins (measured); an administrative state that is not an explicit true/false stays a refusal.
+    c.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] = ""
 
 
 def _peer2_member_has_conf(c):
@@ -249,7 +250,7 @@ def _peer2_detail_unreadable(c):
     "prep, needle",
     [
         (_peer2_member_owned_by_an_overlay, "live policies for it"),
-        (_peer2_member_up, "not administratively down"),
+        (_peer2_member_admin_unknown, "administrative state is unknown"),
         (_peer2_member_has_conf, "freeform CONF"),
         (_peer2_member_already_in_a_port_channel, "already a port-channel member"),
         (_peer2_member_absent, "not an existing physical interface"),

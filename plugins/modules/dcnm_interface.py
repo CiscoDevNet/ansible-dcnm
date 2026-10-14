@@ -200,12 +200,20 @@ options:
               adds the listed members to the current ones ('members' may be omitted, and a subset never
               removes a member); 'replaced' states the exact member list, which must be listed
               explicitly (an omitted or empty list is refused, an empty member list is not supported).
-              An added member must qualify as for a creation. A removed member must be administratively
+              An added member must qualify as for a creation. A member qualifies when it is a free port
+              on the base its mode admits (C(int_trunk_host) for host, promiscuous and trunk promiscuous;
+              a prepared access or routed port for trunk secondary) with no freeform commands and an
+              explicit administrative state (ADMIN_STATE true or false). An administratively up member
+              joins and stays up and a down member stays down, each member keeping its own state whatever
+              the port-channel's 'admin_state' (MEASURED for host, parent down and up, on NDFC 12.6.0.267 /
+              NX-OS 10.5(5); NOT LIVE TESTED for promiscuous, trunk promiscuous and trunk secondary, which
+              share the same template inheritance). A missing or unknown state is refused, and the module
+              never changes a member's state. Administratively up does not mean link up or traffic. A removed member must be administratively
               down and is released administratively down before the deployment, as in 'state=deleted';
               removing members needs C(deploy) true, no check mode and a fabric host interface default
               that is administratively down.
-              For 'trunk secondary' the member must ALREADY be prepared as a neutral, administratively
-              down access (int_access_host) or routed (int_routed_host) port; a member in switchport
+              For 'trunk secondary' the member must ALREADY be prepared as a neutral access
+              (int_access_host) or routed (int_routed_host) port, administratively up or down; a member in switchport
               mode trunk is refused (known incident - NX-OS rejects the join) and the module never
               converts a member. 'state=deleted' removes the port-channel and releases its member
               administratively down before the deployment, on the policy the controller releases it
@@ -500,7 +508,7 @@ options:
               that peer, a one-peer PVLAN native/allowed change and a one-peer freeform change), a change
               of C(admin_state) of an existing vPC, C(overridden), check mode for a
               creation or a deletion and NDFC 11. For C(trunk secondary) each member must ALREADY be
-              prepared as a neutral, administratively down access (C(int_access_host)) or routed
+              prepared as a neutral access (C(int_access_host)) or routed
               (C(int_routed_host)) port on BOTH peers; a member in switchport mode trunk is refused
               (known incident - NX-OS rejects the join) and the module never converts a member.
               C(peer1_*) belong to the first switch of C(switch) and C(peer2_*) to the second; both
@@ -508,7 +516,11 @@ options:
               parent; per peer, C(peer1_members) and C(peer2_members) follow the regular port-channel
               rule - C(merged) adds the listed members (an omitted list keeps the current members),
               C(replaced) states the exact member list of each peer, which must be listed explicitly
-              (an omitted or empty list is refused). An added member must qualify as for a creation; a
+              (an omitted or empty list is refused). An added member must qualify as for a creation (as
+              for a regular port-channel; each member keeps its own explicit administrative state, an up
+              member on one peer and a down member on the other are both admitted and each peer is judged
+              on its own serial - MEASURED for host with both members up, NOT LIVE TESTED for the other
+              modes); a
               removed member must be administratively down and is released administratively down on its
               own switch before the deployment (needs C(deploy) true, no check mode and an
               administratively down fabric host interface default). Both peers are validated before anything is deployed and the vPC is reported
@@ -2483,6 +2495,28 @@ EXAMPLES = """
             - primary_vlan: 2210
               secondary_vlan: 2212
 
+- name: Create a port-channel in PVLAN host mode whose member is already administratively up (it joins and stays up)
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    config:
+      - name: po11
+        type: pc
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          mode: pvlan
+          pvlan_mode: host
+          members:
+            - Ethernet1/8               # int_trunk_host with ADMIN_STATE true: no shutdown before or after the join
+          admin_state: false            # the port-channel's own state; it does not change the member's
+          pvlan_association:
+            - primary_vlan: 2210
+              secondary_vlan: 2212
+# To delete po11 later, its member must first be administratively down: the release contract is unchanged and the
+# module never shuts a member itself.
+
 - name: Set companion controls of that port-channel (NOT LIVE TESTED; the LLDP and spanning-tree fields are registered)
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
@@ -2597,7 +2631,7 @@ EXAMPLES = """
           peer1_allowed_vlans: "2301"
           peer2_allowed_vlans: "2301"
 
-- name: Create a vPC in PVLAN trunk secondary mode (both members must ALREADY be prepared as access or routed ports, admin down)
+- name: Create a vPC in PVLAN trunk secondary mode (both members must ALREADY be prepared as access or routed ports; up or down)
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
     state: merged
@@ -2919,7 +2953,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import 
     po_member_canonical as pvlan_po_member_canonical,
     PO_PREPARED_BASELINES as PVLAN_PO_PREPARED_BASELINES,
     PO_ROUTED_BASELINE_POLICY as PVLAN_PO_ROUTED_BASELINE_POLICY,
-    PO_ROUTED_SELF_CHILDREN as PVLAN_PO_ROUTED_SELF_CHILDREN,
+    po_routed_member_self_children as pvlan_po_routed_member_self_children,
     PO_ROUTED_RELEASE_CHILDREN_UP as PVLAN_PO_ROUTED_RELEASE_CHILDREN_UP,
     PO_ROUTED_RELEASE_CHILDREN_DOWN as PVLAN_PO_ROUTED_RELEASE_CHILDREN_DOWN,
     RELEASED_MEMBER_POLICIES as PVLAN_RELEASED_MEMBER_POLICIES,
@@ -7836,7 +7870,7 @@ class DcnmIntf:
           * the detail intent, when it carries POLICY_ID, names that same policyId.
         Missing or malformed evidence is never read as direct ownership.
         G6 `self_children`: template names of live child policies whose source is THIS interface itself, set aside before the
-        one-policy check (the measured children of a routed member, PO_ROUTED_SELF_CHILDREN); any other policy still refuses."""
+        one-policy check (the measured children of a routed member, po_routed_member_self_children); any other policy still refuses."""
         authority = self._dcnm_intf_authority_key(sno)
         if authority not in self.have_all_cached_snos or authority in self.have_all_failed_snos:
             self.dcnm_intf_get_have_all_with_sno(sno)
@@ -8099,7 +8133,7 @@ class DcnmIntf:
                 if not problems:
                     owner = self.dcnm_intf_pvlan_check_ownership(
                         member, sno, m_policy, m_nv,
-                        self_children=PVLAN_PO_ROUTED_SELF_CHILDREN if m_policy == PVLAN_PO_ROUTED_BASELINE_POLICY else frozenset())
+                        self_children=pvlan_po_routed_member_self_children(m_nv) if m_policy == PVLAN_PO_ROUTED_BASELINE_POLICY else frozenset())
                     if owner:
                         problems.append(owner)
             elif not problems:
@@ -8993,9 +9027,10 @@ class DcnmIntf:
             return ["its policy is {0}/{1!r} in the summary, not a direct {2}".format(summary["templateName"], summary["source"], policy)]
         live = self.dcnm_intf_pvlan_vpc_live(snap["policies"], entity=member)
         if policy == PVLAN_PO_ROUTED_BASELINE_POLICY:
-            # G6 (EXP-1 R, MEASURED): a member prepared as routed keeps three child policies whose source is the member itself.
-            live = [p for p in live if not (p.get("templateName") in PVLAN_PO_ROUTED_SELF_CHILDREN
-                                            and str(p.get("source", "")).lower() == member.lower())]
+            # G6 (EXP-1 R, MEASURED): a member prepared as routed keeps three child policies whose source is the member itself; which
+            # admin child (shut/no_shut) follows the member's own ADMIN_STATE (ADMIN-UP-ALL-MODES).
+            own = pvlan_po_routed_member_self_children(nv)
+            live = [p for p in live if not (p.get("templateName") in own and str(p.get("source", "")).lower() == member.lower())]
         if len(live) != 1:
             return ["the switch policy list holds {0} live policies for it ({1})".format(
                 len(live), ", ".join(sorted("{0}/{1}".format(p.get("templateName"), p.get("source")) for p in live)))]
