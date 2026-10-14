@@ -9393,16 +9393,8 @@ class DcnmIntf:
         if creates:
             return "create"
         if deploying and resumes:
-            # STAGED: the saved creation must still be pending on BOTH peers, coherent with this request, with nothing foreign; then deploy it.
-            decision, found = self.dcnm_intf_pvlan_vpc_gate(target, [], "prior", "post")
-            if decision != "deploy":
-                for reason in found or ["the saved creation is not pending on both peers"]:
-                    self.dcnm_intf_pvlan_block(name, sno, reason)
-                return "done"
-            target["prior"] = decision
-            delem = {"serialNumber": sno, "ifName": name, "fabricName": self.fabric}
-            self.diff_deploy.append(delem)
-            self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+            # STAGED: the saved creation is judged and its deploy queued in the preflight (dcnm_intf_pvlan_vpc_resume_gates), once every
+            # saved vPC this request completes is registered: their pending is then this request's own, not foreign.
             return "done"
         if deploying:
             # Pre-write gate: the CURRENT state of BOTH peers must be coherent before an update or a repetition acts on it. This is where a
@@ -9434,6 +9426,23 @@ class DcnmIntf:
             self.diff_deploy.append(delem)
             self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
         return "done"
+
+    def dcnm_intf_pvlan_vpc_resume_gates(self):
+        """STAGED + VPC-BATCH-GATE: the pre-write check of every saved vPC this request completes (deploy true on a saved creation).
+        Each must still be pending on BOTH peers, coherent with this request, with nothing foreign. The pending of the OTHER saved vPCs
+        completed by this same request is theirs (dcnm_intf_pvlan_vpc_batch_scope); a saved vPC that is not in the request stays
+        foreign. Only then is the deploy queued; nothing is rewritten."""
+        resumed = [t for t in self.dcnm_intf_pvlan_target_map().values() if t.get("kind") == "vpc" and t.get("resumes")]
+        items = [{"serialNumber": t["sno"], "ifName": t["name"], "fabricName": self.fabric} for t in resumed]
+        for target, delem in zip(resumed, items):
+            decision, found = self.dcnm_intf_pvlan_vpc_gate(target, items, "prior", "post")
+            if decision != "deploy":
+                for reason in found or ["the saved creation is not pending on both peers"]:
+                    self.dcnm_intf_pvlan_block(target["name"], target["sno"], reason)
+                continue
+            target["prior"] = decision
+            self.diff_deploy.append(delem)
+            self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
 
     @staticmethod
     def dcnm_intf_pvlan_vpc_saved_creation(snaps):
@@ -10353,6 +10362,7 @@ class DcnmIntf:
         self.dcnm_intf_pvlan_po_register_deletes()
         self.dcnm_intf_pvlan_vpc_register_deletes()
         self.dcnm_intf_pvlan_register_other_targets()
+        self.dcnm_intf_pvlan_vpc_resume_gates()
         if self.pvlan_targets and self.dcnm_version != 12:
             self.dcnm_intf_pvlan_block("*", "*", "native PVLAN requires NDFC 12")
         for target in self.pvlan_targets.values():
