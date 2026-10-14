@@ -98,7 +98,7 @@ def test_summary_http_status_names_peer_stage_and_status_only_for_that_peer():
     assert not any(SN2 in l for l in got)
 
 
-def test_summary_entry_without_deleteReason_on_a_foreign_port_names_the_entry_and_field():
+def test_summary_entry_without_markDeleted_on_a_foreign_port_names_the_entry_and_field():
     ctrl = V.baseline_ctrl()
     ctrl.nodes[SN1]["Ethernet1/40"] = {"policy": TRUNK, "nvPairs": trunk_host_nv("Ethernet1/40")}
     orig = ctrl._peer_summary
@@ -107,14 +107,14 @@ def test_summary_entry_without_deleteReason_on_a_foreign_port_names_the_entry_an
         out = orig(serial)
         for e in out:
             if serial == SN1 and e["ifName"] == "Ethernet1/40":
-                e.pop("deleteReason")
+                e.pop("markDeleted")
                 e["alias"] = CANARY
         return out
 
     ctrl._peer_summary = summary
     got = refused(ctrl)
     assert generic(SN1, M1) <= folded(got)
-    assert cause(SN1, "the interface summary of", "entry 0: field deleteReason missing") in got
+    assert cause(SN1, "the interface summary of", "entry 0: field markDeleted missing") in got
 
 
 def test_bulk_record_without_nvPairs_names_the_record_once_per_peer():

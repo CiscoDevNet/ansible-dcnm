@@ -7334,7 +7334,6 @@ class DcnmIntf:
             ("field isPhysical missing", present("isPhysical")),
             ("field markDeleted missing", present("markDeleted")),
             ("field alias missing", present("alias")),
-            ("field deleteReason missing", present("deleteReason")),
             ("field complianceStatus missing or empty", nonempty_str("complianceStatus")),
             ("field underlayPolicies missing", present("underlayPolicies")),
         )
@@ -12355,6 +12354,14 @@ class DcnmIntf:
                 and (str(have["isPhysical"]).lower() == "true")
             ):
 
+                # deleteReason is consumed only here, and only when an alias makes the decision depend on it.
+                # An absent key (not null) is insufficient information: refuse during planning, before anything is sent.
+                if have["alias"] != "" and "deleteReason" not in have:
+                    self.module.fail_json(
+                        msg="Interface {0} on {1} has an alias but the controller did not provide deleteReason, "
+                        "so it cannot be decided whether the interface may be reset or deleted. Refusing to "
+                        "reset or delete it; no change was sent.".format(name, sno)
+                    )
                 if have["alias"] != "" and have["deleteReason"] is not None:
                     self.changed_dict[0]["skipped"].append(
                         {
@@ -12819,7 +12826,7 @@ class DcnmIntf:
                                         {
                                             "Name": have_intf,
                                             "Alias": have.get("alias"),
-                                            "Delete Reason": have["deleteReason"],
+                                            "Delete Reason": have["deleteReason"] if "deleteReason" in have else "not provided by controller",
                                         }
                                     )
                                     continue
