@@ -195,3 +195,87 @@ def test_b_an_identical_repetition_with_check_deploy_writes_nothing():
     status, result = run(ctrl, [V.vpc_item()])
     assert status == "exit" and result["changed"] is False, result.get("msg")
     assert ctrl.writes() == []
+
+
+# ================================================================== A: deploy false, then deploy true
+@pytest.mark.parametrize("state", ["merged", "replaced"])
+@pytest.mark.parametrize("form", ["down", "up"])
+def test_a_a_saved_vpc_is_completed_by_the_next_deploy_true(form, state):
+    ctrl = saved_not_applied(form, state)
+    create, converged = FORMS[form]
+    queue(ctrl, create, create, converged)  # pre-write check of the saved creation, deploy gate, resend check
+    status, result = run(ctrl, [V.vpc_item()], state=state)
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert ctrl.creates() == [] and ctrl.modifies() == [] and len(ctrl.deploys()) == 1, "no intent rewrite, exactly one deploy"
+    assert [d["ifName"] for d in json.loads(ctrl.deploys()[0][2])] == ["vPC10"]
+    sites = [(g["site"], g["targets"]["vPC10"]) for g in result["pvlan_gate"]]
+    assert sites == [("prior", "deploy")] * 2 + [("deploy", "deploy")] * 2 + [("check_deploy_resend", "converged")] * 2
+    # the next identical run is a no-op on a deployed baseline
+    ctrl.next_invocation()
+    ctrl.calls = []
+    queue(ctrl, converged)
+    status, result = run(ctrl, [V.vpc_item()], state=state)
+    assert status == "exit" and result["changed"] is False and ctrl.writes() == [], result.get("msg")
+
+
+def test_a_without_check_deploy_the_saved_vpc_is_deployed_once():
+    ctrl = saved_not_applied("down")
+    queue(ctrl, down_create, down_create)
+    status, result = run(ctrl, [V.vpc_item()], check_deploy=False)
+    assert status == "exit" and len(ctrl.deploys()) == 1 and ctrl.creates() == [] and ctrl.modifies() == [], result.get("msg")
+
+
+def test_a_a_repeated_deploy_false_writes_nothing():
+    ctrl = saved_not_applied("down")
+    status, result = run(ctrl, [V.vpc_item(deploy=False)], check_deploy=False)
+    assert status == "exit" and result["changed"] is False and ctrl.writes() == [], result.get("msg")
+
+
+def test_a_foreign_pending_on_a_peer_refuses_before_any_write():
+    ctrl = saved_not_applied("down")
+    queue(ctrl, down_create, down_create, down_converged)
+    ctrl.vpc_previews[V.SN1][0]["DATA"][0]["pendingConfig"] += ["interface port-channel99", "  description foreign", "configure terminal"]
+    status, result = run(ctrl, [V.vpc_item()])
+    assert status == "fail" and ctrl.writes() == [], result.get("msg")
+    assert "outside this deploy batch: port-channel99" in result["msg"]
+
+
+def test_a_one_peer_already_applied_is_a_partial_state_and_refused():
+    ctrl = saved_not_applied("down")
+    ctrl.vpc_previews[V.SN1] = [down_converged(V.SN1)]
+    ctrl.vpc_previews[V.SN2] = [down_create(V.SN2)]
+    status, result = run(ctrl, [V.vpc_item()])
+    assert status == "fail" and ctrl.writes() == [], result.get("msg")
+    assert "peer 1 is already converged" in result["msg"]
+
+
+def test_a_an_unreadable_peer_preview_refuses_before_any_write():
+    ctrl = saved_not_applied("down")
+    queue(ctrl, down_create)
+    ctrl.vpc_previews[V.SN2][0] = {"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": {}}
+    status, result = run(ctrl, [V.vpc_item()])
+    assert status == "fail" and ctrl.writes() == [], result.get("msg")
+
+
+def test_a_a_pending_that_shuts_an_up_member_is_refused_before_any_write():
+    ctrl = saved_not_applied("up")
+    queue(ctrl, up_create)
+    UP.shut_the_member({"pending": ctrl.vpc_previews[V.SN1][0]["DATA"][0]["pendingConfig"]})  # the same list, changed in place
+    status, result = run(ctrl, [V.vpc_item()])
+    assert status == "fail" and ctrl.writes() == [], result.get("msg")
+
+
+def test_a_a_changed_request_on_a_saved_vpc_stays_refused_before_any_write():
+    ctrl = saved_not_applied("down")
+    queue(ctrl, down_create)
+    status, result = run(ctrl, [V.vpc_item(peer1_description="changed")])
+    assert status == "fail" and ctrl.writes() == [], result.get("msg")
+
+
+def test_a_the_controller_parent_deployed_but_peers_not_converged_is_not_a_saved_creation():
+    # the parent already reports a compliance value: the vPC was deployed once; a missing Po on the device is a drift, not a creation
+    ctrl = saved_not_applied("down")
+    ctrl.applied = True
+    queue(ctrl, down_create)
+    status, result = run(ctrl, [V.vpc_item()])
+    assert status == "fail" and ctrl.writes() == [], result.get("msg")

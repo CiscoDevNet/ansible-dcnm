@@ -9333,6 +9333,15 @@ class DcnmIntf:
             leg["post_po"], leg["post_member"] = po_post, mem_post
             leg["expect"] = "deploy" if leg["joining"] or pvlan_vpc_leg_cli_changes(
                 (leg["pre_po"], leg["pre_member"]), (po_post, mem_post)) else "converged"
+        # STAGED (Beta live S3b/S3d): a vPC created with deploy false and repeated unchanged with deploy true is a SAVED CREATION, not a
+        # deployed baseline. It is recognised only from the controller's own state (dcnm_intf_pvlan_vpc_saved_creation); each leg is then
+        # judged exactly as a creation (the child Po absent from the device, the member joining from a standalone trunk host) and the vPC
+        # gets the creation rule: BOTH peers must still need the deploy. Nothing is rewritten; only the deploy is sent.
+        resumes = (not creates and not result["update"] and str(deploy).lower() == "true"
+                   and self.dcnm_intf_pvlan_vpc_saved_creation(snaps))
+        if resumes:
+            for leg in legs:
+                leg["pre_po"], leg["pre_member"], leg["joining"] = (None, None), (PVLAN_TRUNK_HOST_POLICY, {}), True
         # PLAN-2 C1: the member template's own precondition for a LACP rate change (member admin down), on BOTH peers; never forced.
         lacp_problems = [(leg["member"], leg["serial"], m) for leg in legs for m in pvlan_member_lacp_rate_problems(
             leg["member"], leg["pre_member"][1], leg["post_member"][1], not leg["joining"])]
@@ -9360,13 +9369,25 @@ class DcnmIntf:
             "name": name, "sno": sno, "kind": "vpc", "creates": creates, "update": result["update"], "deletes": False,
             "pre": (have_policy, copy.deepcopy(have_nv)) if have_policy else (None, None),
             "post": (VPC_HOST_POLICY, copy.deepcopy(new_nv)), "new_secondaries": result.get("new_secondaries") or [], "members": [],
-            "legs": legs, "prior": None, "removed_legs": [] if creates else removed_legs,
+            "legs": legs, "prior": None, "removed_legs": [] if creates else removed_legs, "resumes": resumes,
         }
         self.pvlan_targets[(sno, name.lower())] = target
         want["interfaces"][0]["nvPairs"] = new_nv
         deploying = str(deploy).lower() == "true"
         if creates:
             return "create"
+        if deploying and resumes:
+            # STAGED: the saved creation must still be pending on BOTH peers, coherent with this request, with nothing foreign; then deploy it.
+            decision, found = self.dcnm_intf_pvlan_vpc_gate(target, [], "prior", "post")
+            if decision != "deploy":
+                for reason in found or ["the saved creation is not pending on both peers"]:
+                    self.dcnm_intf_pvlan_block(name, sno, reason)
+                return "done"
+            target["prior"] = decision
+            delem = {"serialNumber": sno, "ifName": name, "fabricName": self.fabric}
+            self.diff_deploy.append(delem)
+            self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+            return "done"
         if deploying:
             # Pre-write gate: the CURRENT state of BOTH peers must be coherent before an update or a repetition acts on it. This is where a
             # pre-existing partial state (one peer applied, the other not) is rejected -- before any modify.
@@ -9397,6 +9418,21 @@ class DcnmIntf:
             self.diff_deploy.append(delem)
             self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
         return "done"
+
+    @staticmethod
+    def dcnm_intf_pvlan_vpc_saved_creation(snaps):
+        """True when the controller lists this vPC's parent, on EVERY peer's authoritative summary, exactly once and with complianceStatus
+        present and null: the MEASURED shape of a vPC whose intent was saved and never deployed (NDFC 12.6.0.267, Beta S1/S3b). A peer that
+        reports any compliance value, a missing or duplicated parent, or an unreadable summary is not a saved creation."""
+        if not snaps:
+            return False
+        for snap in snaps:
+            parents = snap["summary"]["vpc"]
+            if snap["problems"] or not snap["summary_ok"] or len(parents) != 1:
+                return False
+            if "complianceStatus" not in parents[0] or parents[0]["complianceStatus"] is not None:
+                return False
+        return True
 
     def dcnm_intf_pvlan_vpc_leg_decision(self, leg, entry, blocks, which):
         """(decision, problems) of ONE peer from ONE fresh preview entry: the child Po and the member, each against its own model."""
@@ -9515,7 +9551,7 @@ class DcnmIntf:
             mode = "repeat"
         elif target.get("deletes"):
             mode = "delete"
-        elif target["creates"]:
+        elif target["creates"] or target.get("resumes"):
             mode = "create"
         else:
             mode = "update"
