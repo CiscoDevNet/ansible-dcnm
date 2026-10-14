@@ -7323,6 +7323,20 @@ class DcnmIntf:
         def present(field):
             return lambda item: field in item
 
+        def compliance_reported(item):
+            # NDFC reports a logical vPC parent that has not been deployed yet (composite serial) with the key present and
+            # null: measured live on 12.6.0.267. Only that shape is accepted without a value. Absent, empty or non-string
+            # values, and null on any other entry, are still rejected. The null is stored untouched and is never In-Sync, so
+            # every consumer that waits for or acts on convergence keeps comparing against "In-Sync" and does not proceed.
+            if nonempty_str("complianceStatus")(item):
+                return True
+            return (
+                item.get("ifType") == "INTERFACE_VPC"
+                and "complianceStatus" in item
+                and item["complianceStatus"] is None
+                and len(self._dcnm_intf_serial_parts(item["serialNo"])) == 2
+            )
+
         entry_checks = (
             ("field ifName missing or empty", nonempty_str("ifName")),
             ("field serialNo missing or empty", nonempty_str("serialNo")),
@@ -7334,7 +7348,7 @@ class DcnmIntf:
             ("field isPhysical missing", present("isPhysical")),
             ("field markDeleted missing", present("markDeleted")),
             ("field alias missing", present("alias")),
-            ("field complianceStatus missing or empty", nonempty_str("complianceStatus")),
+            ("field complianceStatus missing or empty", compliance_reported),
             ("field underlayPolicies missing", present("underlayPolicies")),
         )
 
