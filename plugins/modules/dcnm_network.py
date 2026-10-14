@@ -1280,48 +1280,6 @@ class DcnmNetwork:
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
-    @staticmethod
-    def find_dict_in_list_by_key_value(search: list, key: str, value: str):
-        """
-        # Summary
-
-        Find a dictionary in a list of dictionaries.
-
-
-        ## Raises
-
-        None
-
-        ## Parameters
-
-        -   search: A list of dict
-        -   key: The key to lookup in each dict
-        -   value: The desired matching value for key
-
-        ## Returns
-
-        Either the first matching dict or None
-
-        ## Usage
-
-        ```python
-        content = [{"foo": "bar"}, {"foo": "baz"}]
-
-        match = find_dict_in_list_by_key_value(search=content, key="foo", value="baz")
-        print(f"{match}")
-        # -> {"foo": "baz"}
-
-        match = find_dict_in_list_by_key_value(search=content, key="foo", value="bingo")
-        print(f"{match}")
-        # -> None
-        ```
-        """
-        if search is None:
-            return None
-
-        match = (d for d in search if d[key] == value)
-        return next(match, None)
-
     def get_no_deploy_net_names(self):
         """Return names whose first playbook entry sets deploy: false."""
         config_by_name = {}
@@ -3476,12 +3434,12 @@ class DcnmNetwork:
         diff_deploy = self.diff_deploy
 
         diff_attach_by_name = {}
-        for d_attach in diff_attach:
-            diff_attach_by_name.setdefault(d_attach["networkName"], d_attach)
+        for entry in diff_attach:
+            diff_attach_by_name.setdefault(entry["networkName"], entry)
         want_create_names = {net["networkName"] for net in self.want_create}
         want_attach_by_name = {}
-        for want_a in self.want_attach:
-            want_attach_by_name.setdefault(want_a["networkName"], want_a)
+        for entry in self.want_attach:
+            want_attach_by_name.setdefault(entry["networkName"], entry)
 
         for have_a in self.have_attach:
             r_net_list = []
