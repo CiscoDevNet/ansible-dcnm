@@ -10,7 +10,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
 import json
 from unittest.mock import patch
 
@@ -98,6 +97,7 @@ def _run(state, modes, managable=None, pair_extra=None):
     case = _Case(methodName="runTest")
     case.setUp()
     set_module_args({"state": state, "fabric": FABRIC, "config": []})
+    result = None
     try:
         with patch.object(module, "get_fabric_inventory_details", return_value=inventory), \
                 patch.object(module, "get_ip_sn_dict", return_value=(ip_sn, hn_sn)), \
@@ -109,6 +109,8 @@ def _run(state, modes, managable=None, pair_extra=None):
                 module.main()
             except (AnsibleExitJson, AnsibleFailJson) as exc:
                 result = exc.args[0]
+            else:
+                raise AssertionError("module did not exit through Ansible")
     finally:
         case.tearDown()
     return result, calls
