@@ -142,7 +142,9 @@ class ActionModule(ActionBase):
     def _entry_differences(self, want, nvpairs, ignore_fields):
         """Differences between the requested nvPairs and ONE readback entry ({} when every requested value matches)."""
         have = dict((k, v) for k, v in nvpairs.items() if k not in ignore_fields)
-        diff = process_deepdiff(DeepDiff(want, have), keys_to_ignore=ignore_fields, ignore_extra_fields=True)
+        # The expectation is a few requested nvPairs; the readback is the full template. DeepDiff >= 8 would report the two
+        # dicts as one change at 'root' when they share few keys (threshold_to_diff_deeper, default 0.33); 0 keeps it per key.
+        diff = process_deepdiff(DeepDiff(want, have, threshold_to_diff_deeper=0), keys_to_ignore=ignore_fields, ignore_extra_fields=True)
         entry = {}
         if not diff:
             return entry
