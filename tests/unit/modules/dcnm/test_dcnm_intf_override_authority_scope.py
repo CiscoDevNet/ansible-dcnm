@@ -116,6 +116,13 @@ def _stub(have_all):
     # serial, so the fetch is never reached.
     s.ip_sn = {"192.0.2.10": SERIAL}
     s.dcnm_intf_get_have_all = mock.Mock()
+    # The SUMMARY of this switch was read (have_all above is its outcome); only the interface DETAIL failed. The sweep
+    # now requires that summary authority for every switch it covers, so the stub states it like the detail sets above.
+    s.have_all_cached_snos = {SERIAL}
+    s.have_all_failed_snos = set()
+    s.dcnm_intf_require_summary_authority = types.MethodType(
+        DcnmIntf.dcnm_intf_require_summary_authority, s
+    )
 
     # A no-op: the authority sets above already express the outcome this fetch would have had,
     # so the real one would only overwrite the condition under test.
@@ -218,3 +225,15 @@ def test_readable_switch_sweeps_without_the_gate_firing():
 
     assert stub.module.fail_json.call_count == 0
     assert stub.changed_dict[0]["deleted"], "an unwanted port-channel should be deleted"
+
+
+def test_unreadable_summary_refuses_the_sweep_even_when_have_all_is_empty():
+    """The summary itself could not be read: have_all is empty for this switch, so no gate inside the walk could fire.
+    The sweep must refuse on the summary authority before planning any mutation."""
+    stub = _stub([])
+    stub.have_all_cached_snos = set()
+    stub.have_all_failed_snos = {SERIAL}
+    with pytest.raises(_FailJson):
+        _run(stub)
+    assert "summary" in str(stub.module.fail_json.call_args)
+    assert stub.diff_replace == [] and stub.diff_deploy == []

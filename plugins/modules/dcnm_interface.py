@@ -12266,6 +12266,12 @@ class DcnmIntf:
                     for d in self.have_all
                 ):
                     self.dcnm_intf_get_have_all(address)
+            # Without a config block the summary IS the scope of the sweep: a switch whose summary could not
+            # be read authoritatively contributes no interface, and the run would end as a successful no-op
+            # over state it never saw (or sweep only the readable switches). Refuse during planning, before
+            # any configuration or deployment request; a valid empty summary still passes.
+            for address in self.ip_sn.keys():
+                self.dcnm_intf_require_summary_authority(self.ip_sn[address])
         else:
             # compute have_all for every switch included in 'cfg'.
             # 'deploy' flag will be picked from 'cfg' in case of state 'deleted' and from
