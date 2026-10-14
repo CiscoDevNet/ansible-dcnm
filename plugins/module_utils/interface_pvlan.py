@@ -3867,9 +3867,11 @@ def vpc_leg_cli_changes(pre_models, post_models):
     return False
 
 
-def vpc_combine(mode, decisions, expected=None):
+def vpc_combine(mode, decisions, expected=None, after_deploy=False):
     """The decision for a whole vPC from the per-leg decisions ("deploy"/"converged"/"refuse"), never from one leg.
-    Returns (decision, problems). `mode`:
+    Returns (decision, problems). `after_deploy`: the deploy of THIS create/update was already sent and accepted in this invocation (the
+    check_deploy safety re-deploy check); a peer that deploy applied is then "converged" and one it did not apply yet still needs "deploy",
+    while for an update a peer predicted "converged" must still be converged. `mode`:
       create  every leg must be "deploy": a leg already converged is a state this request does not explain;
       update  each leg must show exactly what the models predict (`expected`, per leg, from the PREVIOUS and NEW models), so a
               leg that legitimately has no CLI change may stay converged while the other deploys;
@@ -3881,6 +3883,16 @@ def vpc_combine(mode, decisions, expected=None):
     bad = [i for i, d in enumerate(decisions) if d not in ("deploy", "converged")]
     if bad:
         return "refuse", ["peer %d: the gate did not accept the leg (%s)" % (i + 1, decisions[i]) for i in bad]
+    if after_deploy and mode == "create":
+        return ("deploy" if "deploy" in decisions else "converged"), []
+    if after_deploy and mode == "update":
+        if expected is None or len(expected) != 2:
+            return "refuse", ["no expected result per peer was derived from the previous and new models"]
+        off = [i for i in (0, 1) if decisions[i] != expected[i] and not (expected[i] == "deploy" and decisions[i] == "converged")]
+        if off:
+            return "refuse", ["peer %d shows %s after the deploy but this update predicts %s; the difference is not explained by the request"
+                              % (i + 1, decisions[i], expected[i]) for i in off]
+        return ("deploy" if "deploy" in decisions else "converged"), []
     if mode in ("create", "delete"):
         off = [i for i, d in enumerate(decisions) if d != "deploy"]
         if off:
