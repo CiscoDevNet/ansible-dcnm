@@ -795,10 +795,11 @@ def test_interface_summary_malformed_or_failed_is_unavailable(response):
     "isPhysical",
     "markDeleted",
     "alias",
-    "deleteReason",
     "complianceStatus",
     "underlayPolicies",
 ])
+# deleteReason is deliberately absent from this list: it is checked where a decision consumes it, not on every entry
+# (see test_dcnm_intf_deletereason_scoped.py).
 def test_interface_summary_rejects_missing_mutation_field(missing):
     s = _stub()
     item = _summary()
