@@ -4115,12 +4115,6 @@ class DcnmIntf:
                                     msg="Interface {0}: mode 'pvlan' on a port-channel (int_port_channel_pvlan_host) "
                                     "is not implemented for this controller version. No change was sent.".format(ifname)
                                 )
-                            if self.module.params["state"] == "overridden":
-                                self.module.fail_json(
-                                    msg="Interface {0}: state '{1}' is not implemented for a port-channel in mode "
-                                    "'pvlan'; 'merged', 'replaced' and 'deleted' (of the port-channel itself) "
-                                    "are. No change was sent.".format(ifname, self.module.params["state"])
-                                )
                         if (
                             pol_ind_str == "eth_pvlan"
                             and pol_ind_str not in self.pol_types[self.dcnm_version]
@@ -4132,11 +4126,6 @@ class DcnmIntf:
 
                         if pol_ind_str == "vpc_pvlan":
                             # VPC-HOST-E1-OFFLINE: one request per vPC, bound to the two serials of its pair.
-                            if self.module.params["state"] == "overridden":
-                                self.module.fail_json(
-                                    msg="Interface {0}: state 'overridden' is not implemented for a vPC in mode 'pvlan'; 'merged', "
-                                    "'replaced' and 'deleted' (of the vPC itself) are. No change was sent.".format(ifname)
-                                )
                             if len(cfg["switch"]) != 2 or len(set(cfg["switch"])) != 2:
                                 self.module.fail_json(
                                     msg="Interface {0}: a vPC in mode 'pvlan' needs exactly the two switches of its vPC pair in `switch`; "
@@ -8422,8 +8411,10 @@ class DcnmIntf:
         G4 (architect decision B): after the mark-delete and BEFORE any deploy, dcnm_intf_pvlan_po_release_members()
         proves the released member's ownership afresh and, when needed, sets ONLY its ADMIN_STATE to "false" with its
         complete writable nvPairs (legacy interface/modify, per-item outcome, readback). The released member's expected
-        state stays PO_RELEASED_MEMBER_NV; the pre-deploy gate and the post-deploy readback verify it."""
-        if self.module.params.get("state") != "deleted":
+        state stays PO_RELEASED_MEMBER_NV; the pre-deploy gate and the post-deploy readback verify it.
+        LIFECYCLE-A: an `overridden` sweep puts every PVLAN port-channel of its scope that the request no longer wants in the SAME
+        diff_delete list, so it is registered here exactly like a named deletion (same preconditions, same release path)."""
+        if self.module.params.get("state") not in ("deleted", "overridden"):
             return
         deploys = set(
             (d.get("serialNumber"), str(d.get("ifName", "")).lower()) for g in self.diff_delete_deploy for d in (g or []))
@@ -8496,10 +8487,51 @@ class DcnmIntf:
                 }
                 # Never the generic deferred default (a sparse seven-key payload, deployed separately): G4 corrects the
                 # released member itself, with its complete nvPairs, before the parent's deletion is deployed.
-                self.deferred_delete_member_defaults = [
-                    d for d in (self.deferred_delete_member_defaults or [])
-                    if (d.get("serialNumber"), str(d.get("ifName", "")).lower()) not in set(
-                        (sno, m["name"].lower()) for m in members)]
+                self.dcnm_intf_pvlan_drop_generic_member_resets(set((sno, m["name"].lower()) for m in members))
+
+    def dcnm_intf_pvlan_learn_pair(self, pair):
+        """LIFECYCLE-A: the pair identity of a vPC deletion found by an `overridden` sweep. A named vPC teaches the module its pair while the
+        playbook is translated (vpcpair_serial_number); a vPC that only the sweep found does not, and then every later summary re-read of a
+        peer kept the pair's OLD entries (the post-deploy verification saw a deleted vPC as still listed). The pair is confirmed by the same
+        controller lookup for each peer, never assumed from the summary alone. Returns the problems (empty when the pair is known)."""
+        parts = self._dcnm_intf_serial_parts(pair) or ()
+        if len(parts) != 2:
+            return ["the vPC identity {0!r} is not a pair of serials".format(pair)]
+        problems = []
+        for part in parts:
+            ips = [ip for ip, sn in self.ip_sn.items() if str(sn).casefold() == part.casefold()]
+            if len(ips) != 1:
+                problems.append("peer {0} of the vPC is not exactly one switch of the fabric inventory".format(part))
+                continue
+            known = self.vpc_ip_sn.get(ips[0])
+            if known is None:
+                known = self.dcnm_intf_get_vpc_serial_number(ips[0])
+            if self._dcnm_intf_authority_key(known or "") is None or \
+                    self._dcnm_intf_authority_key(known).casefold() != self._dcnm_intf_authority_key(pair).casefold():
+                problems.append("the controller's vPC pair of {0} ({1!r}) is not {2}".format(part, known, pair))
+                continue
+            self.vpc_ip_sn[ips[0]] = known
+        return problems
+
+    def dcnm_intf_pvlan_drop_generic_member_resets(self, released):
+        """The members a REGISTERED PVLAN deletion releases (and corrects) itself never also get the generic default reset: neither the
+        `deleted` deferred list nor -- LIFECYCLE-A -- the reset/deploy the `overridden` sweep queues inline for a member whose source is
+        a deleted port-channel/vPC. `released` = {(serial, ifName lower)}. Any other entry is left untouched."""
+        def kept(item):
+            return (item.get("serialNumber"), str(item.get("ifName", "")).lower()) not in released
+
+        self.deferred_delete_member_defaults = [d for d in (self.deferred_delete_member_defaults or []) if kept(d)]
+        replace = []
+        for payload in self.diff_replace or []:
+            intfs = [i for i in payload.get("interfaces", []) if kept(i)]
+            if intfs:
+                payload["interfaces"] = intfs
+                replace.append(payload)
+        self.diff_replace = replace
+        self.diff_deploy = [d for d in (self.diff_deploy or []) if kept(d)]
+        changed = self.changed_dict[0]
+        changed["replaced"] = [p for p in changed.get("replaced", []) if all(kept(i) for i in p.get("interfaces", [p]))]
+        changed["deploy"] = [d for d in changed.get("deploy", []) if kept(d)]
 
     def dcnm_intf_pvlan_po_member_claims(self, member, sno, po_name):
         """Reason the member's live policies are not exactly the PVLAN port-channel's (H1 measured shape: one
@@ -9781,8 +9813,9 @@ class DcnmIntf:
           * deploy is requested, not check mode, and the fabric releases host interfaces administratively down.
         The release is verified against the explicit contract (a direct int_trunk_host, shut, no CONF, the documented model), never
         against a configuration this run did not read. E5: the mark-delete releases each member ADMIN_STATE "true" (MEASURED, L1-E4 live), so the
-        module writes ONE legacy modify per member with only ADMIN_STATE "false" BEFORE the deploy (dcnm_intf_pvlan_vpc_release_members)."""
-        if self.module.params.get("state") != "deleted":
+        module writes ONE legacy modify per member with only ADMIN_STATE "false" BEFORE the deploy (dcnm_intf_pvlan_vpc_release_members).
+        LIFECYCLE-A: also the vPCs an `overridden` sweep queued for deletion (identity = pair serial + name, as in a named deletion)."""
+        if self.module.params.get("state") not in ("deleted", "overridden"):
             return
         deploys = set((d.get("serialNumber"), str(d.get("ifName", "")).lower()) for g in self.diff_delete_deploy for d in (g or []))
         for group in self.diff_delete:
@@ -9795,7 +9828,7 @@ class DcnmIntf:
                 if not isinstance(detail, dict) or detail.get("policy") != VPC_HOST_POLICY:
                     continue  # not a PVLAN vPC: the generic deletion is unchanged
                 nv = self.dcnm_intf_pvlan_vpc_nv(detail)
-                problems = []
+                problems = list(self.dcnm_intf_pvlan_learn_pair(sno))
                 if nv is None:
                     problems.append("the controller returned no nvPairs for the vPC")
                     nv = {}
@@ -9860,10 +9893,7 @@ class DcnmIntf:
                     "wire_name": self.dcnm_intf_pvlan_detail_ifname(detail, name),
                     "frozen": {"parent": name, "serial": sno, "legs": [(leg["serial"], leg["member"]) for leg in legs]},
                 }
-                released = set((leg["serial"], leg["member"].lower()) for leg in legs)
-                self.deferred_delete_member_defaults = [
-                    d for d in (self.deferred_delete_member_defaults or [])
-                    if (d.get("serialNumber"), str(d.get("ifName", "")).lower()) not in released]
+                self.dcnm_intf_pvlan_drop_generic_member_resets(set((leg["serial"], leg["member"].lower()) for leg in legs))
 
     # ================================================================ VPC-HOST-E4-G6: deletion = confirmed mark-delete + released members
     # The regular-Po steps of G4/G4-R1 (ONE confirmed mark-delete, then the released member kept administratively DOWN before any deploy) are
@@ -12504,6 +12534,14 @@ class DcnmIntf:
                 deploy = cfg[0].get("deploy")
             for config in cfg:
                 self.dcnm_intf_process_config(config)
+            if self.module.params["state"] == "overridden":
+                # LIFECYCLE-A: the switches of the request ARE the scope of this sweep, exactly as every switch is for an empty
+                # config: an unreadable summary would make every interface of that switch look absent, so nothing outside the request
+                # would be reset or deleted there and the run would report success over state it never saw. Refuse during planning.
+                for config in cfg:
+                    for sw in config.get("switch") or []:
+                        if sw in self.ip_sn:
+                            self.dcnm_intf_require_summary_authority(self.ip_sn[sw])
 
         del_list = []
         defer_list = []
@@ -12538,12 +12576,20 @@ class DcnmIntf:
 
         self.dcnm_intf_build_can_be_replaced_lookups()
 
+        # LIFECYCLE-A: each peer's summary of a vPC pair lists the pair's own entries (the vPC parent, serial "S1~S2"), so a sweep over
+        # both peers met the same vPC twice and queued it twice for deletion and deploy. One identity (serial or pair + name) is
+        # decided once; nothing else changes.
+        swept = set()
         for have in self.have_all:
 
             delem = {}
             name = have["ifName"]
             sno = have["serialNo"]
             fabric = have["fabricName"]
+            identity = (str(self._dcnm_intf_authority_key(sno) or sno).casefold(), str(name).lower(), fabric)
+            if identity in swept:
+                continue
+            swept.add(identity)
 
             # Check if this interface type is to be overridden.
             if self.module.params["override_intf_types"] != []:

@@ -254,13 +254,8 @@ def test_missing_required_fields_are_refused():
         assert status == "fail", drop
 
 
-# G1 (scope change): `deleted` of the port-channel itself is implemented (test_dcnm_intf_pvlan_po_g1.py); `overridden`
-# stays refused.
-@pytest.mark.parametrize("state", ["overridden"])
-def test_states_not_implemented_for_a_pvlan_port_channel(state):
-    ctrl = created_ctrl()
-    status, result = run(ctrl, [po_item()], state=state)
-    assert status == "fail" and "not implemented" in result["msg"] and ctrl.writes() == []
+# G1 (scope change): `deleted` of the port-channel itself is implemented (test_dcnm_intf_pvlan_po_g1.py). LIFECYCLE-A: `overridden`
+# is implemented too (test_dcnm_intf_pvlan_lifecycle.py: retained, extra and last port-channel of the sweep).
 
 
 def test_ndfc11_gets_an_explicit_error_without_claiming_impossibility():
