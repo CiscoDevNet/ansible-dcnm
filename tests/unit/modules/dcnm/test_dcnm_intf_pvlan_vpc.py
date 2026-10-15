@@ -164,7 +164,7 @@ def test_out_of_scope_requests_are_refused_before_any_write(profile, needle):
 @pytest.mark.parametrize(
     "kw, needle",
     [
-        ({"state": "overridden"}, "not implemented for a vPC in mode 'pvlan'"),
+        # LIFECYCLE-A: `overridden` is implemented (test_dcnm_intf_pvlan_lifecycle.py)
         ({"check_mode": True}, "refused in check mode"),
         ({"version": (11, "11.5.4")}, "not a supported vPC mode"),
     ],
