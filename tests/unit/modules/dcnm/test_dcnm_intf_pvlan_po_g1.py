@@ -477,12 +477,14 @@ def test_pr_deletion_preconditions_refuse_before_any_write(prep, needle, kw):
     assert status == "fail" and needle in result["msg"] and ctrl.writes() == []
 
 
-def test_pr_deletion_without_deploy_is_refused():
+def test_pr_deletion_without_deploy_is_saved_and_never_deployed():
+    # LIFECYCLE-B (was: refused): deploy false SAVES the deletion (mark-delete, member release, gate on the fresh pending) and never
+    # deploys. The never-deployed harness Po leaves no pending, so the gate's verdict here is not the point: no deploy request is.
     ctrl = created("promiscuous", ["switchport private-vlan mapping 2210 2212"], pvlan_mapping=MAP_2212)
     d = del_item()
     d["deploy"] = False
-    status, result = run(ctrl, [d], state="deleted")
-    assert status == "fail" and "without deploy" in result["msg"] and ctrl.writes() == []
+    run(ctrl, [d], state="deleted")
+    assert len(ctrl.markdeletes()) == 1 and ctrl.deploys() == []
 
 
 def test_deleting_a_non_pvlan_port_channel_is_unchanged():

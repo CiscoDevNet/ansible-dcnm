@@ -1493,6 +1493,24 @@ def interface_stanza(lines, name):
     return count, body
 
 
+def running_po_members(lines, po_number):
+    """LIFECYCLE-B: (members, pc_mode) of port-channel `po_number` as the DEVICE holds it: every physical interface stanza of a running
+    configuration whose body carries the persisted `channel-group N` (pc_mode "on") or `channel-group N mode M` line for that number.
+    Names are returned as the running configuration spells them; pc_mode is None when no member, or the members disagree."""
+    pattern = re.compile(r"^channel-group %s(?: mode (active|passive))?$" % re.escape(str(po_number)))
+    members, modes, current = [], set(), None
+    for line in lines or []:
+        if not line.startswith(" "):
+            m = re.match(r"^interface (\S+)$", line.strip(), re.I)
+            current = m.group(1) if m and m.group(1).lower().startswith("ethernet") else None
+            continue
+        hit = pattern.match(line.strip()) if current else None
+        if hit and current not in members:
+            members.append(current)
+            modes.add(hit.group(1) or "on")
+    return sorted(members, key=str.lower), (modes.pop() if len(modes) == 1 else None)
+
+
 def cli_model(body, vocabulary=None):
     """Model of an interface from device (runningConfig) or controller (expectedConfig) CLI.
 
