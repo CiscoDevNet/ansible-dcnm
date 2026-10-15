@@ -8622,8 +8622,8 @@ class DcnmIntf:
         items = [{"serialNumber": t["sno"], "ifName": t["name"], "fabricName": self.fabric} for t in saved]
         self.dcnm_intf_pvlan_deploy_gate(items, "update_saved", True)
         for t in saved:
-            removed = [m["name"] for m in t.get("removed") or []] or ["{0} on peer {1}".format(r["member"], r["index"] + 1)
-                                                                         for r in t.get("removed_legs") or []]
+            removed = [m["name"] for m in t.get("removed") or []]
+            removed = removed or ["{0} on peer {1}".format(r["member"], r["index"] + 1) for r in t.get("removed_legs") or []]
             self.result.setdefault("pvlan_saved", []).append({
                 "kind": t.get("kind"), "name": t["name"], "serial": t["sno"], "operation": "remove member", "members": removed,
                 "state": "saved: membership updated, removed members released administratively down, pending validated; NOT deployed",

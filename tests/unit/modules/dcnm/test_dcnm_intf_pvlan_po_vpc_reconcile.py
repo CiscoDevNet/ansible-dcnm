@@ -230,7 +230,7 @@ def test_po_deletion_with_deploy_false_is_saved_member_corrected_pending_gated_a
 
 
 def test_a_saved_deletion_repeated_with_deploy_false_writes_nothing_and_stays_reported_pending():
-    ctrl, _ = po_saved_ctrl()
+    ctrl = po_saved_ctrl()[0]
     ctrl.previews = [G5.corrected_hr_preview()]
     calls = len(ctrl.calls)
     status, result = run(ctrl, [{"name": "po502", "switch": [SWITCH_IP], "deploy": False}], state="deleted")
@@ -242,7 +242,7 @@ def test_a_saved_deletion_repeated_with_deploy_false_writes_nothing_and_stays_re
 @pytest.mark.parametrize("state, config", [("deleted", [{"name": "po502", "switch": [SWITCH_IP], "deploy": True}]),
                                            ("overridden", [lo(SWITCH_IP)])])
 def test_a_saved_deletion_is_completed_and_verified_by_a_later_deploy_true_request_without_a_second_mark_delete(state, config):
-    ctrl, _ = po_saved_ctrl()
+    ctrl = po_saved_ctrl()[0]
     ctrl.previews = [G5.corrected_hr_preview(), G5.corrected_hr_preview()]
     calls = len(ctrl.calls)
     status, result = run(ctrl, config, state=state)
@@ -261,7 +261,7 @@ def test_a_saved_deletion_whose_pending_would_bring_the_member_up_never_deploys(
 
 
 def test_a_saved_deletion_whose_preview_cannot_be_read_is_refused_before_any_write():
-    ctrl, _ = po_saved_ctrl()
+    ctrl = po_saved_ctrl()[0]
     ctrl.read_failures = {"/config-preview/"}
     calls = len(ctrl.calls)
     status, result = run(ctrl, [{"name": "po502", "switch": [SWITCH_IP], "deploy": True}], state="deleted")
@@ -314,7 +314,7 @@ def test_vpc_deletion_with_deploy_false_is_saved_on_both_peers_and_never_deploye
 
 @pytest.mark.parametrize("deploy, expected_writes", [(False, []), (True, ["globalInterface/deploy"])])
 def test_a_saved_vpc_deletion_is_read_from_both_peers_by_the_next_process(deploy, expected_writes):
-    ctrl, _ = vpc_saved_ctrl()
+    ctrl = vpc_saved_ctrl()[0]
     vpc_queue(ctrl, 2)
     ctrl.next_invocation()
     calls = len(ctrl.calls)
@@ -325,7 +325,7 @@ def test_a_saved_vpc_deletion_is_read_from_both_peers_by_the_next_process(deploy
 
 
 def test_a_vpc_deletion_marked_on_one_peer_only_is_refused_with_that_diagnosis():
-    ctrl, _ = vpc_saved_ctrl()
+    ctrl = vpc_saved_ctrl()[0]
     ctrl.summary_extra[V.SN2] = []  # the second peer no longer lists its marked child: applied on one peer only
     vpc_queue(ctrl, 2)
     ctrl.next_invocation()
