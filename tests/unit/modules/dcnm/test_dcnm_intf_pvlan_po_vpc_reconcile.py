@@ -342,3 +342,51 @@ def test_overridden_with_deploy_false_saves_the_dropped_vpc():
     status, result = with_args(V, V.run_vpc, ctrl, [lo(V.IP1, deploy=False)], {"deploy": False}, state="overridden")
     assert status == "exit", result.get("msg")
     assert "globalInterface/deploy" not in writes(ctrl) and len(ctrl.markdeletes()) == 1
+
+
+# ================================================================== NaC PR895 argument shapes (fixtures/nac_pr895_pvlan_args.json)
+import copy  # noqa: E402
+import os  # noqa: E402
+
+NAC = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "nac_pr895_pvlan_args.json")))
+
+
+def nac_po(members, deploy=False):
+    """The rendered NaC PR895 PVLAN Po entry (types and keys as NaC sends them) on the harness names: switch, name and members only."""
+    e = copy.deepcopy([x for x in NAC["create_pvlan"] if x["type"] == "pc"][0])
+    e.update(name="po10", switch=[SWITCH_IP], deploy=deploy)
+    e["profile"]["members"] = list(members)
+    return e
+
+
+def nac_vpc(deploy=False):
+    e = copy.deepcopy([x for x in NAC["create_pvlan"] if x["type"] == "vpc"][0])
+    e.update(name="vpc10", switch=[V.IP1, V.IP2], deploy=deploy)
+    e["profile"].update(peer1_members=[V.M1], peer2_members=[V.M2], peer1_pcid=10, peer2_pcid=10, peer1_description="", peer2_description="")
+    return e
+
+
+def test_nac_rendered_po_member_removal_in_the_create_phase_is_saved():
+    # NaC create phase: state replaced, the rendered entry with deploy false and one member fewer.
+    # The port-channel already carries NaC's rendered description (intent and device), as after NaC created it.
+    desc = "NetAsCode PVLAN Port-Channel Interface"
+    ctrl = measured_po(MU.seeded())
+    ctrl.detail[MU.H.PO]["nvPairs"]["DESC"] = desc
+    pv = MU.fragments(kept=(MU.E7,), removed_trunk=(MU.E9,))
+    for key in ("runningConfig", "expectedConfig"):
+        lines = pv["DATA"][0][key]
+        i = lines.index("interface port-channel10")
+        pv["DATA"][0][key] = lines[:i + 1] + ["  description " + desc] + lines[i + 1:]
+    ctrl.previews = [pv]
+    entry = nac_po([MU.E7])
+    status, result = run(ctrl, [entry], state="replaced")
+    assert status == "exit", result.get("msg")
+    assert ctrl.deploys() == [] and len(ctrl.member_modifies()) == 1
+    assert any(r["operation"] == "remove member" for r in result.get("pvlan_saved", []))
+
+
+def test_nac_rendered_vpc_kept_by_the_full_run_overridden_is_accepted_without_writes():
+    ctrl = vpc_ctrl()
+    V.converged_previews(ctrl)
+    status, result = V.run_vpc(ctrl, [nac_vpc()], state="overridden")
+    assert status == "exit" and writes(ctrl) == [], result.get("msg")
