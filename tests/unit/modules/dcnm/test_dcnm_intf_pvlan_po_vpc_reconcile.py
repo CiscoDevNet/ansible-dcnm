@@ -207,3 +207,138 @@ def test_vpc_dropped_with_an_up_member_on_one_peer_keeps_the_release_contract():
     V.delete_previews(ctrl)
     status, result = V.run_vpc(ctrl, [lo(V.IP1)], state="overridden")
     assert status == "fail" and "not administratively down" in result["msg"] and writes(ctrl) == [], result.get("msg")
+
+
+# ================================================================== B: deploy false saves; a later process completes from controller state
+from . import test_dcnm_intf_pvlan_po_g5_next_modes as G5  # noqa: E402
+
+
+def po_saved_ctrl():
+    """The DEPLOYED-Po release harness (G4R1 measured marked-for-deletion listing) after a deletion saved with deploy false."""
+    ctrl = measured_po(G5.hr_ctrl([G5.corrected_hr_preview()]))
+    status, result = run(ctrl, [{"name": "po502", "switch": [SWITCH_IP], "deploy": False}], state="deleted")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    return ctrl, result
+
+
+def test_po_deletion_with_deploy_false_is_saved_member_corrected_pending_gated_and_never_deployed():
+    ctrl, result = po_saved_ctrl()
+    assert writes(ctrl) == ["interface/markdelete", "interface/modify"], "no deployment request at all"
+    assert ctrl.marked is not None and ctrl.detail[G5.MEM_10]["nvPairs"]["ADMIN_STATE"] == "false"
+    assert [r["operation"] for r in result["pvlan_saved"]] == ["delete"] and "NOT deployed" in result["pvlan_saved"][0]["state"]
+    assert [g["site"] for g in result["pvlan_gate"]] == ["delete_saved"]
+
+
+def test_a_saved_deletion_repeated_with_deploy_false_writes_nothing_and_stays_reported_pending():
+    ctrl, _ = po_saved_ctrl()
+    ctrl.previews = [G5.corrected_hr_preview()]
+    calls = len(ctrl.calls)
+    status, result = run(ctrl, [{"name": "po502", "switch": [SWITCH_IP], "deploy": False}], state="deleted")
+    assert status == "exit" and result["changed"] is False, result.get("msg")
+    assert writes(type("C", (), {"calls": ctrl.calls[calls:]})) == []
+    assert "awaiting deployment" in result["pvlan_saved"][0]["state"], "pending, never reported as done"
+
+
+@pytest.mark.parametrize("state, config", [("deleted", [{"name": "po502", "switch": [SWITCH_IP], "deploy": True}]),
+                                           ("overridden", [lo(SWITCH_IP)])])
+def test_a_saved_deletion_is_completed_and_verified_by_a_later_deploy_true_request_without_a_second_mark_delete(state, config):
+    ctrl, _ = po_saved_ctrl()
+    ctrl.previews = [G5.corrected_hr_preview(), G5.corrected_hr_preview()]
+    calls = len(ctrl.calls)
+    status, result = run(ctrl, config, state=state)
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    later = writes(type("C", (), {"calls": ctrl.calls[calls:]}))
+    assert later[0] == "globalInterface/deploy" and "interface/markdelete" not in later and "interface/modify" not in later
+    assert ctrl.marked is None and G5.PO_502 not in ctrl.detail
+    assert any(r.get("state") == "completing the saved deletion" for r in result["pvlan_saved"])
+
+
+def test_a_saved_deletion_whose_pending_would_bring_the_member_up_never_deploys():
+    ctrl = measured_po(G5.hr_ctrl([{"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": [G5.g4r1_entry("HR-post")]}]))
+    status, result = run(ctrl, [{"name": "po502", "switch": [SWITCH_IP], "deploy": False}], state="deleted")
+    assert status == "fail" and "'no shutdown'" in result["msg"] and "ALREADY changed" in result["msg"], result.get("msg")
+    assert "globalInterface/deploy" not in writes(ctrl)
+
+
+def test_a_saved_deletion_whose_preview_cannot_be_read_is_refused_before_any_write():
+    ctrl, _ = po_saved_ctrl()
+    ctrl.read_failures = {"/config-preview/"}
+    calls = len(ctrl.calls)
+    status, result = run(ctrl, [{"name": "po502", "switch": [SWITCH_IP], "deploy": True}], state="deleted")
+    assert status == "fail" and "cannot be classified" in result["msg"], result.get("msg")
+    assert writes(type("C", (), {"calls": ctrl.calls[calls:]})) == []
+
+
+def test_member_removal_saved_with_deploy_false_is_completed_by_a_later_deploy_true_repetition():
+    ctrl = measured_po(MU.seeded())
+    ctrl.previews = [MU.fragments(kept=(MU.E7,), removed_trunk=(MU.E9,))]
+    status, result = run(ctrl, [MU.item([MU.E7], deploy=False)], state="replaced")
+    assert status == "exit" and ctrl.deploys() == [] and len(ctrl.member_modifies()) == 1, result.get("msg")
+    ctrl.next_invocation()
+    base = ctrl._summary_list
+
+    def pending_until_deploy():
+        out = base()
+        for entry in out:
+            if entry["ifName"] == MU.H.PO and not ctrl.deployed:
+                entry["complianceStatus"] = "Out-of-Sync"  # the saved removal keeps the port-channel pending until its deploy
+        return out
+
+    ctrl._summary_list = pending_until_deploy
+    ctrl.previews = [MU.fragments(kept=(MU.E7,), removed_trunk=(MU.E9,))]
+    status, result = run(ctrl, [MU.item([MU.E7], deploy=True)], state="replaced")
+    assert status == "exit" and len(ctrl.deploys()) == 1 and len(ctrl.member_modifies()) == 1, result.get("msg")
+    assert any(r.get("state") == "completing the saved removal" for r in result["pvlan_saved"])
+
+
+def vpc_queue(ctrl, n):
+    for serial, port in ((V.SN1, V.M1), (V.SN2, V.M2)):
+        ctrl.vpc_previews[serial] = [V.delete_preview(serial, port) for _i in range(n)]
+
+
+def vpc_saved_ctrl():
+    ctrl = vpc_ctrl()
+    ctrl.children_marked_deleted = True  # MEASURED (L1-E4 live F): the children stay listed, marked, until the deploy
+    vpc_queue(ctrl, 1)
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item(deploy=False)], state="deleted")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    return ctrl, result
+
+
+def test_vpc_deletion_with_deploy_false_is_saved_on_both_peers_and_never_deployed():
+    ctrl, result = vpc_saved_ctrl()
+    assert writes(ctrl) == ["interface/markdelete", "interface/modify", "interface/modify"]
+    assert all(ctrl.nodes[s][p]["nvPairs"]["ADMIN_STATE"] == "false" for s, p in ((V.SN1, V.M1), (V.SN2, V.M2)))
+    assert result["pvlan_saved"][0]["kind"] == "vpc"
+
+
+@pytest.mark.parametrize("deploy, expected_writes", [(False, []), (True, ["globalInterface/deploy"])])
+def test_a_saved_vpc_deletion_is_read_from_both_peers_by_the_next_process(deploy, expected_writes):
+    ctrl, _ = vpc_saved_ctrl()
+    vpc_queue(ctrl, 2)
+    ctrl.next_invocation()
+    calls = len(ctrl.calls)
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item(deploy=deploy)], state="deleted")
+    assert status == "exit", result.get("msg")
+    assert writes(type("C", (), {"calls": ctrl.calls[calls:]})) == expected_writes
+    assert sorted(ctrl.previews_asked()[-4:] if deploy else ctrl.previews_asked()[-2:])[0] == V.SN1
+
+
+def test_a_vpc_deletion_marked_on_one_peer_only_is_refused_with_that_diagnosis():
+    ctrl, _ = vpc_saved_ctrl()
+    ctrl.summary_extra[V.SN2] = []  # the second peer no longer lists its marked child: applied on one peer only
+    vpc_queue(ctrl, 2)
+    ctrl.next_invocation()
+    calls = len(ctrl.calls)
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item()], state="deleted")
+    assert status == "fail" and "applied on one peer only" in result["msg"], result.get("msg")
+    assert writes(type("C", (), {"calls": ctrl.calls[calls:]})) == []
+
+
+def test_overridden_with_deploy_false_saves_the_dropped_vpc():
+    ctrl = vpc_ctrl()
+    ctrl.children_marked_deleted = True
+    vpc_queue(ctrl, 1)
+    status, result = with_args(V, V.run_vpc, ctrl, [lo(V.IP1, deploy=False)], {"deploy": False}, state="overridden")
+    assert status == "exit", result.get("msg")
+    assert "globalInterface/deploy" not in writes(ctrl) and len(ctrl.markdeletes()) == 1

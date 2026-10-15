@@ -261,10 +261,16 @@ def test_an_unsafe_member_to_remove_is_refused_before_any_write(change, needle):
     assert status == "fail" and needle in result["msg"] and ctrl.writes() == [], result.get("msg")
 
 
-def test_removal_without_deploy_is_refused_before_any_write():
+def test_removal_without_deploy_is_saved_released_and_never_deployed():
+    # LIFECYCLE-B (was: refused): deploy false SAVES the removal -- the parent's modify, the removed member released administratively
+    # down, the pending validated by the pre-deploy gate -- and sends no deployment request.
     ctrl = seeded()
+    ctrl.previews = [fragments(kept=(E7,), removed_trunk=(E9,))]
     status, result = run(ctrl, item([E7], deploy=False), "replaced")
-    assert status == "fail" and "without deploy is not implemented" in result["msg"] and ctrl.writes() == [], result.get("msg")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert len(ctrl.po_modifies()) == 1 and len(ctrl.member_modifies()) == 1 and ctrl.deploys() == []
+    assert ctrl.detail[E9]["nvPairs"]["ADMIN_STATE"] == "false"
+    assert [r["operation"] for r in result["pvlan_saved"]] == ["remove member"]
 
 
 @pytest.mark.parametrize("policy, needle", [(H.PO_MEMBER, "already a port-channel member"), ("int_access_host", "is not covered")])

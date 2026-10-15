@@ -810,7 +810,7 @@ def test_deletion_preconditions_judge_the_current_state_of_both_peers_and_refuse
 @pytest.mark.parametrize(
     "kw, item_kw, needle",
     [
-        ({}, {"deploy": False}, "without deploy is not implemented"),
+        # LIFECYCLE-B: deploy false now SAVES the deletion (test_dcnm_intf_pvlan_po_vpc_reconcile.py)
         ({"check_mode": True}, {}, "refused in check mode"),
         ({"fabric_admin": "true"}, {}, "HOST_INTF_ADMIN_STATE"),
     ],
