@@ -191,8 +191,11 @@ options:
               the four PVLAN modes, update of the PVLAN lists ('merged' adds to the current list,
               'replaced' states the complete model) and of 'pc_mode', 'description', 'admin_state',
               'native_vlan' and 'allowed_vlans' without changing 'pvlan_mode', a change of the member
-              list, and the identical repetition. Refused before any change is sent - ranges, vPC, a
-              'pvlan_mode' change, 'overridden', and removing secondaries from a 'promiscuous' mapping
+              list, the identical repetition and 'overridden' (a kept port-channel follows 'replaced'; a
+              PVLAN port-channel of the sweep's scope that the request no longer wants is deleted through
+              the same path and contract as 'state=deleted'; switch scope and override_intf_types are those
+              of the generic sweep; NOT LIVE TESTED). Refused before any change is sent - ranges, vPC, a
+              'pvlan_mode' change, and removing secondaries from a 'promiscuous' mapping
               that keeps others (protection kept from the measured Ethernet defect). Fields for this mode are 'pvlan_mode', 'pvlan_association' (host,
               trunk secondary), 'pvlan_mapping' (promiscuous, trunk promiscuous), 'native_vlan' and
               'allowed_vlans' (trunk modes), 'members', 'pc_mode', 'description' and 'admin_state'.
@@ -210,8 +213,15 @@ options:
               share the same template inheritance). A missing or unknown state is refused, and the module
               never changes a member's state. Administratively up does not mean link up or traffic. A removed member must be administratively
               down and is released administratively down before the deployment, as in 'state=deleted';
-              removing members needs C(deploy) true, no check mode and a fabric host interface default
-              that is administratively down.
+              removing members needs no check mode and a fabric host interface default that is
+              administratively down. With C(deploy) false a member removal or a deletion is SAVED - the
+              modify or mark-delete, the released member corrected administratively down and the pending
+              validated by the pre-deploy gate, with no deployment request (result C(pvlan_saved)); a later
+              request with C(deploy) true, in any process, recognises the saved operation from the
+              controller's state only (the marked-for-deletion listing, the device's running configuration
+              and the released member), deploys and verifies it without a second mark-delete, and the
+              same request with C(deploy) false writes nothing and reports it still pending (NOT LIVE
+              TESTED).
               For 'trunk secondary' the member must ALREADY be prepared as a neutral access
               (int_access_host) or routed (int_routed_host) port, administratively up or down; a member in switchport
               mode trunk is refused (known incident - NX-OS rejects the join) and the module never
@@ -506,8 +516,10 @@ options:
               from the measured Ethernet defect), any other update that reaches only
               one peer (including a description change of one peer together with a member change of
               that peer, a one-peer PVLAN native/allowed change and a one-peer freeform change), a change
-              of C(admin_state) of an existing vPC, C(overridden), check mode for a
-              creation or a deletion and NDFC 11. For C(trunk secondary) each member must ALREADY be
+              of C(admin_state) of an existing vPC, check mode for a
+              creation or a deletion and NDFC 11. C(overridden) keeps a requested vPC as C(replaced) and
+              deletes a PVLAN vPC of the sweep's scope that the request no longer wants through the
+              deletion path (one decision per pair and name; NOT LIVE TESTED). For C(trunk secondary) each member must ALREADY be
               prepared as a neutral access (C(int_access_host)) or routed
               (C(int_routed_host)) port on BOTH peers; a member in switchport mode trunk is refused
               (known incident - NX-OS rejects the join) and the module never converts a member.
@@ -522,8 +534,10 @@ options:
               on its own serial - MEASURED for host with both members up, NOT LIVE TESTED for the other
               modes); a
               removed member must be administratively down and is released administratively down on its
-              own switch before the deployment (needs C(deploy) true, no check mode and an
-              administratively down fabric host interface default). Both peers are validated before anything is deployed and the vPC is reported
+              own switch before the deployment (needs no check mode and an administratively down fabric
+              host interface default; with C(deploy) false the removal or the deletion is saved and
+              completed later as for a regular port-channel, a saved deletion being recognised only when
+              BOTH peers list the vPC's children marked for deletion). Both peers are validated before anything is deployed and the vPC is reported
               successful only when EVERY peer is. The deletion is verified on both peers against the
               explicit contract (each member a direct C(int_trunk_host), or C(int_routed_host) in the
               measured neutral form, as the controller releases it; administratively down; no freeform
