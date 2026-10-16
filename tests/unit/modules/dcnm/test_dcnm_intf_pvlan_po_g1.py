@@ -466,7 +466,8 @@ def test_pr_deletion_fails_loud_when_the_member_is_not_released_and_never_rewrit
 @pytest.mark.parametrize(
     "prep, needle, kw",
     [
-        (lambda c: c.detail[IF7]["nvPairs"].__setitem__("ADMIN_STATE", "true"), "not administratively down", {}),
+        # RELEASE-ADMIN: an up member is released to the fabric default; an unknown administrative state stays refused
+        (lambda c: c.detail[IF7]["nvPairs"].__setitem__("ADMIN_STATE", "maybe"), "unknown administrative state", {}),
         (lambda c: None, "check mode", {"check_mode": True}),
     ],
 )

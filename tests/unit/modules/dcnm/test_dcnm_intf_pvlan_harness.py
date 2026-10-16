@@ -357,7 +357,8 @@ def run(ctrl, config, state="merged", check_mode=False, check_deploy=False, bulk
         patch.object(module, "dcnm_version_supported", return_value=version),
         patch.object(module, "dcnm_send", side_effect=ctrl),
         patch.object(module, "dcnm_get_bulk_api_support", return_value=bulk),
-        patch.object(module, "get_fabric_details", return_value={"nvPairs": {"HOST_INTF_ADMIN_STATE": "false"}}),
+        # RELEASE-ADMIN: the fabric host default the release targets; a controller may carry `fabric_admin` (default "false").
+        patch.object(module, "get_fabric_details", return_value={"nvPairs": {"HOST_INTF_ADMIN_STATE": getattr(ctrl, "fabric_admin", "false")}}),
         patch.object(module.time, "sleep", return_value=None),
     ]
     for p in patches:

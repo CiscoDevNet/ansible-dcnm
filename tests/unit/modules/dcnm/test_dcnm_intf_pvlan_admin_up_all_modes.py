@@ -344,12 +344,13 @@ def test_vpc_repetition_with_up_members_writes_nothing(mode):
 
 
 @pytest.mark.parametrize("mode", [P_, TP, TS])
-def test_vpc_deletion_with_an_up_member_keeps_the_admin_down_release_contract(mode):
+def test_vpc_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markdelete(mode):
+    # RELEASE-ADMIN (supersedes the admin-down-only release): the up member is released to the fabric default in every mode.
     ctrl = E1.seeded_ctrl(mode)
     ctrl.nodes[SN1][M1]["nvPairs"]["ADMIN_STATE"] = "true"
     status, result = E1.run_vpc(ctrl, [E1.vpc_del_item()], state="deleted")
-    assert status == "fail" and "not administratively down; releasing it is not implemented" in result["msg"], result.get("msg")
-    assert ctrl.writes() == []
+    assert "not administratively down" not in str(result.get("msg"))
+    assert len(ctrl.markdeletes()) == 1, result.get("msg")
 
 
 @pytest.mark.parametrize("mode", [P_, TP, TS])

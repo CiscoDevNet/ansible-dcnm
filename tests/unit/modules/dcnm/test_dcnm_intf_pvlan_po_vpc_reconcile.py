@@ -130,12 +130,14 @@ def test_override_intf_types_that_exclude_port_channels_leave_the_pvlan_port_cha
     assert writes(ctrl) == ["globalInterface", "globalInterface/deploy"] and G4.PO in ctrl.detail
 
 
-def test_a_dropped_port_channel_whose_member_is_up_keeps_the_release_contract_and_writes_nothing():
+def test_a_dropped_port_channel_whose_member_is_up_is_released_to_the_fabric_default():
+    # RELEASE-ADMIN: the up member is released like a down one; the fabric default here is "false", so it is corrected before the deploy
     ctrl = measured_po(G4.owned_ctrl())
     ctrl.detail[G4.MEM]["nvPairs"]["ADMIN_STATE"] = "true"
     status, result = run(ctrl, [lo(SWITCH_IP)], state="overridden")
-    assert status == "fail" and "not administratively down; releasing it is not implemented" in result["msg"], result.get("msg")
-    assert writes(ctrl) == []
+    assert status == "exit", result.get("msg")
+    assert writes(ctrl) == ["interface/markdelete", "interface/modify", "globalInterface/deploy", "globalInterface", "globalInterface/deploy"]
+    assert ctrl.detail[G4.MEM]["nvPairs"]["ADMIN_STATE"] == "false"
 
 
 def test_an_unreadable_summary_refuses_the_sweep_before_any_write():
@@ -201,12 +203,14 @@ def test_vpc_whose_pair_the_controller_does_not_confirm_is_refused_before_any_wr
     assert status == "fail" and "vPC pair" in result["msg"] and writes(ctrl) == [], result.get("msg")
 
 
-def test_vpc_dropped_with_an_up_member_on_one_peer_keeps_the_release_contract():
+def test_vpc_dropped_with_an_up_member_on_one_peer_is_released_to_the_fabric_default():
+    # RELEASE-ADMIN: an up member no longer blocks the drop; both released members reach the fabric default ("false") before the deploy
     ctrl = vpc_ctrl()
     ctrl.nodes[V.SN2][V.M2]["nvPairs"]["ADMIN_STATE"] = "true"
     V.delete_previews(ctrl)
     status, result = V.run_vpc(ctrl, [lo(V.IP1)], state="overridden")
-    assert status == "fail" and "not administratively down" in result["msg"] and writes(ctrl) == [], result.get("msg")
+    assert status == "exit", result.get("msg")
+    V.release_only(ctrl)
 
 
 # ================================================================== B: deploy false saves; a later process completes from controller state

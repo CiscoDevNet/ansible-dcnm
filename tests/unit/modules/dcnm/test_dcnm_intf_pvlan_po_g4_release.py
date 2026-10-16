@@ -377,8 +377,9 @@ def test_no_bulk_update_api_is_refused_before_the_markdelete():
     assert status == "fail" and "bulk interface update API is not available" in result["msg"] and ctrl.writes() == []
 
 
-def test_a_member_that_is_administratively_up_before_the_deletion_is_refused_before_the_markdelete():
+def test_a_member_whose_admin_state_is_unknown_before_the_deletion_is_refused_before_the_markdelete():
+    # RELEASE-ADMIN: an up member is released to the fabric default (test_dcnm_intf_pvlan_release_admin.py); unknown stays refused
     ctrl = owned_ctrl()
-    ctrl.detail[MEM]["nvPairs"]["ADMIN_STATE"] = "true"
+    ctrl.detail[MEM]["nvPairs"]["ADMIN_STATE"] = "maybe"
     status, result = delete(ctrl)
-    assert status == "fail" and "not administratively down" in result["msg"] and ctrl.writes() == []
+    assert status == "fail" and "unknown administrative state" in result["msg"] and ctrl.writes() == []
