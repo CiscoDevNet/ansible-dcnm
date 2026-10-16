@@ -764,8 +764,9 @@ def _two_members_on_peer1(c):
     c.parents[VPC]["nvPairs"]["PEER1_MEMBER_INTERFACES"] = M1 + ",Ethernet1/9"
 
 
-def _member2_up(c):
-    c.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] = "true"
+def _member2_admin_unknown(c):
+    # RELEASE-ADMIN: an up member is released to the fabric default; an unknown administrative state stays refused
+    c.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] = "maybe"
 
 
 def _member2_not_ours(c):
@@ -791,7 +792,7 @@ def _policy_list2_unreadable(c):
         (_mode_not_host, "not in a known pvlan_mode"),
         (_pcid_differs, "differs from the vPC id"),
         (_two_members_on_peer1, "child port-channel or member could not be read"),
-        (_member2_up, "not administratively down"),
+        (_member2_admin_unknown, "unknown administrative state"),
         (_member2_not_ours, "not the member of port-channel10"),
         (_child2_missing, "partial state"),
         (_child2_foreign_policy, "does not hold exactly one"),
@@ -812,7 +813,8 @@ def test_deletion_preconditions_judge_the_current_state_of_both_peers_and_refuse
     [
         # LIFECYCLE-B: deploy false now SAVES the deletion (test_dcnm_intf_pvlan_po_vpc_reconcile.py)
         ({"check_mode": True}, {}, "refused in check mode"),
-        ({"fabric_admin": "true"}, {}, "HOST_INTF_ADMIN_STATE"),
+        # RELEASE-ADMIN: true is a supported default now (released members stay up); an unreadable one refuses
+        ({"fabric_admin": "maybe"}, {}, "HOST_INTF_ADMIN_STATE"),
     ],
 )
 def test_deletion_requirements(kw, item_kw, needle):

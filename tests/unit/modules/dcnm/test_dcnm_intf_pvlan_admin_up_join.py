@@ -207,12 +207,14 @@ def test_po_lacp_rate_change_with_an_up_member_stays_refused_before_any_write():
     assert ctrl.writes() == []
 
 
-def test_po_deletion_with_an_up_member_keeps_the_admin_down_release_contract():
+def test_po_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markdelete():
+    # RELEASE-ADMIN (supersedes the admin-down-only release): the up member is released to the fabric default; the full release lifecycle
+    # is asserted in test_dcnm_intf_pvlan_release_admin.py. Here: the old refusal is gone and the deletion's first write is the mark-delete.
     ctrl = MU.seeded(members=(IF7,), spare=())
     ctrl.detail[IF7]["nvPairs"]["ADMIN_STATE"] = "true"
     status, result = H.run(ctrl, [{"name": H.PO_ITEM_NAME, "switch": [H.SWITCH_IP], "deploy": True}], state="deleted")
-    assert status == "fail" and "not administratively down; releasing it is not implemented" in result["msg"], result.get("msg")
-    assert ctrl.writes() == []
+    assert "not administratively down" not in str(result.get("msg"))
+    assert ctrl.writes() and "markdelete" in ctrl.writes()[0][1], ctrl.writes()
 
 
 # ================================================================== vPC through main()
@@ -311,12 +313,13 @@ def test_vpc_repetition_after_the_up_join_writes_nothing():
     assert ctrl.writes() == []
 
 
-def test_vpc_deletion_with_an_up_member_keeps_the_admin_down_release_contract():
+def test_vpc_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markdelete():
+    # RELEASE-ADMIN (supersedes the admin-down-only release): see test_dcnm_intf_pvlan_release_admin.py for the full lifecycle.
     ctrl = V.VpcController()
     for serial, port in ((V.SN1, V.M1), (V.SN2, V.M2)):
         ctrl.nodes[serial][port] = {"policy": V.TRUNK, "nvPairs": up_nv(port)}
     ctrl = ctrl.seed_vpc()
     ctrl.next_invocation()
     status, result = V.run_vpc(ctrl, [V.vpc_del_item()], state="deleted")
-    assert status == "fail" and "not administratively down; releasing it is not implemented" in result["msg"], result.get("msg")
-    assert ctrl.writes() == []
+    assert "not administratively down" not in str(result.get("msg"))
+    assert len(ctrl.markdeletes()) == 1, result.get("msg")

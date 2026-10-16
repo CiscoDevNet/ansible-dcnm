@@ -1278,7 +1278,7 @@ def _line_pairs(match):
     return {(p, s) for s in secondaries}
 
 
-def validate_transition(body, pre, post):
+def validate_transition(body, pre, post, release=False):
     """Problems (empty = deployable) for one PVLAN target's fresh pending body lines, given the
     pre-write and post-write Models. Positive lines must belong to the post state; negations
     must withdraw an OWNED line of the pre state that the post state does not hold (a foreign
@@ -1354,6 +1354,11 @@ def validate_transition(body, pre, post):
     # the pre state still need their own withdrawals, as measured.
     if "no switchport" in pos_scalars and "switchport" in pre.scalars and "switchport" not in post.scalars:
         neg_scalars.add("switchport")
+    # RELEASE-ADMIN (HR MEASURED, NDFC 12.6.0.267: a down member released up carries ONE `no shutdown` line in the pending): the post state's
+    # own `no shutdown` withdraws the pre state's `shutdown`, exactly like `no switchport` above. ONLY for a member RELEASE (`release`): any
+    # other shutdown -> no shutdown transition keeps the documented limit of this validator.
+    if release and "no shutdown" in pos_scalars and "shutdown" in pre.scalars and "shutdown" not in post.scalars:
+        neg_scalars.add("shutdown")
     missing_add = added_pairs - seen_pos
     if missing_add:
         problems.append("intended pair(s) %s are absent from the pending" % sorted(missing_add))
@@ -1554,7 +1559,7 @@ def _difference(a, b):
 
 
 def assess_target(body, entry, name, desired, vocabulary=None, absent_ok=False, member_force=None, member_inherit=None,
-                  member_reassert=None, member_mtu_inherit=None, member_speed_inherit=None):
+                  member_reassert=None, member_mtu_inherit=None, member_speed_inherit=None, release=False):
     """Decision for one PVLAN target from ONE fresh preview entry.
 
     Authority, all from that entry: `runningConfig` (device), `expectedConfig` (controller
@@ -1645,7 +1650,7 @@ def assess_target(body, entry, name, desired, vocabulary=None, absent_ok=False, 
     body, observed, problems = po_member_force_transition(body, observed, desired, member_force)
     if problems:
         return "refuse", problems
-    problems = validate_transition(body, observed, desired)
+    problems = validate_transition(body, observed, desired, release=release)
     return ("refuse", problems) if problems else ("deploy", [])
 
 
@@ -2340,13 +2345,36 @@ PO_RELEASED_MEMBER_NV = {
 PO_RELEASE_SAFETY_NV = (("ADMIN_STATE", "false"), ("ALLOWED_VLANS", "none"), ("NATIVE_VLAN", ""), ("CONF", ""))
 
 
-def po_released_member_safety_problems(nv):
+def released_member_model(admin="false"):
+    """RELEASE-ADMIN: the template release model (PO_RELEASED_MEMBER_NV) with the administrative state the release targets. `admin` is the
+    fabric's host-interface default (HOST_INTF_ADMIN_STATE, "true" or "false"), the same value the generic reset of a host interface uses
+    (dcnm_intf_get_default_eth_payload); the module never infers it."""
+    return dict(PO_RELEASED_MEMBER_NV, ADMIN_STATE=_admin_word(admin))
+
+
+def released_routed_children(admin="false"):
+    """RELEASE-ADMIN: the own children a released int_routed_host may keep once it holds the targeted administrative state: the measured
+    up set (no_shut_interface) for "true", the down set (shut_interface) for "false"."""
+    return PO_ROUTED_RELEASE_CHILDREN_UP if _admin_word(admin) == "true" else PO_ROUTED_RELEASE_CHILDREN_DOWN
+
+
+def _admin_word(admin):
+    word = str(admin).strip().lower()
+    if word not in ("true", "false"):
+        raise ValueError("the released administrative state must be 'true' or 'false', not %r" % (admin,))
+    return word
+
+
+def po_released_member_safety_problems(nv, admin="false"):
     """Why the released member's writable nvPairs are not a safe standalone port (empty = safe). Values compared after stripping
-    surrounding blanks; ADMIN_STATE and ALLOWED_VLANS case-insensitively (boolean / keyword); NATIVE_VLAN and CONF must be empty."""
+    surrounding blanks; ADMIN_STATE and ALLOWED_VLANS case-insensitively (boolean / keyword); NATIVE_VLAN and CONF must be empty.
+    RELEASE-ADMIN: ADMIN_STATE must be the targeted state `admin` (the fabric's host default; "false" keeps the original contract)."""
     if not isinstance(nv, dict):
         return ["the released member carries no nvPairs"]
     problems = []
     for key, want in PO_RELEASE_SAFETY_NV:
+        if key == "ADMIN_STATE":
+            want = _admin_word(admin)
         if key not in nv:
             problems.append("%s is absent from the released member" % key)
             continue
@@ -2430,25 +2458,26 @@ def po_marked_deleted_problem(entry, ifname, parent=None):
     return None
 
 
-def po_released_member_payload(nv, ifname, serial, fabric):
+def po_released_member_payload(nv, ifname, serial, fabric, admin="false"):
     """The ONE legacy interface/modify payload of the G4 member release: the released int_trunk_host with ALL its current
-    writable nvPairs (the fresh read, minus PO_RELEASE_METADATA) and only ADMIN_STATE changed to "false". Never the
-    generic seven-key default payload; never a stale copy."""
+    writable nvPairs (the fresh read, minus PO_RELEASE_METADATA) and only ADMIN_STATE changed to the targeted state (RELEASE-ADMIN: the
+    fabric's host default; "false" keeps the original contract). Never the generic seven-key default payload; never a stale copy."""
     out = dict((k, v) for k, v in nv.items() if k not in PO_RELEASE_METADATA)
-    out["ADMIN_STATE"] = "false"
+    out["ADMIN_STATE"] = _admin_word(admin)
     intf = {"interfaceType": "INTERFACE_ETHERNET", "serialNumber": serial, "ifName": ifname, "fabricName": fabric, "nvPairs": out}
     return {"policy": TRUNK_HOST_POLICY, "interfaces": [intf]}
 
 
-def po_released_member_readback_problems(before, after):
+def po_released_member_readback_problems(before, after, admin="false"):
     """Differences between the released member's writable nvPairs before the G4 modify and its fresh readback. Only
-    ADMIN_STATE may change (and must now be "false"); a writable key that disappears, changes value or appears is a
+    ADMIN_STATE may change (and must now be the targeted state `admin`); a writable key that disappears, changes value or appears is a
     problem; PO_RELEASE_METADATA is the only tolerated difference."""
     if not isinstance(after, dict):
         return ["the member readback carries no nvPairs"]
     problems = []
-    if str(after.get("ADMIN_STATE", "")).strip().lower() != "false":
-        problems.append("ADMIN_STATE reads back %r, not 'false'" % (after.get("ADMIN_STATE"),))
+    admin = _admin_word(admin)
+    if str(after.get("ADMIN_STATE", "")).strip().lower() != admin:
+        problems.append("ADMIN_STATE reads back %r, not %r" % (after.get("ADMIN_STATE"), admin))
     keys = (set(before) | set(after)) - PO_RELEASE_METADATA - {"ADMIN_STATE"}
     for key in sorted(keys):
         if key not in after:
@@ -2569,19 +2598,20 @@ def _render_routed_released(nv):
     return Model(s, None, (), True)
 
 
-def released_member_safety_problems(policy, nv):
+def released_member_safety_problems(policy, nv, admin="false"):
     """Why a released member (policy + writable nvPairs) is not a safe standalone port (empty = safe). int_trunk_host keeps the
     PO_RELEASE_SAFETY_NV contract unchanged; int_routed_host must be administratively down, without residual membership fields, and in the
     measured neutral routed form (no address, VRF, routing, ACL, QoS or freeform). Any other policy is refused."""
     if policy == TRUNK_HOST_POLICY:
-        return po_released_member_safety_problems(nv)
+        return po_released_member_safety_problems(nv, admin)
     if policy != PO_ROUTED_BASELINE_POLICY:
         return ["the released member holds %r, which is not a released-member policy (%s)" % (policy, ", ".join(RELEASED_MEMBER_POLICIES))]
     if not isinstance(nv, dict):
         return ["the released member carries no nvPairs"]
     problems = []
-    if str(nv.get("ADMIN_STATE", "")).strip().lower() != "false":
-        problems.append("ADMIN_STATE is %r, not 'false'" % (nv.get("ADMIN_STATE"),))
+    admin = _admin_word(admin)
+    if str(nv.get("ADMIN_STATE", "")).strip().lower() != admin:
+        problems.append("ADMIN_STATE is %r, not %r" % (nv.get("ADMIN_STATE"), admin))
     for key in _RELEASE_RESIDUAL_KEYS:
         if str(nv.get(key, "") or "").strip() not in _RELEASE_RESIDUAL_EMPTY:
             problems.append("residual membership field %s=%r" % (key, nv.get(key)))
@@ -2592,22 +2622,22 @@ def released_member_safety_problems(policy, nv):
     return problems
 
 
-def released_member_payload(policy, nv, ifname, serial, fabric):
+def released_member_payload(policy, nv, ifname, serial, fabric, admin="false"):
     """The ONE legacy interface/modify payload of a released member: its OWN fresh policy and ALL its current writable nvPairs
-    (minus PO_RELEASE_METADATA) with only ADMIN_STATE changed to "false" (po_released_member_payload, policy carried)."""
+    (minus PO_RELEASE_METADATA) with only ADMIN_STATE changed to the targeted state (po_released_member_payload, policy carried)."""
     if policy not in RELEASED_MEMBER_POLICIES:
         raise ValueError("not a released-member policy: %r" % (policy,))
-    payload = po_released_member_payload(nv, ifname, serial, fabric)
+    payload = po_released_member_payload(nv, ifname, serial, fabric, admin)
     payload["policy"] = policy
     return payload
 
 
-def released_member_readback_problems(before_policy, before, after_policy, after):
+def released_member_readback_problems(before_policy, before, after_policy, after, admin="false"):
     """po_released_member_readback_problems plus the policy itself: the readback must hold the SAME template."""
     problems = []
     if after_policy != before_policy:
         problems.append("the member readback holds %r, not the released %r" % (after_policy, before_policy))
-    return problems + po_released_member_readback_problems(before, after)
+    return problems + po_released_member_readback_problems(before, after, admin)
 
 
 def released_member_role_expectation(role):
@@ -3956,7 +3986,8 @@ def vpc_response_class(resp, sno, name):
     return "accepted" if not modify_outcome_problems(resp, [(sno, name)]) else "unknown"
 
 
-def vpc_leg_residue(policies, vpc_name, po_name, member, member_detail_nv, baseline_policy=TRUNK_HOST_POLICY, self_children=frozenset()):
+def vpc_leg_residue(policies, vpc_name, po_name, member, member_detail_nv, baseline_policy=TRUNK_HOST_POLICY, self_children=frozenset(),
+                    admin="false"):
     """Reasons a leg is NOT clean after a vPC deletion (empty = clean). `policies` is the leg's fresh live-policy list.
     The released member legitimately keeps ONE direct int_trunk_host policy (its baseline): that is NOT residue. Residue is
     any live policy that is a vPC child (source = the vPC), names the removed vPC or Po as its entity, is not the single
@@ -3985,8 +4016,10 @@ def vpc_leg_residue(policies, vpc_name, po_name, member, member_detail_nv, basel
         reasons.append("the member does not hold exactly one direct %s policy (%s)" % (
             baseline_policy, ", ".join(sorted("%s/%s" % (p.get("templateName"), p.get("source")) for p in own)) or "none"))
     if isinstance(member_detail_nv, dict):
-        if str(member_detail_nv.get("ADMIN_STATE", "")).strip().lower() != "false":
-            reasons.append("the released member is not administratively down")
+        # RELEASE-ADMIN: the released member holds the fabric's host default (`admin`; "false" keeps the original contract)
+        if str(member_detail_nv.get("ADMIN_STATE", "")).strip().lower() != _admin_word(admin):
+            reasons.append("the released member is not administratively down" if _admin_word(admin) == "false"
+                           else "the released member is not at the fabric's host default ADMIN_STATE %s" % _admin_word(admin))
         if str(member_detail_nv.get("CONF", "") or "").strip():
             reasons.append("the released member carries freeform CONF")
     return reasons

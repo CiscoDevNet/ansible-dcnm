@@ -249,7 +249,8 @@ def test_replaced_without_an_explicit_member_list_is_refused_before_any_write(me
 
 
 @pytest.mark.parametrize("change, needle", [
-    (lambda c: c.detail[E9]["nvPairs"].update(ADMIN_STATE="true"), "not administratively down"),
+    # RELEASE-ADMIN: an up member is released to the fabric default; an unknown administrative state stays refused
+    (lambda c: c.detail[E9]["nvPairs"].update(ADMIN_STATE="maybe"), "unknown administrative state"),
     (lambda c: setattr(c, "policies_extra", [{"entityName": E9, "entityType": "INTERFACE", "templateName": "Config_Profile", "source": "OVERLAY",
                                               "deleted": False, "policyId": "POLICY-990100", "priority": 500, "serialNumber": "x"}]),
      "live policies are not exactly those of"),
@@ -493,11 +494,12 @@ def test_a_unilateral_change_that_is_not_membership_stays_refused():
     assert status == "fail" and "changes only peer 1" in result["msg"] and ctrl.writes() == [], result.get("msg")
 
 
-def test_vpc_removing_a_member_that_is_up_is_refused_before_any_write():
+def test_vpc_removing_a_member_whose_admin_state_is_unknown_is_refused_before_any_write():
+    # RELEASE-ADMIN: an up member is released to the fabric default (test_dcnm_intf_pvlan_release_admin.py); unknown stays refused
     ctrl = vpc_seeded({V.SN1: [V.M1, E9P], V.SN2: [V.M2]})
-    ctrl.nodes[V.SN1][E9P]["nvPairs"]["ADMIN_STATE"] = "true"
+    ctrl.nodes[V.SN1][E9P]["nvPairs"]["ADMIN_STATE"] = "maybe"
     status, result = V.run_vpc(ctrl, [V.vpc_item(peer1_members=[V.M1], peer2_members=[V.M2])], state="replaced")
-    assert status == "fail" and "not administratively down" in result["msg"] and ctrl.writes() == [], result.get("msg")
+    assert status == "fail" and "administrative state is unknown" in result["msg"] and ctrl.writes() == [], result.get("msg")
 
 
 def test_vpc_unsafe_release_of_a_removed_member_stops_before_any_member_write_and_deploy():
