@@ -312,7 +312,8 @@ options:
           pvlan_mapping:
             description:
             - Promiscuous mappings for C(pvlan_mode) C(promiscuous) (a single primary VLAN) and C(trunk promiscuous),
-              as a list of dictionaries with the keys C(primary_vlan) and C(secondary_vlans) (a VLAN list string).
+              as a list of dictionaries with the keys C(primary_vlan) and C(secondary_vlans) (a VLAN list string; a single-value range
+              "N-N" is the VLAN N, also in C(allowed_vlans)).
             - A secondary VLAN belongs to one primary VLAN - the resulting list (after a C(merged) union with the current one)
               that puts one secondary under two primaries is refused before any write.
             type: list
@@ -608,7 +609,8 @@ options:
           pvlan_mapping:
             description:
             - Promiscuous mappings for C(pvlan_mode) C(promiscuous) (a single primary VLAN) and C(trunk promiscuous),
-              as a list of dictionaries with the keys C(primary_vlan) and C(secondary_vlans) (a VLAN list string).
+              as a list of dictionaries with the keys C(primary_vlan) and C(secondary_vlans) (a VLAN list string; a single-value range
+              "N-N" is the VLAN N, also in C(allowed_vlans)).
             - A secondary VLAN belongs to one primary VLAN - the resulting list (after a C(merged) union with the current one)
               that puts one secondary under two primaries is refused before any write.
             type: list
@@ -1249,7 +1251,9 @@ options:
                 required: true
               secondary_vlans:
                 description:
-                - Secondary VLAN IDs as a string, for example "2211" or "2211-2212,2214".
+                - Secondary VLAN IDs as a string, for example "2211" or "2211-2212,2214". A single-value range such as "2212-2212" is
+                  accepted as the VLAN "2212" and sent and compared as "2212"; a descending, repeated, overlapping or out-of-range value is
+                  refused.
                 type: str
                 required: true
       profile_svi:
@@ -2900,6 +2904,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 # Native standalone Ethernet PVLAN (int_pvlan_host). Pure helpers; transport stays here.
 from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import (
     PROFILE_KEYS as PVLAN_PROFILE_KEYS,
+    normalize_single_value_ranges as pvlan_normalize_single_value_ranges,
     PVLAN_POLICY,
     PvlanError,
     preview_entry as pvlan_preview_entry,
@@ -14721,6 +14726,14 @@ class DcnmIntf:
             # Native PVLAN (Ethernet and port-channel) keeps the RAW allowed_vlans: it is validated
             # before any rewrite and sent in the measured int_pvlan_host form ("2301", not "2301-2301").
             # VPC-MODES-E1: the same for the per-peer PVLAN allowed VLANs of a vPC in mode 'pvlan'.
+            # SINGLETON-RANGE: a single-value range "N-N" (NaC convert_ranges for from N / to N) in those lists and in the
+            # pvlan_mapping secondary_vlans is collapsed to "N" here, before validation, so it is sent and compared exactly as "N".
+            if (
+                cfg.get("type") in ("eth", "pc", "vpc")
+                and isinstance(cfg.get("profile"), dict)
+                and cfg["profile"].get("mode") == "pvlan"
+            ):
+                pvlan_normalize_single_value_ranges(cfg["profile"])
             if cfg.get("profile", None) is not None and not (
                 cfg.get("type") in ("eth", "pc", "vpc")
                 and isinstance(cfg["profile"], dict)

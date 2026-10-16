@@ -175,8 +175,9 @@ _VLAN_RANGE_RE = re.compile(r"^([1-9][0-9]{0,3})(?:-([1-9][0-9]{0,3}))?$")
 
 
 def vlan_set(text, field):
-    """Strict 'N', 'N-M' comma list -> sorted list of ints. Descending, degenerate,
-    overlapping or duplicate input is refused so duplicates cannot vanish in a set."""
+    """Strict 'N', 'N-M' comma list -> sorted list of ints. Descending, overlapping or duplicate input is refused so duplicates
+    cannot vanish in a set. SINGLETON-RANGE: a single-value inclusive range 'N-N' (what NaC's convert_ranges macro renders for
+    from N / to N) is the VLAN N; it still counts toward the duplicate check ('2212,2212-2212' is refused)."""
     if not isinstance(text, str):
         raise PvlanError("%s must be a string" % field)
     out = []
@@ -190,7 +191,7 @@ def vlan_set(text, field):
             raise PvlanError("%s %r is not a VLAN list" % (field, text))
         low = int(m.group(1))
         high = int(m.group(2)) if m.group(2) else low
-        if m.group(2) and high <= low:
+        if m.group(2) and high < low:
             raise PvlanError("%s range %r is not ascending" % (field, part))
         for v in range(low, high + 1):
             if not 1 <= v <= 4094:
@@ -200,6 +201,49 @@ def vlan_set(text, field):
             seen.add(v)
             out.append(v)
     return sorted(out)
+
+
+_SINGLE_VALUE_RANGE_RE = re.compile(r"^\s*([1-9][0-9]{0,3})\s*-\s*([1-9][0-9]{0,3})\s*$")
+# The raw PVLAN profile keys holding a VLAN list the module forwards or compares (pvlan_mapping rows: secondary_vlans).
+SINGLE_VALUE_RANGE_KEYS = ("allowed_vlans", "peer1_allowed_vlans", "peer2_allowed_vlans")
+
+
+def collapse_single_value_ranges(text):
+    """SINGLETON-RANGE: each comma token that is a single-value range 'N-N' becomes 'N'; every other token is returned unchanged
+    (a descending, malformed, out-of-range or duplicate value is left for the strict validator to refuse). A non-string is returned as
+    is. 'N' is the form the controller stores and the module sends (int_pvlan_host measured '2301', not '2301-2301'), so N-N input
+    produces the same payload and the same comparison as N."""
+    if not isinstance(text, str):
+        return text
+    out = []
+    for part in text.split(","):
+        m = _SINGLE_VALUE_RANGE_RE.match(part)
+        out.append(m.group(1) if m and m.group(1) == m.group(2) else part)
+    return ",".join(out)
+
+
+def normalize_single_value_ranges(profile):
+    """SINGLETON-RANGE: collapse 'N-N' in the VLAN lists of a RAW `mode: pvlan` profile (allowed_vlans, peer1/peer2_allowed_vlans and
+    every pvlan_mapping row's secondary_vlans), in place, before validation. Returns the changed keys (diagnostics). Nothing else is
+    touched; values of the wrong type are left for the validator."""
+    changed = []
+    if not isinstance(profile, dict):
+        return changed
+    for key in SINGLE_VALUE_RANGE_KEYS:
+        value = profile.get(key)
+        new = collapse_single_value_ranges(value)
+        if new != value:
+            profile[key] = new
+            changed.append(key)
+    rows = profile.get("pvlan_mapping")
+    if isinstance(rows, list):
+        for index, row in enumerate(rows):
+            if isinstance(row, dict) and isinstance(row.get("secondary_vlans"), str):
+                new = collapse_single_value_ranges(row["secondary_vlans"])
+                if new != row["secondary_vlans"]:
+                    row["secondary_vlans"] = new
+                    changed.append("pvlan_mapping[%d].secondary_vlans" % index)
+    return changed
 
 
 def _lenient_vlan_set(text):
