@@ -6800,6 +6800,87 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
         self.assertEqual(have_attach[0]["lanAttachList"][0]["freeformConfig"], "")
 
+    def test_dcnm_net_overlay_single_network_ignores_switch_management_policy(self):
+        """A sole task network does not own a switch-wide management route."""
+        serial = "9NN7E41N16A"
+        for template in ("switch_freeform", "switch_freeform_config"):
+            for deploy in (False, True):
+                with self.subTest(template=template, deploy=deploy):
+                    dcnm_net = self._build_diff_network(self.net_inv_data)
+                    dcnm_net.module = Mock()
+                    dcnm_net.paths = dcnm_network.DcnmNetwork.dcnm_network_paths[12]
+                    have = [{"networkName": "test_network", "lanAttachList": [
+                        self._build_attach_state(serial, "Ethernet1/1,Ethernet1/2"),
+                    ]}]
+                    before = copy.deepcopy(have)
+                    self.run_dcnm_send.side_effect = None
+                    self.run_dcnm_send.return_value = {
+                        "RETURN_CODE": 200,
+                        "DATA": [{
+                            "templateName": template, "serialNumber": serial,
+                            "entityName": "SWITCH", "entityType": "SWITCH",
+                            "description": "management vrf configuration",
+                            "nvPairs": {"CONF": "vrf context management\n  ip route 0.0.0.0/0 10.122.84.1"},
+                        }],
+                    }
+
+                    self._real_overlay_have_freeform_from_switch_details(
+                        dcnm_net, have, {"test_network": [serial]}
+                    )
+
+                    self.assertEqual(have, before)
+                    want = self._build_attach_state(serial, "Ethernet1/1,Ethernet1/2", freeform_config=None)
+                    want.update(deployment=deploy, is_deploy=deploy)
+                    diff, dep_net = dcnm_net.diff_for_attach_deploy(
+                        [want], copy.deepcopy(have[0]["lanAttachList"]), replace=True, network_vlan=202
+                    )
+                    self.assertEqual(diff, [])
+                    self.assertFalse(dep_net)
+
+    def test_dcnm_net_overlay_single_network_preserves_scoped_freeform_and_clear(self):
+        """Ignore global policy ordering without hiding real freeform changes."""
+        serial = "9NN7E41N16A"
+        current_cli = "interface Vlan202\n  no autostate"
+        for deploy in (False, True):
+            for wanted_cli in (current_cli, "interface Vlan202\n  no ip redirects", ""):
+                with self.subTest(deploy=deploy, wanted_cli=wanted_cli):
+                    dcnm_net = self._build_diff_network(self.net_inv_data)
+                    dcnm_net.module = Mock()
+                    dcnm_net.paths = dcnm_network.DcnmNetwork.dcnm_network_paths[12]
+                    have = [{"networkName": "test_network", "lanAttachList": [
+                        self._build_attach_state(serial, "Ethernet1/1"),
+                    ]}]
+                    self.run_dcnm_send.side_effect = None
+                    self.run_dcnm_send.return_value = {
+                        "RETURN_CODE": 200,
+                        "DATA": [
+                            {"templateName": "switch_freeform_config", "entityName": "SWITCH",
+                             "secondaryEntityType": "Config_Profile", "secondaryEntityName": "test_network",
+                             "nvPairs": {"CONF": current_cli}},
+                            {"templateName": "switch_freeform_config", "entityName": "SWITCH",
+                             "description": "management vrf configuration",
+                             "nvPairs": {"CONF": "vrf context management\n  ip route 0.0.0.0/0 10.122.84.1"}},
+                        ],
+                    }
+
+                    self._real_overlay_have_freeform_from_switch_details(
+                        dcnm_net, have, {"test_network": [serial]}
+                    )
+
+                    self.assertEqual(have[0]["lanAttachList"][0]["freeformConfig"], current_cli)
+                    want = self._build_attach_state(serial, "Ethernet1/1", freeform_config=wanted_cli)
+                    want.update(deployment=deploy, is_deploy=deploy)
+                    diff, dep_net = dcnm_net.diff_for_attach_deploy(
+                        [want], copy.deepcopy(have[0]["lanAttachList"]), replace=True, network_vlan=202
+                    )
+                    if wanted_cli == current_cli:
+                        self.assertEqual(diff, [])
+                        self.assertFalse(dep_net)
+                    else:
+                        self.assertEqual(len(diff), 1)
+                        self.assertEqual(diff[0]["freeformConfig"], wanted_cli)
+                        self.assertEqual(dep_net, deploy)
+
     def _make_multinet_overlay_fixture(self):
         dcnm_net = self._make_bare_dcnm_net()
         dcnm_net.paths = dcnm_network.DcnmNetwork.dcnm_network_paths[12]
@@ -6959,7 +7040,12 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
         self.assertIsNone(matcher({"entityName": "net_A"}, []))
 
-        self.assertEqual(matcher({"entityName": "ignored"}, ["only_net"]), "only_net")
+        self.assertIsNone(matcher({"entityName": "ignored"}, ["only_net"]))
+        self.assertIsNone(matcher({}, ["only_net"]))
+        self.assertEqual(matcher({"entityName": "only_net"}, ["only_net"]), "only_net")
+        for field in ("NETWORK_NAME", "networkName", "network_name"):
+            self.assertEqual(matcher({"nvPairs": {field: "only_net"}}, ["only_net"]), "only_net")
+        self.assertEqual(matcher({"description": "freeform for only_net"}, ["only_net"]), "only_net")
 
         self.assertEqual(
             matcher({"entityName": "net_B"}, ["net_A", "net_B"]),
@@ -7000,6 +7086,29 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 ["net_A", "net_B"],
             )
         )
+
+    def test_dcnm_net_match_freeform_policy_uses_explicit_config_profile_scope(self):
+        """NDFC's secondary entity owns the CLI, not the sole task candidate."""
+        matcher = dcnm_network.DcnmNetwork._match_freeform_policy_to_network
+        for policy in (
+            {"entityName": "SWITCH", "secondaryEntityType": "Config_Profile", "secondaryEntityName": "net_A"},
+            {"entityName": "Switch", "nvPairs": {"SECENTTYPE": "Config_Profile", "SECENTITY": "net_A"}},
+            {"entityName": "SWITCH", "secondaryEntityType": "config_profile", "secondaryEntityName": "net_A"},
+        ):
+            with self.subTest(policy=policy):
+                self.assertEqual(matcher(policy, ["net_A"]), "net_A")
+                self.assertEqual(matcher(policy, ["net_A", "net_B"]), "net_A")
+                # Explicit ownership outside the task must not fall back to a
+                # misleading description or entity name for a task network.
+                self.assertIsNone(matcher(dict(policy, description="net_B", entityName="net_B"), ["net_B"]))
+
+        for policy in (
+            {"entityName": "SWITCH", "secondaryEntityType": "Interface", "secondaryEntityName": "net_A"},
+            {"entityName": "SWITCH", "nvPairs": {"SECENTTYPE": "Interface", "SECENTITY": "net_A"}},
+            {"entityName": "SWITCH", "nvPairs": {"CONF": "description net_A"}},
+        ):
+            with self.subTest(unrelated=policy):
+                self.assertIsNone(matcher(policy, ["net_A"]))
 
     class _CountingList(list):
         def __init__(self, *args):
