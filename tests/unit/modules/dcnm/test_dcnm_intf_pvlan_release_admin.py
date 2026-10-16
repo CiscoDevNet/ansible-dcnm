@@ -288,3 +288,33 @@ def test_vpc_saved_member_removal_repeated_with_deploy_false_writes_nothing_and_
     status, result = V.run_vpc(ctrl, [dict(item, deploy=False)], state="replaced", fabric_admin="false")
     assert status == "exit" and result["changed"] is False and len(ctrl.writes()) == before, result.get("msg")
     assert [s for s in result["pvlan_saved"] if s.get("kind") == "vpc" and s["state"].startswith("saved, awaiting deployment")], result.get("pvlan_saved")
+
+
+# ================================================================== V-7b live shape: the marked parent vPC stays listed
+def saved_vpc_with_listed_parent():
+    ctrl = RC.vpc_ctrl()
+    ctrl.children_marked_deleted = True
+    ctrl.parent_marked_listed = True  # MEASURED live V-7a: the parent stays listed, markDeleted True, no policy
+    RC.vpc_queue(ctrl, 1)
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item(deploy=False)], state="deleted")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    ctrl.next_invocation()
+    return ctrl
+
+
+def test_saved_vpc_deletion_with_the_parent_still_listed_is_reported_pending_by_a_deploy_false_repeat():
+    ctrl = saved_vpc_with_listed_parent()
+    before = len(ctrl.writes())
+    RC.vpc_queue(ctrl, 1)
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item(deploy=False)], state="deleted")
+    assert status == "exit" and result["changed"] is False and len(ctrl.writes()) == before, result.get("msg")
+    assert [s for s in result.get("pvlan_saved", []) if s.get("state", "").startswith("saved, awaiting deployment")], result.get("pvlan_saved")
+
+
+def test_saved_vpc_deletion_with_the_parent_still_listed_is_completed_by_deploy_true_without_a_second_markdelete():
+    ctrl = saved_vpc_with_listed_parent()
+    marks = len(ctrl.markdeletes())
+    RC.vpc_queue(ctrl, 2)
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item(deploy=True)], state="deleted")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert len(ctrl.markdeletes()) == marks and "DEPLOY" in ctrl.order(), ctrl.order()

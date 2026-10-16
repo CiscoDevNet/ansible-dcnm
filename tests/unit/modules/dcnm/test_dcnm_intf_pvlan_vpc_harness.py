@@ -97,6 +97,9 @@ class VpcController(FakeController):
         self.parent_metadata = {"createVpc": "true"}  # MEASURED (L1-E4 live A1/A2): the controller adds `createVpc` "true" to the created parent
         self.list_parent_policy = False  # [UNK] V2: whether the parent policy is listed on a peer
         self.vpc_in_summary = True  # [UNK] V0: whether the vPC is an entry of the interface summary
+        # MEASURED (live V-7a, NDFC 12.6.0.267, 2026-10-16): after the vPC's mark-delete the PARENT stays listed on both peers' summaries,
+        # markDeleted True, Out-of-Sync, no underlay policy (L1-E4 F had it gone). Off by default: the older harness shape.
+        self.parent_marked_listed = False
         self.inherited_child = True  # the 'Inherited Commands' int_eth child of every member (HOST 755-780)
         self.summary_extra = {SN1: [], SN2: []}  # entries listed by the interface summary of a peer and by nothing else
         self.compliance_by = {}  # (serial, ifName) -> status
@@ -342,6 +345,11 @@ class VpcController(FakeController):
                                 nv = trunk_host_nv(port)
                                 nv["ADMIN_STATE"] = "true" if self.release_admin_up else "false"
                                 self.nodes[serial][port] = {"policy": TRUNK, "nvPairs": nv}
+                        if self.parent_marked_listed:
+                            self.summary_extra[serial].append({
+                                "ifName": intf["ifName"], "serialNo": PAIR, "fabricName": FABRIC, "ifType": "INTERFACE_VPC", "isPhysical": "False",
+                                "deletable": "True", "editAllowed": "True", "markDeleted": "True", "alias": "", "deleteReason": None,
+                                "complianceStatus": "Out-of-Sync", "underlayPolicies": []})
                         if self.children_marked_deleted:
                             self.summary_extra[serial].append(self._marked_deleted_entry(serial, po))
                             self.policies_extra[serial].append(

@@ -13836,8 +13836,9 @@ class DcnmIntf:
                                     )
                                 ]
 
-                                if not match_have and if_type == "INTERFACE_VPC":
-                                    # LIFECYCLE-B: a vPC whose deletion was saved is no longer listed; its children carry the marking.
+                                if if_type == "INTERFACE_VPC" and (not match_have or str(match_have[0].get("markDeleted")).lower() == "true"):
+                                    # LIFECYCLE-B: a vPC whose deletion was saved is no longer listed (L1-E4 F) or -- V-7b, MEASURED live
+                                    # 2026-10-16 -- still listed marked for deletion without any policy; its children carry the marking.
                                     pvlan_lifecycle_note(self, "vpc_named_resume_requests", (intf["serialNumber"], str(if_name).lower()), {
                                         "deploy": str(cfg.get("deploy", "true")).lower() == "true", "name": if_name})
                                 if match_have and str(match_have[0].get("markDeleted")).lower() == "true":
