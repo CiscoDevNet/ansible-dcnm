@@ -1286,47 +1286,12 @@ class DcnmNetwork:
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
-    @staticmethod
-    def find_dict_in_list_by_key_value(search: list, key: str, value: str):
-        """
-        # Summary
-
-        Find a dictionary in a list of dictionaries.
-
-
-        ## Raises
-
-        None
-
-        ## Parameters
-
-        -   search: A list of dict
-        -   key: The key to lookup in each dict
-        -   value: The desired matching value for key
-
-        ## Returns
-
-        Either the first matching dict or None
-
-        ## Usage
-
-        ```python
-        content = [{"foo": "bar"}, {"foo": "baz"}]
-
-        match = find_dict_in_list_by_key_value(search=content, key="foo", value="baz")
-        print(f"{match}")
-        # -> {"foo": "baz"}
-
-        match = find_dict_in_list_by_key_value(search=content, key="foo", value="bingo")
-        print(f"{match}")
-        # -> None
-        ```
-        """
-        if search is None:
-            return None
-
-        match = (d for d in search if d[key] == value)
-        return next(match, None)
+    def get_no_deploy_net_names(self):
+        """Return names whose first playbook entry sets deploy: false."""
+        config_by_name = {}
+        for cfg in self.config or []:
+            config_by_name.setdefault(cfg["net_name"], cfg)
+        return {name for name, cfg in config_by_name.items() if cfg.get("deploy") is False}
 
     @staticmethod
     def merge_port_lists(port_lists):
@@ -3512,21 +3477,19 @@ class DcnmNetwork:
         all_nets = ""
 
         if self.config:
+            have_create_names = {have_c["networkName"] for have_c in self.have_create}
+            have_attach_by_name = {}
+            for attach in self.have_attach:
+                have_attach_by_name.setdefault(attach["networkName"], attach)
 
             for want_c in self.want_create:
-                if not next(
-                    (have_c for have_c in self.have_create if have_c["networkName"] == want_c["networkName"]),
-                    None,
-                ):
+                if want_c["networkName"] not in have_create_names:
                     continue
 
                 network_name = want_c["networkName"]
                 diff_delete.update({network_name: "DEPLOYED"})
 
-                have_a = next(
-                    (attach for attach in self.have_attach if attach["networkName"] == network_name),
-                    None,
-                )
+                have_a = have_attach_by_name.get(network_name)
 
                 if not have_a:
                     continue
@@ -3603,15 +3566,14 @@ class DcnmNetwork:
         diff_deploy = self.diff_deploy
         diff_undeploy = self.diff_undeploy
 
+        want_create_names = {net["networkName"] for net in self.want_create}
+
         for have_a in self.have_attach:
             # This block will take care of deleting all the networks that are only present on ND but not on playbook
             # The "if not found" block will go through all attachments under those networks and update them so that
             # they will be detached and also the network name will be added to delete payload.
 
-            found = next(
-                (net for net in self.want_create if net["networkName"] == have_a["networkName"]),
-                None,
-            )
+            found = have_a["networkName"] in want_create_names
 
             to_del = []
             if not found:
@@ -3660,44 +3622,47 @@ class DcnmNetwork:
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
 
+        diff_attach_by_name = {}
+        for entry in diff_attach:
+            diff_attach_by_name.setdefault(entry["networkName"], entry)
+        want_create_names = {net["networkName"] for net in self.want_create}
+        want_attach_by_name = {}
+        for entry in self.want_attach:
+            want_attach_by_name.setdefault(entry["networkName"], entry)
+
         for have_a in self.have_attach:
             r_net_list = []
             h_in_w = False
-            for want_a in self.want_attach:
+            want_a = want_attach_by_name.get(have_a["networkName"])
+            if want_a is not None:
                 # This block will take care of deleting any attachments that are present only on DCNM
                 # but, not on the playbook. In this case, the playbook will have a network and few attaches under it,
                 # but, the attaches may be different to what the ND has for the same network.
-                if have_a["networkName"] == want_a["networkName"]:
-                    h_in_w = True
-                    atch_h = have_a["lanAttachList"]
-                    atch_w = want_a.get("lanAttachList")
+                h_in_w = True
+                atch_h = have_a["lanAttachList"]
+                atch_w = want_a.get("lanAttachList")
 
-                    for a_h in atch_h:
-                        if not a_h["isAttached"]:
-                            continue
-                        a_match = False
+                for a_h in atch_h:
+                    if not a_h["isAttached"]:
+                        continue
+                    a_match = False
 
-                        if atch_w:
-                            for a_w in atch_w:
-                                if a_h["serialNumber"] == a_w["serialNumber"]:
-                                    # Have is already in diff, no need to continue looking for it.
-                                    a_match = True
-                                    break
-                        if not a_match:
-                            del a_h["isAttached"]
-                            a_h.update({"deployment": False})
-                            r_net_list.append(a_h)
-                    break
+                    if atch_w:
+                        for a_w in atch_w:
+                            if a_h["serialNumber"] == a_w["serialNumber"]:
+                                # Have is already in diff, no need to continue looking for it.
+                                a_match = True
+                                break
+                    if not a_match:
+                        del a_h["isAttached"]
+                        a_h.update({"deployment": False})
+                        r_net_list.append(a_h)
 
             if not h_in_w:
                 # This block will take care of deleting all the attachments which are in ND but
                 # are not mentioned in the playbook. The playbook just has the network, but, does not have any attach
                 # under it.
-                found = next(
-                    (net for net in self.want_create if net["networkName"] == have_a["networkName"]),
-                    None,
-                )
-                if found:
+                if have_a["networkName"] in want_create_names:
                     atch_h = have_a["lanAttachList"]
                     for a_h in atch_h:
                         if not a_h["isAttached"]:
@@ -3707,29 +3672,22 @@ class DcnmNetwork:
                         r_net_list.append(a_h)
 
             if r_net_list:
-                in_diff = False
-                for d_attach in self.diff_attach:
-                    if have_a["networkName"] == d_attach["networkName"]:
-                        in_diff = True
-                        d_attach["lanAttachList"].extend(r_net_list)
-                        break
-
-                if not in_diff:
+                d_attach = diff_attach_by_name.get(have_a["networkName"])
+                if d_attach is not None:
+                    d_attach["lanAttachList"].extend(r_net_list)
+                else:
                     r_net_dict = {
                         "networkName": have_a["networkName"],
                         "lanAttachList": r_net_list,
                     }
                     diff_attach.append(r_net_dict)
+                    diff_attach_by_name[have_a["networkName"]] = r_net_dict
                     all_nets += have_a["networkName"] + ","
 
         if all_nets:
-            modified_all_nets = copy.deepcopy(all_nets[:-1].split(","))
             # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
-            for net in all_nets[:-1].split(","):
-                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
-                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
-                    modified_all_nets.remove(net)
-            all_nets = ",".join(modified_all_nets)
+            no_deploy_nets = self.get_no_deploy_net_names()
+            all_nets = ",".join(net for net in all_nets[:-1].split(",") if net not in no_deploy_nets)
 
         if not all_nets:
             self.diff_create = diff_create
@@ -3800,69 +3758,70 @@ class DcnmNetwork:
         xconnect_changed = {}
         ipv4_acl_in_changed = {}
 
+        have_create_by_name = {}
+        for have in self.have_create:
+            have_create_by_name.setdefault(have["networkName"], have)
+
         for want_c in self.want_create:
-            found = False
-            for have_c in self.have_create:
-                if want_c["networkName"] == have_c["networkName"]:
+            have_c = have_create_by_name.get(want_c["networkName"])
+            found = have_c is not None
+            if found:
+                (
+                    diff,
+                    gw_chg,
+                    tg_chg,
+                    warn_msg,
+                    l2only_chg,
+                    vn_chg,
+                    idesc_chg,
+                    mtu_chg,
+                    arpsup_chg,
+                    dhcp_servers_chg,
+                    dhcp_loopbk_chg,
+                    mcast_grp_chg,
+                    gwv6_chg,
+                    sec_gw1_chg,
+                    sec_gw2_chg,
+                    sec_gw3_chg,
+                    sec_gw4_chg,
+                    trm_en_chg,
+                    rt_both_chg,
+                    l3gw_onbd_chg,
+                    net_name_chg,
+                    nf_en_chg,
+                    intvlan_nfmon_chg,
+                    vlan_nfmon_chg,
+                    xconnect_chg,
+                    ipv4_acl_in_chg,
+                ) = self.diff_for_create(want_c, have_c)
 
-                    found = True
-                    (
-                        diff,
-                        gw_chg,
-                        tg_chg,
-                        warn_msg,
-                        l2only_chg,
-                        vn_chg,
-                        idesc_chg,
-                        mtu_chg,
-                        arpsup_chg,
-                        dhcp_servers_chg,
-                        dhcp_loopbk_chg,
-                        mcast_grp_chg,
-                        gwv6_chg,
-                        sec_gw1_chg,
-                        sec_gw2_chg,
-                        sec_gw3_chg,
-                        sec_gw4_chg,
-                        trm_en_chg,
-                        rt_both_chg,
-                        l3gw_onbd_chg,
-                        net_name_chg,
-                        nf_en_chg,
-                        intvlan_nfmon_chg,
-                        vlan_nfmon_chg,
-                        xconnect_chg,
-                        ipv4_acl_in_chg,
-                    ) = self.diff_for_create(want_c, have_c)
-
-                    gw_changed.update({want_c["networkName"]: gw_chg})
-                    tg_changed.update({want_c["networkName"]: tg_chg})
-                    l2only_changed.update({want_c["networkName"]: l2only_chg})
-                    vn_changed.update({want_c["networkName"]: vn_chg})
-                    intdesc_changed.update({want_c["networkName"]: idesc_chg})
-                    mtu_changed.update({want_c["networkName"]: mtu_chg})
-                    arpsup_changed.update({want_c["networkName"]: arpsup_chg})
-                    dhcp_servers_changed.update({want_c["networkName"]: dhcp_servers_chg})
-                    dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
-                    if self.is_ms_fabric is False:
-                        multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
-                    gwv6_changed.update({want_c["networkName"]: gwv6_chg})
-                    sec_gw1_changed.update({want_c["networkName"]: sec_gw1_chg})
-                    sec_gw2_changed.update({want_c["networkName"]: sec_gw2_chg})
-                    sec_gw3_changed.update({want_c["networkName"]: sec_gw3_chg})
-                    sec_gw4_changed.update({want_c["networkName"]: sec_gw4_chg})
-                    trm_en_changed.update({want_c["networkName"]: trm_en_chg})
-                    rt_both_changed.update({want_c["networkName"]: rt_both_chg})
-                    l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
-                    net_name_changed.update({want_c["networkName"]: net_name_chg})
-                    nf_en_changed.update({want_c["networkName"]: nf_en_chg})
-                    intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
-                    vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
-                    xconnect_changed.update({want_c["networkName"]: xconnect_chg})
-                    ipv4_acl_in_changed.update({want_c["networkName"]: ipv4_acl_in_chg})
-                    if diff:
-                        diff_create_update.append(diff)
-                    break
+                gw_changed.update({want_c["networkName"]: gw_chg})
+                tg_changed.update({want_c["networkName"]: tg_chg})
+                l2only_changed.update({want_c["networkName"]: l2only_chg})
+                vn_changed.update({want_c["networkName"]: vn_chg})
+                intdesc_changed.update({want_c["networkName"]: idesc_chg})
+                mtu_changed.update({want_c["networkName"]: mtu_chg})
+                arpsup_changed.update({want_c["networkName"]: arpsup_chg})
+                dhcp_servers_changed.update({want_c["networkName"]: dhcp_servers_chg})
+                dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
+                if self.is_ms_fabric is False:
+                    multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
+                gwv6_changed.update({want_c["networkName"]: gwv6_chg})
+                sec_gw1_changed.update({want_c["networkName"]: sec_gw1_chg})
+                sec_gw2_changed.update({want_c["networkName"]: sec_gw2_chg})
+                sec_gw3_changed.update({want_c["networkName"]: sec_gw3_chg})
+                sec_gw4_changed.update({want_c["networkName"]: sec_gw4_chg})
+                trm_en_changed.update({want_c["networkName"]: trm_en_chg})
+                rt_both_changed.update({want_c["networkName"]: rt_both_chg})
+                l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
+                net_name_changed.update({want_c["networkName"]: net_name_chg})
+                nf_en_changed.update({want_c["networkName"]: nf_en_chg})
+                intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
+                vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
+                xconnect_changed.update({want_c["networkName"]: xconnect_chg})
+                ipv4_acl_in_changed.update({want_c["networkName"]: ipv4_acl_in_chg})
+                if diff:
+                    diff_create_update.append(diff)
             if not found:
                 net_id = want_c.get("networkId", None)
 
@@ -3925,62 +3884,65 @@ class DcnmNetwork:
                 else:
                     diff_create.append(want_c)
 
+        # Every existing entry for a name is processed, so keep them all in order.
+        have_attach_matches = {}
+        for have in self.have_attach:
+            have_attach_matches.setdefault(have["networkName"], []).append(have)
+
         # Check for deployment needed due to configuration changes (without attachment changes)
         all_nets = []
         for want_a in self.want_attach:
             dep_net = ""
             found = False
-            for have_a in self.have_attach:
-                if want_a["networkName"] == have_a["networkName"]:
+            for have_a in have_attach_matches.get(want_a["networkName"], []):
+                found = True
+                diff, net = self.diff_for_attach_deploy(
+                    want_a["lanAttachList"],
+                    have_a["lanAttachList"],
+                    replace,
+                    network_vlan=want_a.get("vlan_id") or 0,
+                )
 
-                    found = True
-                    diff, net = self.diff_for_attach_deploy(
-                        want_a["lanAttachList"],
-                        have_a["lanAttachList"],
-                        replace,
-                        network_vlan=want_a.get("vlan_id") or 0,
-                    )
+                if diff:
+                    base = want_a.copy()
+                    del base["lanAttachList"]
+                    base.pop("vlan_id", None)
+                    base.update({"lanAttachList": diff})
+                    diff_attach.append(base)
+                    if net:
+                        dep_net = want_a["networkName"]
+                else:
+                    # Check if any configuration changes require deployment
+                    network_name = want_a["networkName"]
 
-                    if diff:
-                        base = want_a.copy()
-                        del base["lanAttachList"]
-                        base.pop("vlan_id", None)
-                        base.update({"lanAttachList": diff})
-                        diff_attach.append(base)
-                        if net:
-                            dep_net = want_a["networkName"]
-                    else:
-                        # Check if any configuration changes require deployment
-                        network_name = want_a["networkName"]
-
-                        if (
-                            net
-                            or gw_changed.get(want_a["networkName"], False)
-                            or tg_changed.get(want_a["networkName"], False)
-                            or l2only_changed.get(want_a["networkName"], False)
-                            or vn_changed.get(want_a["networkName"], False)
-                            or intdesc_changed.get(want_a["networkName"], False)
-                            or mtu_changed.get(want_a["networkName"], False)
-                            or arpsup_changed.get(want_a["networkName"], False)
-                            or dhcp_servers_changed.get(want_a["networkName"], False)
-                            or dhcp_loopback_changed.get(want_a["networkName"], False)
-                            or multicast_group_address_changed.get(want_a["networkName"], False)
-                            or gwv6_changed.get(want_a["networkName"], False)
-                            or sec_gw1_changed.get(want_a["networkName"], False)
-                            or sec_gw2_changed.get(want_a["networkName"], False)
-                            or sec_gw3_changed.get(want_a["networkName"], False)
-                            or sec_gw4_changed.get(want_a["networkName"], False)
-                            or trm_en_changed.get(want_a["networkName"], False)
-                            or rt_both_changed.get(want_a["networkName"], False)
-                            or l3gw_onbd_changed.get(want_a["networkName"], False)
-                            or net_name_changed.get(want_a["networkName"], False)
-                            or nf_en_changed.get(want_a["networkName"], False)
-                            or intvlan_nfmon_changed.get(want_a["networkName"], False)
-                            or vlan_nfmon_changed.get(want_a["networkName"], False)
-                            or xconnect_changed.get(want_a["networkName"], False)
-                            or ipv4_acl_in_changed.get(want_a["networkName"], False)
-                        ):
-                            dep_net = want_a["networkName"]
+                    if (
+                        net
+                        or gw_changed.get(want_a["networkName"], False)
+                        or tg_changed.get(want_a["networkName"], False)
+                        or l2only_changed.get(want_a["networkName"], False)
+                        or vn_changed.get(want_a["networkName"], False)
+                        or intdesc_changed.get(want_a["networkName"], False)
+                        or mtu_changed.get(want_a["networkName"], False)
+                        or arpsup_changed.get(want_a["networkName"], False)
+                        or dhcp_servers_changed.get(want_a["networkName"], False)
+                        or dhcp_loopback_changed.get(want_a["networkName"], False)
+                        or multicast_group_address_changed.get(want_a["networkName"], False)
+                        or gwv6_changed.get(want_a["networkName"], False)
+                        or sec_gw1_changed.get(want_a["networkName"], False)
+                        or sec_gw2_changed.get(want_a["networkName"], False)
+                        or sec_gw3_changed.get(want_a["networkName"], False)
+                        or sec_gw4_changed.get(want_a["networkName"], False)
+                        or trm_en_changed.get(want_a["networkName"], False)
+                        or rt_both_changed.get(want_a["networkName"], False)
+                        or l3gw_onbd_changed.get(want_a["networkName"], False)
+                        or net_name_changed.get(want_a["networkName"], False)
+                        or nf_en_changed.get(want_a["networkName"], False)
+                        or intvlan_nfmon_changed.get(want_a["networkName"], False)
+                        or vlan_nfmon_changed.get(want_a["networkName"], False)
+                        or xconnect_changed.get(want_a["networkName"], False)
+                        or ipv4_acl_in_changed.get(want_a["networkName"], False)
+                    ):
+                        dep_net = want_a["networkName"]
 
             if not found and want_a.get("lanAttachList"):
                 atch_list = []
@@ -4012,11 +3974,8 @@ class DcnmNetwork:
         modified_all_nets = copy.deepcopy(all_nets)
         if all_nets:
             # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
-            for net in all_nets:
-                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
-                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
-                    modified_all_nets.remove(net)
-            modified_all_nets = list(set(modified_all_nets))
+            no_deploy_nets = self.get_no_deploy_net_names()
+            modified_all_nets = list(set(net for net in all_nets if net not in no_deploy_nets))
             final_count = len(modified_all_nets)
 
         if modified_all_nets:
@@ -6434,19 +6393,26 @@ class DcnmNetwork:
         if self.want_create == []:
             return
 
+        have_create_by_name = {}
+        for have in self.have_create:
+            have_create_by_name.setdefault(have["networkName"], have)
+        config_by_name = {}
+        for cfg in self.config:
+            config_by_name.setdefault(cfg["net_name"], cfg)
+
         for net in self.want_create:
 
             # Get the matching have to copy values if required
-            match_have = [have for have in self.have_create if ((net["networkName"] == have["networkName"]))]
-            if match_have == []:
+            match_have = have_create_by_name.get(net["networkName"])
+            if match_have is None:
                 continue
 
             # Get the network from self.config to check if a particular object is included or not
-            match_cfg = [cfg for cfg in self.config if ((net["networkName"] == cfg["net_name"]))]
-            if match_cfg == []:
+            match_cfg = config_by_name.get(net["networkName"])
+            if match_cfg is None:
                 continue
 
-            self.dcnm_update_network_information(net, match_have[0], match_cfg[0])
+            self.dcnm_update_network_information(net, match_have, match_cfg)
 
 
 def main():

@@ -7000,3 +7000,245 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 ["net_A", "net_B"],
             )
         )
+
+    class _CountingList(list):
+        def __init__(self, *args):
+            super().__init__(*args)
+            self.iter_count = 0
+
+        def __iter__(self):
+            self.iter_count += 1
+            return super().__iter__()
+
+    @classmethod
+    def _deploy_filter_config(cls, count):
+        """deploy: false for every net-<i> with i % 3 == 0; a later duplicate net-1 entry must not win."""
+        config = [{"net_name": f"net-{i}", "deploy": i % 3 != 0} for i in range(count)]
+        config.append({"net_name": "net-1", "deploy": False})
+        return cls._CountingList(config)
+
+    def test_dcnm_net_get_diff_replace_scale_uses_attach_and_deploy_lookups(self):
+        count = 500
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.config = self._deploy_filter_config(count)
+        dcnm_net.get_diff_merge = Mock(return_value=None)
+        dcnm_net.diff_create = []
+        dcnm_net.diff_deploy = {}
+        # Stand-in for get_diff_merge(replace=True) output: even networks already have an attach diff.
+        dcnm_net.diff_attach = self._CountingList(
+            {"networkName": f"net-{i}", "lanAttachList": [{"serialNumber": "SN1"}]} for i in range(0, count, 2)
+        )
+        dcnm_net.want_create = [{"networkName": f"net-{i}"} for i in range(count)]
+        dcnm_net.want_attach = [
+            {"networkName": f"net-{i}", "lanAttachList": [{"serialNumber": "SN1"}]} for i in range(0, count, 2)
+        ]
+        dcnm_net.have_attach = [
+            {
+                "networkName": f"net-{i}",
+                "lanAttachList": [
+                    {"serialNumber": "SN1", "isAttached": True},
+                    {"serialNumber": "SN2", "isAttached": True},
+                ],
+            }
+            for i in range(count)
+        ]
+
+        dcnm_net.get_diff_replace()
+
+        self.assertEqual(dcnm_net.diff_attach.iter_count, 1)
+        self.assertEqual(dcnm_net.config.iter_count, 1)
+
+        serials = {d["networkName"]: [a["serialNumber"] for a in d["lanAttachList"]] for d in dcnm_net.diff_attach}
+        self.assertEqual(len(dcnm_net.diff_attach), count)
+        for i in range(count):
+            self.assertEqual(serials[f"net-{i}"], ["SN1", "SN2"])
+
+        expected_deploy = [f"net-{i}" for i in range(1, count, 2) if i % 3 != 0]
+        self.assertIn("net-1", expected_deploy)
+        self.assertEqual(dcnm_net.diff_deploy["networkNames"], ",".join(expected_deploy))
+
+    def test_dcnm_net_get_diff_merge_scale_uses_deploy_lookup(self):
+        count = 500
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.config = self._deploy_filter_config(count)
+        dcnm_net.want_create = []
+        dcnm_net.have_create = []
+        dcnm_net.have_attach = []
+        dcnm_net.want_attach = [
+            {
+                "networkName": f"net-{i}",
+                "lanAttachList": [{"serialNumber": "SN1", "isAttached": True, "torports": [], "is_deploy": True}],
+            }
+            for i in range(count)
+        ]
+
+        dcnm_net.get_diff_merge()
+
+        self.assertEqual(dcnm_net.config.iter_count, 1)
+        self.assertEqual(len(dcnm_net.diff_attach), count)
+        expected_deploy = {f"net-{i}" for i in range(count) if i % 3 != 0}
+        self.assertIn("net-1", expected_deploy)
+        self.assertEqual(set(dcnm_net.diff_deploy["networkNames"].split(",")), expected_deploy)
+
+    def _build_replace_override_diff_network(self, count):
+        """net-<i> are desired (even i also carry a SN1 attach); remote-<i> exist only on the controller."""
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.config = []
+        dcnm_net.get_diff_merge = Mock(return_value=None)
+        dcnm_net.diff_create = []
+        dcnm_net.diff_attach = []
+        dcnm_net.diff_deploy = {}
+        dcnm_net.diff_detach = []
+        dcnm_net.diff_undeploy = {}
+        dcnm_net.want_create = self._CountingList({"networkName": f"net-{i}"} for i in range(count))
+        dcnm_net.want_attach = self._CountingList(
+            {"networkName": f"net-{i}", "lanAttachList": [{"serialNumber": "SN1"}]} for i in range(0, count, 2)
+        )
+        dcnm_net.have_attach = []
+        for i in range(count):
+            dcnm_net.have_attach.append(
+                {
+                    "networkName": f"net-{i}",
+                    "lanAttachList": [
+                        {"serialNumber": "SN1", "isAttached": True},
+                        {"serialNumber": "SN2", "isAttached": True},
+                    ],
+                }
+            )
+            dcnm_net.have_attach.append(
+                {"networkName": f"remote-{i}", "lanAttachList": [{"serialNumber": "SN1", "isAttached": True}]}
+            )
+        return dcnm_net
+
+    def test_dcnm_net_get_diff_replace_scale_uses_name_lookups(self):
+        count = 1000
+        dcnm_net = self._build_replace_override_diff_network(count)
+
+        dcnm_net.get_diff_replace()
+
+        self.assertEqual(dcnm_net.want_create.iter_count, 1)
+        self.assertEqual(dcnm_net.want_attach.iter_count, 1)
+
+        detached = {d["networkName"]: sorted(a["serialNumber"] for a in d["lanAttachList"]) for d in dcnm_net.diff_attach}
+        expected = {f"net-{i}": (["SN2"] if i % 2 == 0 else ["SN1", "SN2"]) for i in range(count)}
+        self.assertEqual(detached, expected)
+        for d in dcnm_net.diff_attach:
+            for a in d["lanAttachList"]:
+                self.assertFalse(a["deployment"])
+        self.assertEqual(set(dcnm_net.diff_deploy["networkNames"].split(",")), set(expected))
+
+    def test_dcnm_net_get_diff_override_scale_uses_name_lookups(self):
+        count = 1000
+        dcnm_net = self._build_replace_override_diff_network(count)
+
+        dcnm_net.get_diff_override()
+
+        # Once in get_diff_replace() and once in get_diff_override().
+        self.assertEqual(dcnm_net.want_create.iter_count, 2)
+        self.assertEqual(dcnm_net.want_attach.iter_count, 1)
+
+        expected_deletes = {f"remote-{i}" for i in range(count)}
+        self.assertEqual(set(dcnm_net.diff_delete), expected_deletes)
+        self.assertEqual({d["networkName"] for d in dcnm_net.diff_detach}, expected_deletes)
+        self.assertEqual(set(dcnm_net.diff_undeploy["networkNames"].split(",")), expected_deletes)
+
+    def test_dcnm_net_update_want_scale_uses_first_match_lookups(self):
+        count = 1000
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.fabric_type = "standalone"
+        dcnm_net.module = Mock(params={"state": "merged"})
+        dcnm_net.dcnm_update_network_information = Mock()
+        dcnm_net.want_create = [{"networkName": f"net-{i}"} for i in range(count)]
+        dcnm_net.want_create += [{"networkName": "new-net"}, {"networkName": "no-config-net"}]
+        dcnm_net.have_create = self._CountingList(
+            [{"networkName": f"net-{i}", "source": "first"} for i in range(count)]
+            + [{"networkName": "net-0", "source": "second"}, {"networkName": "no-config-net"}]
+        )
+        dcnm_net.config = self._CountingList(
+            [{"net_name": f"net-{i}", "source": "first"} for i in range(count)] + [{"net_name": "net-0", "source": "second"}]
+        )
+
+        dcnm_net.update_want()
+
+        self.assertEqual(dcnm_net.have_create.iter_count, 1)
+        self.assertEqual(dcnm_net.config.iter_count, 1)
+        calls = dcnm_net.dcnm_update_network_information.call_args_list
+        self.assertEqual([c.args[0]["networkName"] for c in calls], [f"net-{i}" for i in range(count)])
+        net0_call = calls[0].args
+        self.assertEqual(net0_call[1]["source"], "first")
+        self.assertEqual(net0_call[2]["source"], "first")
+
+    def test_dcnm_net_get_diff_merge_scale_uses_create_and_attach_lookups(self):
+        count = 1000
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.module = Mock()
+        dcnm_net.is_ms_fabric = False
+        dcnm_net.config = []
+        dcnm_net.diff_for_create = Mock(return_value=({}, False, False, None) + (False,) * 22)
+        dcnm_net.diff_for_attach_deploy = Mock(return_value=([], False))
+        new_net = {"networkName": "new-net", "networkId": 5}
+        dcnm_net.want_create = [{"networkName": f"net-{i}", "networkId": 1000 + i} for i in range(count)] + [new_net]
+        dcnm_net.have_create = self._CountingList(
+            [{"networkName": f"net-{i}", "source": "first"} for i in range(count)] + [{"networkName": "net-0", "source": "second"}]
+        )
+        dcnm_net.want_attach = [{"networkName": f"net-{i}", "lanAttachList": [f"want-{i}"]} for i in range(count)]
+        # A duplicate controller entry must still be diffed, after the first one.
+        dcnm_net.have_attach = self._CountingList(
+            [{"networkName": f"net-{i}", "lanAttachList": [f"have-{i}"]} for i in range(count)]
+            + [{"networkName": "net-0", "lanAttachList": ["have-0-dup"]}]
+        )
+
+        dcnm_net.get_diff_merge()
+
+        self.assertEqual(dcnm_net.have_create.iter_count, 1)
+        self.assertEqual(dcnm_net.have_attach.iter_count, 1)
+
+        create_calls = dcnm_net.diff_for_create.call_args_list
+        self.assertEqual(len(create_calls), count)
+        self.assertEqual(create_calls[0].args[1]["source"], "first")
+        self.assertEqual(dcnm_net.diff_create, [new_net])
+
+        attach_calls = dcnm_net.diff_for_attach_deploy.call_args_list
+        self.assertEqual(len(attach_calls), count + 1)
+        net0_have_lists = [c.args[1] for c in attach_calls if c.args[0] == ["want-0"]]
+        self.assertEqual(net0_have_lists, [["have-0"], ["have-0-dup"]])
+
+    def test_dcnm_net_get_diff_delete_scale_uses_name_lookups(self):
+        count = 1000
+        dcnm_net = dcnm_network.DcnmNetwork.__new__(dcnm_network.DcnmNetwork)
+        dcnm_net.log = self._build_test_logger()
+        dcnm_net.config = [{"net_name": "placeholder"}]
+        dcnm_net.want_create = [{"networkName": f"net-{i}"} for i in range(count)] + [{"networkName": "absent-net"}]
+        dcnm_net.have_create = self._CountingList({"networkName": f"net-{i}"} for i in range(count))
+        duplicate = {"networkName": "net-0", "lanAttachList": [{"serialNumber": "SN9", "isAttached": True}]}
+        dcnm_net.have_attach = self._CountingList(
+            [
+                {
+                    "networkName": f"net-{i}",
+                    "lanAttachList": [
+                        {"serialNumber": "SN1", "isAttached": True},
+                        {"serialNumber": "SN2", "isAttached": False},
+                    ],
+                }
+                for i in range(0, count, 2)
+            ]
+            + [duplicate]
+        )
+
+        dcnm_net.get_diff_delete()
+
+        self.assertEqual(dcnm_net.have_create.iter_count, 1)
+        self.assertEqual(dcnm_net.have_attach.iter_count, 1)
+
+        expected_detached = [f"net-{i}" for i in range(0, count, 2)]
+        self.assertEqual(list(dcnm_net.diff_delete), [f"net-{i}" for i in range(count)])
+        self.assertEqual([d["networkName"] for d in dcnm_net.diff_detach], expected_detached)
+        for d in dcnm_net.diff_detach:
+            self.assertEqual(d["lanAttachList"], [{"serialNumber": "SN1", "deployment": False}])
+        self.assertEqual(dcnm_net.diff_undeploy["networkNames"], ",".join(expected_detached))
+        self.assertEqual(duplicate["lanAttachList"], [{"serialNumber": "SN9", "isAttached": True}])
