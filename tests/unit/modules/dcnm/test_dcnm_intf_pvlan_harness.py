@@ -332,6 +332,7 @@ INVENTORY = {
         "vpcDomain": 0,
         "switchRole": "leaf",
         "managable": "True",
+        "ccStatus": "In-Sync",  # the real inventory carries it; F-RA-1 reads the preview only for a switch that is not In-Sync
     }
 }
 

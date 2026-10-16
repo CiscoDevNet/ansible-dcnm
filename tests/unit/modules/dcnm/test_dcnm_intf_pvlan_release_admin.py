@@ -269,3 +269,22 @@ def test_vpc_repetition_with_a_foreign_pending_port_is_still_refused():
         ctrl.vpc_previews[serial] = [pv, json.loads(json.dumps(pv))]
     status, result = V.run_vpc(ctrl, [V.vpc_item(peer1_members=[V.M1], peer2_members=[V.M2])], state="replaced", fabric_admin="true")
     assert status == "fail" and "outside" in result["msg"] and "DEPLOY" not in ctrl.order(), result.get("msg")
+
+
+def test_vpc_saved_member_removal_repeated_with_deploy_false_writes_nothing_and_stays_reported_pending(monkeypatch):
+    ctrl = MU.vpc_seeded({V.SN1: [V.M1, MU.E9P], V.SN2: [V.M2]})
+    MU.queue_peer(ctrl, V.SN1, kept=(V.M1,), removed_trunk=(MU.E9P,))
+    MU.queue_peer(ctrl, V.SN2, kept=(V.M2,))
+    for serial in (V.SN1, V.SN2):
+        ctrl.vpc_previews[serial] = ctrl.vpc_previews[serial][1:]
+    item = V.vpc_item(peer1_members=[V.M1], peer2_members=[V.M2])
+    status, result = V.run_vpc(ctrl, [dict(item, deploy=False)], state="replaced", fabric_admin="false")
+    assert status == "exit", result.get("msg")
+    ctrl.next_invocation()
+    before = len(ctrl.writes())
+    monkeypatch.setattr(V, "INVENTORY", dict((ip, dict(entry, ccStatus="Out-of-Sync")) for ip, entry in V.INVENTORY.items()))
+    for serial, kw in ((V.SN1, {"kept": (V.M1,), "removed_trunk": (MU.E9P,)}), (V.SN2, {"kept": (V.M2,)})):
+        ctrl.vpc_previews[serial] = [MU.peer_preview(serial, **kw)]
+    status, result = V.run_vpc(ctrl, [dict(item, deploy=False)], state="replaced", fabric_admin="false")
+    assert status == "exit" and result["changed"] is False and len(ctrl.writes()) == before, result.get("msg")
+    assert [s for s in result["pvlan_saved"] if s.get("kind") == "vpc" and s["state"].startswith("saved, awaiting deployment")], result.get("pvlan_saved")

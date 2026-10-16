@@ -273,26 +273,46 @@ def test_a_saved_deletion_whose_preview_cannot_be_read_is_refused_before_any_wri
     assert writes(type("C", (), {"calls": ctrl.calls[calls:]})) == []
 
 
-def test_member_removal_saved_with_deploy_false_is_completed_by_a_later_deploy_true_repetition():
+def saved_removal_ctrl():
+    """A member removal SAVED with deploy false; the next invocation sees the MEASURED state (live PO-8b/8c, F-RA-1): the port-channel
+    itself stays In-Sync (no pending of its own), the released member carries the pending and the switch is not In-Sync."""
     ctrl = measured_po(MU.seeded())
     ctrl.previews = [MU.fragments(kept=(MU.E7,), removed_trunk=(MU.E9,))]
     status, result = run(ctrl, [MU.item([MU.E7], deploy=False)], state="replaced")
     assert status == "exit" and ctrl.deploys() == [] and len(ctrl.member_modifies()) == 1, result.get("msg")
     ctrl.next_invocation()
-    base = ctrl._summary_list
+    return ctrl
 
-    def pending_until_deploy():
-        out = base()
-        for entry in out:
-            if entry["ifName"] == MU.H.PO and not ctrl.deployed:
-                entry["complianceStatus"] = "Out-of-Sync"  # the saved removal keeps the port-channel pending until its deploy
-        return out
 
-    ctrl._summary_list = pending_until_deploy
-    ctrl.previews = [MU.fragments(kept=(MU.E7,), removed_trunk=(MU.E9,))]
+@pytest.fixture
+def switch_out_of_sync(monkeypatch):
+    monkeypatch.setitem(HH.INVENTORY, SWITCH_IP, dict(HH.INVENTORY[SWITCH_IP], ccStatus="Out-of-Sync"))
+
+
+def test_member_removal_saved_with_deploy_false_is_completed_by_a_later_deploy_true_repetition(switch_out_of_sync):
+    ctrl = saved_removal_ctrl()
+    ctrl.previews = [MU.fragments(kept=(MU.E7,), removed_trunk=(MU.E9,)) for _i in range(2)]  # the saved-removal check, then the gate
     status, result = run(ctrl, [MU.item([MU.E7], deploy=True)], state="replaced")
-    assert status == "exit" and len(ctrl.deploys()) == 1 and len(ctrl.member_modifies()) == 1, result.get("msg")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert len(ctrl.deploys()) == 1 and len(ctrl.member_modifies()) == 1, "deployed once; the member is not written again"
     assert any(r.get("state") == "completing the saved removal" for r in result["pvlan_saved"])
+
+
+def test_a_saved_member_removal_repeated_with_deploy_false_writes_nothing_and_stays_reported_pending(switch_out_of_sync):
+    ctrl = saved_removal_ctrl()
+    before = len(ctrl.writes())  # the saving invocation's writes
+    ctrl.previews = [MU.fragments(kept=(MU.E7,), removed_trunk=(MU.E9,))]
+    status, result = run(ctrl, [MU.item([MU.E7], deploy=False)], state="replaced")
+    assert status == "exit" and result["changed"] is False and len(ctrl.writes()) == before, result.get("msg")
+    assert [s for s in result["pvlan_saved"] if s["operation"] == "remove member" and s["members"] == [MU.E9]
+            and s["state"].startswith("saved, awaiting deployment")], result.get("pvlan_saved")
+
+
+def test_a_repetition_whose_saved_removal_check_cannot_read_the_preview_is_refused(switch_out_of_sync):
+    ctrl = saved_removal_ctrl()
+    ctrl.previews = [{"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": {}}]
+    status, result = run(ctrl, [MU.item([MU.E7], deploy=True)], state="replaced")
+    assert status == "fail" and "rule out a saved member removal" in result["msg"] and ctrl.deploys() == [], result.get("msg")
 
 
 def vpc_queue(ctrl, n):

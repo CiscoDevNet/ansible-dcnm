@@ -65,7 +65,8 @@ MARKDELETE = "/rest/interface/markdelete"
 PRIMARY, SECONDARY = 2210, 2212
 
 INVENTORY = dict(
-    (ip, {"logicalName": "sw-%d" % (i + 1), "serialNumber": sn, "isVpcConfigured": "True", "vpcDomain": 10, "switchRole": "leaf", "managable": "True"})
+    (ip, {"logicalName": "sw-%d" % (i + 1), "serialNumber": sn, "isVpcConfigured": "True", "vpcDomain": 10, "switchRole": "leaf", "managable": "True",
+          "ccStatus": "In-Sync"})
     for i, (ip, sn) in enumerate(((IP1, SN1), (IP2, SN2)))
 )
 

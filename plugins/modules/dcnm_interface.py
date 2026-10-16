@@ -8210,8 +8210,22 @@ class DcnmIntf:
             self.dcnm_intf_merge_intf_info(want, self.diff_replace)
             self.changed_dict[0][state].append(changed_dict)
             intf_changed = True
+        saved = []
+        if not intf_changed:
+            # F-RA-1 (live PO-8c, MEASURED NDFC 12.6.0.267): after a member removal SAVED with deploy false the pending is ONLY the released
+            # member's; the port-channel itself stays In-Sync, so an unchanged repetition found nothing to deploy and reported success over
+            # that pending. The saved removal is looked for in the controller's own state (dcnm_intf_pvlan_po_saved_removals); an unreadable
+            # state refuses instead of being read as "nothing saved".
+            saved = self.dcnm_intf_pvlan_po_saved_removals(sno, name, result["nv"])
+            if saved is None:
+                self.dcnm_intf_pvlan_block(name, sno, "the controller's preview could not be read to rule out a saved member removal")
+                return "done"
+            if saved and str(deploy).lower() != "true":
+                self.result.setdefault("pvlan_saved", []).append({
+                    "kind": "po", "name": name, "serial": sno, "operation": "remove member", "members": saved,
+                    "state": "saved, awaiting deployment (nothing written by this run)"})
         if str(deploy).lower() == "true":
-            if intf_changed:
+            if intf_changed or saved:
                 match_intf, rc = [], True
             else:
                 match_intf, rc = self.dcnm_intf_can_be_added(want)
@@ -8610,7 +8624,7 @@ class DcnmIntf:
         for t in saved:
             self.result.setdefault("pvlan_saved", []).append({
                 "kind": t.get("kind"), "name": t["name"], "serial": t["sno"], "operation": "delete",
-                "state": "saved: marked for deletion, members released administratively down, pending validated; NOT deployed",
+                "state": "saved: marked for deletion, members released to the fabric's host default, pending validated; NOT deployed",
                 "continuation": "deploy the switches (fabric deploy), or repeat the deletion with deploy true: the module recognises the "
                                 "saved deletion from the controller's state and completes and verifies it"})
 
@@ -8627,8 +8641,56 @@ class DcnmIntf:
             removed = removed or ["{0} on peer {1}".format(r["member"], r["index"] + 1) for r in t.get("removed_legs") or []]
             self.result.setdefault("pvlan_saved", []).append({
                 "kind": t.get("kind"), "name": t["name"], "serial": t["sno"], "operation": "remove member", "members": removed,
-                "state": "saved: membership updated, removed members released administratively down, pending validated; NOT deployed",
+                "state": "saved: membership updated, removed members released to the fabric's host default, pending validated; NOT deployed",
                 "continuation": "deploy the switches (fabric deploy), or repeat the request with deploy true"})
+
+    def dcnm_intf_pvlan_po_saved_removals(self, sno, name, po_nv):
+        """F-RA-1: the members of a SAVED removal of this existing PVLAN port-channel, from ONE fresh forced preview of its switch (cached per
+        serial for this run): ports the DEVICE still joins to it (`channel-group N`), with pending, that its intent no longer lists, holding a
+        released member policy at the fabric's host default and no live policy of the port-channel. [] = none; None = the preview or the
+        policy list could not be read (never "none"). The same rule dcnm_intf_pvlan_po_resume_removed applies in the gate."""
+        number = re.match(r"^port-channel([0-9]+)$", str(name).lower())
+        if not number:
+            return []
+        admin = self.dcnm_intf_pvlan_release_admin()
+        if admin is None:
+            return None
+        # A switch the inventory read at the start of this run reports explicitly In-Sync holds no pending at all, so no saved removal: the
+        # preview is read only otherwise (an absent or other ccStatus is never taken as In-Sync).
+        if self.dcnm_intf_pvlan_switch_in_sync(sno):
+            return []
+        cache = self.__dict__.setdefault("pvlan_saved_removal_previews", {})
+        if sno not in cache:
+            cache[sno] = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, sno))
+        try:
+            entry = pvlan_preview_entry(cache[sno], sno)
+            blocks, _global = pvlan_split_blocks(entry["pendingConfig"])
+        except PvlanError:
+            return None
+        running = entry.get("runningConfig") if isinstance(entry.get("runningConfig"), list) else None
+        if running is None:
+            return None
+        listed = set(pvlan_normalize_member_list((po_nv or {}).get("MEMBER_INTERFACES"))[0])
+        joined, _mode = pvlan_running_po_members(running, number.group(1))
+        out = []
+        for member in joined:
+            if member.lower() not in blocks or pvlan_po_member_canonical(member) in listed:
+                continue
+            mname = self.dcnm_intf_pvlan_po_member_ifname(member, sno)
+            m_problems, m_policy, m_nv = self.dcnm_intf_pvlan_po_member_context(mname, sno)
+            if m_problems or m_policy not in PVLAN_RELEASED_MEMBER_POLICIES or not isinstance(m_nv, dict):
+                continue
+            if str(m_nv.get("ADMIN_STATE", "")).strip().lower() != admin:
+                continue
+            policies = self.dcnm_intf_pvlan_read_policies(sno)
+            if policies is None:
+                return None
+            if any(name.lower() in (str(p.get("source", "")).lower(), str(p.get("entityName", "")).lower())
+                   and str(p.get("entityName", "")).lower() == mname.lower()
+                   and p.get("deleted") is not True and str(p.get("deleted", "")).lower() != "true" for p in policies):
+                continue
+            out.append(mname)
+        return out
 
     def dcnm_intf_pvlan_po_resume_removed(self, sno, entry, blocks, allowed, items):
         """LIFECYCLE-B: the continuation of a SAVED member removal (deploy false earlier) of a regular PVLAN port-channel this batch deploys.
@@ -9585,7 +9647,13 @@ class DcnmIntf:
                                 "policy_id": (mnv or {}).get("POLICY_ID")})
         return entries, problems
 
-    def dcnm_intf_pvlan_vpc_resume_removed(self, target, legs, previews):
+    def dcnm_intf_pvlan_switch_in_sync(self, sno):
+        """True only when the inventory read at the start of this run reports `sno` explicitly In-Sync (an absent or other ccStatus is not)."""
+        inventory = [v for v in (getattr(self, "inventory_data", None) or {}).values()
+                     if isinstance(v, dict) and str(v.get("serialNumber", "")).casefold() == str(sno).casefold()]
+        return len(inventory) == 1 and str(inventory[0].get("ccStatus", "")).strip() == "In-Sync"
+
+    def dcnm_intf_pvlan_vpc_resume_removed(self, target, legs, previews, state="completing the saved removal"):
         """V-8 (LIFECYCLE-B): the continuation of a SAVED member removal of a PVLAN vPC (deploy false earlier, in another process), repeated
         with deploy true. Recognised ONLY from the controller's state, per peer, in THAT peer's fresh forced preview: a port the DEVICE still
         joins to the peer's child port-channel (`channel-group N`), with pending, that the vPC intent no longer lists for that peer, whose own
@@ -9640,7 +9708,7 @@ class DcnmIntf:
             target.setdefault("removed_legs", []).extend(out)
             self.result.setdefault("pvlan_saved", []).append({
                 "kind": "vpc", "name": target["name"], "serial": target["sno"], "operation": "remove member",
-                "members": ["{0} on peer {1}".format(r["member"], r["index"] + 1) for r in out], "state": "completing the saved removal"})
+                "members": ["{0} on peer {1}".format(r["member"], r["index"] + 1) for r in out], "state": state})
         return out
 
     def dcnm_intf_pvlan_vpc_removed_decision(self, rleg, entry, blocks):
@@ -9827,6 +9895,9 @@ class DcnmIntf:
         deploying = str(deploy).lower() == "true"
         if creates:
             return "create"
+        if not deploying and not result["update"] and not all(self.dcnm_intf_pvlan_switch_in_sync(leg["serial"]) for leg in legs):
+            # V-8: a saved member removal repeated with deploy false writes nothing and is reported still pending
+            self.dcnm_intf_pvlan_vpc_resume_removed(target, legs, {}, state="saved, awaiting deployment (nothing written by this run)")
         if deploying and resumes:
             # STAGED: the saved creation is judged and its deploy queued in the preflight (dcnm_intf_pvlan_vpc_resume_gates), once every
             # saved vPC this request completes is registered: their pending is then this request's own, not foreign.
