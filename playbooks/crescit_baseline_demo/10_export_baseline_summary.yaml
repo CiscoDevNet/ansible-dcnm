@@ -1,0 +1,30 @@
+---
+# Export baseline summary markers used by demo narration and evidence cards.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+
+  tasks:
+    - name: Build baseline evidence summary
+      ansible.builtin.set_fact:
+        baseline_summary:
+          fabric: "{{ fabric_name }}"
+          markers:
+            - PROD_VRF_Core
+            - PROD_VRF_Shared
+            - PROD_VRF_App
+            - PROD_VRF_Transit
+            - MGMT_OOB_VLAN3902
+            - PROD_NET_Legacy_VLAN999
+          intent:
+            - "Brownfield-safe baseline before risky PR rollout"
+            - "Known-good dependency graph for VRF -> Network -> Interface"
+            - "Ready for Crescit impact and auto-fix demonstrations"
+
+    - name: Display baseline evidence summary
+      ansible.builtin.debug:
+        var: baseline_summary
