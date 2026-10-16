@@ -1133,7 +1133,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Secondary VLAN IDs as a string, for example &quot;2211&quot; or &quot;2211-2212,2214&quot;.</div>
+                        <div>Secondary VLAN IDs as a string, for example &quot;2211&quot; or &quot;2211-2212,2214&quot;. A single-value range such as &quot;2212-2212&quot; is accepted as the VLAN &quot;2212&quot; and sent and compared as &quot;2212&quot;; a descending, repeated, overlapping or out-of-range value is refused.</div>
                 </td>
             </tr>
 
@@ -2003,7 +2003,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string).</div>
+                        <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string; a single-value range &quot;N-N&quot; is the VLAN N, also in <code>allowed_vlans</code>).</div>
                         <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a <code>merged</code> union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
@@ -3778,7 +3778,7 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string).</div>
+                        <div>Promiscuous mappings for <code>pvlan_mode</code> <code>promiscuous</code> (a single primary VLAN) and <code>trunk promiscuous</code>, as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlans</code> (a VLAN list string; a single-value range &quot;N-N&quot; is the VLAN N, also in <code>allowed_vlans</code>).</div>
                         <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a <code>merged</code> union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
