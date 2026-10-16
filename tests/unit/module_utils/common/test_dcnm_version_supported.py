@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import inspect
 from unittest.mock import Mock, patch
 
 import pytest
@@ -236,3 +237,79 @@ def test_get_nd_version_reports_malformed_success_responses():
     assert result["failed"] is True
     assert "did not contain DATA.version" in result["msg"]
     assert "malformed version 'not-a-version'" in result["msg"]
+
+
+# DCNM715-SECONDARYGWS-001 / G7: one authoritative normalized full-version
+# value crosses the helper/action/module boundary. The helper's public
+# full-version contract is always an exact two-tuple; there is no opt-in third
+# value. Normalization remains the existing digit-run behavior, including the
+# explicitly accepted tradeoff that punctuation inside a version may collapse
+# into a canonical dotted value.
+
+
+def test_get_nd_version_g7_has_no_third_version_opt_in():
+    signature = inspect.signature(dcnm.get_nd_version)
+
+    assert tuple(signature.parameters) == (
+        "action_module",
+        "task_vars",
+        "tmp",
+        "return_full_version",
+    )
+
+
+@pytest.mark.parametrize(
+    ("controller_version", "expected"),
+    (
+        ("12.4.1.245", (12.4, "12.4.1.245")),
+        ("11.5(1)", (11.0, "11.5.1")),
+        ("12.1.2e", (12.1, "12.1.2")),
+        ("12.4.1a", (12.4, "12.4.1")),
+        ("DEVEL", (11.0, "11.5.1")),
+        ("12.2.3.+70", (12.2, "12.2.3.70")),
+    ),
+)
+def test_get_nd_version_g7_returns_exact_normalized_pair(controller_version, expected):
+    action = Mock()
+    action._execute_module.return_value = action_version_response(controller_version)
+
+    result = dcnm.get_nd_version(action, {}, None, return_full_version=True)
+
+    assert result.__class__ is tuple
+    assert len(result) == 2
+    assert result[0].__class__ is float
+    assert result[1].__class__ is str
+    assert result == expected
+    action._execute_module.assert_called_once()
+
+
+def test_get_nd_version_g7_fallback_returns_exact_normalized_pair():
+    action = Mock()
+    action._execute_module.side_effect = [
+        {
+            "failed": False,
+            "response": {
+                "RETURN_CODE": 503,
+                "MESSAGE": "Service unavailable",
+            },
+        },
+        action_version_response("12.4.1a"),
+    ]
+
+    result = dcnm.get_nd_version(action, {}, None, return_full_version=True)
+
+    assert result.__class__ is tuple
+    assert len(result) == 2
+    assert result == (12.4, "12.4.1")
+    assert action._execute_module.call_count == 2
+
+
+def test_get_nd_version_g7_default_scalar_contract_for_vrf_caller():
+    """dcnm_vrf continues to use the unchanged default scalar contract."""
+    action = Mock()
+    action._execute_module.return_value = action_version_response("12.4.1a")
+
+    result = dcnm.get_nd_version(action, {}, None)
+
+    assert result.__class__ is float
+    assert result == 12.4
