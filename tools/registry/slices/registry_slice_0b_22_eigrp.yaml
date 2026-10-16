@@ -1,0 +1,942 @@
+# WP98 — the thirteen EIGRP fields, on the three overlay parents.
+#
+# WHY ONE SLICE FOR THREE PARENTS
+#   Because the thirteen are IDENTICAL across int_routed_host, int_subif and int_vlan -- same
+#   type, same default, same bounds, same valid values, thirteen for thirteen. That was measured
+#   against the bodies the controller is running, not assumed from the batch on disk.
+#
+#   The OSPF scalars needed one slice per parent for the opposite reason: passive and bfd are
+#   enums on routed and vlan and booleans on subif, and retransmit_interval does not exist on
+#   routed at all. Authentication was the first family that turned out uniform; EIGRP is the
+#   second. Uniformity is a finding each time, never a default.
+#
+# WHERE THESE FACTS COME FROM
+#   The template bodies fetched FROM THE CONTROLLER on 2026-09-19, archived at
+#   <internal evidence record>
+#
+#   This matters more than it sounds. Three of the four parents on the controller DIFFER from the
+#   local 15sep2026_full batch, and int_loopback differs so much that the installed body has no
+#   EIGRP at all. A slice authored from the batch would describe a template nobody is running.
+#
+# THE GATE: EIGRP_PROCESS_TAG
+#   Every other field is inert without it. The parent's DSL wraps the whole EIGRP block in
+#   `if eigrpProcessTag != "":`, the tag declares NO default, and all eleven booleans default to
+#   false with IsShow="EIGRP_PROCESS_TAG!=''".
+#
+#   Two consequences worth stating plainly.
+#
+#   Nothing fires on its own. That is the structural opposite of int_vlan's DISABLE_IP_REDIRECTS,
+#   which defaults to true and instantiated a child that was missing from the controller -- the
+#   HTTP 500 that blocked SVI work for two days. EIGRP carries no such default, which is why this
+#   family needed no template upload.
+#
+#   THE TEMPLATE REFUSES THE TAGLESS CASE ITSELF. Above the creation block, every one of the three
+#   parents -- and the new int_loopback -- carries an explicit rejection:
+#
+#       if eigrpOptionSelected and eigrpProcessTag == "":
+#           errMsg = "EIGRP process tag is required when EIGRP interface options are enabled."
+#           respObj.setFailureRetCode()
+#           return respObj
+#
+#   (int_routed_host:897, int_subif:679, int_vlan:939 in the captured controller bodies.)
+#
+#   An earlier version of this header claimed the opposite -- that NDFC accepts such a config,
+#   instantiates nothing and reports success. That was an inference from reading the creation
+#   block alone, written as though it had been measured. It had not been, and the body archived
+#   beside this slice contradicts it. The architect found it. Recorded here rather than quietly
+#   deleted, because the error was stating an unmeasured behaviour as fact, not the guess itself.
+#
+#   These rows therefore do NOT enforce the gate, and do not need to: NDFC already implements the
+#   dependency. The engine validates membership and transports the string; template semantics stay
+#   the template's. What the module must not do is demand the tag in every profile -- a valid
+#   partial update may omit it while HAVE carries it, and the comparator preserves it.
+#
+# TWO MORE RULES THE TEMPLATE ENFORCES, ALSO NOT OURS TO DUPLICATE
+#
+#       "EIGRP IPv4 passive-interface enable and disable cannot both be selected."
+#       "EIGRP BFD enable and disable cannot both be selected."
+#
+#   Present in all three parents. They pair (eigrp_ipv4_passive, eigrp_no_ipv4_passive) and
+#   (enable_eigrp_bfd, disable_eigrp_bfd) as mutually exclusive. Worth naming because the
+#   carry-forward can build a payload that trips them without the operator writing both: send
+#   disable_eigrp_bfd while HAVE holds enable_eigrp_bfd, and the preserved value arrives beside
+#   the new one. That interaction is a live stage, not an assumption -- see the runbook.
+#
+# AN ASYMMETRY THAT IS THE TEMPLATE'S, NOT A TYPO
+#   IPv4 has both EIGRP_IPV4_PASSIVE and EIGRP_NO_IPV4_PASSIVE. IPv6 has only
+#   EIGRP_NO_IPV6_PASSIVE -- there is no EIGRP_IPV6_PASSIVE field. The children match exactly:
+#   eigrp_interface_ip_passive_11_1, eigrp_interface_no_ip_passive_11_1 and
+#   eigrp_interface_no_ipv6_passive_11_1 exist; an ipv6-passive child does not.
+#
+# THE TWO DISTRIBUTE-LIST DIRECTIONS ARE ENUMS, AND THEIR OWN GATE IS THE PREFIX LIST
+#   EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION is IsShow-gated on
+#   EIGRP_IPV4_DISTRIBUTE_LIST_PREFIX_LIST being non-empty, not on the process tag. Valid values
+#   are QUOTED here for the same reason every enum in this registry is: an enum maps to the `str`
+#   validator, because nvPairs are a string-valued map and NDFC returns "out", never a symbol.
+#
+# ALL TEN CHILDREN ARE INSTALLED
+#   Verified against the controller before this slice was written, by reading the parents' DSL
+#   rather than searching for names -- the int_vlan blocker was a child whose name matched no
+#   pattern. Zero absent children on all three parents. See phase26-eigrp-template-preflight.
+
+bindings:
+  # ---------------------------------------------------------------- int_routed_host
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpProcessTag
+    profile_key: eigrp_process_tag
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: unverified
+    # PR725-EIGRP-ALL-001 Experimento A: medido en vivo 2026-09-29 sobre los cuatro
+    # sujetos de BETA_EIGRP/L1-F4, en contexto que NUNCA llevo una opcion `passive`.
+    # TRANSICION COORDINADA, no retiro independiente: el validador 1 del parent
+    # RECHAZA la peticion si queda cualquier opcion activa con el tag vacio, asi que
+    # `enable_eigrp_routing` se apago en la MISMA peticion. Eso es una imposicion del
+    # producto, no una eleccion, y se registra como tal.
+    # READBACK: eigrpProcessTag `EIGRP47` -> `""`. EQUIPO: CERO lineas EIGRP en los
+    # cuatro sujetos -- sin inversa y sin residuo, a diferencia de lo observado
+    # cuando la interfaz habia llevado `passive`. Rerun identico: 0 mutaciones, y
+    # CERO pendientes atribuibles a estos sujetos.
+    # LIMITE: un cierre de compuerta agrupado NO valida por separado el retiro de
+    # cada subordinada; esas se midieron una por una en rM, rD y los alternos.
+    reset_wire: ''
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpRouting
+    profile_key: enable_eigrp_routing
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv6Routing
+    profile_key: enable_eigrp_ipv6_routing
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv4Passive
+    profile_key: eigrp_ipv4_passive
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpNoIpv4Passive
+    profile_key: eigrp_no_ipv4_passive
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpNoIpv6Passive
+    profile_key: eigrp_no_ipv6_passive
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpShutdown
+    profile_key: enable_eigrp_shutdown
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpBfd
+    profile_key: enable_eigrp_bfd
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # PR725-EIGRP-ALL-001 perfil alterno p3a: medido en vivo 2026-09-29 en los cuatro
+    # sujetos de BETA_EIGRP/L1-F4, con `feature bfd` habilitado por politica de NDFC.
+    # `ip eigrp EIGRP47 bfd` presente tras el apply y AUSENTE tras el clear explicito;
+    # r2 reaplico identico con 0 mutaciones. NO coexiste con disable_eigrp_bfd: el
+    # parent RECHAZA la peticion si ambos van en true, y por eso se midio aparte.
+    # NO se afirma comportamiento OPERATIVO de BFD: la evidencia es de configuracion.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpBfdDisable
+    profile_key: disable_eigrp_bfd
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # PR725-EIGRP-ALL-001 perfil alterno p3b: medido en vivo 2026-09-29 en los cuatro
+    # sujetos. `ip eigrp EIGRP47 bfd disable` presente tras el apply y AUSENTE tras el
+    # clear, SIN dejar detras `ip eigrp EIGRP47 bfd` -- comparado por linea completa,
+    # porque una es prefijo de la otra. Excluyente con enable_eigrp_bfd.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv4DistributeListPrefixList
+    profile_key: eigrp_ipv4_distribute_list_prefix_list
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv4DistributeListDirection
+    profile_key: eigrp_ipv4_distribute_list_direction
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    # PR725-EIGRP-ALL-001 rD: medido en vivo 2026-09-29. Reset DIRIGIDO de la direccion
+    # CONSERVANDO la prefix-list, el tag y el contexto. Efecto de FRAGMENTO, no de
+    # linea: `ip[v6] distribute-list eigrp EIGRP47 prefix-list <pl> in` -> `... out`,
+    # con la atadura RETENIDA. rD2 reaplico identico: 0 mutaciones, In-Sync.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv6DistributeListPrefixList
+    profile_key: eigrp_ipv6_distribute_list_prefix_list
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv6DistributeListDirection
+    profile_key: eigrp_ipv6_distribute_list_direction
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    # PR725-EIGRP-ALL-001 rD: medido en vivo 2026-09-29. Reset DIRIGIDO de la direccion
+    # CONSERVANDO la prefix-list, el tag y el contexto. Efecto de FRAGMENTO, no de
+    # linea: `ip[v6] distribute-list eigrp EIGRP47 prefix-list <pl> in` -> `... out`,
+    # con la atadura RETENIDA. rD2 reaplico identico: 0 mutaciones, In-Sync.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  # ---------------------------------------------------------------- int_subif
+  - parent_template: int_subif
+    parent_nvpair: eigrpProcessTag
+    profile_key: eigrp_process_tag
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: unverified
+    # PR725-EIGRP-ALL-001 Experimento A: medido en vivo 2026-09-29 sobre los cuatro
+    # sujetos de BETA_EIGRP/L1-F4, en contexto que NUNCA llevo una opcion `passive`.
+    # TRANSICION COORDINADA, no retiro independiente: el validador 1 del parent
+    # RECHAZA la peticion si queda cualquier opcion activa con el tag vacio, asi que
+    # `enable_eigrp_routing` se apago en la MISMA peticion. Eso es una imposicion del
+    # producto, no una eleccion, y se registra como tal.
+    # READBACK: eigrpProcessTag `EIGRP47` -> `""`. EQUIPO: CERO lineas EIGRP en los
+    # cuatro sujetos -- sin inversa y sin residuo, a diferencia de lo observado
+    # cuando la interfaz habia llevado `passive`. Rerun identico: 0 mutaciones, y
+    # CERO pendientes atribuibles a estos sujetos.
+    # LIMITE: un cierre de compuerta agrupado NO valida por separado el retiro de
+    # cada subordinada; esas se midieron una por una en rM, rD y los alternos.
+    reset_wire: ''
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpRouting
+    profile_key: enable_eigrp_routing
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv6Routing
+    profile_key: enable_eigrp_ipv6_routing
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv4Passive
+    profile_key: eigrp_ipv4_passive
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpNoIpv4Passive
+    profile_key: eigrp_no_ipv4_passive
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpNoIpv6Passive
+    profile_key: eigrp_no_ipv6_passive
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpShutdown
+    profile_key: enable_eigrp_shutdown
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpBfd
+    profile_key: enable_eigrp_bfd
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # PR725-EIGRP-ALL-001 perfil alterno p3a: medido en vivo 2026-09-29 en los cuatro
+    # sujetos de BETA_EIGRP/L1-F4, con `feature bfd` habilitado por politica de NDFC.
+    # `ip eigrp EIGRP47 bfd` presente tras el apply y AUSENTE tras el clear explicito;
+    # r2 reaplico identico con 0 mutaciones. NO coexiste con disable_eigrp_bfd: el
+    # parent RECHAZA la peticion si ambos van en true, y por eso se midio aparte.
+    # NO se afirma comportamiento OPERATIVO de BFD: la evidencia es de configuracion.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpBfdDisable
+    profile_key: disable_eigrp_bfd
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # PR725-EIGRP-ALL-001 perfil alterno p3b: medido en vivo 2026-09-29 en los cuatro
+    # sujetos. `ip eigrp EIGRP47 bfd disable` presente tras el apply y AUSENTE tras el
+    # clear, SIN dejar detras `ip eigrp EIGRP47 bfd` -- comparado por linea completa,
+    # porque una es prefijo de la otra. Excluyente con enable_eigrp_bfd.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv4DistributeListPrefixList
+    profile_key: eigrp_ipv4_distribute_list_prefix_list
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: exact
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv4DistributeListDirection
+    profile_key: eigrp_ipv4_distribute_list_direction
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    # PR725-EIGRP-ALL-001 rD: medido en vivo 2026-09-29. Reset DIRIGIDO de la direccion
+    # CONSERVANDO la prefix-list, el tag y el contexto. Efecto de FRAGMENTO, no de
+    # linea: `ip[v6] distribute-list eigrp EIGRP47 prefix-list <pl> in` -> `... out`,
+    # con la atadura RETENIDA. rD2 reaplico identico: 0 mutaciones, In-Sync.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv6DistributeListPrefixList
+    profile_key: eigrp_ipv6_distribute_list_prefix_list
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: exact
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv6DistributeListDirection
+    profile_key: eigrp_ipv6_distribute_list_direction
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    # PR725-EIGRP-ALL-001 rD: medido en vivo 2026-09-29. Reset DIRIGIDO de la direccion
+    # CONSERVANDO la prefix-list, el tag y el contexto. Efecto de FRAGMENTO, no de
+    # linea: `ip[v6] distribute-list eigrp EIGRP47 prefix-list <pl> in` -> `... out`,
+    # con la atadura RETENIDA. rD2 reaplico identico: 0 mutaciones, In-Sync.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  # ---------------------------------------------------------------- int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: eigrpProcessTag
+    profile_key: eigrp_process_tag
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: unverified
+    # PR725-EIGRP-ALL-001 Experimento A: medido en vivo 2026-09-29 sobre los cuatro
+    # sujetos de BETA_EIGRP/L1-F4, en contexto que NUNCA llevo una opcion `passive`.
+    # TRANSICION COORDINADA, no retiro independiente: el validador 1 del parent
+    # RECHAZA la peticion si queda cualquier opcion activa con el tag vacio, asi que
+    # `enable_eigrp_routing` se apago en la MISMA peticion. Eso es una imposicion del
+    # producto, no una eleccion, y se registra como tal.
+    # READBACK: eigrpProcessTag `EIGRP47` -> `""`. EQUIPO: CERO lineas EIGRP en los
+    # cuatro sujetos -- sin inversa y sin residuo, a diferencia de lo observado
+    # cuando la interfaz habia llevado `passive`. Rerun identico: 0 mutaciones, y
+    # CERO pendientes atribuibles a estos sujetos.
+    # LIMITE: un cierre de compuerta agrupado NO valida por separado el retiro de
+    # cada subordinada; esas se midieron una por una en rM, rD y los alternos.
+    reset_wire: ''
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpRouting
+    profile_key: enable_eigrp_routing
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv6Routing
+    profile_key: enable_eigrp_ipv6_routing
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv4Passive
+    profile_key: eigrp_ipv4_passive
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpNoIpv4Passive
+    profile_key: eigrp_no_ipv4_passive
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpNoIpv6Passive
+    profile_key: eigrp_no_ipv6_passive
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpShutdown
+    profile_key: enable_eigrp_shutdown
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpBfd
+    profile_key: enable_eigrp_bfd
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # PR725-EIGRP-ALL-001 perfil alterno p3a: medido en vivo 2026-09-29 en los cuatro
+    # sujetos de BETA_EIGRP/L1-F4, con `feature bfd` habilitado por politica de NDFC.
+    # `ip eigrp EIGRP47 bfd` presente tras el apply y AUSENTE tras el clear explicito;
+    # r2 reaplico identico con 0 mutaciones. NO coexiste con disable_eigrp_bfd: el
+    # parent RECHAZA la peticion si ambos van en true, y por eso se midio aparte.
+    # NO se afirma comportamiento OPERATIVO de BFD: la evidencia es de configuracion.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpBfdDisable
+    profile_key: disable_eigrp_bfd
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # PR725-EIGRP-ALL-001 perfil alterno p3b: medido en vivo 2026-09-29 en los cuatro
+    # sujetos. `ip eigrp EIGRP47 bfd disable` presente tras el apply y AUSENTE tras el
+    # clear, SIN dejar detras `ip eigrp EIGRP47 bfd` -- comparado por linea completa,
+    # porque una es prefijo de la otra. Excluyente con enable_eigrp_bfd.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv4DistributeListPrefixList
+    profile_key: eigrp_ipv4_distribute_list_prefix_list
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv4DistributeListDirection
+    profile_key: eigrp_ipv4_distribute_list_direction
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    # PR725-EIGRP-ALL-001 rD: medido en vivo 2026-09-29. Reset DIRIGIDO de la direccion
+    # CONSERVANDO la prefix-list, el tag y el contexto. Efecto de FRAGMENTO, no de
+    # linea: `ip[v6] distribute-list eigrp EIGRP47 prefix-list <pl> in` -> `... out`,
+    # con la atadura RETENIDA. rD2 reaplico identico: 0 mutaciones, In-Sync.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv6DistributeListPrefixList
+    profile_key: eigrp_ipv6_distribute_list_prefix_list
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    # PR725-EIGRP-ALL-001 rM: medido en vivo 2026-09-29 sobre los cuatro sujetos de
+    # BETA_EIGRP/L1-F4. Clear explicito por tipo propio conservando el tag. La linea
+    # CLI de esta identidad estaba presente antes y AUSENTE despues; contexto y no
+    # objetivos intactos; controlador In-Sync sin pendientes.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv6DistributeListDirection
+    profile_key: eigrp_ipv6_distribute_list_direction
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    # PR725-EIGRP-ALL-001 rD: medido en vivo 2026-09-29. Reset DIRIGIDO de la direccion
+    # CONSERVANDO la prefix-list, el tag y el contexto. Efecto de FRAGMENTO, no de
+    # linea: `ip[v6] distribute-list eigrp EIGRP47 prefix-list <pl> in` -> `... out`,
+    # con la atadura RETENIDA. rD2 reaplico identico: 0 mutaciones, In-Sync.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30

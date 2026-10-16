@@ -1,0 +1,344 @@
+{
+ "M1": {
+  "post_deploy": {
+   "<SERIAL_LEAF_B>": {
+    "expected": [
+     "interface ethernet1/13",
+     "  channel-group 573 mode active",
+     "  mtu 9216",
+     "  no shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel573",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "pending": [],
+    "running": [
+     "interface ethernet1/13",
+     "  channel-group 573 mode active",
+     "  mtu 9216",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel573",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "pre_deploy": {
+   "<SERIAL_LEAF_B>": {
+    "expected": [
+     "interface ethernet1/13",
+     "  channel-group 573 mode active",
+     "  mtu 9216",
+     "  no shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel573",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "pending": [
+     "interface ethernet1/13",
+     "  no spanning-tree port type edge trunk",
+     "interface port-channel573",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal",
+     "interface ethernet1/13",
+     "  channel-group 573 force mode active",
+     "  no shutdown",
+     "configure terminal"
+    ],
+    "running": [
+     "interface ethernet1/13",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "Out-of-Sync"
+   }
+  }
+ },
+ "M2": {
+  "post_deploy": {
+   "<SERIAL_LEAF_B>": {
+    "expected": [
+     "interface ethernet1/14",
+     "  channel-group 574 mode active",
+     "  mtu 9216",
+     "  no shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel574",
+     "  mtu 9216",
+     "  no shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "pending": [],
+    "running": [
+     "interface ethernet1/14",
+     "  channel-group 574 mode active",
+     "  mtu 9216",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel574",
+     "  mtu 9216",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "pre_deploy": {
+   "<SERIAL_LEAF_B>": {
+    "expected": [
+     "interface ethernet1/14",
+     "  channel-group 574 mode active",
+     "  mtu 9216",
+     "  no shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel574",
+     "  mtu 9216",
+     "  no shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "pending": [
+     "interface ethernet1/14",
+     "  no spanning-tree port type edge trunk",
+     "interface port-channel574",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  no shutdown",
+     "configure terminal",
+     "interface ethernet1/14",
+     "  channel-group 574 force mode active",
+     "  no shutdown",
+     "configure terminal"
+    ],
+    "running": [
+     "interface ethernet1/14",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "Out-of-Sync"
+   }
+  }
+ },
+ "M3": {
+  "post_deploy": {
+   "<SERIAL_LEAF_A>": {
+    "expected": [
+     "interface ethernet1/16",
+     "  channel-group 575 mode active",
+     "  mtu 9216",
+     "  no shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel575",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  vpc 575"
+    ],
+    "pending": [],
+    "running": [
+     "interface ethernet1/16",
+     "  channel-group 575 mode active",
+     "  mtu 9216",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel575",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  vpc 575"
+    ],
+    "status": "In-Sync"
+   },
+   "<SERIAL_LEAF_B>": {
+    "expected": [
+     "interface ethernet1/16",
+     "  channel-group 575 mode active",
+     "  mtu 9216",
+     "  no shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel575",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  vpc 575"
+    ],
+    "pending": [],
+    "running": [
+     "interface ethernet1/16",
+     "  channel-group 575 mode active",
+     "  mtu 9216",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel575",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  vpc 575"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "pre_deploy": {
+   "<SERIAL_LEAF_A>": {
+    "expected": [
+     "interface ethernet1/16",
+     "  channel-group 575 mode active",
+     "  mtu 9216",
+     "  no shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel575",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  vpc 575"
+    ],
+    "pending": [
+     "interface ethernet1/16",
+     "  no spanning-tree port type edge trunk",
+     "interface port-channel575",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  mtu 9216",
+     "  vpc 575",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal",
+     "interface ethernet1/16",
+     "  channel-group 575 force mode active",
+     "  no shutdown",
+     "configure terminal"
+    ],
+    "running": [
+     "interface ethernet1/16",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "Out-of-Sync"
+   },
+   "<SERIAL_LEAF_B>": {
+    "expected": [
+     "interface ethernet1/16",
+     "  channel-group 575 mode active",
+     "  mtu 9216",
+     "  no shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "interface port-channel575",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  vpc 575"
+    ],
+    "pending": [
+     "interface ethernet1/16",
+     "  no spanning-tree port type edge trunk",
+     "interface port-channel575",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  mtu 9216",
+     "  vpc 575",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal",
+     "interface ethernet1/16",
+     "  channel-group 575 force mode active",
+     "  no shutdown",
+     "configure terminal"
+    ],
+    "running": [
+     "interface ethernet1/16",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "Out-of-Sync"
+   }
+  }
+ },
+ "_source": "PR725-ADMIN-UP-JOIN Phase 1 direct legacy measurements, ND90 NDFC 12.6.0.267 / NX-OS 10.5(5), 2026-10-14; member admin-up int_trunk_host joining a PVLAN host Po (M1 parent down, M2 parent up) and vPC (M3 parent down, both peers). Verbatim stanzas of the case's own interfaces only; serials are placeholders."
+}

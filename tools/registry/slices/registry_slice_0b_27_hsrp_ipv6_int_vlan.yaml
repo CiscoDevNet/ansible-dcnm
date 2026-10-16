@@ -1,0 +1,105 @@
+# WP98 — HSRP IPv6 on int_vlan. DOS filas, despues de que la medicion tumbara las otras dos.
+#
+# LO QUE SE PIDIO Y POR QUE NO ALCANZA CON UNA FILA
+#   El pedido era registrar HSRP_GROUPv6. Medido contra el cuerpo instalado
+#   (int_vlan.template@0efb09af7f837b30), ese campo no puede producir NINGUNA linea por si solo:
+#   todo el bloque IPv6 del DSL esta detras de una sola puerta,
+#
+#       if ipv6_vip:                       # ipv6_vip = HSRP_VIPv6
+#           ipv6_hsrp_group = ipv6_hsrp_group if ipv6_hsrp_group else HSRP_GROUP
+#           ... instancia los hijos con IP_TYPE "ipv6"
+#
+#   y antes de eso hay una trampa peor. El DSL calcula
+#
+#       hostMask = 0xFFFF... >> int(ipv6_prefix_len)     # int("") lanza
+#       except:
+#           ipv6_address = ipv6_prefix_len = ipv6_vip = ipv6_hsrp_group = ""
+#
+#   Ese `except` desnudo BORRA ipv6_vip. Sin PREFIXv6 el bloque IPv6 no se activa y la plantilla
+#   NO se queja: no rechaza, ignora. Es la forma de fallo mas enganosa de todo el lote.
+#
+#   Cadena completa para que HSRP IPv6 exista: IPv6 + PREFIXv6 + HSRP_VIPv6, y entonces
+#   HSRP_GROUPv6 tiene algo que modificar. Este slice registra los DOS de HSRP. Los otros dos
+#   NO van aqui, y la razon se midio en vez de razonarse.
+#
+# POR QUE IPv6 Y PREFIXv6 SE RETIRARON DE ESTE SLICE
+#   Estuvieron registrados y se quitaron. No es preferencia: es un defecto medido.
+#
+#   Registrar ("int_vlan", "IPv6") -> "ipv6_addr" hizo que el guard del engine reclamara esa
+#   clave publica GLOBALMENTE, y empezo a rechazarla en int_subif, donde el arg spec NATIVO si la
+#   soporta:
+#
+#       'ipv6_addr' is not supported on this interface (type 'sub_int', mode 'subint').
+#       No template metadata was queried and no change was sent.
+#
+#   Lo atraparon dos pruebas de subinterfaz de test_dcnm_intf.py. La leccion: una profile_key que
+#   el spec nativo ya sirve en OTROS padres no se puede registrar para un padre -- el binding es
+#   por (parent, nvpair) pero el camino de rechazo del guard no lo es.
+#
+#   test_gie_legacy_and_engine_never_collide NO lo atrapo. Comprueba si el builder del padre
+#   REGISTRADO escribe el nvPair a mano, y el builder de SVI no escribe IPv6. Su punto ciego son
+#   los builders de los OTROS padres. Documentado como hallazgo en phase37.
+#
+#   El direccionamiento IPv6 de la SVI pertenece al svi_prof_spec, donde ya vive para int_subif e
+#   int_loopback -- con el detalle de que int_vlan llama a su prefijo PREFIXv6 mientras los otros
+#   usan IPv6_PREFIX, asi que el camino nativo necesita ese mapeo. Eso es un cambio en el modulo
+#   fuera del engine y no se hace aqui.
+#
+# CONSECUENCIA PARA LA RONDA EN VIVO
+#   Con estos dos registrados y sin direccionamiento IPv6 en la SVI, `r1` NO puede producir
+#   lineas IPv6: falta PREFIXv6 y el `except` se come el VIP en silencio. Estas dos filas quedan
+#   registradas y probadas OFFLINE, y su ciclo en vivo espera el cambio nativo. Se dice aqui para
+#   que nadie las cuente como validadas en hardware.
+#
+# HSRP_VIPv6 COMO `string`, Y ES UNA DECISION
+#   Es ipV6Address en la plantilla. El engine mapea cuatro tipos (boolean/enum/string/integer) y
+#   ninguno es de direccion, asi que va como `string`: es la PRIMERA fila de la tabla que
+#   corresponde a un campo de direccion. El modulo deja de validar el formato; NDFC sigue
+#   validandolo con reglas propias ("HSRP IPv6 address ...: host address part cannot be all 0s",
+#   "Cannot enable HSRP without HSRP IPv4 or IPv6 address"). Es delegar, no abrir -- pero es
+#   precedente, y NO resuelve DHCP_RELAY_SRC_INTF (tipo `interface`) ni HSRP_SECONDARY_VIPS
+#   (struct con lista de 16), que siguen sin tipo.
+#
+# EL VALOR OBSERVABLE DE HSRP_GROUPv6
+#   `ipv6_hsrp_group if ipv6_hsrp_group else HSRP_GROUP`: si se omite, cae al grupo IPv4. Cuando
+#   la ronda pueda correr, tiene que mandarlo DISTINTO del IPv4 -- es la unica forma de ver que
+#   transporto.
+
+bindings:
+
+
+  - parent_template: int_vlan
+    parent_nvpair: HSRP_VIPv6
+    profile_key: hsrp_vipv6
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: casefold
+    max_length: 45
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: HSRP_GROUPv6
+    profile_key: hsrp_groupv6
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    min: 0
+    max: 4095
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30

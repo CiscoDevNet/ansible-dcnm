@@ -1,0 +1,657 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+# Fabric-loopback OSPF message-digest authentication.
+#
+#   profile.enable_ospf_auth_message_digest
+#     -> nvPairs.ENABLE_OSPF_AUTH_MESSAGE_DIGEST
+#     -> int_fabric_loopback_11_1
+#     -> ospf_interface_auth_message_digest_11_1   (child PTI, created/deleted
+#                                                   by the parent template)
+#
+# This file is deliberately separate from dcnm_lo_fabric.yaml. That file opens
+# with a fabric-wide `state: overridden` reset, before anything has been
+# captured and outside any restoration block. Reusing it would mean either
+# inheriting that pattern or restructuring a shared file for every unrelated
+# loopback case.
+#
+# Ordering is the safety property here, and it is not incidental:
+#
+#   1. classify capability            (GET only)
+#   2. capture BOTH loopback baselines complete and untouched
+#   3. prove every captured field can be reproduced exactly
+#   4. only then enter the block that mutates
+#   5. `always` restores from the captured baseline, on every exit path
+#
+# Nothing above step 4 changes controller state, so an abort at any earlier
+# point leaves the fabric exactly as it was found.
+
+- name: Remove local log file
+  local_action: command rm -f dcnm_intf_ospf_auth_md.log
+
+##############################################
+##       1. CAPABILITY (GET ONLY)           ##
+##############################################
+
+# Capability comes from named-template metadata. Never from the NDFC version,
+# and never from the absence of the nvPair in an interface query: a fabric whose
+# loopbacks predate the parameter looks identical to one that cannot support it.
+- name: Read the fabric loopback parent template
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/int_fabric_loopback_11_1
+  register: lo_parent_template
+  ignore_errors: true
+
+- name: Read the OSPF message-digest child template
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/ospf_interface_auth_message_digest_11_1
+  register: lo_child_template
+  ignore_errors: true
+
+- name: Classify the capability
+  ansible.builtin.set_fact:
+    # A real list, not merely "iterable and not string": a dict is iterable and
+    # not a string, so the old test accepted dict-valued parameters that the
+    # product classifier (isinstance list) rejects. type_debug == 'list' mirrors
+    # the product exactly.
+    ospf_md_parent_readable: >-
+      {{
+        (not (lo_parent_template.failed | default(false)))
+        and (lo_parent_template.response.RETURN_CODE | default(0)) == 200
+        and (lo_parent_template.response.DATA.name | default('')) == 'int_fabric_loopback_11_1'
+        and ((lo_parent_template.response.DATA.parameters | default(none) | type_debug) == 'list')
+      }}
+    ospf_md_child_readable: >-
+      {{
+        (not (lo_child_template.failed | default(false)))
+        and (lo_child_template.response.RETURN_CODE | default(0)) == 200
+        and (lo_child_template.response.DATA.name | default('')) == 'ospf_interface_auth_message_digest_11_1'
+      }}
+
+# Every entry is inspected, not just the matching one. A single malformed entry
+# means the metadata cannot be trusted to describe anything, which is why this
+# is a separate fact from the target lookup below.
+- name: Detect malformed parameter entries
+  ansible.builtin.set_fact:
+    ospf_md_malformed_entries: >-
+      {{
+        (lo_parent_template.response.DATA.parameters | default([]))
+        | rejectattr('name', 'defined') | list
+        + (lo_parent_template.response.DATA.parameters | default([]))
+        | selectattr('name', 'defined')
+        | selectattr('name', 'string')
+        | selectattr('name', 'match', '^\s*$') | list
+        + (lo_parent_template.response.DATA.parameters | default([]))
+        | selectattr('name', 'defined')
+        | rejectattr('name', 'string') | list
+      }}
+    ospf_md_targets: >-
+      {{
+        (lo_parent_template.response.DATA.parameters | default([]))
+        | selectattr('name', 'defined')
+        | selectattr('name', 'string')
+        | selectattr('name', 'equalto', 'ENABLE_OSPF_AUTH_MESSAGE_DIGEST')
+        | list
+      }}
+
+# Child metadata, mirroring DcnmIntf._dcnm_intf_classify_child_metadata(): the
+# child must declare a real parameter list, no malformed sibling, exactly one
+# INTF_NAME, of type 'interface'. Accepting a same-name child on name alone
+# would classify a broken controller as supported.
+- name: Classify child metadata
+  ansible.builtin.set_fact:
+    ospf_md_child_params_list: >-
+      {{ (lo_child_template.response.DATA.parameters | default(none) | type_debug) == 'list' }}
+    ospf_md_child_malformed: >-
+      {{
+        (lo_child_template.response.DATA.parameters | default([]))
+        | rejectattr('name', 'defined') | list
+        + (lo_child_template.response.DATA.parameters | default([]))
+        | selectattr('name', 'defined')
+        | selectattr('name', 'string')
+        | selectattr('name', 'match', '^\s*$') | list
+        + (lo_child_template.response.DATA.parameters | default([]))
+        | selectattr('name', 'defined')
+        | rejectattr('name', 'string') | list
+      }}
+    ospf_md_child_intf_targets: >-
+      {{
+        (lo_child_template.response.DATA.parameters | default([]))
+        | selectattr('name', 'defined')
+        | selectattr('name', 'string')
+        | selectattr('name', 'equalto', 'INTF_NAME')
+        | list
+      }}
+
+- name: Derive the strict tri-state verdict
+  ansible.builtin.set_fact:
+    # Mirrors DcnmIntf._dcnm_intf_classify_ospf_auth_md_metadata() plus
+    # _dcnm_intf_classify_child_metadata() branch for branch. The unit suite
+    # test_dcnm_intf_ospfmd_classifier_parity.py extracts these expressions from
+    # THIS file and requires the same verdict as the product classifiers for
+    # every input, so the two cannot drift apart.
+    #
+    # defaultValue: strip surrounding whitespace then surrounding quotes only
+    # (trim | trim('"')), never embedded quotes -- product does .strip().strip('"').
+    ospf_md_capability: >-
+      {%- if not (ospf_md_parent_readable | bool) -%}unavailable
+      {%- elif (ospf_md_malformed_entries | length) > 0 -%}unavailable
+      {%- elif (ospf_md_targets | length) == 0 -%}unsupported
+      {%- elif (ospf_md_targets | length) > 1 -%}unavailable
+      {%- elif (ospf_md_targets[0].parameterType | default('')) != 'boolean' -%}unavailable
+      {%- elif (ospf_md_targets[0].metaProperties | default(none) | type_debug) != 'dict' -%}unavailable
+      {%- elif 'defaultValue' not in (ospf_md_targets[0].metaProperties) -%}unavailable
+      {%- elif ((ospf_md_targets[0].metaProperties.defaultValue) | string | trim | trim('"') | lower) not in ['false',''] -%}unavailable
+      {%- elif not (ospf_md_child_readable | bool) -%}unavailable
+      {%- elif not (ospf_md_child_params_list | bool) -%}unavailable
+      {%- elif (ospf_md_child_malformed | length) > 0 -%}unavailable
+      {%- elif (ospf_md_child_intf_targets | length) != 1 -%}unavailable
+      {%- elif (ospf_md_child_intf_targets[0].parameterType | default('')) != 'interface' -%}unavailable
+      {%- else -%}supported
+      {%- endif -%}
+
+# 'unavailable' is not 'unsupported'. Unreadable or ambiguous metadata must stop
+# the file rather than quietly select the no-feature branch, because the cleanup
+# at the end would then run against a capability nobody established.
+- name: ASSERT - refuse to continue on unreadable or ambiguous metadata
+  ansible.builtin.assert:
+    that:
+      - ospf_md_capability in ['supported', 'unsupported']
+    fail_msg: >-
+      OSPF message-digest template metadata is unreadable or ambiguous
+      (parent readable={{ ospf_md_parent_readable }},
+      malformed entries={{ ospf_md_malformed_entries | length }},
+      target count={{ ospf_md_targets | length }},
+      child readable={{ ospf_md_child_readable }},
+      child INTF_NAME count={{ ospf_md_child_intf_targets | length }}).
+      Refusing to run or clean up against unknown capability.
+    success_msg: "Capability classified: {{ ospf_md_capability }}"
+
+- name: Debug
+  ansible.builtin.debug:
+    msg: "OSPF message-digest capability from controller metadata: {{ ospf_md_capability }}"
+
+##############################################
+##   2. BASELINE CAPTURE (UNTOUCHED)        ##
+##############################################
+
+# Both loopbacks, before anything mutates. Loopback1 is not a target of this
+# file; it is captured so that "unchanged" can be proven at the end instead of
+# assumed.
+- name: Capture the untouched Loopback0 baseline
+  cisco.dcnm.dcnm_interface:
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - name: lo0
+        switch:
+          - "{{ test_data_common.switch2 }}"
+  register: lpk0_data
+
+- name: Capture the untouched Loopback1 baseline
+  cisco.dcnm.dcnm_interface:
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - name: lo1
+        switch:
+          - "{{ test_data_common.switch2 }}"
+  register: lpk1_data
+
+- name: ASSERT - both baselines were actually captured
+  ansible.builtin.assert:
+    that:
+      - (lpk0_data.response | default([]) | length) == 1
+      - (lpk1_data.response | default([]) | length) == 1
+      - lpk0_data.response[0]['interfaces'][0]['nvPairs'] is defined
+      - lpk1_data.response[0]['interfaces'][0]['nvPairs'] is defined
+      - lpk0_data.response[0]['policy'] is defined
+      - lpk1_data.response[0]['policy'] is defined
+    fail_msg: >-
+      A fabric loopback baseline is incomplete. Nothing has been mutated;
+      stop and investigate rather than proceeding without a restore point.
+    success_msg: "Both fabric loopback baselines captured"
+
+- name: Record the captured field names, never the values
+  ansible.builtin.debug:
+    msg: >-
+      lo0 policy={{ lpk0_data.response[0]['policy'] }},
+      lo0 fields={{ lpk0_data.response[0]['interfaces'][0]['nvPairs'].keys() | sort | list }};
+      lo1 policy={{ lpk1_data.response[0]['policy'] }},
+      lo1 fields={{ lpk1_data.response[0]['interfaces'][0]['nvPairs'].keys() | sort | list }}
+
+##############################################
+##   3. REPRODUCIBILITY GATE (PRE-MUTATION) ##
+##############################################
+
+# The module cannot reproduce an ABSENT nvPair for keys it defaults. Its
+# loopback profile spec declares speed with default "Auto" and cmds as a list,
+# so a baseline missing SPEED or CONF cannot be restored byte for byte.
+#
+# Checking this after mutation, as an earlier revision did, is too late: by then
+# the unreproducible baseline has already been destroyed. The gate therefore
+# runs while the fabric is still untouched, and refuses rather than proceeding.
+- name: ASSERT - every captured field can be reproduced exactly
+  ansible.builtin.assert:
+    that:
+      - "'SPEED' in lpk0_data.response[0]['interfaces'][0]['nvPairs']"
+      - "'CONF' in lpk0_data.response[0]['interfaces'][0]['nvPairs']"
+      - "'SPEED' in lpk1_data.response[0]['interfaces'][0]['nvPairs']"
+      - "'CONF' in lpk1_data.response[0]['interfaces'][0]['nvPairs']"
+      - "'IP' in lpk0_data.response[0]['interfaces'][0]['nvPairs']"
+      - "'IP' in lpk1_data.response[0]['interfaces'][0]['nvPairs']"
+    fail_msg: >-
+      The captured baseline contains a field this module cannot reproduce.
+      dcnm_interface defaults SPEED and emits CONF, so an absent value cannot be
+      restored to absent. Nothing has been mutated. Do not run this file against
+      this fabric until the baseline is reproducible or the module contract is
+      extended to preserve absence.
+      lo0 fields={{ lpk0_data.response[0]['interfaces'][0]['nvPairs'].keys() | sort | list }},
+      lo1 fields={{ lpk1_data.response[0]['interfaces'][0]['nvPairs'].keys() | sort | list }}
+    success_msg: "Baseline is reproducible; mutation may proceed"
+
+# Restoring a value the module cannot interpret would be guesswork.
+- name: ASSERT - the captured feature key is present and a recognizable boolean
+  ansible.builtin.assert:
+    that:
+      # G6A.1 finding 4: reject an ABSENT feature key before mutating.
+      #
+      # The observed homelab baseline omits ENABLE_OSPF_AUTH_MESSAGE_DIGEST on
+      # both loopbacks. Restoring an absent key would require emitting an explicit
+      # false, which converts absence into false rather than reproducing absence -
+      # and whether NDFC canonicalizes an omitted key back to absent or to false
+      # is unproven. Until exact key removal/canonicalization is proven, an absent
+      # captured key is not reproducible, so the gate rejects it before any change.
+      - "'ENABLE_OSPF_AUTH_MESSAGE_DIGEST' in lpk0_data.response[0]['interfaces'][0]['nvPairs']"
+      - "'ENABLE_OSPF_AUTH_MESSAGE_DIGEST' in lpk1_data.response[0]['interfaces'][0]['nvPairs']"
+      - >-
+        (lpk0_data.response[0]['interfaces'][0]['nvPairs']['ENABLE_OSPF_AUTH_MESSAGE_DIGEST']
+         | string | trim | lower) in ['true', 'false']
+      - >-
+        (lpk1_data.response[0]['interfaces'][0]['nvPairs']['ENABLE_OSPF_AUTH_MESSAGE_DIGEST']
+         | string | trim | lower) in ['true', 'false']
+    fail_msg: >-
+      The captured ENABLE_OSPF_AUTH_MESSAGE_DIGEST is absent or not a recognized
+      boolean, so it cannot be restored faithfully. On the observed homelab it is
+      absent on both loopbacks; this gate refuses rather than converting absence
+      into an explicit false. Nothing has been mutated.
+    success_msg: "Captured feature values are present and recognizable booleans"
+
+##############################################
+##   4. MUTATION, INSIDE THE RESTORE BLOCK  ##
+##############################################
+
+- name: Fabric loopback OSPF message-digest lifecycle
+  when: ospf_md_capability == 'supported'
+  block:
+
+    ##########################################
+    ##  enable
+    ##########################################
+    - name: Enable message-digest authentication on Loopback0
+      cisco.dcnm.dcnm_interface: &lo0_enable
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced
+        config:
+          - name: lo0
+            type: lo
+            switch:
+              - "{{ test_data_common.switch2 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: fabric
+              ipv4_addr: "{{ was0['IP'] }}"
+              secondary_ipv4_addr: "{{ was0['SECONDARY_IP'] | default('') }}"
+              ipv6_addr: "{{ was0['V6IP'] | default('') }}"
+              route_tag: "{{ was0['ROUTE_MAP_TAG'] | default('') }}"
+              description: "{{ was0['DESC'] | default('') }}"
+              admin_state: "{{ was0['ADMIN_STATE'] | default('true') | string | lower == 'true' }}"
+              speed: "{{ was0['SPEED'] }}"
+              cmds: "{{ was0['CONF'].split('\n') }}"
+              enable_ospf_auth_message_digest: true
+      vars:
+        was0: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs'] }}"
+      register: enable_result
+
+    - name: ASSERT - the enable was applied
+      ansible.builtin.assert:
+        that:
+          - enable_result.changed is true
+          - "(enable_result.response | rejectattr('RETURN_CODE', 'equalto', 200) | list | length) == 0"
+        fail_msg: "Enabling message-digest authentication did not succeed"
+        success_msg: "Message-digest authentication enabled on Loopback0"
+
+    - name: QUERY - read Loopback0 back after enabling
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: lo0
+            switch:
+              - "{{ test_data_common.switch2 }}"
+      register: lpk0_enabled
+
+    - name: ASSERT - the controller reports the nvPair true
+      ansible.builtin.assert:
+        that:
+          - >-
+            (lpk0_enabled.response[0]['interfaces'][0]['nvPairs']['ENABLE_OSPF_AUTH_MESSAGE_DIGEST']
+             | string | trim | lower) == 'true'
+        fail_msg: "NDFC does not report ENABLE_OSPF_AUTH_MESSAGE_DIGEST as true"
+        success_msg: "NDFC reports the nvPair as true"
+
+    ##########################################
+    ##  idempotency of the enable
+    ##########################################
+    - name: Enable again, unchanged
+      cisco.dcnm.dcnm_interface: *lo0_enable
+      vars:
+        was0: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs'] }}"
+      register: enable_again
+
+    - name: ASSERT - the second enable is a no-op
+      ansible.builtin.assert:
+        that:
+          - enable_again.changed is false
+          - (enable_again.diff[0]['replaced'] | default([]) | length) == 0
+        fail_msg: >-
+          The enable is not idempotent; a no-diff rerun still produced a change.
+        success_msg: "Enable is idempotent"
+
+    ##########################################
+    ##  Loopback1 must be untouched by all of it
+    ##########################################
+    - name: QUERY - read Loopback1 while Loopback0 is enabled
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: lo1
+            switch:
+              - "{{ test_data_common.switch2 }}"
+      register: lpk1_during
+
+    - name: ASSERT - Loopback1 is byte-identical to its baseline
+      ansible.builtin.assert:
+        that:
+          - lpk1_during.response[0]['policy'] == lpk1_data.response[0]['policy']
+          - >-
+            lpk1_during.response[0]['interfaces'][0]['nvPairs']
+            == lpk1_data.response[0]['interfaces'][0]['nvPairs']
+        fail_msg: >-
+          Loopback1 changed while only Loopback0 was targeted. This is a finding,
+          not something to normalize.
+        success_msg: "Loopback1 is unchanged"
+
+    ##########################################
+    ##  explicit false clears the child
+    ##########################################
+    - name: Disable message-digest authentication with an explicit false
+      cisco.dcnm.dcnm_interface: &lo0_disable
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced
+        config:
+          - name: lo0
+            type: lo
+            switch:
+              - "{{ test_data_common.switch2 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: fabric
+              ipv4_addr: "{{ was0['IP'] }}"
+              secondary_ipv4_addr: "{{ was0['SECONDARY_IP'] | default('') }}"
+              ipv6_addr: "{{ was0['V6IP'] | default('') }}"
+              route_tag: "{{ was0['ROUTE_MAP_TAG'] | default('') }}"
+              description: "{{ was0['DESC'] | default('') }}"
+              admin_state: "{{ was0['ADMIN_STATE'] | default('true') | string | lower == 'true' }}"
+              speed: "{{ was0['SPEED'] }}"
+              cmds: "{{ was0['CONF'].split('\n') }}"
+              enable_ospf_auth_message_digest: false
+      vars:
+        was0: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs'] }}"
+      register: disable_result
+
+    - name: ASSERT - the disable was applied
+      ansible.builtin.assert:
+        that:
+          - disable_result.changed is true
+        fail_msg: "Explicit false did not clear the enabled value"
+        success_msg: "Explicit false cleared the value"
+
+    - name: QUERY - read Loopback0 back after disabling
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: lo0
+            switch:
+              - "{{ test_data_common.switch2 }}"
+      register: lpk0_disabled
+
+    - name: ASSERT - the controller reports the nvPair false
+      ansible.builtin.assert:
+        that:
+          - >-
+            (lpk0_disabled.response[0]['interfaces'][0]['nvPairs']['ENABLE_OSPF_AUTH_MESSAGE_DIGEST']
+             | default('false') | string | trim | lower) == 'false'
+        fail_msg: "NDFC still reports ENABLE_OSPF_AUTH_MESSAGE_DIGEST as true"
+        success_msg: "NDFC reports the nvPair as false"
+
+    - name: Disable again, unchanged
+      cisco.dcnm.dcnm_interface: *lo0_disable
+      vars:
+        was0: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs'] }}"
+      register: disable_again
+
+    - name: ASSERT - the disable is idempotent
+      ansible.builtin.assert:
+        that:
+          - disable_again.changed is false
+        fail_msg: "The disable is not idempotent"
+        success_msg: "Disable is idempotent"
+
+    ##########################################
+    ##  negative: ordinary loopback is refused
+    ##########################################
+    - name: NEGATIVE - the option on an ordinary loopback must fail
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: lo100
+            type: lo
+            switch:
+              - "{{ test_data_common.switch2 }}"
+            deploy: false
+            profile:
+              mode: lo
+              ipv4_addr: 192.0.2.100
+              enable_ospf_auth_message_digest: true
+      register: ordinary_result
+      ignore_errors: true
+
+    - name: ASSERT - the ordinary loopback was refused before any change
+      ansible.builtin.assert:
+        that:
+          - ordinary_result.failed is true
+          - "'mode: fabric' in (ordinary_result.msg | default(''))"
+          - (ordinary_result.response | default([]) | length) == 0
+        fail_msg: >-
+          The option was accepted for a non-fabric loopback, or it failed only
+          after contacting the controller.
+        success_msg: "Ordinary loopback refused during input validation"
+
+  ##############################################
+  ##   5. RESTORATION — RUNS ON EVERY PATH    ##
+  ##############################################
+  always:
+
+    # No fabric-wide reset. Only the two interfaces this file captured are
+    # restored, from their captured values, so nothing outside the captured
+    # surface is touched.
+    - name: Restore both fabric loopbacks from their captured baselines
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced
+        config:
+          - name: lo0
+            type: lo
+            switch:
+              - "{{ test_data_common.switch2 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: fabric
+              ipv4_addr: "{{ was0['IP'] }}"
+              secondary_ipv4_addr: "{{ was0['SECONDARY_IP'] | default('') }}"
+              ipv6_addr: "{{ was0['V6IP'] | default('') }}"
+              route_tag: "{{ was0['ROUTE_MAP_TAG'] | default('') }}"
+              description: "{{ was0['DESC'] | default('') }}"
+              admin_state: "{{ was0['ADMIN_STATE'] | default('true') | string | lower == 'true' }}"
+              speed: "{{ was0['SPEED'] }}"
+              # Exact preservation: order, duplicates, indentation and blank
+              # lines all survive. Filtering or sorting would silently rewrite
+              # freeform config the fabric owns.
+              cmds: "{{ was0['CONF'].split('\n') }}"
+              enable_ospf_auth_message_digest: "{{ (was0['ENABLE_OSPF_AUTH_MESSAGE_DIGEST'] | default('false') | string | trim | lower) == 'true' }}"
+          - name: lo1
+            type: lo
+            switch:
+              - "{{ test_data_common.switch2 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: fabric
+              ipv4_addr: "{{ was1['IP'] }}"
+              secondary_ipv4_addr: "{{ was1['SECONDARY_IP'] | default('') }}"
+              ipv6_addr: "{{ was1['V6IP'] | default('') }}"
+              route_tag: "{{ was1['ROUTE_MAP_TAG'] | default('') }}"
+              description: "{{ was1['DESC'] | default('') }}"
+              admin_state: "{{ was1['ADMIN_STATE'] | default('true') | string | lower == 'true' }}"
+              speed: "{{ was1['SPEED'] }}"
+              cmds: "{{ was1['CONF'].split('\n') }}"
+              enable_ospf_auth_message_digest: "{{ (was1['ENABLE_OSPF_AUTH_MESSAGE_DIGEST'] | default('false') | string | trim | lower) == 'true' }}"
+      vars:
+        was0: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs'] }}"
+        was1: "{{ lpk1_data.response[0]['interfaces'][0]['nvPairs'] }}"
+      when: ospf_md_capability == 'supported'
+      register: restore_result
+
+    - name: QUERY - read Loopback0 back after restoration
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: lo0
+            switch:
+              - "{{ test_data_common.switch2 }}"
+      register: lpk0_restored
+      when: ospf_md_capability == 'supported'
+
+    - name: QUERY - read Loopback1 back after restoration
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: lo1
+            switch:
+              - "{{ test_data_common.switch2 }}"
+      register: lpk1_restored
+      when: ospf_md_capability == 'supported'
+
+    # Restoration is proven, not assumed. Whole-nvPairs equality, so a field
+    # nobody thought to enumerate is still covered.
+    - name: ASSERT - both loopbacks match their captured baselines exactly
+      ansible.builtin.assert:
+        that:
+          - lpk0_restored.response[0]['policy'] == lpk0_data.response[0]['policy']
+          - lpk1_restored.response[0]['policy'] == lpk1_data.response[0]['policy']
+          - >-
+            lpk0_restored.response[0]['interfaces'][0]['nvPairs']
+            == lpk0_data.response[0]['interfaces'][0]['nvPairs']
+          - >-
+            lpk1_restored.response[0]['interfaces'][0]['nvPairs']
+            == lpk1_data.response[0]['interfaces'][0]['nvPairs']
+        # Field names only. nvPairs can carry key material on other policies and
+        # this message reaches logs and CI artifacts.
+        fail_msg: >-
+          A fabric loopback was not restored to its captured state. Compare the
+          captured and read-back nvPairs.
+          lo0 differing fields={{
+            lpk0_restored.response[0]['interfaces'][0]['nvPairs'].keys()
+            | symmetric_difference(lpk0_data.response[0]['interfaces'][0]['nvPairs'].keys())
+            | list }};
+          lo0 policy {{ lpk0_data.response[0]['policy'] }} -> {{ lpk0_restored.response[0]['policy'] }};
+          lo1 policy {{ lpk1_data.response[0]['policy'] }} -> {{ lpk1_restored.response[0]['policy'] }}
+        success_msg: "Both fabric loopbacks restored exactly"
+      when: ospf_md_capability == 'supported'
+
+##############################################
+##   UNSUPPORTED CONTROLLER PATH            ##
+##############################################
+
+# Nothing above ran. Prove the module still refuses explicit use, and that it
+# refuses during input validation rather than after contacting the controller.
+- name: NEGATIVE - explicit use on an unsupported controller
+  when: ospf_md_capability == 'unsupported'
+  block:
+    - name: Attempt an explicit enable on a controller without the capability
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config:
+          - name: lo0
+            type: lo
+            switch:
+              - "{{ test_data_common.switch2 }}"
+            deploy: false
+            profile:
+              mode: fabric
+              ipv4_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['IP'] }}"
+              enable_ospf_auth_message_digest: true
+      register: unsupported_result
+      ignore_errors: true
+
+    - name: ASSERT - refused before any controller mutation
+      ansible.builtin.assert:
+        that:
+          - unsupported_result.failed is true
+          - "'Unsupported controller capability' in (unsupported_result.msg | default(''))"
+          - (unsupported_result.response | default([]) | length) == 0
+        fail_msg: >-
+          Explicit use was not refused on a controller that cannot manage the
+          nvPair, or it was refused only after sending a request.
+        success_msg: "Explicit use refused during input validation"
+
+    - name: QUERY - confirm Loopback0 is untouched
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query
+        config:
+          - name: lo0
+            switch:
+              - "{{ test_data_common.switch2 }}"
+      register: lpk0_untouched
+
+    - name: ASSERT - Loopback0 is byte-identical to its baseline
+      ansible.builtin.assert:
+        that:
+          - >-
+            lpk0_untouched.response[0]['interfaces'][0]['nvPairs']
+            == lpk0_data.response[0]['interfaces'][0]['nvPairs']
+        fail_msg: "Loopback0 changed on a path that must not mutate anything"
+        success_msg: "Loopback0 untouched on the unsupported path"

@@ -1,0 +1,4085 @@
+{
+ "_provenance": "Measured legacy config-preview responses of PR725-PVLAN-NATIVE-PLAN-001 G5/G6 (NDFC 12.6.0.267, NX-OS 10.5(5)); Ethernet1/7 stanzas only; synthetic identity. Built by tooling/build_pvlan_device_fixtures.py (PR725-PVLAN-ETHERNET-001 E2). Discovery reads used ?forceShowRun=true (G5) or the same with a preceding Manage recompute (G6); the module's recomputeMapEnable request is NOT represented by these captures.",
+ "cases": {
+  "G6-L0a": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport trunk allowed vlan none",
+      "  no switchport mode trunk"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport trunk allowed vlan none",
+     "  no switchport mode trunk",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "G6-L0b": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211-2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "G6-L1": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport private-vlan mapping trunk 2210 remove 2212"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport private-vlan mapping trunk 2210 remove 2212",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "G6-L2": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "G6-LR": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan mapping trunk 2210 2211",
+      "  no switchport private-vlan trunk allowed vlan 2301",
+      "  no switchport private-vlan trunk native vlan 2301",
+      "  no switchport mode private-vlan trunk promiscuous"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode trunk",
+      "  switchport trunk allowed vlan none",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping trunk 2210 2211",
+     "  no switchport private-vlan trunk allowed vlan 2301",
+     "  no switchport private-vlan trunk native vlan 2301",
+     "  no switchport mode private-vlan trunk promiscuous",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "G6-M0a": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport trunk allowed vlan none",
+      "  no switchport mode trunk"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport trunk allowed vlan none",
+     "  no switchport mode trunk",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "G6-M0b": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211-2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "G6-M1": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport private-vlan mapping trunk 2210 remove 2212"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport private-vlan mapping trunk 2210 remove 2212",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "G6-M2": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "G6-MR": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan mapping trunk 2210 2211",
+      "  no switchport private-vlan trunk allowed vlan 2301",
+      "  no switchport private-vlan trunk native vlan 2301",
+      "  no switchport mode private-vlan trunk promiscuous"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode trunk",
+      "  switchport trunk allowed vlan none",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping trunk 2210 2211",
+     "  no switchport private-vlan trunk allowed vlan 2301",
+     "  no switchport private-vlan trunk native vlan 2301",
+     "  no switchport mode private-vlan trunk promiscuous",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "H3a": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2211"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport trunk allowed vlan none",
+      "  no switchport mode trunk"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan host",
+      "  switchport private-vlan host-association 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport trunk allowed vlan none",
+     "  no switchport mode trunk",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "H3b": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan host-association 2210 2211"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan host",
+      "  switchport private-vlan host-association 2210 2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan host-association 2210 2211",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2211"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LP1b": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan promiscuous",
+      "  switchport private-vlan mapping 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LP1c": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan promiscuous",
+      "  switchport private-vlan mapping 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LP1r": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan promiscuous",
+      "  switchport private-vlan mapping 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LP2": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "LP3a": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping 2210 2211",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LP3b": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping 2210 2211",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LP3c": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping 2210 2211",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LS1b": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk secondary",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan association trunk 2210 2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LS1c": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk secondary",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan association trunk 2210 2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LS3a": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan association trunk 2210 2212",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan association trunk 2210 2212",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LS3b": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan association trunk 2210 2212",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan association trunk 2210 2212",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LS3c": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan association trunk 2210 2212",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan association trunk 2210 2212",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT1b": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT1c": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT1d": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT1e": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT1f": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT1r": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT2": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "LT3a": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping trunk 2210 2211",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT3b": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping trunk 2210 2211",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT3c": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping trunk 2210 2211",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT4a": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan trunk native vlan 2301",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan trunk native vlan 2301",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "LT5a": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan trunk allowed vlan 2301",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "PC1": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping 2210 2211-2212",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "PU1": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan host-association 2210 2212",
+      "  no switchport mode private-vlan host"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan promiscuous",
+      "  switchport private-vlan mapping 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan host-association 2210 2212",
+     "  no switchport mode private-vlan host",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2210 2212"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "PU2": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan promiscuous",
+      "  switchport private-vlan mapping 2210 2211-2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "PU3": {
+   "kind": "apply",
+   "outcome_in_discovery": "STOP_POST_DEPLOY",
+   "post": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport private-vlan mapping 22102210 remove 2211"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan promiscuous",
+      "  switchport private-vlan mapping 2210 2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2212"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport private-vlan mapping 22102210 remove 2211",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "status": "Out-of-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport private-vlan mapping 22102210 remove 2211"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan promiscuous",
+      "  switchport private-vlan mapping 2210 2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2212"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport private-vlan mapping 22102210 remove 2211",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "PU3R": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "PX1": {
+   "kind": "gate_only",
+   "outcome_in_discovery": "PENDING_RECORDED",
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport private-vlan mapping 22102210 remove 2212"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan promiscuous",
+      "  switchport private-vlan mapping 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport private-vlan mapping 22102210 remove 2212",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "PX1R": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous",
+     "  switchport private-vlan mapping 2210 2211-2212"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "RESTORE": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan trunk allowed vlan 2301",
+      "  no switchport private-vlan trunk native vlan 2301",
+      "  no switchport mode private-vlan trunk secondary"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode trunk",
+      "  switchport trunk allowed vlan none",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan trunk allowed vlan 2301",
+     "  no switchport private-vlan trunk native vlan 2301",
+     "  no switchport mode private-vlan trunk secondary",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode trunk",
+     "  switchport trunk allowed vlan none",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TC1": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping trunk 2210 2211-2212",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TS1": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan mapping trunk 2210 2211",
+      "  no switchport mode private-vlan trunk promiscuous"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk secondary",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan association trunk 2210 2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan mapping trunk 2210 2211",
+     "  no switchport mode private-vlan trunk promiscuous",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TS1b": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk secondary",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan association trunk 2210 2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TS1c": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk secondary",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan association trunk 2210 2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TS2": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "TS3": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan association trunk 2210 2212",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan association trunk 2210 2212",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TS4": {
+   "kind": "measure_clear",
+   "outcome_in_discovery": "CLEARED",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport private-vlan association trunk 2210 2212",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport private-vlan association trunk 2210 2212",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk secondary",
+     "  switchport private-vlan association trunk 2210 2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TU1": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  no switchport mode private-vlan promiscuous"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  no switchport mode private-vlan promiscuous",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan promiscuous"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TU2": {
+   "kind": "apply",
+   "outcome_in_discovery": "PASS",
+   "post": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   },
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211-2212",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TX1": {
+   "kind": "gate_only",
+   "outcome_in_discovery": "PENDING_RECORDED",
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport private-vlan mapping trunk 2210 remove 2212"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport private-vlan mapping trunk 2210 remove 2212",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TX1R": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   }
+  },
+  "TX2": {
+   "kind": "gate_only",
+   "outcome_in_discovery": "PENDING_RECORDED",
+   "pre": {
+    "entity_commands": [
+     [
+      "interface ethernet1/7",
+      "  switchport private-vlan mapping trunk 2210 remove 2212"
+     ],
+     [
+      "interface ethernet1/7",
+      "  switchport",
+      "  switchport mode private-vlan trunk promiscuous",
+      "  switchport private-vlan trunk native vlan 2301",
+      "  switchport private-vlan trunk allowed vlan 2301",
+      "  switchport private-vlan mapping trunk 2210 2211",
+      "  mtu 9216",
+      "  spanning-tree port type edge trunk",
+      "  shutdown",
+      "configure terminal"
+     ]
+    ],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [
+     "interface ethernet1/7",
+     "  switchport private-vlan mapping trunk 2210 remove 2212",
+     "interface ethernet1/7",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan trunk native vlan 2301",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan mapping trunk 2210 2211",
+     "  mtu 9216",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "TX2R": {
+   "kind": "repeat",
+   "outcome_in_discovery": "PASS",
+   "pre": {
+    "entity_commands": [],
+    "expected_count": 1,
+    "expected_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "has_expectedConfig": true,
+    "has_runningConfig": true,
+    "pendingConfig": [],
+    "running_count": 1,
+    "running_stanza": [
+     "interface ethernet1/7",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan trunk promiscuous",
+     "  switchport private-vlan mapping trunk 2210 2211-2212",
+     "  switchport private-vlan trunk allowed vlan 2301",
+     "  switchport private-vlan trunk native vlan 2301"
+    ],
+    "status": "In-Sync"
+   }
+  }
+ }
+}
