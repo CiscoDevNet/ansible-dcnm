@@ -2970,6 +2970,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import 
     vpc_released_member_differences as pvlan_vpc_released_member_differences,
     po_force_unmeasured as pvlan_po_force_unmeasured,
     po_markdelete_outcome_problems as pvlan_po_markdelete_outcome_problems,
+    PO_MARKDELETE_MESSAGE as PVLAN_PO_MARKDELETE_MESSAGE,
     po_released_member_restoration_delta as pvlan_po_released_member_restoration_delta,
     po_marked_deleted_problem as pvlan_po_marked_deleted_problem,
     po_member_force_withdrawal as pvlan_po_member_force_withdrawal,
@@ -3389,8 +3390,93 @@ def pvlan_record_conventional_releases(obj, payloads, resp):
                 continue
             for member in sorted(set(before) - set(after)):
                 released.setdefault(serial, {})[member] = pcid
-    obj.pvlan_invocation_releases = released
+    store = getattr(obj, "pvlan_invocation_releases", None) or {}
+    for serial, members in released.items():
+        store.setdefault(serial, {}).update(members)
+    obj.pvlan_invocation_releases = store
     return released
+
+
+def pvlan_conventional_delete_prestate(obj, payload):
+    """MIXED-DELETE: immediately before ONE generic mark-delete request, the authoritative pre-state of each CONVENTIONAL port-channel /
+    vPC in it: {(serial, name lower): [(physical serial, port-channel id, [members normalized])]}, from this run's controller detail of
+    that aggregate (the deletion empties it, so it is read before the request). A vPC is mapped to its two PHYSICAL child port-channels
+    (PEERn_PCID / PEERn_MEMBER_INTERFACES -> n-th serial of the pair). PVLAN targets, PVLAN policies, other interface types, an unknown
+    port-channel id and an unparsable member list contribute nothing. Nothing is granted here: see pvlan_record_conventional_deletions."""
+    out = {}
+    targets = getattr(obj, "pvlan_targets", None) or {}
+    for item in payload if isinstance(payload, list) else [payload]:
+        if not isinstance(item, dict):
+            continue
+        name, sno = str(item.get("ifName", "")), str(item.get("serialNumber", ""))
+        if (sno, name.lower()) in targets:
+            continue
+        number = re.match(r"^port-channel([0-9]+)$", name.lower())
+        if number:
+            itype = "INTERFACE_PORT_CHANNEL"
+        elif re.match(r"^vpc[0-9]+$", name.lower()) and len(sno.split("~")) == 2:
+            itype = "INTERFACE_VPC"
+        else:
+            continue
+        detail = obj.dcnm_intf_get_intf_info(name, sno, itype)
+        if not isinstance(detail, dict) or detail.get("policy") in (PVLAN_POLICY, PO_HOST_POLICY, VPC_HOST_POLICY):
+            continue
+        nv = ((detail.get("interfaces") or [{}])[0]).get("nvPairs") or {}
+        if itype == "INTERFACE_PORT_CHANNEL":
+            legs = [(sno, number.group(1), nv.get("MEMBER_INTERFACES"))]
+        else:
+            peers = sno.split("~")
+            legs = [(peers[i], str(nv.get("PEER%d_PCID" % (i + 1), "") or "").strip(), nv.get("PEER%d_MEMBER_INTERFACES" % (i + 1)))
+                    for i in (0, 1)]
+        record = []
+        for serial, pcid, raw in legs:
+            members, unresolved = pvlan_normalize_member_list(raw)
+            if pcid.isdigit() and not unresolved:
+                record.append((serial, pcid, members))
+        if record:
+            out[(sno, name.lower())] = record
+    return out
+
+
+def pvlan_markdelete_batch_confirmed(resp, payload):
+    """MIXED-DELETE: True only when the ORIGINAL answer of one generic mark-delete request (before any generic retry or "No Commands to
+    execute" masking) is the measured success form -- 200/OK, DATA.message "Interface deleted successfully" -- and its `value` names
+    every requested (serial, interface) exactly once and nothing else. Anything else is an unverified outcome."""
+    items = payload if isinstance(payload, list) else [payload]
+    if not isinstance(resp, dict) or resp.get("RETURN_CODE") != 200 or resp.get("MESSAGE") != "OK":
+        return False
+    data = resp.get("DATA")
+    if not isinstance(data, dict) or data.get("message") != PVLAN_PO_MARKDELETE_MESSAGE or not isinstance(data.get("value"), list):
+        return False
+    answered = sorted((str(v.get("serialNumber", "")).casefold(), str(v.get("IfName", v.get("ifName", ""))).lower())
+                      for v in data["value"] if isinstance(v, dict))
+    asked = sorted((str(i.get("serialNumber", "")).casefold(), str(i.get("ifName", "")).lower()) for i in items if isinstance(i, dict))
+    return len(answered) == len(data["value"]) and answered == asked
+
+
+def pvlan_record_conventional_deletions(obj, payload, resp, prestate):
+    """MIXED-DELETE: after the confirmed mark-delete of conventional aggregates in THIS invocation, record on each physical serial what that
+    deletion legitimately leaves pending: the exact global withdrawal `no interface port-channel<id>` (obj.pvlan_invocation_withdrawn) and
+    each pre-state member released with that id (obj.pvlan_invocation_releases, judged by pvlan_invocation_owned: its block must withdraw
+    that channel-group). Unconfirmed or ambiguous answers record nothing. In memory for the gates of this invocation only."""
+    if not prestate or not pvlan_markdelete_batch_confirmed(resp, payload):
+        return {}
+    releases = getattr(obj, "pvlan_invocation_releases", None) or {}
+    withdrawn = getattr(obj, "pvlan_invocation_withdrawn", None) or {}
+    for legs in prestate.values():
+        for serial, pcid, members in legs:
+            withdrawn.setdefault(serial, set()).add("no interface port-channel%s" % pcid)
+            for member in members:
+                releases.setdefault(serial, {})[member] = pcid
+    obj.pvlan_invocation_releases, obj.pvlan_invocation_withdrawn = releases, withdrawn
+    return prestate
+
+
+def pvlan_invocation_withdrawals(obj, sno, global_lines):
+    """MIXED-DELETE: the global pending lines of physical serial `sno` that are exactly the `no interface port-channel<id>` of a conventional
+    aggregate this invocation's confirmed mark-delete deleted on that serial. Any other global line stays outside interface scope."""
+    allowed = (getattr(obj, "pvlan_invocation_withdrawn", None) or {}).get(sno) or set()
+    return sorted(set(str(line).strip().lower() for line in global_lines if str(line).strip().lower() in allowed))
 
 
 def pvlan_invocation_owned(obj, sno, names, blocks):
@@ -10178,7 +10264,9 @@ class DcnmIntf:
                 record["status"] = entry["status"]
                 withdrawn = set(["no interface " + leg["po_name"].lower()]) if which == "delete" else set()
                 withdrawn |= peer_withdrawn.get(sno, set())
-                if [line for line in global_lines if line.lower() not in withdrawn]:
+                # MIXED-DELETE: the exact withdrawal of a conventional aggregate this invocation's confirmed mark-delete deleted on this serial
+                invocation_withdrawn = pvlan_invocation_withdrawals(self, sno, global_lines)
+                if [line for line in global_lines if line.lower() not in withdrawn and line.strip().lower() not in invocation_withdrawn]:
                     problems.append("peer {0} ({1}): pending carries commands outside interface scope".format(leg["index"] + 1, sno))
                 allowed = set(batch.get(sno, set())) | set(
                     name.lower() for peer_leg in legs if peer_leg["serial"] == sno
@@ -10186,9 +10274,11 @@ class DcnmIntf:
                 outside = sorted(set(blocks) - allowed)
                 # MIXED-BATCH: a conventional member this invocation's confirmed update released on this physical serial is not foreign
                 owned = pvlan_invocation_owned(self, sno, outside, blocks)
-                if owned:
-                    self.result.setdefault("pvlan_gate_invocation_releases", []).append(
-                        {"site": site, "serial": sno, "vpc": target["name"], "interfaces": owned})
+                if owned or invocation_withdrawn:
+                    record_owned = {"site": site, "serial": sno, "vpc": target["name"], "interfaces": owned}
+                    if invocation_withdrawn:
+                        record_owned["withdrawn"] = invocation_withdrawn
+                    self.result.setdefault("pvlan_gate_invocation_releases", []).append(record_owned)
                     outside = [n for n in outside if n not in owned]
                 if outside:
                     problems.append("peer {0} ({1}): pending exists for interfaces outside this deploy batch: {2}".format(
@@ -11151,7 +11241,9 @@ class DcnmIntf:
                     "no interface " + t["name"].lower() for t in self.pvlan_targets.values()
                     if t.get("deletes") and t["sno"] == sno
                     and (sno, t["name"].lower()) in set((i["serialNumber"], str(i["ifName"]).lower()) for i in pv))
-                if [line for line in global_lines if line.lower() not in deleted_po]:
+                # MIXED-DELETE: the exact withdrawal of a conventional aggregate this invocation's confirmed mark-delete deleted on this serial
+                invocation_withdrawn = pvlan_invocation_withdrawals(self, sno, global_lines)
+                if [line for line in global_lines if line.lower() not in deleted_po and line.strip().lower() not in invocation_withdrawn]:
                     problems.append("{0}: pending carries commands outside interface scope".format(sno))
                 allowed = set(batch.get(sno, set()))
                 for vit in pv_vpc:
@@ -11168,8 +11260,11 @@ class DcnmIntf:
                 outside = sorted(set(blocks) - allowed)
                 # MIXED-BATCH: a conventional member this invocation's confirmed update released on this serial is not foreign
                 owned = pvlan_invocation_owned(self, sno, outside, blocks)
-                if owned:
-                    self.result.setdefault("pvlan_gate_invocation_releases", []).append({"site": site, "serial": sno, "interfaces": owned})
+                if owned or invocation_withdrawn:
+                    record_owned = {"site": site, "serial": sno, "interfaces": owned}
+                    if invocation_withdrawn:
+                        record_owned["withdrawn"] = invocation_withdrawn
+                    self.result.setdefault("pvlan_gate_invocation_releases", []).append(record_owned)
                     outside = [n for n in outside if n not in owned]
                 if outside:
                     problems.append("{0}: pending exists for interfaces outside this deploy batch: {1}".format(
@@ -14310,7 +14405,11 @@ class DcnmIntf:
                 break
             json_payload = json.dumps(delem)
 
+            # MIXED-DELETE: a conventional aggregate deleted here leaves pending that the PVLAN gates of this invocation must recognise. Its
+            # pre-state is read before the request; ownership is recorded only from the request's ORIGINAL confirmed answer.
+            conventional = pvlan_conventional_delete_prestate(self, delem)
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
+            pvlan_record_conventional_deletions(self, delem, resp, conventional)
 
             if resp.get("RETURN_CODE") != 200:
                 if resp["DATA"]:
