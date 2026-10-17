@@ -51,9 +51,11 @@ def legs_of(r=None, order=(SN1, SN2)):
         (lambda r: r.update(peer1_members=[M1, "e1/7"]), "duplicate physical"),
         (lambda r: r.update(peer2_members=[]), "non-empty list"),
         (lambda r: r.update(peer1_members=["Port-channel5"]), "physical Ethernet"),
-        (lambda r: r.update(peer1_pcid=11), "must equal the vPC id"),
-        (lambda r: r.update(peer2_pcid=True), "must equal the vPC id"),
-        (lambda r: r.pop("peer2_pcid"), "peer2_pcid is required"),
+        # CHILD-IDS: the port-channel number is independent of the vPC id (11 and an omitted one are valid, see test_dcnm_intf_pvlan_vpc_child_ids.py);
+        # only the regular vPC range and type remain.
+        (lambda r: r.update(peer1_pcid=0), "peer1_pcid must be an integer from 1 to 4096"),
+        (lambda r: r.update(peer2_pcid=True), "peer2_pcid must be an integer from 1 to 4096"),
+        (lambda r: r.update(peer2_pcid=4097), "peer2_pcid must be an integer from 1 to 4096"),
         (lambda r: r.update(pvlan_association=[]), "empty pvlan_association"),
         (lambda r: r.update(peer1_cmds=["switchport mode trunk"]), "copies to every member"),  # RC1: freeform rule
         (lambda r: r.update(pvlan_mapping=[{"primary_vlan": 1, "secondary_vlans": "2"}]), "pvlan_mapping is not valid for pvlan_mode 'host'"),
@@ -230,7 +232,8 @@ def test_a_change_reaching_one_peer_only_is_refused_not_applied():
     "have_over, needle",
     [
         ({"PVLAN_MODE": "trunk promiscuous"}, "changing pvlan_mode of an existing vPC"),
-        ({"PEER2_PCID": "11"}, "differs from the vPC id"),
+        ({"PEER2_PCID": "11"}, "differs from the stored PEER2_PCID"),  # CHILD-IDS: the request says 10, the vPC stores 11: a change is refused
+        ({"PEER2_PCID": "bogus"}, "not a readable port-channel number"),
         ({"PEER2_PO_CONF": "mtu 1500"}, "freeform commands on peer 2"),
         ({"PEER1_MEMBER_INTERFACES": "Ethernet1/7,unknown"}, "readable, non-empty list"),
         ({"PEER2_MEMBER_INTERFACES": ""}, "readable, non-empty list"),

@@ -513,8 +513,9 @@ options:
               description keeps it; NOT LIVE TESTED), a change
               of the members of one peer or both, and C(state=deleted) of the vPC, all with C(deploy)
               true when a deployment is wanted. Refused before any change is sent - a C(pvlan_mode)
-              change, a field the mode does not take, a PCID change, a PCID different from the vPC id (both
-              C(peer1_pcid) and C(peer2_pcid) are REQUIRED and must equal it), an empty list,
+              change, a field the mode does not take, a PCID change of an existing vPC (C(peer1_pcid) and
+              C(peer2_pcid) are optional integers 1-4096, one per peer, independent of the vPC id and of each other - as for the regular
+              vPC; omitted means the vPC id on a creation and the stored value on an update), an empty list,
               removing secondaries from a C(promiscuous) mapping that keeps others (protection kept
               from the measured Ethernet defect), any other update that reaches only
               one peer (including a description change of one peer together with a member change of
@@ -2569,7 +2570,7 @@ EXAMPLES = """
           - "{{ ansible_switch1 }}"
         deploy: true
 
-# Private VLAN on a vPC (int_vpc_pvlan_host, NDFC 12; explicit members per peer, PCID equal to the vPC id)
+# Private VLAN on a vPC (int_vpc_pvlan_host, NDFC 12; explicit members per peer, optional peer1_pcid/peer2_pcid)
 
 - name: Create a vPC in PVLAN host mode (peer1_* belong to the first switch, peer2_* to the second)
   cisco.dcnm.dcnm_interface:
@@ -5970,7 +5971,7 @@ class DcnmIntf:
             raw = dict((k, v) for k, v in delem[profile].items() if k in VPC_PROFILE_KEYS and v is not None)
             try:
                 legs = pvlan_vpc_pair_view(
-                    raw, self.vpc_ip_sn.get(delem["switch"][0], ""), [self.ip_sn.get(s_, "") for s_ in delem["switch"]])
+                    raw, self.vpc_ip_sn.get(delem["switch"][0], ""), [self.ip_sn.get(s_, "") for s_ in delem["switch"]], ifname)
             except PvlanError as exc:
                 self.module.fail_json(msg="vPC {0}: {1}. No change was sent.".format(ifname, exc))
             intf["interfaces"][0]["nvPairs"] = pvlan_vpc_host_nvpairs(raw, ifname, legs)
@@ -8790,7 +8791,8 @@ class DcnmIntf:
                                 "the module completes and verifies a saved PVLAN deletion, and a saved conventional port-channel or vPC "
                                 "deleted with it on the same switch, from the controller's state. Not completed by the module (use the "
                                 "fabric deploy): a saved deletion left out of that request, a conventional one whose PVLAN sibling is "
-                                "already deployed, or a conventional vPC whose child port-channel id differs from its vPC id"})
+                                "already deployed, or a conventional vPC whose child port-channel id differs from its vPC id (its children are now "
+                                "found through the marked-for-deletion relation, which has only been exercised offline: use the fabric deploy)"})
 
     def dcnm_intf_pvlan_validate_saved_updates(self):
         """LIFECYCLE-B: membership removals requested with deploy false, after the parent's confirmed modify and the removed members' release:
@@ -8898,6 +8900,15 @@ class DcnmIntf:
                     "kind": "po", "name": target["name"], "serial": sno, "operation": "remove member", "members": [name],
                     "state": "completing the saved removal"})
 
+    def _dcnm_intf_vpc_marked_children(self, vpc_lname, serial=None):
+        """Entries of the interface summary read so far (optionally one serial) that are a port-channel marked for deletion with the
+        controller's `interface_delete` policy whose source is the vPC `vpc_lname`: the authoritative relation parent -> child, whatever
+        port-channel number each peer uses."""
+        return [h for h in self.have_all
+                if (serial is None or h.get("serialNo") == serial)
+                and re.match(r"^port-channel[0-9]+$", str(h.get("ifName", "")).lower())
+                and not pvlan_po_marked_deleted_problem(h, h.get("ifName", ""), parent=vpc_lname)]
+
     def dcnm_intf_pvlan_vpc_register_resumes(self):
         """LIFECYCLE-B: the continuation of a SAVED PVLAN vPC deletion. MEASURED (L1-E4 live F): after the vPC's mark-delete the parent is no
         longer listed and each peer's child port-channel stays listed, marked for deletion, with ONE interface_delete policy whose source is
@@ -8915,11 +8926,11 @@ class DcnmIntf:
             group = groups.setdefault(source, {"deploy": req.get("deploy"), "name": None, "peers": {}})
             group["peers"][sno] = entry
         for (pair, lname), req in sorted((getattr(self, "vpc_named_resume_requests", None) or {}).items(), key=str):
-            child = "port-channel" + (vpc_id(lname) or "")
+            # The child of each peer is found by its RELATION to the vPC (the marked-for-deletion `interface_delete` policy whose source is the
+            # vPC), never by a name derived from the vPC id: the port-channel number may differ from the vPC id (and between the peers).
             # Only a vPC with the marking already visible in what this run read (the pair's first serial) can be a saved PVLAN deletion;
             # any other absent vPC keeps the generic no-op, without further reads.
-            if not any(str(h.get("ifName", "")).lower() == child and not pvlan_po_marked_deleted_problem(h, h.get("ifName", ""), parent=lname)
-                       for h in self.have_all):
+            if not self._dcnm_intf_vpc_marked_children(lname):
                 continue
             group = groups.setdefault(lname, {"deploy": req.get("deploy"), "name": req.get("name"), "peers": {}})
             group["name"] = req.get("name")
@@ -8929,10 +8940,11 @@ class DcnmIntf:
                 if not self.dcnm_intf_get_have_all_with_sno(part):
                     group["unreadable"] = part
                     continue
-                for h in self.have_all:
-                    if (h.get("serialNo") == part and str(h.get("ifName", "")).lower() == "port-channel" + (vpc_id(lname) or "")
-                            and not pvlan_po_marked_deleted_problem(h, h.get("ifName", ""), parent=lname)):
-                        group["peers"][part] = h
+                found = self._dcnm_intf_vpc_marked_children(lname, part)
+                if len(found) > 1:
+                    group["ambiguous"] = (part, sorted(str(h.get("ifName", "")) for h in found))
+                elif found:
+                    group["peers"][part] = found[0]
         for source, group in sorted(groups.items()):
             vid = vpc_id(source)
             if not group["peers"] or not vid:
@@ -8940,6 +8952,10 @@ class DcnmIntf:
             if group.get("unreadable"):
                 self.dcnm_intf_pvlan_block(group["name"] or source, group["unreadable"], "the saved vPC deletion cannot be classified: the "
                                            "interface summary of {0} could not be read authoritatively".format(group["unreadable"]))
+                continue
+            if group.get("ambiguous"):
+                self.dcnm_intf_pvlan_block(group["name"] or source, group["ambiguous"][0], "the saved vPC deletion cannot be classified: peer {0} lists "
+                                           "{1} marked for deletion with the vPC as source".format(group["ambiguous"][0], ", ".join(group["ambiguous"][1])))
                 continue
             some = sorted(group["peers"])[0]
             ips = [ip for ip, sn in self.ip_sn.items() if str(sn).casefold() == some.casefold()]
@@ -8971,9 +8987,13 @@ class DcnmIntf:
                 problems.append(self.dcnm_intf_pvlan_release_admin_problem())
             if not self.module.check_mode and not self.has_bulk_api:
                 problems.append("the controller's bulk interface update API is not available")
-            po_name = pvlan_vpc_po_name(vid)
             conventional = {}
+            pcids = {}
             for index, part in enumerate(parts):
+                # This peer's own child (the relation found above), so the two peers may use different port-channel numbers.
+                pcid = re.match(r"^port-channel([0-9]+)$", str(group["peers"][part].get("ifName", "")).lower()).group(1)
+                pcids[part] = pcid
+                po_name = pvlan_vpc_po_name(pcid)
                 resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, part))
                 try:
                     pv = pvlan_preview_entry(resp, part)
@@ -8989,7 +9009,7 @@ class DcnmIntf:
                     problems.append("peer {0} ({1}): the device does not hold {2} in a PVLAN mode, so the saved deletion cannot be "
                                     "verified".format(index + 1, part, po_name))
                     continue
-                joined, pc_mode = pvlan_running_po_members(running, vid)
+                joined, pc_mode = pvlan_running_po_members(running, pcid)
                 if not joined:
                     problems.append("peer {0} ({1}): no member joined to {2} on the device".format(index + 1, part, po_name))
                 for member in joined:
@@ -8999,14 +9019,14 @@ class DcnmIntf:
                     if not m_problems and m_policy not in PVLAN_RELEASED_MEMBER_POLICIES:
                         problems.append("peer {0} ({1}): member {2} holds {3}, not a released member policy".format(index + 1, part, member, m_policy))
                     elif not m_problems:
-                        legs.append({"serial": part, "index": index, "member": member, "po_name": po_name, "pcid": vid,
+                        legs.append({"serial": part, "index": index, "member": member, "po_name": po_name, "pcid": pcid,
                                      "pc_mode": pc_mode or "active", "pre_member": (PO_MEMBER_POLICY, {"CONF": ""}),
                                      "post_member": (m_policy, self.dcnm_intf_pvlan_released_model())})
             if len(conventional) == 2:
                 # MIXED-SAVED-RETRY: not a PVLAN saved deletion -- BOTH peers hold a conventional child, so the PVLAN-only checks above do
                 # not apply. Kept (with the fresh previews) for dcnm_intf_pvlan_register_conventional_resumes; otherwise the generic path.
                 pvlan_lifecycle_note(self, "pvlan_conventional_vpc_saved", key, {
-                    "name": name, "parts": list(parts), "pcid": vid, "deploy": group["deploy"], "previews": conventional})
+                    "name": name, "parts": list(parts), "pcids": dict(pcids), "deploy": group["deploy"], "previews": conventional})
                 continue
             if conventional:
                 problems.append("the device holds {0} as a conventional port-channel on peer(s) {1} only: the peers are not the same saved "
@@ -9059,7 +9079,7 @@ class DcnmIntf:
                                "legs": [(sno, re.match(r"^port-channel([0-9]+)$", name.lower()).group(1))]})
         for (pair, lname), saved in sorted((getattr(self, "pvlan_conventional_vpc_saved", None) or {}).items(), key=str):
             candidates.append({"name": saved["name"], "sno": pair, "deploy": saved["deploy"], "itype": "INTERFACE_VPC",
-                               "previews": saved["previews"], "legs": [(part, saved["pcid"]) for part in saved["parts"]]})
+                               "previews": saved["previews"], "legs": [(part, saved["pcids"][part]) for part in saved["parts"]]})
         for cand in candidates:
             if not cand["deploy"] or not set(serial for serial, _pcid in cand["legs"]) & resumed:
                 continue
@@ -10033,7 +10053,7 @@ class DcnmIntf:
             return "done"
         raw = dict((k, v) for k, v in match_pb[0].items() if k in VPC_PROFILE_KEYS and v is not None)
         try:
-            legs = pvlan_vpc_pair_view(raw, sno, match_pb[0].get("peer_serials"))
+            legs = pvlan_vpc_pair_view(raw, sno, match_pb[0].get("peer_serials"), name)
         except PvlanError as exc:
             self.dcnm_intf_pvlan_block(name, sno, str(exc))
             return "done"
@@ -10079,6 +10099,10 @@ class DcnmIntf:
             claim_key = (leg["serial"], member.lower())
             if claimed.setdefault(claim_key, name.lower()) != name.lower():
                 problems.append((member, leg["serial"], "the playbook also assigns it to {0}".format(claimed[claim_key])))
+            # The port-channel number is independent of the vPC id, so two vPCs of one request can name the same child on a peer.
+            po_key = (leg["serial"], "po:" + leg["po_name"].lower())
+            if claimed.setdefault(po_key, name.lower()) != name.lower():
+                problems.append((leg["po_name"], leg["serial"], "the playbook also uses this port-channel number for {0}".format(claimed[po_key])))
         removed_legs = []
         snap_reported = set()
 
@@ -10622,7 +10646,6 @@ class DcnmIntf:
                 if nv is None:
                     problems.append("the controller returned no nvPairs for the vPC")
                     nv = {}
-                vid = vpc_id(name)
                 if self.module.check_mode:
                     problems.append("deleting a PVLAN vPC is refused in check mode: the pre-deploy gate needs the deletion to exist")
                 # LIFECYCLE-B: deploy false SAVES the deletion (mark-delete, both peers' members released and corrected, pending validated).
@@ -10643,8 +10666,9 @@ class DcnmIntf:
                     if unresolved or not names:
                         problems.append("peer {0} needs a readable, non-empty list of explicit physical members".format(n))
                         continue
-                    if str(nv.get("PEER%d_PCID" % n, "")).strip() != (vid or ""):
-                        problems.append("PEER{0}_PCID {1!r} differs from the vPC id {2}; not implemented".format(n, nv.get("PEER%d_PCID" % n), vid))
+                    pcid = str(nv.get("PEER%d_PCID" % n, "")).strip()
+                    if not re.match(r"^[1-9][0-9]{0,3}$", pcid) or int(pcid) > 4096:
+                        problems.append("PEER{0}_PCID {1!r} of the vPC is not a readable port-channel number".format(n, nv.get("PEER%d_PCID" % n)))
                         continue
                     if str(nv.get("PEER%d_PO_CONF" % n, "") or "").strip():
                         problems.append("the vPC stores freeform commands on peer {0} (PEER{0}_PO_CONF); the template would run its freeform "
@@ -10653,7 +10677,7 @@ class DcnmIntf:
                     for member in sorted(names):
                         legs.append({"serial": serials[n - 1], "index": n - 1,
                                      "member": self.dcnm_intf_pvlan_po_member_ifname(member, serials[n - 1]),
-                                     "po_name": pvlan_vpc_po_name(vid), "pcid": str(vid), "pc_mode": str(nv.get("PC_MODE", "active"))})
+                                     "po_name": pvlan_vpc_po_name(pcid), "pcid": pcid, "pc_mode": str(nv.get("PC_MODE", "active"))})
                 if problems or set(leg["index"] for leg in legs) != {0, 1}:
                     for reason in problems:
                         self.dcnm_intf_pvlan_block(name, sno, reason)
