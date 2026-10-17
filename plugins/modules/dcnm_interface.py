@@ -3390,11 +3390,57 @@ def pvlan_record_conventional_releases(obj, payloads, resp):
                 continue
             for member in sorted(set(before) - set(after)):
                 released.setdefault(serial, {})[member] = pcid
+            # MIXED-CREATE: a member the same confirmed update ADDED joins that channel-group (pvlan_invocation_owned: join form)
+            for member in sorted(set(after) - set(before)):
+                joins = getattr(obj, "pvlan_invocation_joins", None) or {}
+                joins.setdefault(serial, {})[member] = pcid
+                obj.pvlan_invocation_joins = joins
     store = getattr(obj, "pvlan_invocation_releases", None) or {}
     for serial, members in released.items():
         store.setdefault(serial, {}).update(members)
     obj.pvlan_invocation_releases = store
     return released
+
+
+def pvlan_record_conventional_creation(obj, payload, resp):
+    """MIXED-CREATE (F-1): after the confirmed creation (200/OK) of ONE CONVENTIONAL port-channel or vPC by THIS invocation, record on
+    each physical serial what that creation legitimately leaves pending: each member SENT in the payload joins the new channel-group
+    (obj.pvlan_invocation_joins, judged by pvlan_invocation_owned: its block must join that id) and, for a vPC, the peer's child
+    `port-channel<id>` (obj.pvlan_invocation_children). A vPC leg is mapped to its peer (PEERn -> n-th serial of the pair). PVLAN targets
+    and policies, other interface types, an unknown port-channel id, an unparsable member list and an unconfirmed answer record nothing.
+    In memory for the gates of this invocation only."""
+    if not isinstance(payload, dict) or payload.get("policy") in (PVLAN_POLICY, PO_HOST_POLICY, VPC_HOST_POLICY):
+        return {}
+    if not isinstance(resp, dict) or resp.get("RETURN_CODE") != 200 or resp.get("MESSAGE") != "OK":
+        return {}
+    intf = (payload.get("interfaces") or [{}])[0]
+    name, sno, nv = str(intf.get("ifName", "")), str(intf.get("serialNumber", "")), intf.get("nvPairs") or {}
+    if (sno, name.lower()) in (getattr(obj, "pvlan_targets", None) or {}):
+        return {}
+    itype = intf.get("interfaceType") or payload.get("interfaceType")
+    if itype == "INTERFACE_PORT_CHANNEL":
+        number = re.match(r"^port-channel([0-9]+)$", name.lower())
+        legs = [(sno, nv.get("MEMBER_INTERFACES"), number.group(1) if number else None, False)]
+    elif itype == "INTERFACE_VPC" and len(sno.split("~")) == 2:
+        peers = sno.split("~")
+        legs = [(peers[i], nv.get("PEER%d_MEMBER_INTERFACES" % (i + 1)), str(nv.get("PEER%d_PCID" % (i + 1), "") or "").strip() or None, True)
+                for i in (0, 1)]
+    else:
+        return {}
+    recorded = {}
+    joins = getattr(obj, "pvlan_invocation_joins", None) or {}
+    children = getattr(obj, "pvlan_invocation_children", None) or {}
+    for serial, raw, pcid, child in legs:
+        members, unresolved = pvlan_normalize_member_list(raw)
+        if not pcid or not pcid.isdigit() or unresolved:
+            continue
+        for member in members:
+            joins.setdefault(serial, {})[member] = pcid
+        if child:
+            children.setdefault(serial, set()).add("port-channel%s" % pcid)
+        recorded[serial] = {"pcid": pcid, "members": list(members)}
+    obj.pvlan_invocation_joins, obj.pvlan_invocation_children = joins, children
+    return recorded
 
 
 def pvlan_conventional_delete_prestate(obj, payload):
@@ -3480,19 +3526,32 @@ def pvlan_invocation_withdrawals(obj, sno, global_lines):
 
 
 def pvlan_invocation_owned(obj, sno, names, blocks):
-    """MIXED-BATCH: the subset of `names` (pending interfaces of physical serial `sno` outside a PVLAN batch) that THIS invocation released
-    from a conventional aggregate (pvlan_record_conventional_releases) AND whose pending block withdraws that aggregate's channel-group
-    (`no channel-group <id>[ force][ mode M]`). Same serial only; a name released on another serial, a different port-channel id, or a
-    block without that withdrawal stays foreign."""
+    """MIXED-BATCH / MIXED-CREATE: the subset of `names` (pending interfaces of physical serial `sno` outside a PVLAN batch) that THIS
+    invocation's confirmed write of a conventional aggregate produced on that serial:
+      - a member it released (pvlan_record_conventional_releases / _deletions) whose block withdraws that aggregate's channel-group
+        (`no channel-group <id>[ force][ mode M]`);
+      - a member it joined (pvlan_record_conventional_creation, or added by a confirmed update) whose block joins that channel-group
+        (`channel-group <id>[ force][ mode M]`);
+      - the child `port-channel<id>` of a conventional vPC it created on that peer.
+    Same serial only; a name recorded on another serial, a different port-channel id, or a block without that withdrawal / join stays
+    foreign."""
     released = (getattr(obj, "pvlan_invocation_releases", None) or {}).get(sno) or {}
+    joined = (getattr(obj, "pvlan_invocation_joins", None) or {}).get(sno) or {}
+    children = (getattr(obj, "pvlan_invocation_children", None) or {}).get(sno) or set()
     owned = []
     for name in names:
-        pcid = released.get(str(name).lower())
-        if not pcid:
-            continue
-        pattern = re.compile(r"^no channel-group %s( force)?( mode \S+)?$" % re.escape(str(pcid)), re.IGNORECASE)
-        if any(pattern.match(str(line).strip()) for line in blocks.get(name, [])):
+        key = str(name).lower()
+        if key in children:
             owned.append(name)
+            continue
+        lines = [str(line).strip() for line in blocks.get(name, [])]
+        for pcid, prefix in ((released.get(key), "no "), (joined.get(key), "")):
+            if not pcid:
+                continue
+            pattern = re.compile(r"^%schannel-group %s( force)?( mode \S+)?$" % (prefix, re.escape(str(pcid))), re.IGNORECASE)
+            if any(pattern.match(line) for line in lines):
+                owned.append(name)
+                break
     return owned
 
 
@@ -14776,6 +14835,8 @@ class DcnmIntf:
                 self.module.fail_json(msg=resp)
             else:
                 create = True
+                # MIXED-CREATE (F-1): what this confirmed conventional creation leaves pending, for this invocation's PVLAN gates
+                pvlan_record_conventional_creation(self, payload, resp)
 
         resp = None
 
