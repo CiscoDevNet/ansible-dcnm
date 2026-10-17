@@ -255,6 +255,17 @@ def test_partial_state_with_only_the_conventional_deletion_left_keeps_the_legacy
     assert not [r for r in result.get("pvlan_saved") or [] if r.get("kind") == "conventional"]
 
 
+def test_the_saved_deletion_message_names_only_the_supported_continuations():
+    """The user-facing continuation of a saved deletion promises only what the module does (tested above) and names the cases it does
+    not complete."""
+    ctrl = saved_po_ctrl()
+    result = stage(ctrl)
+    text = [r for r in result["pvlan_saved"] if r.get("operation") == "delete"][0]["continuation"]
+    assert "deploy true naming the same aggregates" in text and "a saved conventional port-channel or vPC deleted with it" in text
+    for limit in ("left out of that request", "PVLAN sibling is already deployed", "child port-channel id differs from its vPC id"):
+        assert limit in text, limit
+
+
 class StillListedAfterDeploy(SavedConvController):
     """The controller keeps listing the conventional Po after its deploy (not converged)."""
 

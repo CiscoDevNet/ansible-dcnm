@@ -8786,10 +8786,11 @@ class DcnmIntf:
             self.result.setdefault("pvlan_saved", []).append({
                 "kind": t.get("kind"), "name": t["name"], "serial": t["sno"], "operation": "delete",
                 "state": "saved: marked for deletion, members released to the fabric's host default, pending validated; NOT deployed",
-                "continuation": "deploy the switches (fabric deploy), or repeat the deletion with deploy true naming every aggregate this "
-                                "request deleted (the conventional ones too): the module recognises each saved deletion from the controller's "
-                                "state and completes and verifies it; a saved deletion left out of that request keeps its pending and the "
-                                "deploy is refused"})
+                "continuation": "deploy the switches (fabric deploy), or repeat this deletion with deploy true naming the same aggregates: "
+                                "the module completes and verifies a saved PVLAN deletion, and a saved conventional port-channel or vPC "
+                                "deleted with it on the same switch, from the controller's state. Not completed by the module (use the "
+                                "fabric deploy): a saved deletion left out of that request, a conventional one whose PVLAN sibling is "
+                                "already deployed, or a conventional vPC whose child port-channel id differs from its vPC id"})
 
     def dcnm_intf_pvlan_validate_saved_updates(self):
         """LIFECYCLE-B: membership removals requested with deploy false, after the parent's confirmed modify and the removed members' release:
