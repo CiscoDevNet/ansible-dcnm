@@ -38,6 +38,7 @@ from .test_dcnm_intf_pvlan_vpc_harness import (
     create_previews,
     created_ctrl,
     delete_previews,
+    description_preview,
     pc_mode_preview,
     release_only,
     run_vpc,
@@ -240,6 +241,31 @@ def test_a_merged_update_keeps_the_stored_port_channel_numbers(explicit):
     sent = json.loads(ctrl.modifies()[0][2])[0]["interfaces"][0]["nvPairs"]
     assert sent["PC_MODE"] == "passive" and (sent["PEER1_PCID"], sent["PEER2_PCID"]) == pcids
     assert sent["PEER1_PO_DESC"] == "keep-a" and sent["PEER2_PO_DESC"] == "keep-b" and len(ctrl.deploys()) == 1
+
+
+@pytest.mark.parametrize("state", ["replaced", "merged"])
+def test_a_description_update_of_both_peers_reaches_payload_and_children_and_keeps_identity_and_association(state):
+    """The live driver's update step: ONLY the descriptions change; vPC id, Po numbers, members and association stay (the driver never invents a network)."""
+    pcids = ("11", "12")
+    ctrl = seeded(pcids, descs=("base-a", "base-b"))
+    ctrl.vpc_previews[SN1] = [converged_preview(SN1, M1, desc="base-a"), description_preview(SN1, M1, "base-a", "new-a")]
+    ctrl.vpc_previews[SN2] = [converged_preview(SN2, M2, desc="base-b"), description_preview(SN2, M2, "base-b", "new-b")]
+    remap(ctrl, pcids)
+    status, result = run_vpc(ctrl, [vpc_item(peer1_pcid=11, peer2_pcid=12, peer1_description="new-a", peer2_description="new-b")], state=state)
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    nv = json.loads(ctrl.modifies()[0][2])[0]["interfaces"][0]["nvPairs"]
+    assert (nv["PEER1_PO_DESC"], nv["PEER2_PO_DESC"]) == ("new-a", "new-b")
+    assert (nv["PEER1_PCID"], nv["PEER2_PCID"]) == pcids and (nv["PEER1_MEMBER_INTERFACES"], nv["PEER2_MEMBER_INTERFACES"]) == (M1, M2)
+    assert P.pairs_from_wire(nv["ASSOCIATION_LIST"], "ASSOCIATION_LIST") == [(2210, 2212)]
+    assert ctrl.nodes[SN1]["port-channel11"]["nvPairs"]["DESC"] == "new-a" and ctrl.nodes[SN2]["port-channel12"]["nvPairs"]["DESC"] == "new-b"
+    # the next step of the sequence, still carrying the UPDATED content, is a no-op: nothing reverts it
+    ctrl.next_invocation()
+    ctrl.calls = []
+    ctrl.vpc_previews[SN1] = [converged_preview(SN1, M1, desc="new-a")]
+    ctrl.vpc_previews[SN2] = [converged_preview(SN2, M2, desc="new-b")]
+    remap(ctrl, pcids)
+    status, result = run_vpc(ctrl, [vpc_item(peer1_pcid=11, peer2_pcid=12, peer1_description="new-a", peer2_description="new-b")], state="replaced")
+    assert status == "exit" and result["changed"] is False and ctrl.writes() == [], result.get("msg")
 
 
 @pytest.mark.parametrize("wanted", [("12", "12"), ("11", "11"), ("10", "10")])
