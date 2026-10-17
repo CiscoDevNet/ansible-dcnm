@@ -158,9 +158,11 @@ def test_unchanged_retry_after_the_saved_deletion_writes_nothing_and_owns_nothin
 
 
 def test_a_later_deploy_true_continuation_does_not_inherit_the_previous_invocations_ownership():
-    """The saved mixed deletion is completed by a LATER process with deploy true: Po301 is already gone (no mark-delete now), so its saved
-    withdrawal and released member are not this invocation's operation and the gate refuses with nothing deployed. Completing such a
-    state is the fabric deploy (NaC's deploy role) or an explicit, scoped recovery -- never process memory."""
+    """A LATER process with deploy true, on a controller that does NOT list Po301 in the marked-for-deletion form (this harness drops it at
+    the mark-delete) while its withdrawal and released member are still pending: nothing in the current controller state proves that
+    saved deletion, so it is not this invocation's operation and the gate refuses with nothing deployed. Ownership is never inherited
+    from the previous process. The positive continuation backed by the controller's marked listing is in
+    test_dcnm_intf_pvlan_mixed_saved_retry.py."""
     ctrl = hr_mixed_ctrl()
     status, result = t6_po(ctrl)
     assert status == "exit", result.get("msg")

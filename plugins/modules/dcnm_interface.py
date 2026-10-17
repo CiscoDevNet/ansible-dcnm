@@ -8786,8 +8786,10 @@ class DcnmIntf:
             self.result.setdefault("pvlan_saved", []).append({
                 "kind": t.get("kind"), "name": t["name"], "serial": t["sno"], "operation": "delete",
                 "state": "saved: marked for deletion, members released to the fabric's host default, pending validated; NOT deployed",
-                "continuation": "deploy the switches (fabric deploy), or repeat the deletion with deploy true: the module recognises the "
-                                "saved deletion from the controller's state and completes and verifies it"})
+                "continuation": "deploy the switches (fabric deploy), or repeat the deletion with deploy true naming every aggregate this "
+                                "request deleted (the conventional ones too): the module recognises each saved deletion from the controller's "
+                                "state and completes and verifies it; a saved deletion left out of that request keeps its pending and the "
+                                "deploy is refused"})
 
     def dcnm_intf_pvlan_validate_saved_updates(self):
         """LIFECYCLE-B: membership removals requested with deploy false, after the parent's confirmed modify and the removed members' release:
@@ -8969,6 +8971,7 @@ class DcnmIntf:
             if not self.module.check_mode and not self.has_bulk_api:
                 problems.append("the controller's bulk interface update API is not available")
             po_name = pvlan_vpc_po_name(vid)
+            conventional = {}
             for index, part in enumerate(parts):
                 resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, part))
                 try:
@@ -8978,6 +8981,9 @@ class DcnmIntf:
                     continue
                 running = pv.get("runningConfig") if isinstance(pv.get("runningConfig"), list) else None
                 count, body = pvlan_interface_stanza(running or [], po_name)
+                if running is not None and count == 1 and not any(str(x).strip().startswith("switchport mode private-vlan ") for x in body):
+                    conventional[part] = pv  # MIXED-SAVED-RETRY: the device holds a CONVENTIONAL child here (classified after both peers)
+                    continue
                 if running is None or count != 1 or not any(str(x).startswith("switchport mode private-vlan ") for x in body):
                     problems.append("peer {0} ({1}): the device does not hold {2} in a PVLAN mode, so the saved deletion cannot be "
                                     "verified".format(index + 1, part, po_name))
@@ -8995,6 +9001,15 @@ class DcnmIntf:
                         legs.append({"serial": part, "index": index, "member": member, "po_name": po_name, "pcid": vid,
                                      "pc_mode": pc_mode or "active", "pre_member": (PO_MEMBER_POLICY, {"CONF": ""}),
                                      "post_member": (m_policy, self.dcnm_intf_pvlan_released_model())})
+            if len(conventional) == 2:
+                # MIXED-SAVED-RETRY: not a PVLAN saved deletion -- BOTH peers hold a conventional child, so the PVLAN-only checks above do
+                # not apply. Kept (with the fresh previews) for dcnm_intf_pvlan_register_conventional_resumes; otherwise the generic path.
+                pvlan_lifecycle_note(self, "pvlan_conventional_vpc_saved", key, {
+                    "name": name, "parts": list(parts), "pcid": vid, "deploy": group["deploy"], "previews": conventional})
+                continue
+            if conventional:
+                problems.append("the device holds {0} as a conventional port-channel on peer(s) {1} only: the peers are not the same saved "
+                                "deletion".format(po_name, ", ".join(sorted(conventional))))
             if problems or set(leg["index"] for leg in legs) != {0, 1}:
                 for reason in problems or ["the saved deletion cannot be verified on both peers"]:
                     self.dcnm_intf_pvlan_block(name, pair, reason)
@@ -9014,6 +9029,123 @@ class DcnmIntf:
             self.changed_dict[0]["delete_deploy"].append(copy.deepcopy(delem))
             self.dcnm_intf_pvlan_drop_generic_member_resets(set((l["serial"], l["member"].lower()) for l in legs))
             self.result.setdefault("pvlan_saved", []).append(dict(record, operation="delete", state="completing the saved deletion"))
+
+    def dcnm_intf_pvlan_register_conventional_resumes(self):
+        """MIXED-SAVED-RETRY: a saved CONVENTIONAL port-channel / vPC deletion that THIS request names again with deployment, on a physical
+        serial where this request also completes a saved PVLAN deletion (registered by the PVLAN resume paths). Without it, that PVLAN
+        deploy is refused: the conventional sibling's `no interface port-channel<id>` and released members are pending on the same switch.
+
+        Recognised only from the controller's current state, never from an earlier process: the summary lists the aggregate in the
+        measured "marked for deletion" form (a regular Po: markDeleted, one `interface_delete` policy whose source is the Po; a vPC: that
+        form for the child on BOTH peers with the vPC as source), and each physical serial's fresh forced preview still holds the
+        port-channel exactly once, NOT in a PVLAN mode, with every member joined to it holding its released policy. Then this invocation
+        owns exactly that `no interface port-channel<id>` and those members (judged by the gates as for a confirmed mark-delete), and the
+        aggregate joins the deployment; anything unproven is refused before any write. Deploy false, no PVLAN continuation on the serial,
+        or a name this request does not repeat: unchanged (generic path; the gate keeps refusing unowned pending)."""
+        resumed = set()
+        for t in self.dcnm_intf_pvlan_target_map().values():
+            if t.get("resumes_delete"):
+                resumed.update([t["sno"]] if t.get("kind") == "po" else [leg["serial"] for leg in t.get("legs") or []])
+        if not resumed:
+            return
+        candidates = []
+        for (sno, lname), req in sorted(self.marked_delete_requests.items(), key=str):
+            entry = req.get("entry") or {}
+            name = str(entry.get("ifName", ""))
+            if (sno, lname) in self.pvlan_targets or not PVLAN_PO_NAME.match(name) or pvlan_po_marked_deleted_problem(entry, name):
+                continue
+            candidates.append({"name": name, "sno": sno, "deploy": req.get("deploy"), "itype": "INTERFACE_PORT_CHANNEL", "previews": {},
+                               "legs": [(sno, re.match(r"^port-channel([0-9]+)$", name.lower()).group(1))]})
+        for (pair, lname), saved in sorted((getattr(self, "pvlan_conventional_vpc_saved", None) or {}).items(), key=str):
+            candidates.append({"name": saved["name"], "sno": pair, "deploy": saved["deploy"], "itype": "INTERFACE_VPC",
+                               "previews": saved["previews"], "legs": [(part, saved["pcid"]) for part in saved["parts"]]})
+        for cand in candidates:
+            if not cand["deploy"] or not set(serial for serial, _pcid in cand["legs"]) & resumed:
+                continue
+            problems, owned = [], []
+            for serial, pcid in cand["legs"]:
+                po_name = "port-channel" + pcid
+                pv = cand["previews"].get(serial)
+                if pv is None:
+                    resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, self._dcnm_intf_query_serial(serial)))
+                    try:
+                        pv = pvlan_preview_entry(resp, serial)
+                    except PvlanError as exc:
+                        problems.append("{0}: {1}".format(serial, exc))
+                        continue
+                running = pv.get("runningConfig") if isinstance(pv.get("runningConfig"), list) else None
+                count, body = pvlan_interface_stanza(running or [], po_name)
+                if running is None or count != 1:
+                    problems.append("{0}: the device does not hold {1} exactly once, so the saved deletion cannot be verified".format(serial, po_name))
+                    continue
+                if any(str(x).strip().startswith("switchport mode private-vlan ") for x in body):
+                    problems.append("{0}: the device holds {1} in a PVLAN mode, not as a conventional port-channel".format(serial, po_name))
+                    continue
+                members = []
+                for member in pvlan_running_po_members(running, pcid)[0]:
+                    member = self.dcnm_intf_pvlan_po_member_ifname(member, serial)
+                    m_problems, m_policy, _m_nv = self.dcnm_intf_pvlan_po_member_context(member, serial)
+                    problems += ["{0}: member {1}: {2}".format(serial, member, x) for x in m_problems]
+                    if not m_problems and m_policy not in PVLAN_RELEASED_MEMBER_POLICIES:
+                        problems.append("{0}: member {1} holds {2}, not a released member policy".format(serial, member, m_policy))
+                    elif not m_problems:
+                        members.append(member)
+                owned.append((serial, pcid, members))
+            if problems:
+                for reason in problems:
+                    self.dcnm_intf_pvlan_block(cand["name"], cand["sno"], "the saved conventional deletion cannot be completed with the PVLAN "
+                                               "one: {0}".format(reason))
+                continue
+            withdrawn = getattr(self, "pvlan_invocation_withdrawn", None) or {}
+            releases = getattr(self, "pvlan_invocation_releases", None) or {}
+            for serial, pcid, members in owned:
+                withdrawn.setdefault(serial, set()).add("no interface port-channel%s" % pcid)
+                for member in members:
+                    releases.setdefault(serial, {})[member.lower()] = pcid
+            self.pvlan_invocation_withdrawn, self.pvlan_invocation_releases = withdrawn, releases
+            delem = {"serialNumber": cand["sno"], "ifName": cand["name"], "fabricName": self.fabric}
+            self.diff_delete_deploy[self.int_index[cand["itype"]]].append(delem)
+            self.changed_dict[0]["delete_deploy"].append(copy.deepcopy(delem))
+            pvlan_lifecycle_note(self, "pvlan_conventional_resumes", (cand["sno"], cand["name"].lower()), dict(cand, owned=owned))
+            self.result.setdefault("pvlan_saved", []).append({
+                "kind": "conventional", "name": cand["name"], "serial": cand["sno"], "operation": "delete",
+                "members": ["{0} on {1}".format(m, serial) for serial, _pcid, ms in owned for m in ms],
+                "state": "completing the saved deletion"})
+
+    def dcnm_intf_pvlan_conventional_verify_deleted(self):
+        """MIXED-SAVED-RETRY: bounded, non-mutating readback after the deploy of saved conventional deletions completed with a PVLAN one: on
+        every physical serial the port-channel (and a vPC parent) is no longer listed and each released member is listed In-Sync. A read
+        that fails is an observation, never a success; nothing is rewritten. A difference fails the run with the observed state."""
+        attempts = 6
+        for (sno, _lname), cand in sorted((getattr(self, "pvlan_conventional_resumes", None) or {}).items(), key=str):
+            verified, observed = False, "no readback was attempted"
+            for attempt in range(attempts):
+                pending = []
+                for serial, pcid, members in cand["owned"]:
+                    self.dcnm_intf_invalidate_serial_authority(serial)
+                    if not self.dcnm_intf_get_have_all_with_sno(serial):
+                        pending.append("{0}: the interface summary could not be read authoritatively".format(serial))
+                        continue
+                    entries = [h for h in self.have_all if h.get("serialNo") in (serial, sno)]
+                    gone = ("port-channel" + pcid, cand["name"].lower())
+                    listed = sorted(set(h.get("ifName") for h in entries if str(h.get("ifName", "")).lower() in gone))
+                    if listed:
+                        pending.append("{0}: still listed {1}".format(serial, listed))
+                    for member in members:
+                        summ = [h for h in entries if h.get("serialNo") == serial and str(h.get("ifName", "")).lower() == member.lower()]
+                        status = summ[0].get("complianceStatus") if len(summ) == 1 else None
+                        if status != "In-Sync":
+                            pending.append("{0}: member {1} is {2}".format(serial, member, status))
+                if not pending:
+                    verified = True
+                    break
+                observed = "; ".join(pending)
+                if attempt < attempts - 1:
+                    time.sleep(5)
+            if not verified:
+                self.module.fail_json(
+                    msg="Saved conventional deletion of {0} on {1} was deployed but could not be verified after {2} readback attempts: "
+                    "{3}. Nothing else was sent.".format(cand["name"], sno, attempts, observed), **self.result)
 
     def dcnm_intf_pvlan_learn_pair(self, pair):
         """LIFECYCLE-A: the pair identity of a vPC deletion found by an `overridden` sweep. A named vPC teaches the module its pair while the
@@ -11063,6 +11195,8 @@ class DcnmIntf:
         if self.module.params.get("state") in ("deleted", "overridden"):
             self.dcnm_intf_pvlan_po_register_resumes()
             self.dcnm_intf_pvlan_vpc_register_resumes()
+            # MIXED-SAVED-RETRY: the conventional siblings this request names again with deployment, beside those PVLAN continuations
+            self.dcnm_intf_pvlan_register_conventional_resumes()
         self.dcnm_intf_pvlan_register_other_targets()
         self.dcnm_intf_pvlan_vpc_resume_gates()
         if self.pvlan_targets and self.dcnm_version != 12:
@@ -14505,6 +14639,7 @@ class DcnmIntf:
         if delete_deploy:
             self.dcnm_intf_pvlan_po_verify_deleted()
             self.dcnm_intf_pvlan_vpc_verify_deleted()
+            self.dcnm_intf_pvlan_conventional_verify_deleted()
 
         if self.deferred_delete_member_defaults:
             self.dcnm_intf_refresh_deferred_deleted_member_defaults()
