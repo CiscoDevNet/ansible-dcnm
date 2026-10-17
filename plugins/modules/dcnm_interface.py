@@ -3340,6 +3340,76 @@ def pvlan_lifecycle_note(obj, attr, key, value):
     store[key] = value
 
 
+def pvlan_record_conventional_releases(obj, payloads, resp):
+    """MIXED-BATCH: the physical members that THIS invocation's confirmed interface update released from a CONVENTIONAL (non-PVLAN)
+    port-channel or vPC: {physical serial: {member (normalized): port-channel id}}. NaC sends conventional and PVLAN member removals in one
+    `dcnm_interface` call; the controller releases a conventional member with pending (`no channel-group N ...` plus the host default) that
+    the PVLAN pre-deploy gate would otherwise call foreign.
+
+    Derived ONLY from: the authoritative pre-state of that aggregate read by this run (obj.have) -- a removed member is no longer in WANT;
+    the payload actually sent (its member list for the leg); and the controller's per-item SUCCESS for that aggregate (`resp`; None for the
+    individual update API, whose every answer was already required OK). A vPC member is mapped to the physical serial of ITS peer (PEERn
+    -> n-th serial of the pair). PVLAN targets, aggregates without a member list in the payload, unconfirmed items and anything not read
+    from the controller contribute nothing. Stored on obj.pvlan_invocation_releases for the gates of this invocation only."""
+    released = {}
+    targets = getattr(obj, "pvlan_targets", None) or {}
+    have_all = getattr(obj, "have", None) or []
+    for payload in payloads or []:
+        if not isinstance(payload, dict) or payload.get("policy") in (PVLAN_POLICY, PO_HOST_POLICY, VPC_HOST_POLICY):
+            continue
+        intf = (payload.get("interfaces") or [{}])[0]
+        name, sno, nv = str(intf.get("ifName", "")), str(intf.get("serialNumber", "")), intf.get("nvPairs") or {}
+        itype = intf.get("interfaceType") or payload.get("interfaceType")
+        if (sno, name.lower()) in targets:
+            continue
+        if itype == "INTERFACE_PORT_CHANNEL":
+            number = re.match(r"^port-channel([0-9]+)$", name.lower())
+            legs = [(sno, "MEMBER_INTERFACES", number.group(1) if number else None)]
+        elif itype == "INTERFACE_VPC":
+            parts = sno.split("~")
+            if len(parts) != 2:
+                continue
+            legs = [(parts[i], "PEER%d_MEMBER_INTERFACES" % (i + 1), str(nv.get("PEER%d_PCID" % (i + 1), "") or "").strip() or None) for i in (0, 1)]
+        else:
+            continue
+        if resp is not None and pvlan_modify_outcome_problems(resp, [(sno, name)]):
+            continue  # this aggregate's update is not confirmed by the controller
+        have = [h for h in have_all if isinstance(h, dict)
+                and str(((h.get("interfaces") or [{}])[0]).get("serialNumber", "")) == sno
+                and str(((h.get("interfaces") or [{}])[0]).get("ifName", "")).lower() == name.lower()]
+        if len(have) != 1:
+            continue
+        have_nv = ((have[0].get("interfaces") or [{}])[0]).get("nvPairs") or {}
+        for serial, key, pcid in legs:
+            if key not in nv or not pcid:
+                continue  # the leg's members are not part of what was sent, or its port-channel id is unknown
+            before, unresolved_before = pvlan_normalize_member_list(have_nv.get(key))
+            after, unresolved_after = pvlan_normalize_member_list(nv.get(key))
+            if unresolved_before or unresolved_after:
+                continue
+            for member in sorted(set(before) - set(after)):
+                released.setdefault(serial, {})[member] = pcid
+    obj.pvlan_invocation_releases = released
+    return released
+
+
+def pvlan_invocation_owned(obj, sno, names, blocks):
+    """MIXED-BATCH: the subset of `names` (pending interfaces of physical serial `sno` outside a PVLAN batch) that THIS invocation released
+    from a conventional aggregate (pvlan_record_conventional_releases) AND whose pending block withdraws that aggregate's channel-group
+    (`no channel-group <id>[ force][ mode M]`). Same serial only; a name released on another serial, a different port-channel id, or a
+    block without that withdrawal stays foreign."""
+    released = (getattr(obj, "pvlan_invocation_releases", None) or {}).get(sno) or {}
+    owned = []
+    for name in names:
+        pcid = released.get(str(name).lower())
+        if not pcid:
+            continue
+        pattern = re.compile(r"^no channel-group %s( force)?( mode \S+)?$" % re.escape(str(pcid)), re.IGNORECASE)
+        if any(pattern.match(str(line).strip()) for line in blocks.get(name, [])):
+            owned.append(name)
+    return owned
+
+
 class DcnmIntf:
     """
     Dcnm Interface methods, properties, and resources for all states.
@@ -10114,6 +10184,12 @@ class DcnmIntf:
                     name.lower() for peer_leg in legs if peer_leg["serial"] == sno
                     for name in (peer_leg["po_name"], peer_leg["member"])) | peer_names.get(sno, set())
                 outside = sorted(set(blocks) - allowed)
+                # MIXED-BATCH: a conventional member this invocation's confirmed update released on this physical serial is not foreign
+                owned = pvlan_invocation_owned(self, sno, outside, blocks)
+                if owned:
+                    self.result.setdefault("pvlan_gate_invocation_releases", []).append(
+                        {"site": site, "serial": sno, "vpc": target["name"], "interfaces": owned})
+                    outside = [n for n in outside if n not in owned]
                 if outside:
                     problems.append("peer {0} ({1}): pending exists for interfaces outside this deploy batch: {2}".format(
                         leg["index"] + 1, sno, ", ".join(outside)))
@@ -11090,6 +11166,11 @@ class DcnmIntf:
                         allowed.update(m["name"].lower() for m in tgt.get("removed") or [])
                 self.dcnm_intf_pvlan_po_resume_removed(sno, entry, blocks, allowed, pv)
                 outside = sorted(set(blocks) - allowed)
+                # MIXED-BATCH: a conventional member this invocation's confirmed update released on this serial is not foreign
+                owned = pvlan_invocation_owned(self, sno, outside, blocks)
+                if owned:
+                    self.result.setdefault("pvlan_gate_invocation_releases", []).append({"site": site, "serial": sno, "interfaces": owned})
+                    outside = [n for n in outside if n not in owned]
                 if outside:
                     problems.append("{0}: pending exists for interfaces outside this deploy batch: {1}".format(
                         sno, ", ".join(outside)))
@@ -14398,6 +14479,8 @@ class DcnmIntf:
                                 "No deployment request was sent.".format("\n  ".join(outcome)),
                                 **self.result
                             )
+                    # MIXED-BATCH: conventional members this confirmed update released (per-item SUCCESS), for this invocation's gates
+                    pvlan_record_conventional_releases(self, self.diff_replace, resp)
                     replace = True
             else:
                 # Individual update API for versions 11 and 12
