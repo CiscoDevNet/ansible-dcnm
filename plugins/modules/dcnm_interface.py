@@ -194,7 +194,8 @@ options:
               list, the identical repetition and 'overridden' (a kept port-channel follows 'replaced'; a
               PVLAN port-channel of the sweep's scope that the request no longer wants is deleted through
               the same path and contract as 'state=deleted'; switch scope and override_intf_types are those
-              of the generic sweep; NOT LIVE TESTED). Refused before any change is sent - ranges, vPC, a
+              of the generic sweep; MEASURED for host mode on NDFC 12.6.0.267, NOT LIVE TESTED for the other
+              modes). Refused before any change is sent - ranges, vPC, a
               'pvlan_mode' change, and removing secondaries from a 'promiscuous' mapping
               that keeps others (protection kept from the measured Ethernet defect). Fields for this mode are 'pvlan_mode', 'pvlan_association' (host,
               trunk secondary), 'pvlan_mapping' (promiscuous, trunk promiscuous), 'native_vlan' and
@@ -222,8 +223,8 @@ options:
               request with C(deploy) true, in any process, recognises the saved operation from the
               controller's state only (the marked-for-deletion listing, the device's running configuration
               and the released member), deploys and verifies it without a second mark-delete, and the
-              same request with C(deploy) false writes nothing and reports it still pending (NOT LIVE
-              TESTED).
+              same request with C(deploy) false writes nothing and reports it still pending (MEASURED for
+              host mode, deletion and member removal, on NDFC 12.6.0.267; NOT LIVE TESTED for the other modes).
               For 'trunk secondary' the member must ALREADY be prepared as a neutral access
               (int_access_host) or routed (int_routed_host) port, administratively up or down; a member in switchport
               mode trunk is refused (known incident - NX-OS rejects the join) and the module never
@@ -523,7 +524,9 @@ options:
               of C(admin_state) of an existing vPC, check mode for a
               creation or a deletion and NDFC 11. C(overridden) keeps a requested vPC as C(replaced) and
               deletes a PVLAN vPC of the sweep's scope that the request no longer wants through the
-              deletion path (one decision per pair and name; NOT LIVE TESTED). For C(trunk secondary) each member must ALREADY be
+              deletion path (one decision per pair and name; MEASURED for host mode on NDFC 12.6.0.267 - retention, unchanged
+              repetition, a vPC no longer wanted and the last PVLAN vPC; NOT LIVE TESTED for the other modes). For
+              C(trunk secondary) each member must ALREADY be
               prepared as a neutral access (C(int_access_host)) or routed
               (C(int_routed_host)) port on BOTH peers; a member in switchport mode trunk is refused
               (known incident - NX-OS rejects the join) and the module never converts a member.
