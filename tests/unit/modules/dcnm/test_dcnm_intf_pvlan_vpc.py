@@ -140,7 +140,7 @@ def test_a_vpc_trunk_item_still_takes_the_unchanged_generic_path():
         ({"pvlan_mode": "promiscuous", "pvlan_association": None}, "pvlan_mapping is required"),
         ({"pvlan_mode": "trunk secondary"}, "Known incident pending engineering"),
         ({"peer2_members": [M2, "e1/8"]}, "duplicate physical"),
-        ({"peer1_pcid": 11}, "must equal the vPC id"),
+        ({"peer1_pcid": 0}, "peer1_pcid must be an integer from 1 to 4096"),  # CHILD-IDS: 11 is valid now (test_dcnm_intf_pvlan_vpc_child_ids.py)
         ({"peer1_pcid": None}, "must not be null"),
         ({"pvlan_association": []}, "empty pvlan_association"),
         ({"peer1_cmds": ["no shutdown"]}, "owned by a structured field"),  # RC1: freeform rule
@@ -756,8 +756,13 @@ def _mode_not_host(c):
     c.parents[VPC]["nvPairs"]["PVLAN_MODE"] = "bogus"  # VPC-MODES-E1: the four submodes are deletable; an unknown one is not
 
 
-def _pcid_differs(c):
+def _pcid_points_to_a_child_that_is_not_there(c):
+    # CHILD-IDS: the parent says peer 2's child is port-channel11, the peer holds port-channel10 only: a partial state, never a guess
     c.parents[VPC]["nvPairs"]["PEER2_PCID"] = "11"
+
+
+def _pcid_unreadable(c):
+    c.parents[VPC]["nvPairs"]["PEER2_PCID"] = "bogus"
 
 
 def _two_members_on_peer1(c):
@@ -790,7 +795,8 @@ def _policy_list2_unreadable(c):
     [
         (_conf_on_peer2, "freeform commands on peer 2"),
         (_mode_not_host, "not in a known pvlan_mode"),
-        (_pcid_differs, "differs from the vPC id"),
+        (_pcid_points_to_a_child_that_is_not_there, "partial state"),
+        (_pcid_unreadable, "not a readable port-channel number"),
         (_two_members_on_peer1, "child port-channel or member could not be read"),
         (_member2_admin_unknown, "unknown administrative state"),
         (_member2_not_ours, "not the member of port-channel10"),

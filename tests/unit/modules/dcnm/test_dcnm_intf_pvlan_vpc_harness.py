@@ -118,7 +118,7 @@ class VpcController(FakeController):
             self.nodes[serial][port] = {"policy": TRUNK, "nvPairs": nv}
         return self
 
-    def seed_vpc(self, association=((PRIMARY, SECONDARY),), descs=("", ""), admin="false"):
+    def seed_vpc(self, association=((PRIMARY, SECONDARY),), descs=("", ""), admin="false", pcids=("10", "10")):
         """A coherent, created vPC (SYNTHETIC): parent + one child Po and one member per peer."""
         wire = json.dumps({"ASSOCIATION_LIST": [{"P_VLAN": str(p), "S_VLAN": str(s)} for p, s in association]}, separators=(",", ":"))
         parent = {
@@ -149,8 +149,8 @@ class VpcController(FakeController):
             "PVLAN_MODE": "host",
             "MAPPING_LIST": "",
             "ASSOCIATION_LIST": wire,
-            "PEER1_PCID": "10",
-            "PEER2_PCID": "10",
+            "PEER1_PCID": str(pcids[0]),
+            "PEER2_PCID": str(pcids[1]),
             "PEER1_MEMBER_INTERFACES": M1,
             "PEER2_MEMBER_INTERFACES": M2,
             "PEER1_PO_DESC": descs[0],

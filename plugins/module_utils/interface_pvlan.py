@@ -3474,7 +3474,7 @@ def vpc_not_implemented(profile, ifname):
     """Reasons a vPC PVLAN request is outside the delivery (empty = in scope). Decided from the RAW profile, before any default or
     coercion and before any read. VPC-MODES-E1: the four PVLAN submodes of int_vpc_pvlan_host; per submode only the fields its template
     shows (association: host/trunk secondary; mapping: promiscuous/trunk promiscuous; per-peer native/allowed: the trunk modes) and the
-    template's own list limits. Still deferred: empty member lists, a PCID different from the vPC id, an empty list, a mode change.
+    template's own list limits. Still deferred: empty member lists, a PCID CHANGE of an existing vPC, an empty list, a mode change.
     RC1: per-peer freeform (`peerN_cmds`) under po_freeform_errors and a non-Auto speed."""
     if not isinstance(profile, dict):
         return ["profile must be a dictionary"]
@@ -3501,10 +3501,11 @@ def vpc_not_implemented(profile, ifname):
             members = profile[key]
             reasons += member_list_errors(members, key)
         pcid = peer + "_pcid"
-        if pcid not in profile or profile.get(pcid) is None:
-            reasons.append("%s is required and must equal the vPC id (a different port-channel number is not implemented)" % pcid)
-        elif isinstance(profile[pcid], bool) or not isinstance(profile[pcid], int) or (vid is not None and str(profile[pcid]) != vid):
-            reasons.append("%s must equal the vPC id %s (a different port-channel number is not implemented)" % (pcid, vid))
+        # Same contract as the regular vPC: optional integer 1-4096 per peer, independent of the vPC id and of the other peer; omitted
+        # means the vPC id on a creation and the existing value on an update (vpc_pair_view / reconcile_vpc).
+        if pcid in profile and profile.get(pcid) is not None:
+            if isinstance(profile[pcid], bool) or not isinstance(profile[pcid], int) or not 1 <= profile[pcid] <= 4096:
+                reasons.append("%s must be an integer from 1 to 4096 (the port-channel number of that peer)" % pcid)
         desc = peer + "_description"
         if desc in profile and profile[desc] is not None:
             value = profile[desc]
@@ -3567,7 +3568,7 @@ def _vpc_peer_trunk_errors(profile, peer, mode):
     return reasons
 
 
-def vpc_pair_view(raw, combined, playbook_serials):
+def vpc_pair_view(raw, combined, playbook_serials, ifname=None):
     """The two legs of a vPC in the controller's pair order, each bound to ITS serial. `peer1_*` of the playbook belong to
     `switch[0]` (the module's existing vPC contract), which may be the controller's second serial. Raises PvlanError when the
     playbook switches are not exactly the two serials of the pair. Returns [{serial, index, playbook_peer, member, pcid, desc}]."""
@@ -3584,7 +3585,10 @@ def vpc_pair_view(raw, combined, playbook_serials):
         legs.append({
             "serial": serial, "index": index, "playbook_peer": peer,
             "member": ",".join(m.strip() for m in members) if isinstance(members, list) and members else None,
-            "pcid": raw.get("peer%d_pcid" % peer),
+            # The port-channel number of THIS serial: the operator's value, else the vPC id (the regular vPC default). `pcid_given`
+            # tells an update whether to keep the existing one (omitted) or to refuse a change (explicit).
+            "pcid": raw.get("peer%d_pcid" % peer) if raw.get("peer%d_pcid" % peer) is not None else vpc_id(ifname) if ifname else None,
+            "pcid_given": raw.get("peer%d_pcid" % peer) is not None,
             "desc": raw.get("peer%d_description" % peer),
             # VPC-MODES-E1: per-peer PVLAN trunk native/allowed of THIS serial (None = omitted).
             "native": raw.get("peer%d_native_vlan" % peer),
@@ -3738,15 +3742,26 @@ def reconcile_vpc(state, raw, ifname, legs, have_policy, have_nv, ndfc_version=N
         if unresolved or not names:
             out["blocked"].append("peer %d needs a readable, non-empty list of explicit physical members" % n)
         have_members.append(names)
-        if str(have_nv.get("PEER%d_PCID" % n, "")).strip() != (vid or ""):
-            out["blocked"].append("PEER%d_PCID %r differs from the vPC id %s; a different port-channel number is not implemented"
-                                  % (n, have_nv.get("PEER%d_PCID" % n), vid))
+        have_pcid = str(have_nv.get("PEER%d_PCID" % n, "")).strip()
+        if not re.match(r"^[1-9][0-9]{0,3}$", have_pcid) or int(have_pcid) > 4096:
+            out["blocked"].append("PEER%d_PCID %r is not a readable port-channel number" % (n, have_nv.get("PEER%d_PCID" % n)))
         # RC1: a stored per-peer freeform is accepted only when every command passes the same rule as a requested one; anything else
         # (a command the controller copies to the members, a structured field's command, a sub-mode block) is refused, never rewritten.
         stored = stored_freeform_errors("PEER%d_PO_CONF" % n, have_nv.get("PEER%d_PO_CONF" % n, ""))
         if stored:
             out["blocked"].append("the vPC stores freeform commands on peer %d (PEER%d_PO_CONF) outside the modeled freeform rule: %s"
                                   % (n, n, "; ".join(stored)))
+    # The port-channel number of an existing vPC never changes (the regular contract): an explicit value must equal the stored one of THAT
+    # controller peer; an omitted one keeps it. The legs are copied so the caller's list is untouched.
+    legs = [dict(leg) for leg in legs]
+    for leg in legs:
+        stored = str(have_nv.get("PEER%d_PCID" % (leg["index"] + 1), "")).strip()
+        if leg.get("pcid_given") and str(leg["pcid"]) != stored:
+            out["blocked"].append("peer%d_pcid %s differs from the stored PEER%d_PCID %s of that peer; changing the port-channel number of an "
+                                  "existing vPC is not implemented" % (leg["playbook_peer"], leg["pcid"], leg["index"] + 1, stored))
+        leg["pcid"] = stored
+    if out["blocked"]:
+        return out
     # MM-B: per peer, the membership follows the regular rule (member_list_update): merged = union, replaced/overridden = exactly the
     # requested members of that peer; an omitted or empty peer list in replaced/overridden is refused (an empty member list is not
     # implemented). A member added or removed on one peer does not touch the other peer.
