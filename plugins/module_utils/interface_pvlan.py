@@ -4045,45 +4045,6 @@ def vpc_response_class(resp, sno, name):
     return "accepted" if not modify_outcome_problems(resp, [(sno, name)]) else "unknown"
 
 
-def vpc_leg_residue(policies, vpc_name, po_name, member, member_detail_nv, baseline_policy=TRUNK_HOST_POLICY, self_children=frozenset(),
-                    admin="false"):
-    """Reasons a leg is NOT clean after a vPC deletion (empty = clean). `policies` is the leg's fresh live-policy list.
-    The released member legitimately keeps ONE direct int_trunk_host policy (its baseline): that is NOT residue. Residue is
-    any live policy that is a vPC child (source = the vPC), names the removed vPC or Po as its entity, is not the single
-    direct baseline of the member, or still holds the PVLAN member policy. No history is needed: the baseline is the explicit
-    contract (direct int_trunk_host, source empty, administratively down, no freeform CONF).
-    MM-A: `baseline_policy` is the member's released policy (int_trunk_host or int_routed_host, from the fresh release) and `self_children`
-    the template names of its own child policies admitted with the member itself as source (PO_ROUTED_RELEASE_CHILDREN_DOWN for routed)."""
-    vname, pname, mname = str(vpc_name).lower(), str(po_name).lower(), str(member).lower()
-    live = [p for p in policies if p.get("deleted") is not True and str(p.get("deleted", "")).lower() != "true"]
-    reasons = []
-    own = []
-    for p in live:
-        entity, template, source = str(p.get("entityName", "")).lower(), p.get("templateName"), str(p.get("source", "")).lower()
-        tag = "%s/%s/%s" % (p.get("entityName"), template, p.get("source"))
-        if source == vname:
-            reasons.append("a policy owned by the removed vPC is still live: %s" % tag)
-        elif entity in (pname, vname):
-            reasons.append("a policy for the removed %s is still live: %s" % ("port-channel" if entity == pname else "vPC", tag))
-        elif entity == mname and not (template in self_children and source == mname):
-            own.append(p)
-        elif source == pname:
-            reasons.append("a policy claimed by the removed port-channel is still live: %s" % tag)
-    baseline = [p for p in own if p.get("templateName") == baseline_policy and str(p.get("source", "")) == ""
-                and str(p.get("entityType", "")).upper() == "INTERFACE"]
-    if len(own) != 1 or len(baseline) != 1:
-        reasons.append("the member does not hold exactly one direct %s policy (%s)" % (
-            baseline_policy, ", ".join(sorted("%s/%s" % (p.get("templateName"), p.get("source")) for p in own)) or "none"))
-    if isinstance(member_detail_nv, dict):
-        # RELEASE-ADMIN: the released member holds the fabric's host default (`admin`; "false" keeps the original contract)
-        if str(member_detail_nv.get("ADMIN_STATE", "")).strip().lower() != _admin_word(admin):
-            reasons.append("the released member is not administratively down" if _admin_word(admin) == "false"
-                           else "the released member is not at the fabric's host default ADMIN_STATE %s" % _admin_word(admin))
-        if str(member_detail_nv.get("CONF", "") or "").strip():
-            reasons.append("the released member carries freeform CONF")
-    return reasons
-
-
 # PLAN-2 C1: child nvPairs (POVPC declarations) that the new companions reach, with the child template's default.
 _VPC_CHILD_COMPANION_DEFAULTS = (
     ("spanningTreePortType", "no"), ("PORT_DUPLEX_MODE", "auto"), ("DISABLE_LACP_SUSPEND", "false"), ("ENABLE_LACP_VPC_CONV", "false"),

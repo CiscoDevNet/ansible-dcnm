@@ -544,11 +544,15 @@ options:
               marked for deletion, a saved member removal only when the device still joins the port to the
               peer's port-channel, the vPC intent no longer lists it and it is already released). Both
               peers are validated before anything is deployed and the vPC is reported
-              successful only when EVERY peer is. The deletion is verified on both peers against the
-              explicit contract (each member a direct C(int_trunk_host), or C(int_routed_host) in the
-              measured neutral form, as the controller releases it; at the fabric's host interface default;
-              no freeform commands) without rewriting any member beyond setting a released member to that
-              default on its own policy before the deployment.
+              successful only when EVERY peer is. Before the deployment, each released member is proven on
+              its own peer against the explicit contract (a direct C(int_trunk_host), or C(int_routed_host)
+              in the measured neutral form, as the controller releases it; at the fabric's host interface
+              default; no freeform commands, no residual PVLAN or channel-group field and no policy left by
+              the vPC) without rewriting any member beyond setting a released member to that default on its
+              own policy - also when a later run completes a saved deletion. After the deployment the module
+              reads only the interface summary of each peer - the vPC and its port-channels must no longer
+              be listed and every member must be listed In-Sync - and does not read the intent or the
+              policies again.
             - Companion fields of C(pvlan) on a vPC, shared by both peers (NOT LIVE TESTED). Native, no
               C(patch_version) needed - C(bpdu_guard), C(port_type_fast), C(mtu), C(copy_description),
               C(enable_cdp), C(duplex), C(enable_pfc), C(queuing_policy), C(disable_lacp_suspend_individual),
@@ -2960,7 +2964,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import 
     vpc_leg_cli_changes as pvlan_vpc_leg_cli_changes,
     vpc_combine as pvlan_vpc_combine,
     vpc_response_class as pvlan_vpc_response_class,
-    vpc_leg_residue as pvlan_vpc_leg_residue,
     vpc_child_differences as pvlan_vpc_child_differences,
     vpc_same as pvlan_vpc_same,
     po_intent_same as pvlan_po_intent_same,
@@ -9818,10 +9821,12 @@ class DcnmIntf:
         refusal can name the read that failed without repeating one cause per interface or per member."""
         return self.dcnm_intf_pvlan_vpc_read_serial(serial, [(vpc_name, po_name, member)])[(vpc_name.lower(), po_name.lower(), member.lower())]
 
-    def dcnm_intf_pvlan_vpc_read_serial(self, serial, legs):
+    def dcnm_intf_pvlan_vpc_read_serial(self, serial, legs, summary_only=False):
         """VPC-READS: the fresh SNAPSHOTS of several legs of ONE peer serial from ONE summary, ONE forced bulk refresh and ONE policy-list
         read of that serial (all three are switch-wide). `legs`: [(vpc_name, po_name, member)]; returns {(vpc, po, member) lower: snap},
-        each snap exactly as dcnm_intf_pvlan_vpc_read_leg builds it (problems / causes per leg, "unreadable"/None, never absence)."""
+        each snap exactly as dcnm_intf_pvlan_vpc_read_leg builds it (problems / causes per leg, "unreadable"/None, never absence).
+        DF-2: `summary_only` reads the summary alone (the post-deploy verification of a deletion); "po", "member" and "policies" then stay
+        "unreadable"/None and must not be judged."""
         snaps = {}
         for vpc_name, po_name, member in legs:
             snaps[(vpc_name.lower(), po_name.lower(), member.lower())] = {
@@ -9845,6 +9850,8 @@ class DcnmIntf:
             for snap in snaps.values():
                 snap["problems"].append(cause)
                 snap["causes"].append(cause)
+        if summary_only:
+            return snaps
         if not pvlan_prewrite_reusable(self, "detail", serial):
             self.dcnm_intf_bulk_fetch_intf_info(serial, refresh=True)
         for vpc_name, po_name, member in legs:
@@ -10965,7 +10972,8 @@ class DcnmIntf:
              member and no ERROR, then its readback (every other writable value unchanged). The two writes are NOT atomic: a failure after a
              confirmed first write stops with the state of each serial (confirmed / uncertain / pending);
           C. the FRESH release of EACH member (its readback, or its proof read when no write was needed) must be a safe standalone port; it
-             becomes that leg's post_member for the pre-deploy gate and verify_deleted, and its distance to the template model is recorded as
+             becomes that leg's post_member for the pre-deploy gate (verify_deleted uses only its policy, against the summary after the
+             deploy; this phase is the last judgement of the released member's intent and contract), and its distance to the template model is recorded as
              `restoration_delta` (jumbo is never imposed; restoring the baseline is a separate operation).
         Any problem stops the run before the deploy. This is NOT a repair of a partial state."""
         for target in [t for t in self.dcnm_intf_pvlan_target_map().values() if t.get("deletes") and t.get("kind") == "vpc"]:
@@ -11032,7 +11040,7 @@ class DcnmIntf:
                     self.dcnm_intf_pvlan_vpc_release_fail(target, "at the member readback", problems, completed, peer=peer, per_serial=writes)
                 fresh.append((leg, after_policy, after, "ADMIN_STATE {0} -> {1}, {2} writable nvPairs preserved".format(
                     nv.get("ADMIN_STATE"), admin, len(payload["interfaces"][0]["nvPairs"]))))
-            records = []
+            records, contract = [], []
             for (leg, policy, nv, _payload), (_leg, after_policy, after, modified) in zip(plan, fresh):  # phase C
                 peer, sno = leg["index"] + 1, leg["serial"]
                 released = dict((k, v) for k, v in (after or {}).items() if k not in PVLAN_PO_RELEASE_METADATA)
@@ -11040,9 +11048,14 @@ class DcnmIntf:
                 if problems:
                     self.dcnm_intf_pvlan_vpc_release_fail(target, "the released member is not a safe standalone port", problems, completed,
                                                           peer=peer, per_serial=writes)
+                # DF-2: the explicit release contract of the released member (no residual PVLAN/channel-group field, a modelable member;
+                # VPC-HOST-E2-READBACK), which G11 judged after the deploy, is judged HERE on this fresh release, before the deploy, for every
+                # leg (a divergence on each peer is reported together). The policy residue G11 also re-read after the deploy (a policy of the
+                # vPC or its child, a second own policy) is refused by the release proof above (dcnm_intf_pvlan_vpc_released_member: claims
+                # and sole direct ownership on the fresh policy list) before any member write.
+                contract += ["peer {0} ({1}): member {2}: {3}".format(peer, sno, leg["member"], d) for d in pvlan_vpc_released_member_differences(
+                    released, pvlan_released_member_contract(after_policy, released), after_policy)]
                 leg["post_member"] = (after_policy, released)
-                # verify_deleted keeps judging the contract's own keys (unchanged strength for trunk), now with the values of THIS fresh release
-                leg["release_contract"] = pvlan_released_member_contract(after_policy, released)
                 record = {"vpc": target["name"], "peer": peer, "serial": sno, "member": leg["member"], "released_policy": after_policy,
                           "released_admin_state": nv.get("ADMIN_STATE"), "released_policy_id": nv.get("POLICY_ID"),
                           "member_modify": modified, "member_write": writes[write_keys[(sno, leg["member"])]],
@@ -11051,45 +11064,47 @@ class DcnmIntf:
                           "restoration_delta": pvlan_po_released_member_restoration_delta(released) if after_policy == PVLAN_TRUNK_HOST_POLICY else {}}
                 record.update(self.dcnm_intf_pvlan_released_role_expectation(sno, after_policy))
                 records.append(record)
+            if contract:
+                self.dcnm_intf_pvlan_vpc_release_fail(target, "at the release contract check, before the deploy", contract, completed,
+                                                      per_serial=writes)
             self.result.setdefault("pvlan_vpc_release", []).extend(records)
 
     def dcnm_intf_pvlan_vpc_deleted_judge(self, target, snaps):
-        """Judgement of ONE deleted vPC on the snapshots of one round (`snaps`: the read_serial answers of its pair, keyed
-        (serial, vpc, po, member) lower). Returns (peers {key: "verified" | problems text}, problems [text]). Pure: no read here."""
+        """Judgement of ONE deleted vPC on the SUMMARY snapshots of one round (`snaps`: the read_serial(summary_only=True) answers of its
+        pair, keyed (serial, vpc, po, member) lower). Returns (peers {key: "verified" | problems text}, problems [text], parent listing).
+        What a peer's summary can assert after the deploy, and nothing else: the child port-channel and the vPC parent are no longer listed,
+        each member is listed exactly once and In-Sync and, ONLY when its entry reports a readable policy (pvlan_summary_policy known), that
+        policy is the released one -- an absent or unreadable optional policy field is not judged here and is never recovered with another
+        read. An unreadable summary is a failure, never absence; a member missing from the summary is not In-Sync, never released.
+        Pure: no read here."""
         name, legs = target["name"], self.dcnm_intf_pvlan_vpc_legs(target)
         member_keys = self.dcnm_intf_pvlan_vpc_member_keys(legs)
-        peers, problems = {}, []
+        peers, problems, listing = {}, [], set()
         for leg in legs:
             snap = snaps[(leg["serial"], name.lower(), leg["po_name"].lower(), leg["member"].lower())]
             leg_problems = list(snap["problems"])
-            if not leg_problems:
-                if snap["po"] is not None:
-                    leg_problems.append("the child port-channel {0} is still in the intent".format(leg["po_name"]))
+            if leg_problems or not snap["summary_ok"]:
+                listing.add("unreadable")
+                leg_problems = leg_problems or ["the interface summary of {0} was not read".format(leg["serial"])]
+            else:
                 if snap["summary"]["po"]:
                     leg_problems.append("the interface summary still lists {0}".format(leg["po_name"]))
                 if snap["summary"]["vpc"]:
+                    listing.add("still listed")
                     leg_problems.append("the interface summary still lists {0}".format(name))
-                mdetail = snap["member"]
-                released_policy = leg["post_member"][0]
-                if not isinstance(mdetail, dict) or mdetail.get("policy") != released_policy:
-                    leg_problems.append("the member {0} does not hold {1} ({2})".format(
-                        leg["member"], released_policy, mdetail.get("policy") if isinstance(mdetail, dict) else mdetail))
                 entries = snap["summary"]["member"]
                 if len(entries) != 1 or entries[0].get("complianceStatus") != "In-Sync":
                     leg_problems.append("the member {0} is not In-Sync in the interface summary".format(leg["member"]))
-                leg_problems += pvlan_vpc_leg_residue(
-                    snap["policies"], name, leg["po_name"], leg["member"], self.dcnm_intf_pvlan_vpc_nv(mdetail),
-                    baseline_policy=released_policy,
-                    self_children=pvlan_released_routed_children(self.dcnm_intf_pvlan_release_admin() or "false")
-                    if released_policy == PVLAN_PO_ROUTED_BASELINE_POLICY else frozenset(),
-                    admin=self.dcnm_intf_pvlan_release_admin() or "false")
-                if isinstance(mdetail, dict) and mdetail.get("policy") == released_policy:
-                    # VPC-HOST-E2-READBACK: the COMPLETE released member against the explicit contract recorded in the leg
-                    leg_problems += ["member {0}: {1}".format(leg["member"], d) for d in pvlan_vpc_released_member_differences(
-                        self.dcnm_intf_pvlan_vpc_nv(mdetail), leg.get("release_contract", leg["post_member"][1]), released_policy)]
+                if len(entries) == 1:
+                    released_policy = leg["post_member"][0]
+                    known, summary = pvlan_summary_policy(entries[0], leg["member"])
+                    if known == PVLAN_SUMMARY_KNOWN and summary["templateName"] != released_policy:
+                        leg_problems.append("the interface summary lists the member {0} with {1}, not the released {2}".format(
+                            leg["member"], summary["templateName"], released_policy))
             peers[member_keys[(leg["serial"], leg["member"])]] = "verified" if not leg_problems else "; ".join(leg_problems)
             problems.extend("peer {0} ({1}): {2}".format(leg["index"] + 1, leg["serial"], p) for p in leg_problems)
-        return peers, problems
+        parent = "unreadable" if "unreadable" in listing else "still listed" if "still listed" in listing else "not listed"
+        return peers, problems, parent
 
     def dcnm_intf_pvlan_vpc_member_keys(self, legs):
         return {(leg["serial"], leg["member"]):
@@ -11097,22 +11112,23 @@ class DcnmIntf:
                 for leg in legs}
 
     def dcnm_intf_pvlan_vpc_verify_deleted(self):
-        """Bounded, non-mutating readback after the deletion of PVLAN vPCs, PER PEER, with an EXPLICIT verification state per vPC that starts
-        "unverified" and becomes "verified" only when the parent and EVERY peer were read and proved clean. A failed or intermittent read,
-        a missing peer or an expired verification is a failure; absence is never inferred from an exception, an empty list or a sentinel.
-        A clean peer does not make the vPC clean. Nothing is rewritten to make it so.
+        """Bounded, non-mutating readback after the DEPLOY of the deletion of PVLAN vPCs, PER PEER, with an EXPLICIT verification state per vPC
+        that starts "unverified" and becomes "verified" only when both peers' summaries, read in the same round, show the deploy applied:
+        neither lists the vPC parent or its child port-channel, and every member is listed once and In-Sync on its own peer. A failed or
+        intermittent read, a missing peer or an expired verification is a failure; absence is never inferred from an exception, an empty list
+        or a sentinel. A clean peer does not make the vPC clean. Nothing is rewritten to make it so.
 
-        DF-2: the reads are planned per vPC PAIR and round: each round reads the parents of the pair once (one forced bulk) and each peer
-        serial ONCE (summary, forced bulk, policy list) for the legs of ALL the vPCs the pair deletes; every vPC is judged on those same
-        answers, so the cost is per pair and round (7 GETs), not per vPC. Unlike the post-deploy verification of a creation
-        (dcnm_intf_pvlan_vpc_verify_rounds), which reads the parents ONCE after its rounds, the deletion reads them in EVERY round.
-        A pair is finished only when every one of its vPCs is clean in the SAME round; until then both peers are read again (a vPC verified
-        in an earlier round is judged again with the others). At most 6 rounds and one 5 s wait between rounds, per pair. Each vPC keeps its
-        own state; every vPC that did not verify is named in the failure.
-        What each read detects: the per-peer SUMMARY detects what the deploy left (a mark-deleted parent or child still listed, a member
-        not In-Sync); the parent and peer intent reads and the policy list are FAIL-CLOSED re-confirmations of the pre-deploy release proofs
-        (intent re-created or changed, residue policy), with no measured post-deploy incidence. The `parent` field of pvlan_verification
-        reports the parent INTENT; a parent still listed in a summary fails the vPC through its peers."""
+        Division of the proof (DF-2): the INTENT and the policies are proven FRESH BEFORE the deploy, in the same invocation -- also when a
+        new process completes a saved deletion: the confirmed mark-delete (or the controller's marked-for-deletion listing) and, per released
+        member, dcnm_intf_pvlan_vpc_released_member (no live policy names the vPC or its child; the member holds a sole direct released-member
+        policy) and the phase C safety contract of dcnm_intf_pvlan_vpc_release_members. AFTER the deploy only its outcome is read: ONE summary
+        per peer serial and round -- 2 GETs per pair and round, whatever the number of vPCs or members -- and every vPC of the pair is judged
+        on those answers (dcnm_intf_pvlan_vpc_deleted_judge). The intent and the policy list are NOT read again after the deploy, so this does
+        not re-confirm them against another writer acting meanwhile. `parent` reports the parent's LISTING in both summaries ("not listed",
+        "still listed", "unreadable"), not its intent.
+        A pair is finished only when every one of its vPCs is clean in the SAME round; until then both summaries are read again (a vPC
+        verified in an earlier round is judged again with the others). At most 6 rounds and one 5 s wait between rounds, per pair. Each vPC
+        keeps its own state; every vPC that did not verify is named in the failure."""
         groups = collections.OrderedDict()
         for target in [t for t in self.dcnm_intf_pvlan_target_map().values()
                        if t.get("kind") == "vpc" and t.get("deletes") and not t.get("deferred")]:
@@ -11128,35 +11144,22 @@ class DcnmIntf:
         for attempt in range(6):
             for pair in list(pending):
                 tgts = groups[pair]
-                self.dcnm_intf_bulk_fetch_intf_info(pair, refresh=True)
-                parents = {}
-                for target in tgts:
-                    name = target["name"]
-                    if self.dcnm_intf_detail_unavailable(name, pair):
-                        parents[name] = ("unreadable", "the parent {0} could not be read authoritatively".format(name))
-                    elif isinstance(self.dcnm_intf_get_intf_info(name, pair, "INTERFACE_VPC"), dict):
-                        parents[name] = ("still present", "the vPC {0} is still present in the controller's intent".format(name))
-                    else:
-                        parents[name] = ("absent", None)
                 by_serial = collections.OrderedDict()
                 for target in tgts:
                     for leg in self.dcnm_intf_pvlan_vpc_legs(target):
                         by_serial.setdefault(leg["serial"], []).append((target["name"], leg["po_name"], leg["member"]))
                 snaps = {}
                 for serial, legs in by_serial.items():
-                    for key, snap in self.dcnm_intf_pvlan_vpc_read_serial(serial, legs).items():
+                    for key, snap in self.dcnm_intf_pvlan_vpc_read_serial(serial, legs, summary_only=True).items():
                         snaps[(serial,) + key] = snap
                 finished = True
                 for target in tgts:
                     entry = state[self.dcnm_intf_pvlan_vpc_plan_key(target)]
                     verification = entry["verification"]
-                    peers, problems = self.dcnm_intf_pvlan_vpc_deleted_judge(target, snaps)
-                    verification["parent"], parent_problem = parents[target["name"]]
-                    if parent_problem:
-                        problems.insert(0, parent_problem)
+                    peers, problems, verification["parent"] = self.dcnm_intf_pvlan_vpc_deleted_judge(target, snaps)
                     verification["peers"].update(peers)
                     entry["problems"] = problems
-                    if not problems and verification["parent"] == "absent" and all(v == "verified" for v in verification["peers"].values()):
+                    if not problems and verification["parent"] == "not listed" and all(v == "verified" for v in verification["peers"].values()):
                         verification["state"] = "verified"
                     else:
                         verification["state"] = "unverified"
