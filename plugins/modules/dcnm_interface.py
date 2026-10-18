@@ -11053,71 +11053,125 @@ class DcnmIntf:
                 records.append(record)
             self.result.setdefault("pvlan_vpc_release", []).extend(records)
 
+    def dcnm_intf_pvlan_vpc_deleted_judge(self, target, snaps):
+        """Judgement of ONE deleted vPC on the snapshots of one round (`snaps`: the read_serial answers of its pair, keyed
+        (serial, vpc, po, member) lower). Returns (peers {key: "verified" | problems text}, problems [text]). Pure: no read here."""
+        name, legs = target["name"], self.dcnm_intf_pvlan_vpc_legs(target)
+        member_keys = self.dcnm_intf_pvlan_vpc_member_keys(legs)
+        peers, problems = {}, []
+        for leg in legs:
+            snap = snaps[(leg["serial"], name.lower(), leg["po_name"].lower(), leg["member"].lower())]
+            leg_problems = list(snap["problems"])
+            if not leg_problems:
+                if snap["po"] is not None:
+                    leg_problems.append("the child port-channel {0} is still in the intent".format(leg["po_name"]))
+                if snap["summary"]["po"]:
+                    leg_problems.append("the interface summary still lists {0}".format(leg["po_name"]))
+                if snap["summary"]["vpc"]:
+                    leg_problems.append("the interface summary still lists {0}".format(name))
+                mdetail = snap["member"]
+                released_policy = leg["post_member"][0]
+                if not isinstance(mdetail, dict) or mdetail.get("policy") != released_policy:
+                    leg_problems.append("the member {0} does not hold {1} ({2})".format(
+                        leg["member"], released_policy, mdetail.get("policy") if isinstance(mdetail, dict) else mdetail))
+                entries = snap["summary"]["member"]
+                if len(entries) != 1 or entries[0].get("complianceStatus") != "In-Sync":
+                    leg_problems.append("the member {0} is not In-Sync in the interface summary".format(leg["member"]))
+                leg_problems += pvlan_vpc_leg_residue(
+                    snap["policies"], name, leg["po_name"], leg["member"], self.dcnm_intf_pvlan_vpc_nv(mdetail),
+                    baseline_policy=released_policy,
+                    self_children=pvlan_released_routed_children(self.dcnm_intf_pvlan_release_admin() or "false")
+                    if released_policy == PVLAN_PO_ROUTED_BASELINE_POLICY else frozenset(),
+                    admin=self.dcnm_intf_pvlan_release_admin() or "false")
+                if isinstance(mdetail, dict) and mdetail.get("policy") == released_policy:
+                    # VPC-HOST-E2-READBACK: the COMPLETE released member against the explicit contract recorded in the leg
+                    leg_problems += ["member {0}: {1}".format(leg["member"], d) for d in pvlan_vpc_released_member_differences(
+                        self.dcnm_intf_pvlan_vpc_nv(mdetail), leg.get("release_contract", leg["post_member"][1]), released_policy)]
+            peers[member_keys[(leg["serial"], leg["member"])]] = "verified" if not leg_problems else "; ".join(leg_problems)
+            problems.extend("peer {0} ({1}): {2}".format(leg["index"] + 1, leg["serial"], p) for p in leg_problems)
+        return peers, problems
+
+    def dcnm_intf_pvlan_vpc_member_keys(self, legs):
+        return {(leg["serial"], leg["member"]):
+                (leg["serial"] if sum(l["serial"] == leg["serial"] for l in legs) == 1 else leg["serial"] + ":" + leg["member"])
+                for leg in legs}
+
     def dcnm_intf_pvlan_vpc_verify_deleted(self):
-        """Bounded, non-mutating readback after the deletion of a PVLAN vPC, PER PEER, with an EXPLICIT verification state that starts
+        """Bounded, non-mutating readback after the deletion of PVLAN vPCs, PER PEER, with an EXPLICIT verification state per vPC that starts
         "unverified" and becomes "verified" only when the parent and EVERY peer were read and proved clean. A failed or intermittent read,
         a missing peer or an expired verification is a failure; absence is never inferred from an exception, an empty list or a sentinel.
-        A clean peer does not make the vPC clean. Nothing is rewritten to make it so."""
+        A clean peer does not make the vPC clean. Nothing is rewritten to make it so.
+
+        DF-2: the reads are planned per vPC PAIR and round, the shape of the post-deploy verification of a creation
+        (dcnm_intf_pvlan_vpc_verify_rounds): each round reads the parents of the pair once (one forced bulk) and each peer serial ONCE
+        (summary, forced bulk, policy list) for the legs of ALL the vPCs the pair deletes; every vPC is judged on those same answers, so the
+        cost is per pair and round, not per vPC. A pair is finished only when every one of its vPCs is clean in the SAME round; until then
+        both peers are read again (a vPC verified in an earlier round is judged again with the others). At most 6 rounds and one 5 s wait
+        between rounds, per pair. Each vPC keeps its own state; every vPC that did not verify is named in the failure."""
+        groups = collections.OrderedDict()
         for target in [t for t in self.dcnm_intf_pvlan_target_map().values()
                        if t.get("kind") == "vpc" and t.get("deletes") and not t.get("deferred")]:
-            name, sno, legs = target["name"], target["sno"], self.dcnm_intf_pvlan_vpc_legs(target)
-            member_keys = {(leg["serial"], leg["member"]):
-                           (leg["serial"] if sum(l["serial"] == leg["serial"] for l in legs) == 1
-                            else leg["serial"] + ":" + leg["member"]) for leg in legs}
-            verification = {"state": "unverified", "parent": "not read", "peers": dict((k, "not read") for k in member_keys.values())}
-            self.result.setdefault("pvlan_verification", {})[name] = verification
-            problems = ["no verification was attempted"]
-            for attempt in range(6):
-                problems = []
-                self.dcnm_intf_bulk_fetch_intf_info(sno, refresh=True)
-                if self.dcnm_intf_detail_unavailable(name, sno):
-                    verification["parent"] = "unreadable"
-                    problems.append("the parent {0} could not be read authoritatively".format(name))
-                elif isinstance(self.dcnm_intf_get_intf_info(name, sno, "INTERFACE_VPC"), dict):
-                    verification["parent"] = "still present"
-                    problems.append("the vPC {0} is still present in the controller's intent".format(name))
-                else:
-                    verification["parent"] = "absent"
-                for leg in legs:
-                    snap = self.dcnm_intf_pvlan_vpc_read_leg(leg["serial"], name, leg["po_name"], leg["member"])
-                    leg_problems = list(snap["problems"])
-                    if not leg_problems:
-                        if snap["po"] is not None:
-                            leg_problems.append("the child port-channel {0} is still in the intent".format(leg["po_name"]))
-                        if snap["summary"]["po"]:
-                            leg_problems.append("the interface summary still lists {0}".format(leg["po_name"]))
-                        if snap["summary"]["vpc"]:
-                            leg_problems.append("the interface summary still lists {0}".format(name))
-                        mdetail = snap["member"]
-                        released_policy = leg["post_member"][0]
-                        if not isinstance(mdetail, dict) or mdetail.get("policy") != released_policy:
-                            leg_problems.append("the member {0} does not hold {1} ({2})".format(
-                                leg["member"], released_policy, mdetail.get("policy") if isinstance(mdetail, dict) else mdetail))
-                        entries = snap["summary"]["member"]
-                        if len(entries) != 1 or entries[0].get("complianceStatus") != "In-Sync":
-                            leg_problems.append("the member {0} is not In-Sync in the interface summary".format(leg["member"]))
-                        leg_problems += pvlan_vpc_leg_residue(
-                            snap["policies"], name, leg["po_name"], leg["member"], self.dcnm_intf_pvlan_vpc_nv(mdetail),
-                            baseline_policy=released_policy,
-                            self_children=pvlan_released_routed_children(self.dcnm_intf_pvlan_release_admin() or "false")
-                            if released_policy == PVLAN_PO_ROUTED_BASELINE_POLICY else frozenset(),
-                            admin=self.dcnm_intf_pvlan_release_admin() or "false")
-                        if isinstance(mdetail, dict) and mdetail.get("policy") == released_policy:
-                            # VPC-HOST-E2-READBACK: the COMPLETE released member against the explicit contract recorded in the leg
-                            leg_problems += ["member {0}: {1}".format(leg["member"], d) for d in pvlan_vpc_released_member_differences(
-                                self.dcnm_intf_pvlan_vpc_nv(mdetail), leg.get("release_contract", leg["post_member"][1]), released_policy)]
-                    verification["peers"][member_keys[(leg["serial"], leg["member"])]] = "verified" if not leg_problems else "; ".join(leg_problems)
-                    problems.extend("peer {0} ({1}): {2}".format(leg["index"] + 1, leg["serial"], p) for p in leg_problems)
-                if not problems and verification["parent"] == "absent" and all(v == "verified" for v in verification["peers"].values()):
-                    verification["state"] = "verified"
-                    break
-                if attempt < 5:
-                    time.sleep(5)
-            if verification["state"] != "verified":
-                verification["state"] = "failed"
-                self.module.fail_json(
-                    msg="vPC {0} was deleted but its release could not be verified on every peer: {1}. Nothing else was sent; no member was "
-                    "rewritten.".format(name, "; ".join(problems) or "verification incomplete"), **self.result)
+            groups.setdefault(target["sno"], []).append(target)
+        state = {}
+        for tgts in groups.values():
+            for target in tgts:
+                member_keys = self.dcnm_intf_pvlan_vpc_member_keys(self.dcnm_intf_pvlan_vpc_legs(target))
+                verification = {"state": "unverified", "parent": "not read", "peers": dict((k, "not read") for k in member_keys.values())}
+                self.result.setdefault("pvlan_verification", {})[target["name"]] = verification
+                state[self.dcnm_intf_pvlan_vpc_plan_key(target)] = {"verification": verification, "problems": ["no verification was attempted"]}
+        pending = list(groups)
+        for attempt in range(6):
+            for pair in list(pending):
+                tgts = groups[pair]
+                self.dcnm_intf_bulk_fetch_intf_info(pair, refresh=True)
+                parents = {}
+                for target in tgts:
+                    name = target["name"]
+                    if self.dcnm_intf_detail_unavailable(name, pair):
+                        parents[name] = ("unreadable", "the parent {0} could not be read authoritatively".format(name))
+                    elif isinstance(self.dcnm_intf_get_intf_info(name, pair, "INTERFACE_VPC"), dict):
+                        parents[name] = ("still present", "the vPC {0} is still present in the controller's intent".format(name))
+                    else:
+                        parents[name] = ("absent", None)
+                by_serial = collections.OrderedDict()
+                for target in tgts:
+                    for leg in self.dcnm_intf_pvlan_vpc_legs(target):
+                        by_serial.setdefault(leg["serial"], []).append((target["name"], leg["po_name"], leg["member"]))
+                snaps = {}
+                for serial, legs in by_serial.items():
+                    for key, snap in self.dcnm_intf_pvlan_vpc_read_serial(serial, legs).items():
+                        snaps[(serial,) + key] = snap
+                finished = True
+                for target in tgts:
+                    entry = state[self.dcnm_intf_pvlan_vpc_plan_key(target)]
+                    verification = entry["verification"]
+                    peers, problems = self.dcnm_intf_pvlan_vpc_deleted_judge(target, snaps)
+                    verification["parent"], parent_problem = parents[target["name"]]
+                    if parent_problem:
+                        problems.insert(0, parent_problem)
+                    verification["peers"].update(peers)
+                    entry["problems"] = problems
+                    if not problems and verification["parent"] == "absent" and all(v == "verified" for v in verification["peers"].values()):
+                        verification["state"] = "verified"
+                    else:
+                        verification["state"] = "unverified"
+                        finished = False
+                if finished:
+                    pending.remove(pair)
+            if not pending:
+                break
+            if attempt < 5:
+                time.sleep(5)
+        failed = []
+        for tgts in groups.values():
+            for target in tgts:
+                entry = state[self.dcnm_intf_pvlan_vpc_plan_key(target)]
+                if entry["verification"]["state"] != "verified":
+                    entry["verification"]["state"] = "failed"
+                    failed.append("vPC {0} was deleted but its release could not be verified on every peer: {1}".format(
+                        target["name"], "; ".join(entry["problems"]) or "verification incomplete"))
+        if failed:
+            self.module.fail_json(msg="{0}. Nothing else was sent; no member was rewritten.".format(". ".join(failed)), **self.result)
 
     PVLAN_PHYSICAL_ETHERNET_NAME = re.compile(r"^ethernet[0-9]+(/[0-9]+){1,2}$", re.IGNORECASE)
 
