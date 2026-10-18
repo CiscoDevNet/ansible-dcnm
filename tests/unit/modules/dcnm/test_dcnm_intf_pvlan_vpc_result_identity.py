@@ -38,7 +38,7 @@ def test_the_same_vpc_name_on_two_pairs_keeps_both_results():
     assert sorted(ver) == sorted([KEY_A, KEY_B]), "one entry per pair, no plain vPC10 entry that could read as both"
     for key, pair, vpc_pair in ((KEY_A, A_PAIR, B.PAIRS[0]), (KEY_B, B_PAIR, B.PAIRS[1])):
         entry = ver[key]
-        assert entry["vpc"] == "vPC10" and entry["pair"] == pair and entry["state"] == "verified" and entry["parent"] == "absent"
+        assert entry["vpc"] == "vPC10" and entry["pair"] == pair and entry["state"] == "verified" and entry["parent"] == "not listed"
         assert sorted(entry["peers"]) == sorted(vpc_pair), "every peer of THIS pair, none of the other"
         assert set(entry["peers"].values()) == {"verified"}
 
@@ -106,7 +106,8 @@ def test_only_the_repeated_name_is_composite_when_others_are_unique():
 def test_the_reads_the_writes_and_the_deploy_do_not_change():
     ctrl, status, result = deleted_same_name()
     assert status == "exit"
-    # one round per pair, parent bulk + 3 reads per peer; one mark-delete per vPC; the release modifies come before the single deploy
-    assert B.post_kinds(ctrl) == {"summary": 4, "bulk": 6, "policies": 4}
+    # one round per pair, the summary of each peer only (no parent/peer bulk, no policy list after the deploy); one mark-delete per vPC;
+    # the release modifies come before the single deploy. The composite keys add no request.
+    assert B.post_kinds(ctrl) == {"summary": 4}
     assert len(ctrl.markdeletes()) == 2 and len(ctrl.deploys()) == 1 and ctrl.sleep_log == []
     assert ctrl.order() == ["MODIFY"] * 4 + ["PREVIEW"] * 4 + ["DEPLOY"]
