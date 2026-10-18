@@ -51,6 +51,7 @@ class MultiVpc(V.VpcController):
         self.post_fail = {}       # (kind, serial) -> number of post-deploy GETs of that kind answered HTTP 500
         self.post_drop = {}       # serial -> {ifName} missing from post-deploy summaries
         self.post_dup = {}        # serial -> {ifName} listed twice in post-deploy summaries
+        self.post_extra = {}      # serial -> summary entries listed only AFTER the last deploy
         self.post_mutate = {}     # (serial, ifName) -> nvPairs applied to post-deploy detail reads
         self.post_mutate_parent = {}  # (pair serial, name) -> nvPairs applied to post-deploy reads of that parent
         self.extra_pending = {}   # serial -> pending lines appended to every preview of that serial
@@ -125,6 +126,8 @@ class MultiVpc(V.VpcController):
             if self.deployed and name in self.post_dup.get(serial, set()):
                 out.append(copy.deepcopy(entry))
         out.extend(copy.deepcopy(self.summary_extra.get(serial, [])))
+        if self.deployed:
+            out.extend(copy.deepcopy(self.post_extra.get(serial, [])))
         for key in self.parents:
             if serial in self.plan[key][1]:
                 e = self._summary_entry(serial, key[1], {"policy": V.VPC_HOST}, "In-Sync")
