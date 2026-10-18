@@ -8760,6 +8760,25 @@ class DcnmIntf:
                 # released member itself, with its complete nvPairs, before the parent's deletion is deployed.
                 self.dcnm_intf_pvlan_drop_generic_member_resets(set((sno, m["name"].lower()) for m in members))
 
+    def dcnm_intf_pvlan_planning_preview(self, query_serial):
+        """PLANNING-REUSE: ONE fresh forced preview per queried serial for the PLANNING reads of THIS invocation (the saved-state
+        recognition and the saved-removal detection, all before the first write). Several candidates on the same switch then judge the
+        same answer instead of recomputing that switch each time. Keyed by the serial in the request path, so peers never share an
+        answer. Only an answer that parses as a preview entry of that serial is kept: an unreadable answer is returned to its caller (which
+        judges and reports it as before) and not cached, so a failed read is never reused as an empty state. Once the invocation starts
+        sending (dcnm_intf_send_message_to_dcnm) nothing is reused: the gates keep their own fresh reads after any write."""
+        cache = None if getattr(self, "_pvlan_sending", False) else self.__dict__.setdefault("pvlan_planning_previews", {})
+        if cache is not None and query_serial in cache:
+            return cache[query_serial]
+        resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, query_serial))
+        if cache is not None:
+            try:
+                pvlan_preview_entry(resp, query_serial)
+            except PvlanError:
+                return resp
+            cache[query_serial] = resp
+        return resp
+
     def dcnm_intf_pvlan_po_register_resumes(self):
         """LIFECYCLE-B: the continuation of a SAVED PVLAN port-channel deletion (deploy false earlier, in another process). Recognised ONLY
         from the controller's state: the request reaches a summary entry in the measured "marked for deletion" form of a regular Po
@@ -8774,7 +8793,7 @@ class DcnmIntf:
             name = entry.get("ifName", "")
             if key in self.pvlan_targets or not PVLAN_PO_NAME.match(str(name)) or pvlan_po_marked_deleted_problem(entry, name):
                 continue  # not a regular Po saved deletion (a vPC child carries its parent as source): not this path
-            resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, self._dcnm_intf_query_serial(sno)))
+            resp = self.dcnm_intf_pvlan_planning_preview(self._dcnm_intf_query_serial(sno))
             try:
                 pv = pvlan_preview_entry(resp, sno)
             except PvlanError as exc:
@@ -8884,11 +8903,8 @@ class DcnmIntf:
         # preview is read only otherwise (an absent or other ccStatus is never taken as In-Sync).
         if self.dcnm_intf_pvlan_switch_in_sync(sno):
             return []
-        cache = self.__dict__.setdefault("pvlan_saved_removal_previews", {})
-        if sno not in cache:
-            cache[sno] = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, sno))
         try:
-            entry = pvlan_preview_entry(cache[sno], sno)
+            entry = pvlan_preview_entry(self.dcnm_intf_pvlan_planning_preview(sno), sno)
             blocks, _global = pvlan_split_blocks(entry["pendingConfig"])
         except PvlanError:
             return None
@@ -9053,7 +9069,7 @@ class DcnmIntf:
                 pcid = re.match(r"^port-channel([0-9]+)$", str(group["peers"][part].get("ifName", "")).lower()).group(1)
                 pcids[part] = pcid
                 po_name = pvlan_vpc_po_name(pcid)
-                resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, part))
+                resp = self.dcnm_intf_pvlan_planning_preview(part)
                 try:
                     pv = pvlan_preview_entry(resp, part)
                 except PvlanError as exc:
@@ -9147,7 +9163,7 @@ class DcnmIntf:
                 po_name = "port-channel" + pcid
                 pv = cand["previews"].get(serial)
                 if pv is None:
-                    resp = dcnm_send(self.module, "GET", self.paths["PVLAN_CONFIG_PREVIEW"].format(self.fabric, self._dcnm_intf_query_serial(serial)))
+                    resp = self.dcnm_intf_pvlan_planning_preview(self._dcnm_intf_query_serial(serial))
                     try:
                         pv = pvlan_preview_entry(resp, serial)
                     except PvlanError as exc:
@@ -14580,6 +14596,10 @@ class DcnmIntf:
         return "\n".join(lines)
 
     def dcnm_intf_send_message_to_dcnm(self):
+
+        # PLANNING-REUSE / PREWRITE-REUSE: from here on every read is fresh; nothing planned before a write is reused after it.
+        self._pvlan_sending = True
+        self.__dict__.pop("pvlan_planning_previews", None)
 
         resp = None
         changed = False
