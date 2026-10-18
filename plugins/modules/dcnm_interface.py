@@ -11102,12 +11102,17 @@ class DcnmIntf:
         a missing peer or an expired verification is a failure; absence is never inferred from an exception, an empty list or a sentinel.
         A clean peer does not make the vPC clean. Nothing is rewritten to make it so.
 
-        DF-2: the reads are planned per vPC PAIR and round, the shape of the post-deploy verification of a creation
-        (dcnm_intf_pvlan_vpc_verify_rounds): each round reads the parents of the pair once (one forced bulk) and each peer serial ONCE
-        (summary, forced bulk, policy list) for the legs of ALL the vPCs the pair deletes; every vPC is judged on those same answers, so the
-        cost is per pair and round, not per vPC. A pair is finished only when every one of its vPCs is clean in the SAME round; until then
-        both peers are read again (a vPC verified in an earlier round is judged again with the others). At most 6 rounds and one 5 s wait
-        between rounds, per pair. Each vPC keeps its own state; every vPC that did not verify is named in the failure."""
+        DF-2: the reads are planned per vPC PAIR and round: each round reads the parents of the pair once (one forced bulk) and each peer
+        serial ONCE (summary, forced bulk, policy list) for the legs of ALL the vPCs the pair deletes; every vPC is judged on those same
+        answers, so the cost is per pair and round (7 GETs), not per vPC. Unlike the post-deploy verification of a creation
+        (dcnm_intf_pvlan_vpc_verify_rounds), which reads the parents ONCE after its rounds, the deletion reads them in EVERY round.
+        A pair is finished only when every one of its vPCs is clean in the SAME round; until then both peers are read again (a vPC verified
+        in an earlier round is judged again with the others). At most 6 rounds and one 5 s wait between rounds, per pair. Each vPC keeps its
+        own state; every vPC that did not verify is named in the failure.
+        What each read detects: the per-peer SUMMARY detects what the deploy left (a mark-deleted parent or child still listed, a member
+        not In-Sync); the parent and peer intent reads and the policy list are FAIL-CLOSED re-confirmations of the pre-deploy release proofs
+        (intent re-created or changed, residue policy), with no measured post-deploy incidence. The `parent` field of pvlan_verification
+        reports the parent INTENT; a parent still listed in a summary fails the vPC through its peers."""
         groups = collections.OrderedDict()
         for target in [t for t in self.dcnm_intf_pvlan_target_map().values()
                        if t.get("kind") == "vpc" and t.get("deletes") and not t.get("deferred")]:
