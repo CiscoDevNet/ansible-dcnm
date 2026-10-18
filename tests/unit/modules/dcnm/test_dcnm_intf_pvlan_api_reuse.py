@@ -143,3 +143,133 @@ def test_the_sender_closes_the_planning_phase_before_any_request():
     first_request = min(i for i in (src.find("dcnm_send("), src.find("resp = dcnm_send")) if i >= 0)
     assert 0 <= src.find("self._pvlan_sending = True") < first_request
     assert 0 <= src.find('pop("pvlan_planning_previews", None)') < first_request
+
+
+# ================================================================== 2. PREWRITE-REUSE (vPC reads before the first write)
+from . import test_dcnm_intf_pvlan_vpc_child_ids as CI  # noqa: E402
+from . import test_dcnm_intf_pvlan_vpc_read_diagnostics as RD  # noqa: E402
+
+POLICIES, DETAIL = "/control/policies/switches/", "/rest/interface?serialNumber="
+
+
+def reads(calls, mark, serial, before=None):
+    end = len(calls) if before is None else before
+    return sum(1 for c in calls[:end] if c[0] == "GET" and (mark + serial) in c[1] and "&ifName=" not in c[1])
+
+
+def first_write(calls):
+    return next(i for i, c in enumerate(calls) if c[0] in ("POST", "PUT", "DELETE"))
+
+
+def test_vpc_creation_reads_each_peers_policies_once_before_writing_and_fresh_after_the_deploy():
+    """Peers with DIFFERENT port-channel numbers, playbook order reversed (peer1 = SN2): each serial gets its own state."""
+    pcids = ("11", "12")
+    ctrl = V.baseline_ctrl()
+    V.create_previews(ctrl)
+    CI.remap(ctrl, pcids)
+    # peer1_* of the playbook belong to its FIRST switch (SN2 here): SN2 owns 12 and SN1 owns 11
+    status, result = V.run_vpc(ctrl, [V.vpc_item(switches=[V.IP2, V.IP1], peer1_members=[V.M2], peer2_members=[V.M1], peer1_pcid=12,
+                                                 peer2_pcid=11)])
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    w = first_write(ctrl.calls)
+    for serial in (V.SN1, V.SN2):
+        assert reads(ctrl.calls, POLICIES, serial, w) == 1, serial      # before: 2 (generic + vPC compare)
+        assert reads(ctrl.calls[w:], POLICIES, serial) >= 1, serial     # the post-deploy verification still reads its own
+    # each serial kept its own Po number and member (the base result of the swapped creation)
+    nv = CI.sent_nv(ctrl)
+    assert (nv["PEER1_PCID"], nv["PEER2_PCID"]) == ("11", "12") and nv["PEER1_MEMBER_INTERFACES"] == V.M1
+    assert "port-channel11" in ctrl.nodes[V.SN1] and "port-channel12" in ctrl.nodes[V.SN2]
+
+
+def test_a_failed_generic_policy_read_is_not_reused_the_vpc_reader_reads_again_and_judges_it():
+    """SN2's generic policy read fails once: nothing is recorded, the vPC reader reads SN2 again (fresh) and the creation proceeds;
+    SN1's complete read is still reused. A failed read is never taken as an empty policy list."""
+
+    class OnceFailing(RD.CanaryController):
+        def __call__(self, mod, method, path, data=None):
+            if POLICIES + V.SN2 in path and not getattr(self, "failed_once", False):
+                self.failed_once = True
+                self.calls.append((method, path, data))
+                return {"RETURN_CODE": 500, "MESSAGE": "x", "DATA": {}}
+            return super(OnceFailing, self).__call__(mod, method, path, data)
+
+    ctrl = OnceFailing().seed_baseline()
+    V.create_previews(ctrl)
+    status, result = V.run_vpc(ctrl, [V.vpc_item()])
+    w = first_write(ctrl.calls) if status == "exit" else len(ctrl.calls)
+    assert reads(ctrl.calls, POLICIES, V.SN2, w) >= 2, "the failed generic read was not reused as a state"
+    assert reads(ctrl.calls, POLICIES, V.SN1, w) == 1
+
+
+def test_a_policy_read_failing_for_the_vpc_reader_as_well_still_refuses_with_its_peer_named():
+    """Both reads of SN2's policies fail: the existing refusal (peer and stage named, nothing written) is unchanged."""
+    ctrl = RD.CanaryController().seed_baseline()
+    ctrl.canary_failures.add(POLICIES + V.SN2)
+    got = RD.refused(ctrl)
+    assert any(V.SN2 in l and "switch policy list" in l for l in got), got
+    assert not any(V.SN1 in l and "switch policy list" in l for l in got), got
+
+
+def test_an_unchanged_vpc_repeat_still_reads_and_writes_nothing():
+    pcids = ("11", "12")
+    ctrl = CI.seeded(pcids)
+    V.converged_previews(ctrl)
+    CI.remap(ctrl, pcids)
+    status, result = V.run_vpc(ctrl, [V.vpc_item(peer1_pcid=11, peer2_pcid=12)])
+    assert status == "exit" and result["changed"] is False and ctrl.writes() == [], result.get("msg")
+    for serial in (V.SN1, V.SN2):
+        assert reads(ctrl.calls, POLICIES, serial) == 1, serial          # before: 2
+        assert reads(ctrl.calls, "config-preview/", serial) == 1, serial  # the prior gate keeps its fresh preview
+
+
+def test_a_description_update_keeps_its_modify_and_deploy_and_both_peers_new_text():
+    pcids = ("11", "12")
+    ctrl = CI.seeded(pcids, descs=("base-a", "base-b"))
+    ctrl.vpc_previews[V.SN1] = [V.converged_preview(V.SN1, V.M1, desc="base-a"), V.description_preview(V.SN1, V.M1, "base-a", "new-a")]
+    ctrl.vpc_previews[V.SN2] = [V.converged_preview(V.SN2, V.M2, desc="base-b"), V.description_preview(V.SN2, V.M2, "base-b", "new-b")]
+    CI.remap(ctrl, pcids)
+    status, result = V.run_vpc(ctrl, [V.vpc_item(peer1_pcid=11, peer2_pcid=12, peer1_description="new-a", peer2_description="new-b")],
+                               state="replaced")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert len(ctrl.modifies()) == 1 and len(ctrl.deploys()) == 1
+    assert ctrl.nodes[V.SN1]["port-channel11"]["nvPairs"]["DESC"] == "new-a" and ctrl.nodes[V.SN2]["port-channel12"]["nvPairs"]["DESC"] == "new-b"
+
+
+class _ReuseObj(object):
+    def __init__(self):
+        self.have_all_cached_snos, self.have_all_failed_snos = set(), set()
+        self.intf_detail_cached_snos, self.intf_detail_fetch_failed_snos = set(), set()
+
+    @staticmethod
+    def _dcnm_intf_authority_key(serial):
+        return serial
+
+
+def test_prewrite_records_are_per_physical_serial_dropped_on_failure_and_closed_by_sending():
+    obj = _ReuseObj()
+    module.pvlan_prewrite_note(obj, "policies", "SNA", True, [{"x": 1}])
+    module.pvlan_prewrite_note(obj, "policies", "SNA~SNB", True, [{"x": 2}])   # a pair read is never recorded
+    assert module.pvlan_prewrite_reusable(obj, "policies", "SNA") and not module.pvlan_prewrite_reusable(obj, "policies", "SNB")
+    assert not module.pvlan_prewrite_reusable(obj, "policies", "SNA~SNB")
+    module.pvlan_prewrite_note(obj, "policies", "SNA", False)                  # a later failed read drops the earlier one
+    assert not module.pvlan_prewrite_reusable(obj, "policies", "SNA")
+    module.pvlan_prewrite_note(obj, "detail", "SNA", True)
+    assert not module.pvlan_prewrite_reusable(obj, "detail", "SNA"), "detail needs the serial still cached as authoritative"
+    obj.intf_detail_cached_snos.add("SNA")
+    assert module.pvlan_prewrite_reusable(obj, "detail", "SNA")
+    obj.intf_detail_fetch_failed_snos.add("SNA")
+    assert not module.pvlan_prewrite_reusable(obj, "detail", "SNA")
+    obj.intf_detail_fetch_failed_snos.clear()
+    obj._pvlan_sending = True
+    assert not module.pvlan_prewrite_reusable(obj, "detail", "SNA")
+    module.pvlan_prewrite_note(obj, "policies", "SNC", True, [])               # nothing is recorded once sending started
+    obj._pvlan_sending = False
+    assert not module.pvlan_prewrite_reusable(obj, "policies", "SNC")
+
+
+def test_the_summary_is_always_read_again_by_the_vpc_reader():
+    """Not reused on purpose: the generic summary of the OTHER peer rewrites this serial's have_all entries (pair union), so the
+    pre-write summary of a serial is not provably complete when the vPC reader runs."""
+    import inspect
+    src = inspect.getsource(module.DcnmIntf.dcnm_intf_pvlan_vpc_read_serial)
+    assert "if self.dcnm_intf_get_have_all_with_sno(serial):" in src and 'pvlan_prewrite_reusable(self, "summary"' not in src

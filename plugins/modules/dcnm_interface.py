@@ -3519,6 +3519,31 @@ def pvlan_record_conventional_deletions(obj, payload, resp, prestate):
     return prestate
 
 
+def pvlan_prewrite_note(obj, kind, serial, ok, data=None):
+    """PREWRITE-REUSE bookkeeping: `kind` ("detail", "policies") of ONE PHYSICAL serial was just read by the generic HAVE
+    readers of THIS invocation, before its first write. ok: a complete, validated answer (data: the validated policy list); a failed or
+    partial read, a combined pair serial, or any read once sending started records nothing and drops an earlier record. Module level so
+    the shared readers keep working on the minimal objects of the unit tests."""
+    reads = obj.__dict__.setdefault("pvlan_prewrite_reads", {})
+    key = str(serial)
+    record = reads.setdefault(kind, {})
+    record.pop(key, None)
+    if ok and not getattr(obj, "_pvlan_sending", False) and "~" not in key:
+        record[key] = data
+
+
+def pvlan_prewrite_reusable(obj, kind, serial):
+    """True only before the first write, for a physical serial whose `kind` was read completely by this invocation and is still held as
+    authoritative (not invalidated or failed since)."""
+    record = (obj.__dict__.get("pvlan_prewrite_reads") or {}).get(kind) or {}
+    if getattr(obj, "_pvlan_sending", False) or str(serial) not in record:
+        return False
+    authority = obj._dcnm_intf_authority_key(serial)
+    if kind == "detail":
+        return authority in obj.intf_detail_cached_snos and authority not in obj.intf_detail_fetch_failed_snos
+    return isinstance(record[str(serial)], list)
+
+
 def pvlan_invocation_withdrawals(obj, sno, global_lines):
     """MIXED-DELETE: the global pending lines of physical serial `sno` that are exactly the `no interface port-channel<id>` of a conventional
     aggregate this invocation's confirmed mark-delete deleted on that serial. Any other global line stays outside interface scope."""
@@ -7145,6 +7170,7 @@ class DcnmIntf:
 
         self.dcnm_intf_invalidate_serial_authority(serialNumber)
         read_reason_clear(self, "detail", serialNumber)
+        pvlan_prewrite_note(self, "detail", query_serial, False)
 
         # Invalidation above runs first on purpose: a skipped read must not leave
         # a stale cache entry behind that would let the authority guard pass.
@@ -7172,6 +7198,7 @@ class DcnmIntf:
             self.intf_detail_cached_snos.update(authorities)
             self.intf_detail_fetch_failed_snos.difference_update(authorities)
             self._dcnm_intf_clear_failed_reads(serialNumber)
+            pvlan_prewrite_note(self, "detail", query_serial, query_serial == serialNumber)
             return
 
         if not (isinstance(resp, dict) and resp.get("RETURN_CODE") == 200):
@@ -7240,6 +7267,7 @@ class DcnmIntf:
         self.intf_detail_cached_snos.update(authorities)
         self.intf_detail_fetch_failed_snos.difference_update(authorities)
         self._dcnm_intf_clear_failed_reads(serialNumber)
+        pvlan_prewrite_note(self, "detail", query_serial, query_serial == serialNumber)
 
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
@@ -7686,7 +7714,10 @@ class DcnmIntf:
         if not valid:
             self.have_breakout_failed_snos.add(authority)
             self.have_breakout_cached_snos.discard(authority)
+            pvlan_prewrite_note(self, "policies", query_serial, False)
             return False
+        # PREWRITE-REUSE: the same switch policy list the PVLAN reader validates (a list of objects), kept for this physical serial
+        pvlan_prewrite_note(self, "policies", query_serial, query_serial == sno, copy.deepcopy(data))
 
         breakout = [
             elem["entityName"]
@@ -9796,6 +9827,7 @@ class DcnmIntf:
             snaps[(vpc_name.lower(), po_name.lower(), member.lower())] = {
                 "serial": serial, "problems": [], "causes": [], "summary": {"po": [], "member": [], "vpc": []}, "summary_ok": False,
                 "po": "unreadable", "member": "unreadable", "policies": None}
+        # The summary is always read again: the generic summary of the OTHER peer rewrites this serial's have_all entries (pair union).
         if self.dcnm_intf_get_have_all_with_sno(serial):
             for vpc_name, po_name, member in legs:
                 snap = snaps[(vpc_name.lower(), po_name.lower(), member.lower())]
@@ -9813,7 +9845,8 @@ class DcnmIntf:
             for snap in snaps.values():
                 snap["problems"].append(cause)
                 snap["causes"].append(cause)
-        self.dcnm_intf_bulk_fetch_intf_info(serial, refresh=True)
+        if not pvlan_prewrite_reusable(self, "detail", serial):
+            self.dcnm_intf_bulk_fetch_intf_info(serial, refresh=True)
         for vpc_name, po_name, member in legs:
             snap = snaps[(vpc_name.lower(), po_name.lower(), member.lower())]
             for key, name, kind in (("po", po_name, "INTERFACE_PORT_CHANNEL"), ("member", member, "INTERFACE_ETHERNET")):
@@ -9826,7 +9859,10 @@ class DcnmIntf:
                     continue
                 found = self.dcnm_intf_get_intf_info(name, serial, kind)
                 snap[key] = copy.deepcopy(found) if isinstance(found, dict) else None  # None: authoritatively absent
-        self.pvlan_policies.pop(serial, None)
+        if pvlan_prewrite_reusable(self, "policies", serial):
+            self.pvlan_policies[serial] = copy.deepcopy(self.__dict__["pvlan_prewrite_reads"]["policies"][str(serial)])
+        else:
+            self.pvlan_policies.pop(serial, None)
         policies = self.dcnm_intf_pvlan_read_policies(serial)
         for snap in snaps.values():
             if policies is None:
@@ -14600,6 +14636,7 @@ class DcnmIntf:
         # PLANNING-REUSE / PREWRITE-REUSE: from here on every read is fresh; nothing planned before a write is reused after it.
         self._pvlan_sending = True
         self.__dict__.pop("pvlan_planning_previews", None)
+        self.__dict__.pop("pvlan_prewrite_reads", None)
 
         resp = None
         changed = False
