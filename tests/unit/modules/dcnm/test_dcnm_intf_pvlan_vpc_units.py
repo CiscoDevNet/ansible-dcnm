@@ -384,49 +384,10 @@ def test_response_classes_never_pass_an_error_or_an_unknown_shape(resp, cls):
     assert P.vpc_response_class(resp, PAIR, VPC) == cls
 
 
-# ---------------------------------------------------------------- residue after a deletion (per peer)
-def pol(entity, template, source="", deleted=False, etype="INTERFACE"):
-    return {"entityName": entity, "templateName": template, "source": source, "deleted": deleted, "entityType": etype}
-
-
-def baseline_member_nv():
-    return {"ADMIN_STATE": "false", "CONF": ""}
-
-
-CLEAN = [pol("Ethernet1/7", "int_trunk_host"), pol("Ethernet1/9", "int_trunk_host"), pol("loopback0", "int_loopback")]
-
-
-@pytest.mark.parametrize(
-    "policies, mnv, needle",
-    [
-        (CLEAN, baseline_member_nv(), None),  # D1 the released member's own policy is NOT residue
-        (CLEAN + [pol("Ethernet1/7", "int_trunk_host", deleted=True)], baseline_member_nv(), None),  # deleted entries are not live
-        (CLEAN + [pol("Ethernet1/7", "int_eth", source="vPC10")], baseline_member_nv(), "owned by the removed vPC"),  # D2 a child still claims it
-        (CLEAN + [pol("port-channel10", "int_vpc_pvlan_po", source="vPC10")], baseline_member_nv(), "owned by the removed vPC"),
-        (CLEAN + [pol("port-channel10", "int_port_channel_trunk_host")], baseline_member_nv(), "for the removed port-channel"),  # D3
-        (CLEAN + [pol("vPC10", "int_vpc_pvlan_host")], baseline_member_nv(), "for the removed vPC"),
-        ([pol("Ethernet1/7", "int_port_channel_pvlan_member")], baseline_member_nv(), "does not hold exactly one direct"),  # D4 still PVLAN
-        (CLEAN + [pol("Ethernet1/7", "Config_Profile", source="OVERLAY")], baseline_member_nv(), "does not hold exactly one direct"),  # D5 overlay
-        (CLEAN, {"ADMIN_STATE": "true", "CONF": ""}, "not administratively down"),  # D6
-        (CLEAN, {"ADMIN_STATE": "false", "CONF": "mtu 1500"}, "freeform CONF"),
-        ([pol("Ethernet1/7", "int_access_host")], baseline_member_nv(), "does not hold exactly one direct"),  # D9 another template
-        ([pol("Ethernet1/7", "int_trunk_host", source="someone")], baseline_member_nv(), "does not hold exactly one direct"),
-        ([], baseline_member_nv(), "does not hold exactly one direct"),  # the member has no policy at all
-        (CLEAN + [pol("Ethernet1/9", "int_eth", source="port-channel10")], baseline_member_nv(), "claimed by the removed port-channel"),
-    ],
-)
-def test_residue_distinguishes_the_valid_member_baseline_from_what_the_vpc_left(policies, mnv, needle):
-    reasons = P.vpc_leg_residue(policies, VPC, "port-channel10", M1, mnv)
-    if needle is None:
-        assert reasons == []
-    else:
-        assert any(needle in x for x in reasons), reasons
-
-
-def test_the_old_blanket_rule_would_have_rejected_the_valid_baseline_and_the_new_rule_does_not():
-    blanket = [p for p in CLEAN if p["entityName"].lower() == "ethernet1/7"]
-    assert blanket, "G2 6.4 called ANY policy whose entityName is the member residue: that would reject the baseline"
-    assert P.vpc_leg_residue(CLEAN, VPC, "port-channel10", M1, baseline_member_nv()) == []
+# ---------------------------------------------------------------- residue after a deletion
+# DF-2: the residue rules of the former vpc_leg_residue (a policy of the vPC or its child, a second own policy, a member left on another
+# template, freeform CONF) are enforced by the release proof BEFORE the deploy; each case is exercised through main() in
+# test_dcnm_intf_pvlan_vpc_readback.py::test_a_residue_left_by_the_vpc_is_refused_by_the_release_proof_before_any_member_write.
 
 
 def test_child_differences_detect_a_leg_that_does_not_follow_its_parent():

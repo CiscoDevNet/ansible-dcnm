@@ -236,25 +236,37 @@ def test_a_member_that_already_contradicts_its_model_is_refused_before_any_write
     assert ctrl.writes() == [], "refused before the first write"
 
 
-# ================================================================== R1-02: the released member after a deletion
+# ================================================================== R1-02: the released member of a deletion
+# DF-2 (minimal post-deploy reads): the complete judgement of the released member -- the explicit release contract, residual PVLAN /
+# channel-group fields, a modelable member and the policy residue -- is made on the FRESH release, BEFORE the deploy (phase C of
+# dcnm_intf_pvlan_vpc_release_members), in the same invocation and also when a new process completes a saved deletion. After the deploy only
+# the peers' summaries are read. So a divergence the controller RELEASES is refused before any deploy; a change made after the deploy is not
+# re-read by the module (OUTPUT_SEMANTICS.md; the external test harness checks the member's intent and running configuration).
 class Released(VpcController):
-    def __init__(self, serial=None, port=None, drift=None):
+    """`when` = "release": `drift` is applied when the controller releases the member (at the mark-delete); "deploy": right after the deploy
+    answer (G11's probe shape)."""
+
+    def __init__(self, serial=None, port=None, drift=None, when="release"):
         super(Released, self).__init__()
-        self.target, self.drift = (serial, port), drift
+        self.target, self.drift, self.when = (serial, port), drift, when
+
+    def apply(self, serial, port, drift):
+        node = self.nodes[serial][port]
+        replaced = drift(node["nvPairs"])
+        if replaced is not None:
+            node["nvPairs"] = replaced["value"]
 
     def __call__(self, mod, method, path, data=None):
         response = super(Released, self).__call__(mod, method, path, data)
-        if method == "POST" and path.endswith(DEPLOY) and self.drift:
-            serial, port = self.target
-            node = self.nodes[serial][port]
-            replaced = self.drift(node["nvPairs"])
-            if replaced is not None:
-                node["nvPairs"] = replaced["value"]
+        moment = "release" if method == "DELETE" and path.endswith("/rest/interface/markdelete") else (
+            "deploy" if method == "POST" and path.endswith(DEPLOY) else None)
+        if moment == self.when and self.drift:
+            self.apply(self.target[0], self.target[1], self.drift)
         return response
 
 
-def deleted_run(serial=None, port=None, drift=None):
-    ctrl = Released(serial, port, drift)
+def deleted_run(serial=None, port=None, drift=None, when="release", ctrl=None):
+    ctrl = ctrl or Released(serial, port, drift, when)
     ctrl.seed_baseline().seed_vpc()
     ctrl.next_invocation()
     delete_previews(ctrl)
@@ -262,38 +274,111 @@ def deleted_run(serial=None, port=None, drift=None):
     return ctrl, status, result
 
 
+def reads_after_deploy(ctrl):
+    last = max(i for i, c in enumerate(ctrl.calls) if c[0] == "POST" and c[1].endswith(DEPLOY))
+    return sorted(set(path.split("?")[0].rsplit("/rest/", 1)[-1] for method, path, _d in ctrl.calls[last + 1:] if method == "GET"))
+
+
 @pytest.mark.parametrize("serial, port, peer", PEERS)
 @pytest.mark.parametrize(
     "drift, needle",
     [
-        (setter("ALLOWED_VLANS", "2301"), "ALLOWED_VLANS is '2301', the release contract requires 'none'"),
-        (setter("ALLOWED_VLANS", "all"), "ALLOWED_VLANS is 'all', the release contract requires 'none'"),
-        (setter("NATIVE_VLAN", "5"), "NATIVE_VLAN is '5', the release contract requires ''"),
-        (setter("MTU", "default"), "MTU is 'default', the release contract requires 'jumbo'"),
-        (setter("BPDUGUARD_ENABLED", "true"), "BPDUGUARD_ENABLED is 'true', the release contract requires 'no'"),
-        (setter("PORTTYPE_FAST_ENABLED", "false"), "PORTTYPE_FAST_ENABLED is 'false', the release contract requires 'true'"),
-        (setter("DESC", "leftover"), "DESC is 'leftover', the release contract requires ''"),
-        (setter("SPEED", "10Gb"), "SPEED is '10Gb', the release contract requires 'Auto'"),
+        # refused by the pre-existing safety check while proving the member, before any member write
+        (setter("ALLOWED_VLANS", "2301"), "ALLOWED_VLANS is '2301', not 'none'"),
+        (setter("ALLOWED_VLANS", "all"), "ALLOWED_VLANS is 'all', not 'none'"),
+        (setter("NATIVE_VLAN", "5"), "NATIVE_VLAN is '5', not ''"),
+        (remover("ALLOWED_VLANS"), "ALLOWED_VLANS is absent from the released member"),
+        (setter("ALLOWED_VLANS", ["none"]), "ALLOWED_VLANS is ['none'], not 'none'"),
+        # refused by the release contract check, moved before the deploy (G11 judged it after the deploy)
         (setter("PO_ID", "port-channel10"), "residual PVLAN/channel-group field PO_ID='port-channel10'"),
         (setter("PVLAN_MODE", "host"), "residual PVLAN/channel-group field PVLAN_MODE='host'"),
         (setter("PC_MODE", "active"), "residual PVLAN/channel-group field PC_MODE='active'"),
-        (remover("ALLOWED_VLANS"), "ALLOWED_VLANS is None, the release contract requires 'none'"),
-        (setter("ALLOWED_VLANS", ["none"]), "ALLOWED_VLANS is ['none'], the release contract requires 'none'"),
-        (setter("ADMIN_STATE", "true"), "not administratively down"),
         (setter("GUARD_MODE", "root"), "the released member's CLI model differs from the contract"),  # a modeled field outside the contract's own keys
         (setter("CDP_ENABLE", "false"), "the released member's CLI model differs from the contract"),
+        (setter("SPEED", "10Gb"), "cannot be modeled"),
         (setter("ENABLE_PFC", "true"), "cannot be modeled"),  # a field the model cannot judge is never success
     ],
 )
-def test_a_released_member_that_diverges_from_the_contract_fails_the_deletion_on_either_peer(serial, port, peer, drift, needle):
+def test_a_released_member_that_diverges_from_the_contract_is_refused_before_the_deploy_on_either_peer(serial, port, peer, drift, needle):
     ctrl, status, result = deleted_run(serial, port, drift)
     assert status == "fail" and needle in result["msg"], result.get("msg")
-    assert "peer %d (%s)" % (peer, serial) in result["msg"] and port in result["msg"] or "administratively down" in result["msg"]
+    assert "(peer %d)" % peer in result["msg"] or "peer %d (%s): member %s" % (peer, serial, port) in result["msg"], result["msg"][:300]
     other = [p for p in PEERS if p[2] != peer][0]
-    verification = result["pvlan_verification"][VPC]
-    assert verification["state"] == "failed" and verification["peers"][other[0]] == "verified" and verification["peers"][serial] != "verified"
+    assert "peer %d (%s)" % (other[2], other[0]) not in result["msg"], "the clean peer is not blamed"
+    assert ctrl.deploys() == [] and len(ctrl.markdeletes()) == 1 and ctrl.creates() == [], "nothing is deployed over a released member that fails"
+    assert "pvlan_verification" not in result, "the post-deploy verification is never reached"
+
+
+def residue_policy(entity, template, source="", deleted=False):
+    return {"entityName": entity, "templateName": template, "source": source, "deleted": deleted, "entityType": "INTERFACE",
+            "policyId": "RES-%s-%s" % (entity, template), "serialNumber": SN1}
+
+
+class Residue(VpcController):
+    """At the mark-delete the controller releases peer 1's member with a residue: extra live policies on that serial, another member
+    template, extra member nvPairs, or no member policy at all."""
+
+    def __init__(self, extra=(), member_policy=None, member_nv=None, hide_member=False):
+        super(Residue, self).__init__()
+        self.extra, self.member_policy, self.member_nv, self.hide_member = list(extra), member_policy, member_nv or {}, hide_member
+
+    def __call__(self, mod, method, path, data=None):
+        response = super(Residue, self).__call__(mod, method, path, data)
+        if method == "DELETE" and path.endswith("/rest/interface/markdelete"):
+            self.policies_extra[SN1] += self.extra
+            if self.member_policy:
+                self.nodes[SN1][M1]["policy"] = self.member_policy
+            self.nodes[SN1][M1]["nvPairs"].update(self.member_nv)
+        return response
+
+    def _peer_policies(self, serial):
+        out = super(Residue, self)._peer_policies(serial)
+        if self.hide_member and self.markdeleted and serial == SN1:
+            out = [p for p in out if p["entityName"] != M1]
+        return out
+
+
+@pytest.mark.parametrize(
+    "kw, needle",
+    [
+        # the cases of the former unit test of vpc_leg_residue (G11 re-read them after the deploy), now through main() and the release proof
+        (dict(extra=[residue_policy(M1, "int_eth", source=VPC)]), "live policies still reference the vPC or its child port-channel"),
+        (dict(extra=[residue_policy("port-channel10", "int_vpc_pvlan_po", source=VPC)]), "live policies still reference the vPC or its child"),
+        (dict(extra=[residue_policy("port-channel10", "int_port_channel_trunk_host")]), "live policies still reference the vPC or its child"),
+        (dict(extra=[residue_policy(VPC, "int_vpc_pvlan_host")]), "live policies still reference the vPC or its child port-channel"),
+        (dict(extra=[residue_policy("Ethernet1/9", "int_eth", source="port-channel10")]), "live policies still reference the vPC or its child"),
+        (dict(member_policy="int_port_channel_pvlan_member"), "the released member holds 'int_port_channel_pvlan_member'"),
+        (dict(member_policy="int_access_host"), "the released member holds 'int_access_host'"),
+        (dict(extra=[residue_policy(M1, "Config_Profile", source="OVERLAY")]), "the released member is not a sole direct int_trunk_host"),
+        (dict(extra=[residue_policy(M1, "int_trunk_host", source="someone")]), "the released member is not a sole direct int_trunk_host"),
+        (dict(hide_member=True), "holds 0 live policies for this interface"),
+        (dict(member_nv={"CONF": "mtu 1500"}), "CONF is 'mtu 1500', not ''"),
+    ],
+)
+def test_a_residue_left_by_the_vpc_is_refused_by_the_release_proof_before_any_member_write(kw, needle):
+    ctrl, status, result = deleted_run(ctrl=Residue(**kw))
+    assert status == "fail" and needle in result["msg"], result.get("msg")
+    assert "while proving the released member before any member write (peer 1)" in result["msg"]
+    assert ctrl.modifies() == [] and ctrl.deploys() == [] and len(ctrl.markdeletes()) == 1
+
+
+def test_a_deleted_policy_entry_is_not_residue():
+    ctrl, status, result = deleted_run(ctrl=Residue(extra=[residue_policy(M1, "int_trunk_host", deleted=True)]))
+    assert status == "exit" and result["pvlan_verification"][VPC]["state"] == "verified", result.get("msg")
+
+
+# MTU, BPDUGUARD_ENABLED, PORTTYPE_FAST_ENABLED and DESC released with another value are the release's own values (the contract is built from
+# the fresh release, in G11 as here) and are reported in `restoration_delta`; G11 failed on them only when they CHANGED after the deploy.
+
+
+@pytest.mark.parametrize("serial, port, peer", PEERS)
+@pytest.mark.parametrize("drift", [setter("ALLOWED_VLANS", "2301"), setter("PO_ID", "port-channel10"), lambda nv: {"value": None}])
+def test_a_member_changed_after_the_deploy_is_not_re_read_by_the_module(serial, port, peer, drift):
+    """DF-2 contract change (G11 detected these after the deploy): no intent is read after the deploy, only the two summaries."""
+    ctrl, status, result = deleted_run(serial, port, drift, when="deploy")
+    assert status == "exit" and result["pvlan_verification"][VPC]["state"] == "verified", result.get("msg")
+    assert reads_after_deploy(ctrl) == ["interface/detail"]
     release_only(ctrl)
-    assert len(ctrl.markdeletes()) == 1 and len(ctrl.deploys()) == 1 and ctrl.creates() == [], "no repair write after the deploy"
 
 
 def test_the_released_baseline_and_harmless_metadata_are_still_accepted():
@@ -314,31 +399,26 @@ def test_the_released_baseline_and_harmless_metadata_are_still_accepted():
 
 def test_an_absent_nvpairs_member_still_fails_the_deletion_as_before():
     ctrl, status, result = deleted_run(SN2, M2, lambda nv: {"value": None})
-    assert status == "fail" and "could not be read authoritatively" in result["msg"] and "peer 2 (%s)" % SN2 in result["msg"]
-    assert result["pvlan_verification"][VPC]["state"] == "failed"
-    release_only(ctrl)
+    assert status == "fail" and "could not be read authoritatively" in result["msg"] and "(peer 2)" in result["msg"], result.get("msg")
+    assert ctrl.deploys() == [] and "pvlan_verification" not in result
 
 
 def test_both_peers_released_with_divergences_are_both_reported():
     class Two(Released):
         def __call__(self, mod, method, path, data=None):
             response = super(Two, self).__call__(mod, method, path, data)
-            if method == "POST" and path.endswith(DEPLOY):
-                self.nodes[SN1][M1]["nvPairs"]["MTU"] = "default"
+            if method == "DELETE" and path.endswith("/rest/interface/markdelete"):
+                self.nodes[SN1][M1]["nvPairs"]["PC_MODE"] = "active"
             return response
 
-    ctrl = Two(SN2, M2, setter("ALLOWED_VLANS", "2301"))
-    ctrl.seed_baseline().seed_vpc()
-    ctrl.next_invocation()
-    delete_previews(ctrl)
-    status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
-    assert status == "fail" and "peer 1 (%s)" % SN1 in result["msg"] and "peer 2 (%s)" % SN2 in result["msg"]
-    assert "MTU is 'default'" in result["msg"] and "ALLOWED_VLANS is '2301'" in result["msg"]
+    ctrl, status, result = deleted_run(ctrl=Two(SN2, M2, setter("PO_ID", "port-channel10")))
+    assert status == "fail" and "peer 1 (%s)" % SN1 in result["msg"] and "peer 2 (%s)" % SN2 in result["msg"], result.get("msg")
+    assert "PC_MODE='active'" in result["msg"] and "PO_ID='port-channel10'" in result["msg"] and ctrl.deploys() == []
 
 
 def test_the_message_names_peer_interface_and_field():
-    ctrl, status, result = deleted_run(SN2, M2, setter("ALLOWED_VLANS", "2301"))
-    assert "peer 2 (%s): member %s: ALLOWED_VLANS is '2301'" % (SN2, M2) in result["msg"]
+    ctrl, status, result = deleted_run(SN2, M2, setter("PO_ID", "port-channel10"))
+    assert "peer 2 (%s): member %s: residual PVLAN/channel-group field PO_ID='port-channel10'" % (SN2, M2) in result["msg"]
     ctrl = created_after_deploy(SN2, M2, setter("PC_MODE", "on"))
     status, result = run_vpc(ctrl, [vpc_item()])
     assert "peer 2 (%s): member %s differs from the expected member model: PC_MODE is 'on', expected 'active'" % (SN2, M2) in result["msg"]

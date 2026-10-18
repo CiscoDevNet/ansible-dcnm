@@ -53,7 +53,7 @@ def test_a_deleted_vpc_is_verified_by_the_vpc_verifier_and_the_po_verifier_sends
 
 def test_a_vpc_whose_release_cannot_be_verified_still_fails_through_the_vpc_verifier():
     ctrl = created_ctrl()
-    ctrl.policy_failures = {SN1: [True] * 40, SN2: [True] * 40}
+    ctrl.summary_failures = {SN1: [True] * 40, SN2: [True] * 40}  # DF-2: the peers' summaries are the vPC verifier's only post-deploy reads
     delete_previews(ctrl)
     with SpyPoVerifier(ctrl) as spy:
         status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")

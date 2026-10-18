@@ -1,12 +1,18 @@
-"""PR725 DF-2: the post-deploy verification of a PVLAN vPC DELETION is planned per vPC pair and round, like the one of a creation.
+"""PR725 DF-2: the post-deploy verification of a PVLAN vPC DELETION reads ONE summary per peer serial and round (2 GETs per pair and round),
+whatever the number of vPCs or members, and judges every vPC of the pair on those answers.
 
-Same controller double and entry point as test_dcnm_intf_pvlan_vpc_batch (MultiVpc, the REAL main()). The judgement of each vPC is unchanged
-(dcnm_intf_pvlan_vpc_deleted_judge); what changes is who shares the reads: every round reads the parents of a pair once and each peer serial
-once for the legs of ALL the vPCs the pair deletes. Values are SYNTHETIC. NOT LIVE TESTED by this file."""
+The intent, the release contract and the policy residue are proven FRESH BEFORE the deploy (the release proof and phase C of
+dcnm_intf_pvlan_vpc_release_members); after the deploy the module reads only what the deploy changed: the listings and the In-Sync status
+of each peer. The checks G11 repeated after the deploy are exercised here at the phase that now owns them (injected when the controller
+releases the members), and the contract change -- what is no longer re-read after the deploy -- is asserted explicitly.
+Same controller double and entry point as test_dcnm_intf_pvlan_vpc_batch (MultiVpc, the REAL main()). Values are SYNTHETIC. NOT LIVE TESTED
+by this file."""
 
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
+
+import json
 
 import pytest
 
@@ -41,11 +47,11 @@ def test_deletion_reads_do_not_grow_with_the_number_of_vpcs(n, members):
     ctrl, config = deleted_setup(n, members=members)
     status, result = delete_all(ctrl, config)
     assert status == "exit" and result["changed"] is True, result.get("msg")
-    # one round: parents (1 bulk of the pair) + per peer serial summary + forced bulk + policy list = 7, whatever N and members per peer
-    assert B.post_kinds(ctrl) == {"summary": 2, "bulk": 3, "policies": 2}
-    assert B.post_gets(ctrl) == 7 and ctrl.sleep_log == []
+    # one round: ONE summary per peer serial = 2, whatever N and members per peer (G11: 7, with the pair bulk, peer bulks and policy lists)
+    assert B.post_kinds(ctrl) == {"summary": 2}
+    assert B.post_gets(ctrl) == 2 and ctrl.sleep_log == []
     assert sorted(result["pvlan_verification"]) == sorted(c["name"].replace("vpc", "vPC") for c in config)
-    assert all(v["state"] == "verified" and v["parent"] == "absent" and set(v["peers"].values()) == {"verified"}
+    assert all(v["state"] == "verified" and v["parent"] == "not listed" and set(v["peers"].values()) == {"verified"}
                for v in result["pvlan_verification"].values())
 
 
@@ -53,7 +59,7 @@ def test_two_pairs_cost_one_round_each_not_one_per_vpc():
     ctrl, config = deleted_setup(6, npairs=2)
     status, result = delete_all(ctrl, config)
     assert status == "exit", result.get("msg")
-    assert B.post_kinds(ctrl) == {"summary": 4, "bulk": 6, "policies": 4}
+    assert B.post_kinds(ctrl) == {"summary": 4}
 
 
 def test_a_vpc_whose_member_is_not_in_sync_fails_alone_and_the_others_are_still_reported():
@@ -66,8 +72,8 @@ def test_a_vpc_whose_member_is_not_in_sync_fails_alone_and_the_others_are_still_
     assert "vPC10" not in result["msg"] and "vPC12" not in result["msg"]
     states = dict((k, v["state"]) for k, v in result["pvlan_verification"].items())
     assert states == {"vPC10": "verified", "vPC11": "failed", "vPC12": "verified"}
-    # the pair is read every round (7 GETs) until the budget of 6 rounds with 5 waits is spent: per pair, not per vPC
-    assert (B.post_gets(ctrl), len(ctrl.sleep_log)) == (6 * 7, 5)
+    # the pair is read every round (2 GETs) until the budget of 6 rounds with 5 waits is spent: per pair, not per vPC
+    assert (B.post_gets(ctrl), len(ctrl.sleep_log)) == (6 * 2, 5)
 
 
 def test_two_failing_vpcs_are_both_named():
@@ -86,20 +92,36 @@ def test_a_late_convergence_costs_a_round_per_pair_not_per_vpc():
         ctrl.ready_round[(V.SN1, "Ethernet1/%d" % k)] = 1
     status, result = delete_all(ctrl, config)
     assert status == "exit", result.get("msg")
-    assert (B.post_gets(ctrl), len(ctrl.sleep_log)) == (2 * 7, 1)
+    assert (B.post_gets(ctrl), len(ctrl.sleep_log)) == (2 * 2, 1)
 
 
-@pytest.mark.parametrize("kind, serial, needle", [
-    ("summary", V.SN2, "the interface summary of %s could not be read authoritatively" % V.SN2),
-    ("bulk", V.SN1, "could not be read authoritatively"),
-    ("policies", V.SN2, "the switch policy list of %s could not be read authoritatively" % V.SN2),
-])
-def test_an_unreadable_peer_fails_every_vpc_of_the_pair_and_is_never_taken_for_absence(kind, serial, needle):
+@pytest.mark.parametrize("serial", [V.SN1, V.SN2])
+def test_an_unreadable_peer_fails_every_vpc_of_the_pair_and_is_never_taken_for_absence(serial):
     ctrl, config = deleted_setup(3)
-    ctrl.post_fail[(kind, serial)] = 10 ** 6
+    ctrl.post_fail[("summary", serial)] = 10 ** 6
     status, result = delete_all(ctrl, config)
-    assert status == "fail" and needle in result["msg"], result.get("msg")
-    assert all(v["state"] == "failed" for v in result["pvlan_verification"].values())
+    assert status == "fail" and "the interface summary of %s could not be read authoritatively" % serial in result["msg"], result.get("msg")
+    assert all(v["state"] == "failed" and v["parent"] == "unreadable" for v in result["pvlan_verification"].values())
+
+
+@pytest.mark.parametrize("kind", ["bulk", "policies"])
+def test_the_intent_and_policy_reads_are_not_repeated_after_the_deploy(kind):
+    """DF-2 contract change: G11 read them after the deploy (fail-closed re-confirmations); a failure there can no longer fail the deletion."""
+    ctrl, config = deleted_setup(3)
+    for serial in B.PAIRS[0]:
+        ctrl.post_fail[(kind, serial)] = 10 ** 6
+    status, result = delete_all(ctrl, config)
+    assert status == "exit" and all(v["state"] == "verified" for v in result["pvlan_verification"].values()), result.get("msg")
+    assert B.post_kinds(ctrl) == {"summary": 2}
+
+
+def test_one_transient_summary_failure_is_a_transport_retry_not_a_new_round():
+    ctrl, config = deleted_setup(2)
+    ctrl.post_fail[("summary", V.SN2)] = 1
+    status, result = delete_all(ctrl, config)
+    assert status == "exit", result.get("msg")
+    # the reader's own bounded transport retry (3 attempts, 1 s apart): +1 GET and +1 wait, still one verification round
+    assert (B.post_gets(ctrl), len(ctrl.sleep_log)) == (3, 1) and ctrl.sleep_log == [1]
 
 
 @pytest.mark.parametrize("label, inject, needle", [
@@ -109,8 +131,6 @@ def test_an_unreadable_peer_fails_every_vpc_of_the_pair_and_is_never_taken_for_a
      "is not In-Sync in the interface summary"),
     ("member duplicated in the summary", lambda c, s: c.post_dup.setdefault(s, set()).add("Ethernet2/11" if s == V.SN2 else "Ethernet1/11"),
      "is not In-Sync in the interface summary"),
-    ("member not released (admin up)", lambda c, s: c.post_mutate.__setitem__((s, "Ethernet2/11" if s == V.SN2 else "Ethernet1/11"), {"ADMIN_STATE": "true"}),
-     "member Ethernet"),
 ])
 def test_a_partial_release_of_one_peer_fails_that_vpc_only(label, inject, needle):
     ctrl, config = deleted_setup(3)
@@ -123,7 +143,10 @@ def test_a_partial_release_of_one_peer_fails_that_vpc_only(label, inject, needle
     assert "peer 2 (%s)" % V.SN2 in result["msg"] and "peer 1" not in result["msg"], "the clean peer is not blamed"
 
 
-def test_the_parent_that_remains_fails_that_vpc_and_names_it():
+def test_a_parent_back_in_the_intent_after_the_deploy_is_not_read_again():
+    """DF-2 contract change: the parent's intent is not read after the deploy (G11's pair bulk re-confirmed it). The deletion of the parent is
+    proven by the confirmed mark-delete (or, for a saved deletion, the controller's marked-for-deletion listing); after the deploy the
+    summaries prove it is no longer listed. A re-creation by another party after the deploy is outside the module's verification."""
     ctrl, config = deleted_setup(2)
     real = module.DcnmIntf.dcnm_intf_get_intf_info
 
@@ -135,8 +158,8 @@ def test_the_parent_that_remains_fails_that_vpc_and_names_it():
     from unittest.mock import patch
     with patch.object(module.DcnmIntf, "dcnm_intf_get_intf_info", parent_back):
         status, result = delete_all(ctrl, config)
-    assert status == "fail" and "the vPC vPC11 is still present in the controller's intent" in result["msg"]
-    assert result["pvlan_verification"]["vPC11"]["parent"] == "still present" and result["pvlan_verification"]["vPC10"]["state"] == "verified"
+    assert status == "exit", result.get("msg")
+    assert result["pvlan_verification"]["vPC11"]["parent"] == "not listed" and B.post_kinds(ctrl) == {"summary": 2}
 
 
 def test_the_same_vpc_name_on_two_pairs_is_judged_per_pair():
@@ -158,37 +181,45 @@ def test_a_reversed_switch_order_keeps_the_controller_peer_identity():
     items[1]["switch"] = list(reversed(items[1]["switch"]))
     status, result = B.run(ctrl, items, state="deleted")
     assert status == "exit", result.get("msg")
-    assert B.post_gets(ctrl) == 7 and all(v["state"] == "verified" for v in result["pvlan_verification"].values())
+    assert B.post_gets(ctrl) == 2 and all(v["state"] == "verified" for v in result["pvlan_verification"].values())
 
 
 # ============================================================== Alpha review F-1 / F-3: each remaining check has a discriminating test
 class _PostDeploy(B.MultiVpc):
-    """MultiVpc + post-deploy detail changes the harness does not offer: an extra intent entry per serial (`post_detail_extra`), a policy
-    replaced on a member (`post_policy`) and nvPairs applied from a given verification round on (`late_mutate`: (serial, ifName) ->
-    (rounds waited, nvPairs))."""
+    """MultiVpc + post-deploy SUMMARY changes the harness does not offer: the member's listed policy (`post_policy`, (serial, ifName) ->
+    template) and a compliance status from a given verification round on (`late_status`, (serial, ifName) -> (rounds waited, status));
+    and a live policy added when the controller marks a vPC deleted (`marked_policy`, vPC name -> (serial, policy entry))."""
 
     def __init__(self, *a, **k):
         super(_PostDeploy, self).__init__(*a, **k)
-        self.post_detail_extra, self.post_policy, self.late_mutate = {}, {}, {}
+        self.post_policy, self.late_status, self.marked_policy = {}, {}, {}
 
-    def _peer_details(self, serial):
-        out = super(_PostDeploy, self)._peer_details(serial)
-        if not self.deployed or "~" in serial:
+    def _peer_summary(self, serial):
+        out = super(_PostDeploy, self)._peer_summary(serial)
+        if not self.deployed:
             return out
-        for d in out:
-            intf = d["interfaces"][0]
-            if (serial, intf["ifName"]) in self.post_policy:
-                d["policy"] = self.post_policy[(serial, intf["ifName"])]
-            late = self.late_mutate.get((serial, intf["ifName"]))
+        for e in out:
+            key = (serial, e.get("ifName"))
+            if key in self.post_policy and e.get("underlayPolicies"):
+                e["underlayPolicies"][0]["templateName"] = self.post_policy[key]
+            late = self.late_status.get(key)
             if late and len(self.sleep_log) >= late[0]:
-                intf["nvPairs"].update(late[1])
-        return out + [dict(e) for e in self.post_detail_extra.get(serial, [])]
+                e["complianceStatus"] = late[1]
+        return out
+
+    def __call__(self, mod, method, path, data=None):
+        if method == "DELETE" and path.endswith(V.MARKDELETE):
+            name = json.loads(data)[0]["ifName"]
+            if name in self.marked_policy:
+                serial, policy = self.marked_policy[name]
+                self.policies_extra[serial].append(policy)
+        return super(_PostDeploy, self).__call__(mod, method, path, data)
 
 
 def post_deploy_setup(n):
     ctrl, config = deleted_setup(n)
     ctrl.__class__ = _PostDeploy
-    ctrl.post_detail_extra, ctrl.post_policy, ctrl.late_mutate = {}, {}, {}
+    ctrl.post_policy, ctrl.late_status, ctrl.marked_policy = {}, {}, {}
     return ctrl, config
 
 
@@ -200,44 +231,79 @@ def marked_parent(pair_serial, name):
             "complianceStatus": "Out-of-Sync", "underlayPolicies": [], "interfaces": [{"nvPairs": {}}]}
 
 
-def test_a_parent_still_listed_after_the_deploy_fails_on_the_summary_not_on_the_intent_read():
-    """F-1: the partial-deploy detection belongs to the SUMMARY listing; the parent intent read reports a mark-deleted parent as absent."""
+def test_a_parent_still_listed_after_the_deploy_fails_on_the_summary():
+    """F-1: the partial-deploy detection belongs to the SUMMARY listing (the parent's intent is already empty after its mark-delete)."""
     ctrl, _config = deleted_setup(2)
     pair = B.PAIRS[0]
     for serial in pair:
         ctrl.post_extra[serial] = [marked_parent(pair[0] + "~" + pair[1], "vPC11")]
     status, result = B.run(ctrl, [ctrl.del_item(10), ctrl.del_item(11)], state="deleted")
     assert status == "fail" and "the interface summary still lists vPC11" in result["msg"], result.get("msg")
-    assert result["pvlan_verification"]["vPC11"]["parent"] == "absent", "the intent of a mark-deleted parent is already empty"
+    assert result["pvlan_verification"]["vPC11"]["parent"] == "still listed"
     assert result["pvlan_verification"]["vPC11"]["state"] == "failed" and result["pvlan_verification"]["vPC10"]["state"] == "verified"
+    assert result["pvlan_verification"]["vPC10"]["parent"] == "not listed"
 
 
-def test_a_child_still_in_the_intent_of_one_peer_fails_that_vpc_only():
-    """F-3 (M4): the child port-channel is no longer listed by the summary but is still in the peer's intent (bulk detail)."""
+def test_a_child_still_claimed_on_one_peer_is_refused_before_the_deploy():
+    """F-3 (M4), moved: a child port-channel still live in one peer's intent carries its live policy; the fresh release proof refuses it
+    before any deploy (G11 found it after the deploy with the peer's bulk read)."""
     ctrl, config = post_deploy_setup(3)
-    child = {"serialNumber": V.SN2, "ifName": "port-channel11", "nvPairs": {"INTF_NAME": "port-channel11"}}
-    ctrl.post_detail_extra[V.SN2] = [{"policy": V.VPC_PO, "interfaces": [child]}]
+    ctrl.marked_policy["vPC11"] = (V.SN2, {"entityName": "port-channel11", "entityType": "INTERFACE", "templateName": V.VPC_PO, "source": "vPC11",
+                                           "deleted": False, "policyId": "CHILD-LEFT", "serialNumber": V.SN2})
     status, result = delete_all(ctrl, config)
-    assert status == "fail" and result["msg"].startswith("vPC vPC11 was deleted but its release could not be verified"), result.get("msg")
-    assert "port-channel11" in result["msg"] and "vPC10" not in result["msg"] and "vPC12" not in result["msg"]
-    assert "peer 2 (%s)" % V.SN2 in result["msg"] and "peer 1" not in result["msg"]
+    assert status == "fail" and "PVLAN vPC vPC11" in result["msg"] and "(peer 2)" in result["msg"], result.get("msg")
+    assert "live policies still reference the vPC or its child port-channel" in result["msg"] and "port-channel11" in result["msg"]
+    assert ctrl.deploys() == [] and "pvlan_verification" not in result
 
 
-def test_a_member_left_on_another_policy_after_the_deploy_fails_that_vpc_only():
-    """F-3 (M8): the released member holds a policy that is not a released member policy; the release contract is not even applicable."""
+def test_a_member_listed_with_another_policy_after_the_deploy_fails_that_vpc_only():
+    """F-3 (M8): the summary entry of the released member reports a readable policy that is not the released one."""
     ctrl, config = post_deploy_setup(3)
     ctrl.post_policy[(V.SN1, "Ethernet1/11")] = "int_access_host"
     status, result = delete_all(ctrl, config)
     assert status == "fail" and result["msg"].startswith("vPC vPC11 was deleted but its release could not be verified"), result.get("msg")
-    assert "Ethernet1/11" in result["msg"] and "peer 1 (%s)" % V.SN1 in result["msg"] and "vPC10" not in result["msg"]
+    assert "lists the member Ethernet1/11 with int_access_host, not the released int_trunk_host" in result["msg"]
+    assert "peer 1 (%s)" % V.SN1 in result["msg"] and "vPC10" not in result["msg"]
+
+
+@pytest.mark.parametrize("value", [None, [], [{"templateName": "int_trunk_host"}, {"templateName": "int_access_host"}]])
+def test_a_member_entry_without_a_readable_policy_is_not_judged_on_its_policy(value):
+    """The summary reader requires the `underlayPolicies` key; its CONTENT is optional in the existing contract (pvlan_summary_policy:
+    null or empty = no policy reported, several objects = unknown). Neither is a failure of the post-deploy proof, and no other read is made
+    to recover the policy."""
+    ctrl, config = deleted_setup(2)
+    real = B.MultiVpc._peer_summary
+
+    def no_policy(self, serial):
+        out = real(self, serial)
+        if self.deployed:
+            for e in out:
+                if e.get("ifName") == "Ethernet1/10":
+                    e["underlayPolicies"] = value
+        return out
+
+    from unittest.mock import patch
+    with patch.object(B.MultiVpc, "_peer_summary", no_policy):
+        status, result = delete_all(ctrl, config)
+    assert status == "exit" and result["pvlan_verification"]["vPC10"]["state"] == "verified", result.get("msg")
+    assert B.post_kinds(ctrl) == {"summary": 2}
+
+
+def test_a_member_changed_after_the_deploy_is_not_re_read():
+    """DF-2 contract change: the member's intent (G11's peer bulk) is not read after the deploy; an administrative change made by another
+    party after the pre-deploy proof is outside the module's verification (the external harness checks it)."""
+    ctrl, config = deleted_setup(3)
+    ctrl.post_mutate[(V.SN2, "Ethernet2/11")] = {"ADMIN_STATE": "true"}
+    status, result = delete_all(ctrl, config)
+    assert status == "exit" and all(v["state"] == "verified" for v in result["pvlan_verification"].values()), result.get("msg")
 
 
 def test_a_vpc_verified_in_an_earlier_round_is_judged_again_until_its_pair_closes():
-    """F-3 (M9): vPC10 is clean in round 1 while vPC11 is still converging; in round 2 vPC10's member comes back administratively up. The pair
-    is closed only when EVERY vPC is clean in the same round, so vPC10 is judged again and fails (a stale `verified` is never kept)."""
+    """F-3 (M9): vPC10 is clean in round 1 while vPC11 is still converging; in round 2 vPC10's member is Out-of-Sync again. The pair is
+    closed only when EVERY vPC is clean in the same round, so vPC10 is judged again and fails (a stale `verified` is never kept)."""
     ctrl, config = post_deploy_setup(2)
     ctrl.ready_round[(V.SN1, "Ethernet1/11")] = 1
-    ctrl.late_mutate[(V.SN2, "Ethernet2/10")] = (1, {"ADMIN_STATE": "true"})
+    ctrl.late_status[(V.SN2, "Ethernet2/10")] = (1, "Out-of-Sync")
     status, result = delete_all(ctrl, config)
     assert status == "fail", "a vPC that regressed after an earlier clean round must not stay verified"
     assert "vPC vPC10 was deleted but its release could not be verified" in result["msg"], result["msg"][:300]

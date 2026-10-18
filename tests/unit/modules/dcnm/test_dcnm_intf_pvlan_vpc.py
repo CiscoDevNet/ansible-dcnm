@@ -724,9 +724,29 @@ def test_deletion_in_a_new_instance_marks_deletes_releases_both_members_down_dep
     assert VPC not in ctrl.parents and "port-channel10" not in ctrl.nodes[SN1] and "port-channel10" not in ctrl.nodes[SN2]
     assert ctrl.nodes[SN1][M1]["policy"] == TRUNK and ctrl.nodes[SN2][M2]["policy"] == TRUNK
     verification = result["pvlan_verification"][VPC]
-    assert verification["state"] == "verified" and verification["parent"] == "absent"
+    assert verification["state"] == "verified" and verification["parent"] == "not listed"
     assert verification["peers"] == {SN1: "verified", SN2: "verified"}
     assert sorted(ctrl.previews_asked()) == [SN1, SN2] and [g["targets"][VPC] for g in result["pvlan_gate"]] == ["deploy", "deploy"]
+    # DF-2: after the deploy the module reads ONE summary per peer, and nothing else
+    assert reads_after_deploy(ctrl) == ["summary %s" % SN1, "summary %s" % SN2]
+
+
+def reads_after_deploy(ctrl):
+    """The GETs sent after the LAST deploy, as "<kind> <serial>" (summary = interface/detail, bulk = interface, policies = policy list)."""
+    last = max(i for i, c in enumerate(ctrl.calls) if c[0] == "POST" and c[1].endswith("/rest/globalInterface/deploy"))
+    out = []
+    for method, path, _data in ctrl.calls[last + 1:]:
+        if method != "GET":
+            continue
+        if "/rest/interface/detail?serialNumber=" in path:
+            out.append("summary " + path.split("serialNumber=")[1])
+        elif "/control/policies/switches/" in path:
+            out.append("policies " + path.rsplit("/", 1)[1])
+        elif "/rest/interface?serialNumber=" in path:
+            out.append("bulk " + path.split("serialNumber=")[1].split("&")[0])
+        else:
+            out.append(path)
+    return out
 
 
 def test_repetition_of_the_deletion_is_a_noop():
@@ -887,26 +907,46 @@ def test_residue_only_on_the_second_peer_stops_the_release_before_the_deploy_and
 
 
 class LateResidue(VpcController):
-    """A residue that appears only AFTER the deploy (the controller finishes the deletion late): the post-deploy verification must catch it."""
+    """A residue policy owned by the vPC on the second peer only, present before the deploy (`before`) or appearing only AFTER it."""
+
+    def __init__(self, before=False):
+        super(LateResidue, self).__init__()
+        self.before = before
+
+    def residue(self):
+        self.policies_extra[SN2] = [
+            dict(entityName="Ethernet1/60", entityType="INTERFACE", templateName="int_eth", source=VPC, deleted=False, policyId="RES", serialNumber=SN2)
+        ]
 
     def __call__(self, mod, method, path, data=None):
+        if self.before and method == "DELETE" and path.endswith("/rest/interface/markdelete"):
+            self.residue()
         resp = super(LateResidue, self).__call__(mod, method, path, data)
-        if method == "POST" and path.endswith("/rest/globalInterface/deploy"):
-            self.policies_extra[SN2] = [
-                dict(entityName="Ethernet1/60", entityType="INTERFACE", templateName="int_eth", source=VPC, deleted=False, policyId="RES", serialNumber=SN2)
-            ]
+        if not self.before and method == "POST" and path.endswith("/rest/globalInterface/deploy"):
+            self.residue()
         return resp
 
 
-def test_residue_only_on_the_second_peer_after_the_deploy_fails_the_verification():
+def test_a_residue_policy_on_the_second_peer_only_is_refused_before_the_deploy():
+    """DF-2: the residue that the post-deploy policy read used to catch is judged on the FRESH release proof, before any deploy."""
+    ctrl = LateResidue(before=True).seed_baseline().seed_vpc()
+    ctrl.next_invocation()
+    delete_previews(ctrl)
+    status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
+    assert status == "fail" and "(peer 2)" in result["msg"] and "live policies still reference the vPC or its child port-channel" in result["msg"]
+    assert ctrl.deploys() == [] and len(ctrl.markdeletes()) == 1, "nothing is deployed over a residue"
+    assert "pvlan_verification" not in result
+
+
+def test_a_residue_that_appears_only_after_the_deploy_is_not_read_again_by_the_module():
+    """DF-2 contract (decision recorded in OUTPUT_SEMANTICS.md): after the deploy only the summaries are read; a policy written by another
+    party after the pre-deploy proof is outside the module's verification (the external test harness checks the policy list)."""
     ctrl = LateResidue().seed_baseline().seed_vpc()
     ctrl.next_invocation()
     delete_previews(ctrl)
     status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
-    assert status == "fail" and "release could not be verified on every peer" in result["msg"] and "peer 2" in result["msg"]
-    assert "peer 1 (" not in result["msg"] and "peer 2 (%s): a policy owned by the removed vPC" % SN2 in result["msg"]
-    assert result["pvlan_verification"][VPC]["state"] == "failed"
-    assert result["pvlan_verification"][VPC]["peers"][SN1] == "verified" and result["pvlan_verification"][VPC]["peers"][SN2] != "verified"
+    assert status == "exit" and result["pvlan_verification"][VPC]["state"] == "verified", result.get("msg")
+    assert reads_after_deploy(ctrl) == ["summary %s" % SN1, "summary %s" % SN2]
     release_only(ctrl)
 
 
@@ -937,18 +977,30 @@ def test_a_child_policy_still_claiming_a_member_stops_the_release_before_any_wri
     [
         {SN1: [True] * 40, SN2: [True] * 40},  # every read fails
         {SN1: [False] * 40, SN2: [True] * 40},  # peer 1 always readable, peer 2 never
-        {SN1: [True, False] * 20, SN2: [False, True] * 20},  # intermittent, never BOTH peers readable in one attempt
+        # intermittent, never BOTH peers readable in one round: a summary read makes up to 3 transport attempts, so each peer loses a whole
+        # read (3 x 500) in alternate rounds
+        {SN1: [True, True, True, False] * 6, SN2: [False, True, True, True] * 6},
     ],
 )
 def test_unreadable_state_after_the_deletion_is_never_a_verified_deletion(flaky):
     ctrl = created_ctrl()
     delete_previews(ctrl)
-    ctrl.policy_failures = flaky
+    ctrl.summary_failures = flaky  # DF-2: the summaries are the only post-deploy reads
     status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
     assert status == "fail" and "release could not be verified" in result["msg"]
-    assert result["pvlan_verification"][VPC]["state"] == "failed"
+    assert "the interface summary of" in result["msg"] and "could not be read authoritatively" in result["msg"]
+    assert result["pvlan_verification"][VPC]["state"] == "failed" and result["pvlan_verification"][VPC]["parent"] == "unreadable"
     release_only(ctrl)
     assert len(ctrl.markdeletes()) == 1
+
+
+def test_the_policy_list_is_not_read_after_the_deploy():
+    ctrl = created_ctrl()
+    delete_previews(ctrl)
+    ctrl.policy_failures = {SN1: [True] * 40, SN2: [True] * 40}  # would fail every post-deploy policy read (G11 read them)
+    status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
+    assert status == "exit" and result["pvlan_verification"][VPC]["state"] == "verified", result.get("msg")
+    assert not any(r.startswith("policies") or r.startswith("bulk") for r in reads_after_deploy(ctrl))
 
 
 def test_a_deletion_that_is_readable_only_on_a_later_complete_attempt_is_verified_by_that_complete_read():

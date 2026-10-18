@@ -86,6 +86,7 @@ class VpcController(FakeController):
         self.vpc_previews = {SN1: [], SN2: []}
         self.policies_extra = {SN1: [], SN2: []}
         self.policy_failures = {}  # serial -> list consumed per policy-list read AFTER a deploy (True = HTTP 500)
+        self.summary_failures = {}  # serial -> list consumed per interface-summary read AFTER a deploy (True = HTTP 500)
         self.create_responses = []
         self.children_on_save = True  # [INF] the parent's add() writes the children when the intent is saved (HOST 590-600): L1 measures it
         self.release_on_delete = True  # [UNK] V6: the members return to int_trunk_host after the vPC is deleted
@@ -283,6 +284,9 @@ class VpcController(FakeController):
                 return copy.deepcopy(self.policies_override)
             return ok(self._peer_policies(serial))
         if "/rest/interface/detail?serialNumber=" in path:
+            flaky = self.summary_failures.get(path.split("serialNumber=")[1])
+            if self.deployed and flaky and flaky.pop(0):
+                return {"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": {}}
             return ok(self._peer_summary(path.split("serialNumber=")[1]))
         if "/rest/interface?serialNumber=" in path:
             serial = path.split("serialNumber=")[1].split("&")[0]
