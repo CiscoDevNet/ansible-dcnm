@@ -10669,6 +10669,24 @@ class DcnmIntf:
                 plan[self.dcnm_intf_pvlan_vpc_plan_key(target)]["parent"] = self.dcnm_intf_get_intf_info(target["name"], pair, "INTERFACE_VPC")
         return plan
 
+    def dcnm_intf_pvlan_vpc_result_keys(self, targets):
+        """RESULT-IDENTITY: the key of each vPC in the `pvlan_verification` result, decided from the targets of the invocation (no read).
+        A name that is unique among the targets keeps the plain key `<name>` and the existing entry format. The same name (case-insensitive)
+        on two pairs would overwrite one entry with the other, so EVERY entry of that name gets the composite key `<name>@<pair>`, with
+        `vpc` and `pair` inside the entry; `<pair>` is the two peer serials in alphabetical order, so it is the same whatever the order the
+        peers were written in or the controller lists them. No plain `<name>` entry is kept for a repeated name.
+        Returns {plan key: (result key, extra entry fields)}."""
+        by_name = collections.Counter(t["name"].lower() for t in targets)
+        out = {}
+        for target in targets:
+            if by_name[target["name"].lower()] == 1:
+                out[self.dcnm_intf_pvlan_vpc_plan_key(target)] = (target["name"], {})
+                continue
+            parts = self._dcnm_intf_serial_parts(target["sno"]) or (target["sno"],)
+            pair = "~".join(sorted(parts, key=lambda x: str(x).casefold()))
+            out[self.dcnm_intf_pvlan_vpc_plan_key(target)] = ("{0}@{1}".format(target["name"], pair), {"vpc": target["name"], "pair": pair})
+        return out
+
     @staticmethod
     def dcnm_intf_pvlan_vpc_plan_key(target):
         """Identity of a vPC in the post-deploy plan: its pair serial as registered (the controller's vpc_pair_sn order, never re-sorted)
@@ -11134,11 +11152,13 @@ class DcnmIntf:
                        if t.get("kind") == "vpc" and t.get("deletes") and not t.get("deferred")]:
             groups.setdefault(target["sno"], []).append(target)
         state = {}
+        result_keys = self.dcnm_intf_pvlan_vpc_result_keys([t for tgts in groups.values() for t in tgts])
         for tgts in groups.values():
             for target in tgts:
                 member_keys = self.dcnm_intf_pvlan_vpc_member_keys(self.dcnm_intf_pvlan_vpc_legs(target))
                 verification = {"state": "unverified", "parent": "not read", "peers": dict((k, "not read") for k in member_keys.values())}
-                self.result.setdefault("pvlan_verification", {})[target["name"]] = verification
+                verification.update(result_keys[self.dcnm_intf_pvlan_vpc_plan_key(target)][1])
+                self.result.setdefault("pvlan_verification", {})[result_keys[self.dcnm_intf_pvlan_vpc_plan_key(target)][0]] = verification
                 state[self.dcnm_intf_pvlan_vpc_plan_key(target)] = {"verification": verification, "problems": ["no verification was attempted"]}
         pending = list(groups)
         for attempt in range(6):
