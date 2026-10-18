@@ -3409,6 +3409,62 @@ def pvlan_record_conventional_releases(obj, payloads, resp):
     return released
 
 
+def pvlan_record_conventional_modified(obj, payloads, resp):
+    """MIXED-MODIFY (DF-G13-1): the interfaces that THIS invocation's confirmed bulk interface update MODIFIED outside the PVLAN targets:
+    {physical serial: {interface name lower}}. NaC sends, in one `dcnm_interface` call, the modification of conventional interfaces (a
+    port-channel's own fields, a loopback, an Ethernet, an SVI ...) together with a saved PVLAN membership removal; the confirmed update leaves
+    those interfaces' own blocks in the switch pending that the PVLAN pre-deploy gate would otherwise call foreign.
+
+    Derived ONLY from the payload actually sent and the controller's per-item SUCCESS naming that (serial, interface) in `resp` (a missing
+    item, ERROR or any other outcome records nothing). A conventional vPC is recorded as each peer's child `port-channel<PEERn_PCID>` on
+    the n-th serial of the pair, from the PCID that was sent (never the vPC id); a pair serial without a numeric PCID records nothing for
+    that peer. PVLAN targets and policies are not recorded here (their own blocks are judged by the gate). An interface whose block this
+    invocation's pre-write planning preview of the same serial (dcnm_intf_pvlan_planning_preview, when one was read) already listed as
+    pending is NOT recorded: that pending predates the write. No read is made here. Stored on obj.pvlan_invocation_modified for the gates
+    of this invocation only (pvlan_invocation_owned)."""
+    modified = {}
+    targets = getattr(obj, "pvlan_targets", None) or {}
+    planning = (getattr(obj, "__dict__", None) or {}).get("pvlan_planning_previews") or {}
+    before = {}
+    for payload in payloads or []:
+        if not isinstance(payload, dict) or payload.get("policy") in (PVLAN_POLICY, PO_HOST_POLICY, VPC_HOST_POLICY):
+            continue
+        for intf in payload.get("interfaces") or []:
+            if not isinstance(intf, dict):
+                continue
+            name, sno, nv = str(intf.get("ifName", "")), str(intf.get("serialNumber", "")), intf.get("nvPairs") or {}
+            if not name or not sno or (sno, name.lower()) in targets:
+                continue
+            if pvlan_modify_outcome_problems(resp, [(sno, name)]):
+                continue  # this interface's update is not confirmed by the controller
+            parts = sno.split("~")
+            if len(parts) == 2:
+                if (intf.get("interfaceType") or payload.get("interfaceType")) != "INTERFACE_VPC":
+                    continue
+                legs = [(parts[i], "port-channel%s" % str(nv.get("PEER%d_PCID" % (i + 1), "") or "").strip()) for i in (0, 1)
+                        if str(nv.get("PEER%d_PCID" % (i + 1), "") or "").strip().isdigit()]
+            elif len(parts) == 1:
+                legs = [(sno, name.lower())]
+            else:
+                continue
+            for serial, iname in legs:
+                if serial not in before:
+                    before[serial] = set()
+                    if serial in planning:
+                        try:
+                            before[serial] = set(pvlan_split_blocks(pvlan_preview_entry(planning[serial], serial)["pendingConfig"])[0])
+                        except PvlanError:
+                            before[serial] = set()  # an unreadable pre-write view proves nothing either way
+                if iname in before[serial]:
+                    continue  # already pending before this invocation wrote: not this write's
+                modified.setdefault(serial, set()).add(iname)
+    store = getattr(obj, "pvlan_invocation_modified", None) or {}
+    for serial, names in modified.items():
+        store.setdefault(serial, set()).update(names)
+    obj.pvlan_invocation_modified = store
+    return modified
+
+
 def pvlan_record_conventional_creation(obj, payload, resp):
     """MIXED-CREATE (F-1): after the confirmed creation (200/OK) of ONE CONVENTIONAL port-channel or vPC by THIS invocation, record on
     each physical serial what that creation legitimately leaves pending: each member SENT in the payload joins the new channel-group
@@ -3564,16 +3620,20 @@ def pvlan_invocation_owned(obj, sno, names, blocks):
         (`no channel-group <id>[ force][ mode M]`);
       - a member it joined (pvlan_record_conventional_creation, or added by a confirmed update) whose block joins that channel-group
         (`channel-group <id>[ force][ mode M]`);
-      - the child `port-channel<id>` of a conventional vPC it created on that peer.
+      - the child `port-channel<id>` of a conventional vPC it created on that peer;
+      - an interface its confirmed update modified on that serial (pvlan_record_conventional_modified: the interface itself, or the peer's
+        child `port-channel<PEERn_PCID>` of a modified conventional vPC). Its whole block is accepted: the module does not parse it, so
+        pending that another writer adds to that SAME interface between this write and the gate is not told apart.
     Same serial only; a name recorded on another serial, a different port-channel id, or a block without that withdrawal / join stays
     foreign."""
     released = (getattr(obj, "pvlan_invocation_releases", None) or {}).get(sno) or {}
     joined = (getattr(obj, "pvlan_invocation_joins", None) or {}).get(sno) or {}
     children = (getattr(obj, "pvlan_invocation_children", None) or {}).get(sno) or set()
+    modified = (getattr(obj, "pvlan_invocation_modified", None) or {}).get(sno) or set()
     owned = []
     for name in names:
         key = str(name).lower()
-        if key in children:
+        if key in children or key in modified:
             owned.append(name)
             continue
         lines = [str(line).strip() for line in blocks.get(name, [])]
@@ -14941,6 +15001,8 @@ class DcnmIntf:
                             )
                     # MIXED-BATCH: conventional members this confirmed update released (per-item SUCCESS), for this invocation's gates
                     pvlan_record_conventional_releases(self, self.diff_replace, resp)
+                    # MIXED-MODIFY: conventional interfaces this confirmed update modified (per-item SUCCESS), for this invocation's gates
+                    pvlan_record_conventional_modified(self, self.diff_replace, resp)
                     replace = True
             else:
                 # Individual update API for versions 11 and 12
