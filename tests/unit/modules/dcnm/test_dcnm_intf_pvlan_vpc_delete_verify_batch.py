@@ -159,3 +159,86 @@ def test_a_reversed_switch_order_keeps_the_controller_peer_identity():
     status, result = B.run(ctrl, items, state="deleted")
     assert status == "exit", result.get("msg")
     assert B.post_gets(ctrl) == 7 and all(v["state"] == "verified" for v in result["pvlan_verification"].values())
+
+
+# ============================================================== Alpha review F-1 / F-3: each remaining check has a discriminating test
+class _PostDeploy(B.MultiVpc):
+    """MultiVpc + post-deploy detail changes the harness does not offer: an extra intent entry per serial (`post_detail_extra`), a policy
+    replaced on a member (`post_policy`) and nvPairs applied from a given verification round on (`late_mutate`: (serial, ifName) ->
+    (rounds waited, nvPairs))."""
+
+    def __init__(self, *a, **k):
+        super(_PostDeploy, self).__init__(*a, **k)
+        self.post_detail_extra, self.post_policy, self.late_mutate = {}, {}, {}
+
+    def _peer_details(self, serial):
+        out = super(_PostDeploy, self)._peer_details(serial)
+        if not self.deployed or "~" in serial:
+            return out
+        for d in out:
+            intf = d["interfaces"][0]
+            if (serial, intf["ifName"]) in self.post_policy:
+                d["policy"] = self.post_policy[(serial, intf["ifName"])]
+            late = self.late_mutate.get((serial, intf["ifName"]))
+            if late and len(self.sleep_log) >= late[0]:
+                intf["nvPairs"].update(late[1])
+        return out + [dict(e) for e in self.post_detail_extra.get(serial, [])]
+
+
+def post_deploy_setup(n):
+    ctrl, config = deleted_setup(n)
+    ctrl.__class__ = _PostDeploy
+    ctrl.post_detail_extra, ctrl.post_policy, ctrl.late_mutate = {}, {}, {}
+    return ctrl, config
+
+
+def marked_parent(pair_serial, name):
+    """The MEASURED V-7a listing (NDFC 12.6.0.267) of a mark-deleted vPC parent in a peer's summary: markDeleted, Out-of-Sync, no underlay
+    policy, while its intent (bulk detail) is already gone. Adopted from Alpha's control C-A (alpha-df2-review/controls)."""
+    return {"ifName": name, "serialNo": pair_serial, "fabricName": "test_fabric", "ifType": "INTERFACE_VPC", "isPhysical": "False",
+            "deletable": "True", "editAllowed": "True", "markDeleted": "True", "alias": "", "deleteReason": None,
+            "complianceStatus": "Out-of-Sync", "underlayPolicies": [], "interfaces": [{"nvPairs": {}}]}
+
+
+def test_a_parent_still_listed_after_the_deploy_fails_on_the_summary_not_on_the_intent_read():
+    """F-1: the partial-deploy detection belongs to the SUMMARY listing; the parent intent read reports a mark-deleted parent as absent."""
+    ctrl, _config = deleted_setup(2)
+    pair = B.PAIRS[0]
+    for serial in pair:
+        ctrl.post_extra[serial] = [marked_parent(pair[0] + "~" + pair[1], "vPC11")]
+    status, result = B.run(ctrl, [ctrl.del_item(10), ctrl.del_item(11)], state="deleted")
+    assert status == "fail" and "the interface summary still lists vPC11" in result["msg"], result.get("msg")
+    assert result["pvlan_verification"]["vPC11"]["parent"] == "absent", "the intent of a mark-deleted parent is already empty"
+    assert result["pvlan_verification"]["vPC11"]["state"] == "failed" and result["pvlan_verification"]["vPC10"]["state"] == "verified"
+
+
+def test_a_child_still_in_the_intent_of_one_peer_fails_that_vpc_only():
+    """F-3 (M4): the child port-channel is no longer listed by the summary but is still in the peer's intent (bulk detail)."""
+    ctrl, config = post_deploy_setup(3)
+    child = {"serialNumber": V.SN2, "ifName": "port-channel11", "nvPairs": {"INTF_NAME": "port-channel11"}}
+    ctrl.post_detail_extra[V.SN2] = [{"policy": V.VPC_PO, "interfaces": [child]}]
+    status, result = delete_all(ctrl, config)
+    assert status == "fail" and result["msg"].startswith("vPC vPC11 was deleted but its release could not be verified"), result.get("msg")
+    assert "port-channel11" in result["msg"] and "vPC10" not in result["msg"] and "vPC12" not in result["msg"]
+    assert "peer 2 (%s)" % V.SN2 in result["msg"] and "peer 1" not in result["msg"]
+
+
+def test_a_member_left_on_another_policy_after_the_deploy_fails_that_vpc_only():
+    """F-3 (M8): the released member holds a policy that is not a released member policy; the release contract is not even applicable."""
+    ctrl, config = post_deploy_setup(3)
+    ctrl.post_policy[(V.SN1, "Ethernet1/11")] = "int_access_host"
+    status, result = delete_all(ctrl, config)
+    assert status == "fail" and result["msg"].startswith("vPC vPC11 was deleted but its release could not be verified"), result.get("msg")
+    assert "Ethernet1/11" in result["msg"] and "peer 1 (%s)" % V.SN1 in result["msg"] and "vPC10" not in result["msg"]
+
+
+def test_a_vpc_verified_in_an_earlier_round_is_judged_again_until_its_pair_closes():
+    """F-3 (M9): vPC10 is clean in round 1 while vPC11 is still converging; in round 2 vPC10's member comes back administratively up. The pair
+    is closed only when EVERY vPC is clean in the same round, so vPC10 is judged again and fails (a stale `verified` is never kept)."""
+    ctrl, config = post_deploy_setup(2)
+    ctrl.ready_round[(V.SN1, "Ethernet1/11")] = 1
+    ctrl.late_mutate[(V.SN2, "Ethernet2/10")] = (1, {"ADMIN_STATE": "true"})
+    status, result = delete_all(ctrl, config)
+    assert status == "fail", "a vPC that regressed after an earlier clean round must not stay verified"
+    assert "vPC vPC10 was deleted but its release could not be verified" in result["msg"], result["msg"][:300]
+    assert result["pvlan_verification"]["vPC10"]["state"] == "failed" and result["pvlan_verification"]["vPC11"]["state"] == "verified"
