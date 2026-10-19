@@ -65,5 +65,5 @@ from the compiled `reset_wire` and `default_template` (`gie_withdrawal_action`),
 
 Slices are published. They must not contain absolute or personal paths, references to private evidence files, lab serial numbers,
 switch names or management addresses. Measurements are kept as provenance (what was measured, on which NDFC version, the outcome)
-but the lab objects are replaced by neutral placeholders (`leaf-A`, `<lab-serial>`, `<lab-ip>`).
+but the lab objects are replaced by neutral placeholders (`leaf-A`, `<lab-serial>`, `<lab-ip>`, `<tag>` for routing-process tags).
 `test_gie_registry_sources.py` enforces this.
