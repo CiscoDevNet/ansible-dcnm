@@ -1,65 +1,48 @@
-# WP98 — OSPF on int_loopback. The USER loopback, not the fabric one.
+# Registry slice 0b_23 — OSPF on int_loopback (the USER loopback, not the fabric one).
 #
-# WHICH LOOPBACK THIS IS, AND WHY IT MATTERS MORE THAN USUAL
-#   The module keeps two loopback parents apart: `"lo_lo": "int_loopback"` and
-#   `"lo_fabric": "int_fabric_loopback_11_1"` (dcnm_interface.py:2436-2437). This slice registers
-#   the FIRST. Measured on FAB1 on 2026-09-19: all thirteen fabric loopbacks -- loopback0 and
-#   loopback1 on every switch, carrying the underlay router-id and the VTEP -- use the fabric
-#   parent. ZERO interfaces use int_loopback.
+# The module keeps two loopback parents apart: `"lo_lo": "int_loopback"` and
+# `"lo_fabric": "int_fabric_loopback_11_1"` (dcnm_interface.py:2436-2437). This slice registers the
+# first. Measured on the lab fabric: all thirteen fabric loopbacks (loopback0/loopback1 on every switch,
+# underlay router-id and VTEP) use the fabric parent; ZERO interfaces use int_loopback.
 #
-#   That distinction is the whole basis of this slice existing. Retired slice 0b_10 registered
-#   OSPF authentication on int_fabric_loopback_11_1 and was withdrawn because authentication there
-#   is UNDERLAY authentication that fabricSettings owns: the interface value was an override a
-#   keychain fabric setting deletes outright. The architect ruled (Q1, 2026-09-19) that the
-#   retirement was a decision about OWNERSHIP, not about the word "loopback". A user loopback is
-#   not part of the underlay, fabricSettings has no claim on it, and its own template takes
-#   authentication from the interface fields. So the five auth rows below are in scope here while
-#   the same five stay retired there.
+# Why auth is in scope here: retired slice 0b_10 registered OSPF authentication on
+# int_fabric_loopback_11_1 and was withdrawn because that is UNDERLAY authentication owned by
+# fabricSettings (a keychain fabric setting deletes the interface override). The retirement is about
+# OWNERSHIP, not the word "loopback". A user loopback is not underlay, fabricSettings has no claim on
+# it, and its template takes authentication from the interface fields. So the five auth rows below
+# are in scope here while the same five stay retired on the fabric parent.
 #
-# THE TEMPLATE IS INSTALLED -- the note below is CORRECTED IN THIS G41 COPY ONLY
-#   G39's copy of this slice says the controller's int_loopback declares none of these fields and
-#   that an upload is required first. That was true when it was written and is NOT true now.
-#   Measured read-only on 2026-09-24 (G41 entry gate 1c, and identically in the G40 preflight):
-#   the INSTALLED body is 50042 bytes, sha256
-#   27cd9ce7e671b5f3b3accfe70b5c5e52933450db70bd7e52c67496ec2f870ca7, and it declares all six OSPF
-#   integer fields below as `integer` with IsShow="ENABLE_OSPF==true" and the bounds recorded on
-#   each row. No template upload was needed or performed.
-#   Evidence: <internal evidence record> and
-#   ledger/01-entry-gates.json. The G39 slice is left exactly as written; historical slices are
-#   not rewritten.
+# Template installed (measured read-only): body 50042 bytes, sha256
+# 27cd9ce7e671b5f3b3accfe70b5c5e52933450db70bd7e52c67496ec2f870ca7; declares all six OSPF integer
+# fields below as `integer` with IsShow="ENABLE_OSPF==true" and the bounds recorded on each row. No
+# upload needed or performed (an earlier copy of this slice said an upload was required; no longer
+# true). The body instantiates 37 child templates, all already
+# on the controller, so no `templateDO is null` risk (which blocked int_vlan).
 #
-#   Preflight done before writing this: the batch body instantiates 37 child templates and all 37
-#   are already on the controller, so the upload carries none of the `templateDO is null` risk
-#   that blocked int_vlan for two days.
+# This parent diverges from all three overlay parents (authored per parent, never copied):
+#     OSPF_ADVERTISE_SUBNET      boolean; exists ONLY here (loopback concept).
+#     OSPF_BFD                   boolean, as on int_subif; int_routed_host and int_vlan use the
+#                                enum OSPF_BFD_MODE (no_change/enable/disable).
+#     OSPF_PASSIVE_MODE          ABSENT; the three overlay parents all have passive control.
+#     OSPF_RETRANSMIT_INTERVAL   present, as on int_subif and int_vlan; absent on int_routed_host.
+# A copy of int_routed_host would register OSPF_PASSIVE_MODE (the controller silently drops the key
+# and the run succeeds) and miss OSPF_ADVERTISE_SUBNET and OSPF_RETRANSMIT_INTERVAL.
 #
-# THIS PARENT DIVERGES FROM ALL THREE OVERLAY PARENTS
-#   Authored per parent, never copied -- and here is the proof it had to be:
+# no_log: OSPF_AUTH_KEY and OSPF_AUTHENTICATION_KEY carry key material and are marked. The key ID and
+# encryption-type selector are NOT: Ansible scrubs by STRING MATCH, so marking an id would replace
+# bare digits like "1" or "3" in all output, corrupting it while protecting nothing.
 #
-#     OSPF_ADVERTISE_SUBNET      boolean. Exists ONLY here. Advertising the loopback's subnet is
-#                                a loopback concept; no other parent has the field.
-#     OSPF_BFD                   boolean here, exactly as on int_subif. int_routed_host and
-#                                int_vlan model the same concept as the enum OSPF_BFD_MODE
-#                                (no_change/enable/disable).
-#     OSPF_PASSIVE_MODE          ABSENT. The three overlay parents all carry passive control in
-#                                some form; this template has none at all.
-#     OSPF_RETRANSMIT_INTERVAL   present, as on int_subif and int_vlan, absent on int_routed_host.
+# Withdrawn-auth-key rejection: dcnm_interface refuses the three withdrawn auth keys unless
+# resolve_binding finds a binding for them (the registry grants the exemption, not the parent name).
+# With this slice they are accepted on int_loopback and stay refused on the fabric parent, with no
+# second edit and no window where a key is neither refused nor carried.
 #
-#   A slice copied from int_routed_host would have registered OSPF_PASSIVE_MODE, which this
-#   template does not declare, and missed OSPF_ADVERTISE_SUBNET and OSPF_RETRANSMIT_INTERVAL
-#   entirely. The first is the silent failure: the controller drops the key and the run succeeds.
-#
-# no_log
-#   OSPF_AUTH_KEY and OSPF_AUTHENTICATION_KEY carry key material and are marked. The key ID and
-#   the encryption-type selector are NOT, for the same reason as every other auth slice: Ansible
-#   scrubs by STRING MATCH, so marking an id would replace the bare digits "1" or "3" everywhere
-#   in every result, corrupting unrelated output while protecting nothing.
-#
-# THE REJECTION TURNS ITSELF OFF WHEN THIS LANDS
-#   dcnm_interface still refuses the three withdrawn auth keys, but the exemption is granted by
-#   the REGISTRY, not by the parent's name: a key passes only where resolve_binding finds a
-#   binding for it. Before this slice, int_loopback had none and the keys were refused. With it,
-#   they are accepted here and stay refused on the fabric parent -- no second edit, and no window
-#   in which the key is neither refused nor carried.
+# Integer reset (rows marked "MEASURED LIVE" below): measured on loopback193 (int_loopback,
+# /32 192.0.2.193, OSPF context explicit from create). Raw preserving clear: only that field -> "".
+# Update 207 with single SUCCESS; deploy 200. Readback EMPTY STRING (not absent, null or a
+# materialized default). The field's line disappeared while `ip address 192.0.2.193/32` and
+# `ip router ospf <tag> area 0.0.0.0` SURVIVED (same tag and area) and UNDERLAY kept its original
+# set {Lo0, Lo1, Eth1/1}. In-Sync. Answers the removal question for that row on THIS parent.
 
 bindings:
   - parent_template: int_loopback
@@ -141,14 +124,7 @@ bindings:
     profile_key: ospf_cost
     applicable_interface_type: lo
     applicable_mode: lo
-    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
-    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_COST -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
-    # READBACK = STRING VACIO ("42" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf cost 42` y SOBREVIVIERON `ip address 192.0.2.193/32` y
-    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
-    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "42" -> ""; `ip ospf cost 42` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -168,14 +144,7 @@ bindings:
     profile_key: ospf_hello_interval
     applicable_interface_type: lo
     applicable_mode: lo
-    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
-    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_HELLO_INTERVAL -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
-    # READBACK = STRING VACIO ("11" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf hello-interval 11` y SOBREVIVIERON `ip address 192.0.2.193/32` y
-    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
-    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "11" -> ""; `ip ospf hello-interval 11` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -195,14 +164,7 @@ bindings:
     profile_key: ospf_dead_interval
     applicable_interface_type: lo
     applicable_mode: lo
-    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
-    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_DEAD_INTERVAL -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
-    # READBACK = STRING VACIO ("44" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf dead-interval 44` y SOBREVIVIERON `ip address 192.0.2.193/32` y
-    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
-    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "44" -> ""; `ip ospf dead-interval 44` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -222,14 +184,7 @@ bindings:
     profile_key: ospf_retransmit_interval
     applicable_interface_type: lo
     applicable_mode: lo
-    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
-    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_RETRANSMIT_INTERVAL -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
-    # READBACK = STRING VACIO ("9" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf retransmit-interval 9` y SOBREVIVIERON `ip address 192.0.2.193/32` y
-    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
-    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "9" -> ""; `ip ospf retransmit-interval 9` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -249,14 +204,7 @@ bindings:
     profile_key: ospf_transmit_delay
     applicable_interface_type: lo
     applicable_mode: lo
-    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
-    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_TRANSMIT_DELAY -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
-    # READBACK = STRING VACIO ("3" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf transmit-delay 3` y SOBREVIVIERON `ip address 192.0.2.193/32` y
-    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
-    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "3" -> ""; `ip ospf transmit-delay 3` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -276,14 +224,7 @@ bindings:
     profile_key: ospf_priority
     applicable_interface_type: lo
     applicable_mode: lo
-    # G41 MEDIDO en vivo el 2026-09-24 sobre loopback193 (int_loopback, /32 192.0.2.193,
-    # contexto WP98 explicito desde el create). Clear crudo guardado: solo OSPF_PRIORITY -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~loopback193; deploy 200.
-    # READBACK = STRING VACIO ("77" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf priority 77` y SOBREVIVIERON `ip address 192.0.2.193/32` y
-    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, y
-    # UNDERLAY conservo su conjunto original {Lo0, Lo1, Eth1/1}. In-Sync.
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "77" -> ""; `ip ospf priority 77` removed.
     reset_wire: ""
     type: integer
     min: 0
@@ -304,7 +245,7 @@ bindings:
     applicable_interface_type: lo
     applicable_mode: lo
     type: boolean
-    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    reset_wire: "false"     # measured live
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -322,7 +263,7 @@ bindings:
     applicable_interface_type: lo
     applicable_mode: lo
     type: boolean
-    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    reset_wire: "false"     # measured live
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only

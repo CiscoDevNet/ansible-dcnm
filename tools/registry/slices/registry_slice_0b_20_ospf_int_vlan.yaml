@@ -1,9 +1,8 @@
-# WP98 — OSPF on int_vlan. First bindings ever registered for this parent.
+# Registry slice 0b_20 — OSPF on int_vlan. First bindings registered for this parent.
 #
-# EXTRACTED FROM THIS TEMPLATE, NOT COPIED FROM int_routed_host.
-#   The three OSPF parents model the same concepts DIFFERENTLY, which is why the table is keyed
-#   by (parent_template, parent_nvpair) and why copying a slice would have registered nvPairs
-#   that do not exist here:
+# EXTRACTED FROM THIS TEMPLATE, NOT COPIED FROM int_routed_host
+#   The three OSPF parents model the same concepts DIFFERENTLY; hence the table is keyed by
+#   (parent_template, parent_nvpair), and a copied slice would register nvPairs absent here:
 #
 #       concept      int_routed_host        int_subif                int_vlan
 #       passive      OSPF_PASSIVE_MODE      OSPF_PASSIVE_INTERFACE   OSPF_PASSIVE_MODE
@@ -12,32 +11,35 @@
 #                    enum                   BOOLEAN                  enum
 #       retransmit   absent                 OSPF_RETRANSMIT_INTERVAL OSPF_RETRANSMIT_INTERVAL
 #
-#   Every type, default, range and length below is read from the installed template
+#   Every type, default, range and length is read from the installed template
 #   (sha cee4cfc1d8a66d57), never inferred from a sibling parent.
 #
-# applicable_interface_type / applicable_mode
-#   These are DESCRIPTIVE: nothing in the engine or the module reads them -- resolve_binding
-#   matches on parent_template alone. They are still set to the module's own vocabulary, since
-#   `pol_ind_str = delem["type"] + "_" + profile["mode"]` is what selects the policy, and a
-#   reviewer comparing the registry against a playbook should see the same words.
+# applicable_interface_type / applicable_mode are DESCRIPTIVE: resolve_binding matches on
+#   parent_template alone. They use the module vocabulary because
+#   `pol_ind_str = delem["type"] + "_" + profile["mode"]` selects the policy.
 #
-# MODULE WIRING
-#   This parent had NO engine hook before this slice. Two calls were added to dcnm_interface.py,
-#   mirroring the eth path exactly: gie_extend_prof_spec in its validator and
-#   gie_contribute_nvpairs in its builder. No feature-specific key was added to either.
+# MODULE WIRING: this parent had no engine hook before this slice. Two calls were added to
+#   dcnm_interface.py, mirroring the eth path: gie_extend_prof_spec in its validator and
+#   gie_contribute_nvpairs in its builder. No feature-specific key in either.
 #
-# THE FIVE AUTHENTICATION FIELDS ARE EXCLUDED
-#   ENABLE_OSPF_AUTH, OSPF_AUTH_KEY, OSPF_AUTHENTICATION_KEY, OSPF_AUTH_KEY_ID and
-#   OSPF_AUTHENTICATION_KEY_TYPE carry or gate secrets and go in their own lot, on all parents
-#   at once, so the mechanism decision is made once rather than three times.
+# EXCLUDED: the five authentication fields (ENABLE_OSPF_AUTH, OSPF_AUTH_KEY,
+#   OSPF_AUTHENTICATION_KEY, OSPF_AUTH_KEY_ID, OSPF_AUTHENTICATION_KEY_TYPE) carry or gate
+#   secrets and are registered separately, for all parents at once.
 #
-# MECHANISM IS passthrough THROUGHOUT
-#   None owns a dedicated validation path. test_gie_mechanism_contract.py fails if a child_pti
-#   binding is registered without an implementation that actually guards it.
+# MECHANISM: passthrough throughout; none owns a dedicated validation path.
+#   test_gie_mechanism_contract.py fails if a child_pti binding lacks a guarding implementation.
 #
-# REMOVAL SEMANTICS
-#   unresolved, as on int_routed_host: the template creates a child per field and never deletes
-#   one. Withdrawal is contract A per the architect, pending s5.
+# REMOVAL SEMANTICS: unresolved, as on int_routed_host: the template creates a child per field
+#   and never deletes one. Withdrawal follows contract A, pending validation.
+#
+# LIVE CLEAR (rows with reset_wire ""): measured live on an SVI with no address (int_vlan, VRF
+#   default, mtu 9216, advSubnetInUnderlay 'false'), with ENABLE_OSPF 'true', OSPF_TAG '<tag>'
+#   and OSPF_AREA_ID '0.0.0.0'. Each clear sent only that nvPair as "": update 207 with a single
+#   SUCCESS, deploy 200. MEASURED readback is the EMPTY STRING (not a default predicted by the
+#   proposal). The field's CLI line disappeared; the absent address, mtu, other nvPairs, the
+#   association `ip router ospf <tag> area 0.0.0.0` and UNDERLAY {Lo0, Lo1, Eth1/1} held.
+#   Reapplying restored the value (1 update + 1 deploy, In-Sync). This answers the removal
+#   question for each such row on THIS parent.
 
 bindings:
   - parent_template: int_vlan
@@ -104,15 +106,7 @@ bindings:
     profile_key: ospf_cost
     applicable_interface_type: svi
     applicable_mode: vlan
-    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
-    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_COST -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
-    # READBACK MEDIDO = STRING VACIO ("42" -> ""), no predeterminado por la propuesta.
-    # Desaparecio `ip ospf cost 42`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
-    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
-    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
-    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # Clear measured live (see header): readback "42" -> "", `ip ospf cost 42` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -132,15 +126,7 @@ bindings:
     profile_key: ospf_dead_interval
     applicable_interface_type: svi
     applicable_mode: vlan
-    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
-    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_DEAD_INTERVAL -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
-    # READBACK MEDIDO = STRING VACIO ("44" -> ""), no predeterminado por la propuesta.
-    # Desaparecio `ip ospf dead-interval 44`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
-    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
-    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
-    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # Clear measured live (see header): readback "44" -> "", `ip ospf dead-interval 44` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -160,15 +146,7 @@ bindings:
     profile_key: ospf_hello_interval
     applicable_interface_type: svi
     applicable_mode: vlan
-    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
-    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_HELLO_INTERVAL -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
-    # READBACK MEDIDO = STRING VACIO ("11" -> ""), no predeterminado por la propuesta.
-    # Desaparecio `ip ospf hello-interval 11`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
-    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
-    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
-    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # Clear measured live (see header): readback "11" -> "", `ip ospf hello-interval 11` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -189,7 +167,7 @@ bindings:
     applicable_interface_type: svi
     applicable_mode: vlan
     type: boolean
-    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    reset_wire: "false"     # measured live
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -246,15 +224,7 @@ bindings:
     profile_key: ospf_priority
     applicable_interface_type: svi
     applicable_mode: vlan
-    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
-    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_PRIORITY -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
-    # READBACK MEDIDO = STRING VACIO ("77" -> ""), no predeterminado por la propuesta.
-    # Desaparecio `ip ospf priority 77`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
-    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
-    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
-    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # Clear measured live (see header): readback "77" -> "", `ip ospf priority 77` removed.
     reset_wire: ""
     type: integer
     min: 0
@@ -274,15 +244,7 @@ bindings:
     profile_key: ospf_retransmit_interval
     applicable_interface_type: svi
     applicable_mode: vlan
-    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
-    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_RETRANSMIT_INTERVAL -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
-    # READBACK MEDIDO = STRING VACIO ("9" -> ""), no predeterminado por la propuesta.
-    # Desaparecio `ip ospf retransmit-interval 9`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
-    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
-    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
-    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # Clear measured live (see header): readback "9" -> "", `ip ospf retransmit-interval 9` removed.
     reset_wire: ""
     type: integer
     min: 1
@@ -303,7 +265,7 @@ bindings:
     applicable_interface_type: svi
     applicable_mode: vlan
     type: boolean
-    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-beta
+    reset_wire: "false"     # measured live
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -339,15 +301,7 @@ bindings:
     profile_key: ospf_transmit_delay
     applicable_interface_type: svi
     applicable_mode: vlan
-    # G43 MEDIDO en vivo el 2026-09-24 sobre Vlan3784 (int_vlan, SVI SIN direccion, VRF
-    # default, mtu 9216, advSubnetInUnderlay 'false'). Clear crudo guardado: solo OSPF_TRANSMIT_DELAY -> "".
-    # Update 207 con un unico SUCCESS para <lab-serial>~vlan3784; deploy 200.
-    # READBACK MEDIDO = STRING VACIO ("3" -> ""), no predeterminado por la propuesta.
-    # Desaparecio `ip ospf transmit-delay 3`; sobrevivieron direccion-ausente, mtu y el resto de nvPairs.
-    # ENABLE_OSPF 'true', OSPF_TAG 'WP98SVI', OSPF_AREA_ID '0.0.0.0' sostenidos, y la asociacion
-    # `ip router ospf WP98SVI area 0.0.0.0` intacta. UNDERLAY conservo {Lo0, Lo1, Eth1/1}.
-    # R-probe por reaplicacion restauro el valor configurado (1 update + 1 deploy, In-Sync).
-    # Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # Clear measured live (see header): readback "3" -> "", `ip ospf transmit-delay 3` removed.
     reset_wire: ""
     type: integer
     min: 1

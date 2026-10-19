@@ -1,74 +1,40 @@
-# Registry slice 0b_13 — DISABLE_QOS_STATS y DISABLE_QUEUING_STATS sobre eth de host.
+# Registry slice 0b_13 — DISABLE_QOS_STATS and DISABLE_QUEUING_STATS on host Ethernet.
 #
-# Catalogo: WP98_TEMPLATE_PARAMETER_CATALOG.csv los marca como
-# dcnm_interface_gap_vs_nd43 = TRUE, familia "L2/QoS controls", en los dos parents.
-# Cierran los 16 gaps confirmados del catalogo para int_access_host / int_trunk_host.
+# Catalog: WP98_TEMPLATE_PARAMETER_CATALOG.csv marks both as dcnm_interface_gap_vs_nd43 = TRUE,
+# family "L2/QoS controls", on both parents. They close the 16 confirmed catalog gaps for
+# int_access_host / int_trunk_host.
 #
-# DECLARACION
-#   int_trunk_host:201  / int_access_host:186   boolean DISABLE_QOS_STATS     { false }
-#   int_trunk_host:209  / int_access_host:194   boolean DISABLE_QUEUING_STATS { false }
+# Declaration:
+#   int_trunk_host:201 / int_access_host:186   boolean DISABLE_QOS_STATS     { false }
+#   int_trunk_host:209 / int_access_host:194   boolean DISABLE_QUEUING_STATS { false }
 #
-# ------------------------------------------------------------------------------------
-# NINGUNO DE LOS DOS GENERA UNA LINEA CLI PROPIA
-# ------------------------------------------------------------------------------------
-#
-# Son un SUFIJO de la linea que emite su dependencia:
-#
+# Neither emits its own CLI line; each is a SUFFIX of the line its dependency emits:
 #   service-policy type qos input <policy> no-stats
 #   service-policy type queuing output <policy> no-stats
+# Without the dependency the field is a SILENT NO-OP: accepted, stored in the nvPair, no
+# observable change on the switch. A test without the dependency in place "passes" without
+# measuring anything.
 #
-# Si la dependencia no esta satisfecha, el campo es un NO-OP SILENCIOSO: se acepta, se
-# guarda en el nvPair, y no produce ningun cambio observable en el switch. Ese es el modo
-# de falla que hay que tener presente al probarlos -- una prueba sin la dependencia armada
-# "pasa" sin haber medido nada.
-#
-# DEPENDENCIAS (anotadas en el propio template como IsShow)
+# Dependencies (template IsShow):
 #   DISABLE_QOS_STATS      IsShow="ENABLE_QOS==true"
 #   DISABLE_QUEUING_STATS  IsShow="QUEUING_POLICY!=''"
+# The QoS one is stricter than its IsShow (int_trunk_host:689-699): it needs ENABLE_QOS==true AND
+# a resolvable qosPolicyName, i.e. non-empty QOS_POLICY or the fabric AI/ML option
+# (configAIML == "true" -> "QOS_CLASSIFICATION"). ENABLE_QOS true with empty QOS_POLICY and no
+# AI/ML emits nothing.
 #
-# La de QoS es mas estricta de lo que dice el IsShow. En int_trunk_host:689-699:
+# Asymmetry (read from the template):
+#   DISABLE_QOS_STATS is read through a local with a default (int_trunk_host:401-403,
+#   `except: disableQosStats = "false"`).
+#   DISABLE_QUEUING_STATS is read directly from the nvPair inside `try: ... except: pass`
+#   (int_trunk_host:704-706). If that nvPair were missing, the NameError would drop the WHOLE
+#   queuing line, not just the suffix.
+# NDFC always sends the template's full nvPair set, so absence should not occur; it is one more
+# reason the engine must NEVER omit an nvPair already in HAVE (passthrough carry-forward covers it).
 #
-#   if ENABLE_QOS == "true":
-#       if QOS_POLICY:            qosPolicyName = QOS_POLICY
-#       elif configAIML == "true": qosPolicyName = "QOS_CLASSIFICATION"
-#       if qosPolicyName:
-#           noStats = " no-stats" if disableQosStats == "true" else ""
-#           -> 'service-policy type qos input {}{}'
-#
-# O sea: hace falta ENABLE_QOS==true Y ADEMAS un qosPolicyName resoluble -- QOS_POLICY no
-# vacio, o la opcion de fabric AI/ML activa. Con ENABLE_QOS en true y QOS_POLICY vacio y sin
-# AI/ML, no se emite nada.
-#
-# ------------------------------------------------------------------------------------
-# ASIMETRIA ENTRE LOS DOS, MEDIDA EN EL TEMPLATE
-# ------------------------------------------------------------------------------------
-#
-# DISABLE_QOS_STATS se lee a traves de un local con default (int_trunk_host:401-403):
-#     try:    disableQosStats = DISABLE_QOS_STATS
-#     except: disableQosStats = "false"
-#
-# DISABLE_QUEUING_STATS se lee DIRECTO del nvPair, sin local ni default
-# (int_trunk_host:704-706):
-#     try:
-#         if QUEUING_POLICY:
-#             noStats = " no-stats" if DISABLE_QUEUING_STATS == "true" else ""
-#             config_builder.add_config('service-policy type queuing output {}{}')
-#     except:
-#         pass
-#
-# Consecuencia: si el nvPair DISABLE_QUEUING_STATS faltara, el NameError cae en el
-# `except: pass` y se pierde LA LINEA DE QUEUING COMPLETA, no solo el sufijo. El de QoS no
-# tiene ese riesgo porque su local ya tiene default.
-#
-# En la practica NDFC siempre manda el set completo de nvPairs del template, asi que la
-# ausencia no deberia ocurrir. Queda anotado porque es la clase de detalle que explica una
-# falla rara meses despues, y porque refuerza por que el engine NUNCA debe omitir un nvPair
-# que ya existe en HAVE (el carry-forward de passthrough cubre justamente eso).
-#
-# Sin `default_template`: el default del template es false en los dos, pero registrarlo
-# convertiria la omision en "poner false" en lugar de "preservar". Al ser passthrough entran
-# al carry-forward, y preservar es el comportamiento correcto (medido en flowcontrol y en
-# disable_lldp).
+# On default_template: the template default is false on both, but registering it would turn
+# omission into "set false" instead of "preserve". As passthrough fields they are carried
+# forward, and preserving is the correct behaviour (measured for flowcontrol and disable_lldp).
 
 # ---------------------------------------------------------------- DISABLE_QOS_STATS ---
 - parent_template: int_trunk_host
@@ -98,12 +64,12 @@
       ndfc_effect: inline_config
       cli: service-policy type qos input <policy>
       phase: current
-      # El sufijo desaparece; la linea de service-policy permanece.
+      # The suffix disappears; the service-policy line remains.
       evidence_ref: int_trunk_host.template#L699
     - predicate: enable_qos_false_or_policy_unresolvable
       ndfc_effect: silent_noop
       phase: current
-      # Se acepta y se guarda en el nvPair, pero no hay linea que sufijar.
+      # Accepted and stored in the nvPair, but there is no line to suffix.
       evidence_ref: int_trunk_host.template#L689
 
 - parent_template: int_access_host
@@ -112,7 +78,7 @@
   applicable_interface_type: eth
   applicable_mode: access
   type: boolean
-  reset_wire: "false"          # measured live: W-D1 f with a real QoS policy, 2026-09-22
+  reset_wire: "false"          # measured live with a real QoS policy
   presence_model: two_axis
   emit_when: explicit_only
   mechanism: passthrough

@@ -1,30 +1,30 @@
-# PR725-VPC-DOT1Q-001 -- int_vpc_dot1q_tunnel, the native vPC dot1q-tunnel parent.
+# Registry slice 0b_36 — int_vpc_dot1q_tunnel, the native vPC dot1q-tunnel parent.
 #
-# Source of truth: the template INSTALLED on .90 (NDFC 12.6.0.267, installed SMU), captured
-# read-only on 2026-10-01: int_vpc_dot1q_tunnel.template sha256
-# 1eb7a8b6e4f5aba66099aa4c36f56b1491e73ef8f677f57cff8706b0e25c7a94 (990 lines), with its
-# children int_vpc_dot1q_tunnel_po_11_1 (d33a9e48...) and int_vpc_dot1q_tunnel_po_member_11_1
-# (71d5dbf4...). Line numbers below refer to that parent capture.
+# Source of truth: the template INSTALLED on the controller (NDFC 12.6.0.267 with SMU), captured
+# read-only: int_vpc_dot1q_tunnel.template sha256
+# 1eb7a8b6e4f5aba66099aa4c36f56b1491e73ef8f677f57cff8706b0e25c7a94 (990 lines), with children
+# int_vpc_dot1q_tunnel_po_11_1 (d33a9e48...) and int_vpc_dot1q_tunnel_po_member_11_1
+# (71d5dbf4...). Line numbers refer to that parent capture.
 #
-# Six rows, the same public keys and types as int_vpc_access_host and
-# int_port_channel_dot1q_tunnel_host. Each one is declared by the parent AND forwarded to the
-# child that emits it:
+# Six rows, same public keys and types as int_vpc_access_host and
+# int_port_channel_dot1q_tunnel_host. Each is declared by the parent AND forwarded to the child
+# that emits it:
 #   aclFilter, spanningTreePortType, qosStatsSuppressed, queuingStats -> each peer's
 #     int_vpc_dot1q_tunnel_po_11_1 (port-channel CLI)
 #   lldpTransmit, lldpReceive -> each peer's int_vpc_dot1q_tunnel_po_member_11_1 (member CLI)
 #
-# c2 (PR725-VPC-DOT1Q-001, conditional): every row carries the reset_wire of its explicit
-# neutral -- aclFilter '', spanningTreePortType 'no', the four booleans 'false' -- the same forms
-# measured on the sibling vPC parents, but NOT transferred from them: c2 is loaded by the campaign
-# replay ONLY after stage rM sent these six neutrals explicitly on vpc13 and the device verdict
-# 'cleared' passed on BOTH peers (Po13 and member Ethernet1/6). If any field fails rM, the whole
-# campaign stops and c2 is not used; a partial registration is a new, reviewed candidate.
-# default_template is unchanged, so an omission at the declared default still needs nothing.
+# reset_wire (conditional): each row carries its explicit neutral -- aclFilter '',
+# spanningTreePortType 'no', the four booleans 'false'. Same forms as measured on the sibling vPC
+# parents, but NOT transferred from them: these values are loaded by the validation replay ONLY
+# after a clear stage has sent all six neutrals explicitly on a vPC and the device verdict
+# 'cleared' passed on BOTH peers (port-channel and member). If any field fails, the campaign stops
+# and none is used; a partial registration needs a new, reviewed candidate. default_template is
+# unchanged, so omitting a field at its declared default still needs nothing.
 
 - parent_template: int_vpc_dot1q_tunnel
   parent_nvpair: aclFilter
   profile_key: acl_filter
-  reset_wire: ''   # c2: registered only after rM 'cleared' passes on BOTH peers
+  reset_wire: ''   # conditional on the BOTH-peer clear (see header)
   applicable_interface_type: vpc
   applicable_mode: dot1q
   type: string
@@ -49,7 +49,7 @@
 - parent_template: int_vpc_dot1q_tunnel
   parent_nvpair: spanningTreePortType
   profile_key: spanning_tree_port_type
-  reset_wire: 'no'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  reset_wire: 'no'   # conditional on the BOTH-peer clear (see header)
   applicable_interface_type: vpc
   applicable_mode: dot1q
   type: enum
@@ -73,7 +73,7 @@
 - parent_template: int_vpc_dot1q_tunnel
   parent_nvpair: qosStatsSuppressed
   profile_key: disable_qos_stats
-  reset_wire: 'false'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  reset_wire: 'false'   # conditional on the BOTH-peer clear (see header)
   applicable_interface_type: vpc
   applicable_mode: dot1q
   type: boolean
@@ -96,7 +96,7 @@
 - parent_template: int_vpc_dot1q_tunnel
   parent_nvpair: queuingStats
   profile_key: disable_queuing_stats
-  reset_wire: 'false'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  reset_wire: 'false'   # conditional on the BOTH-peer clear (see header)
   applicable_interface_type: vpc
   applicable_mode: dot1q
   type: boolean
@@ -119,7 +119,7 @@
 - parent_template: int_vpc_dot1q_tunnel
   parent_nvpair: lldpTransmit
   profile_key: disable_lldp_transmit
-  reset_wire: 'false'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  reset_wire: 'false'   # conditional on the BOTH-peer clear (see header)
   applicable_interface_type: vpc
   applicable_mode: dot1q
   type: boolean
@@ -142,7 +142,7 @@
 - parent_template: int_vpc_dot1q_tunnel
   parent_nvpair: lldpReceive
   profile_key: disable_lldp_receive
-  reset_wire: 'false'   # c2: registered only after rM 'cleared' passes on BOTH peers
+  reset_wire: 'false'   # conditional on the BOTH-peer clear (see header)
   applicable_interface_type: vpc
   applicable_mode: dot1q
   type: boolean

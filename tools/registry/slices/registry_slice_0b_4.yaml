@@ -1,8 +1,17 @@
-# Phase 0B — slice 4: BFD Interval on int_subif (composition canary, shared effect).
-# Offline, design-only. No engine, no live. Format B: {shared_effects, bindings}.
-# 4 params (1 gate + 3 value_source) -> ONE child interface_bfd_interval_11_1, ONE shared effect.
-# The 3 values are mandatory when the gate is true (catalog: mand=ENABLE_BFD_INTERVAL==true).
-# Ranges from catalog. No delete yet -> removal_semantics: unresolved.
+# Registry slice 0b_4 — BFD interval on int_subif (composition canary, one shared effect).
+#
+# Format B ({shared_effects, bindings}); designed offline (no engine, no live run).
+# 4 params (1 gate + 3 value_source) feed ONE child, interface_bfd_interval_11_1, through ONE
+# shared effect. The 3 values are mandatory when the gate is true (catalog:
+# mand=ENABLE_BFD_INTERVAL==true). Ranges from the catalog. No delete path designed yet, so
+# removal_semantics: unresolved.
+#
+# Mechanism: passthrough for all four rows (not child_pti, as the phase-0 ledger predicted). The
+# module writes the values into the PARENT's nvPairs and NDFC's own DSL instantiates
+# interface_bfd_interval_11_1 from them; the module never touches the child. Same as the OSPF
+# fields (`ip ospf cost` is rendered by ospf_interface_cost_11_1 and its binding is passthrough).
+# The ledger over-predicted child_pti: measured, only 3 of the 10 nvPairs it labelled that way are.
+# Per slice 0b_6, the BFD passthrough rows were confirmed live by measuring the device line.
 shared_effects:
   - effect_id: bfd_interval@int_subif
     parent_template: int_subif
@@ -31,13 +40,6 @@ bindings:
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
-    # passthrough, corrected 2026-09-19. This row said child_pti, inherited from the phase0
-    # ledger's prediction, and was never committed so nobody had to reconcile it. The module
-    # writes this value into the PARENT's nvPairs and NDFC's own DSL instantiates
-    # interface_bfd_interval_11_1 from it -- the module never touches the child. That is exactly
-    # how every OSPF field works: `ip ospf cost` is rendered by ospf_interface_cost_11_1 and its
-    # binding is passthrough. The ledger over-predicted child_pti and it is measured: of the ten
-    # nvPairs it labelled that way, three were.
     mechanism: passthrough
     no_log: false
     min_ndfc_version: "12.6.0.267"
@@ -58,13 +60,6 @@ bindings:
     max: 999
     presence_model: two_axis
     emit_when: explicit_only
-    # passthrough, corrected 2026-09-19. This row said child_pti, inherited from the phase0
-    # ledger's prediction, and was never committed so nobody had to reconcile it. The module
-    # writes this value into the PARENT's nvPairs and NDFC's own DSL instantiates
-    # interface_bfd_interval_11_1 from it -- the module never touches the child. That is exactly
-    # how every OSPF field works: `ip ospf cost` is rendered by ospf_interface_cost_11_1 and its
-    # binding is passthrough. The ledger over-predicted child_pti and it is measured: of the ten
-    # nvPairs it labelled that way, three were.
     mechanism: passthrough
     no_log: false
     min_ndfc_version: "12.6.0.267"
@@ -86,13 +81,6 @@ bindings:
     max: 999
     presence_model: two_axis
     emit_when: explicit_only
-    # passthrough, corrected 2026-09-19. This row said child_pti, inherited from the phase0
-    # ledger's prediction, and was never committed so nobody had to reconcile it. The module
-    # writes this value into the PARENT's nvPairs and NDFC's own DSL instantiates
-    # interface_bfd_interval_11_1 from it -- the module never touches the child. That is exactly
-    # how every OSPF field works: `ip ospf cost` is rendered by ospf_interface_cost_11_1 and its
-    # binding is passthrough. The ledger over-predicted child_pti and it is measured: of the ten
-    # nvPairs it labelled that way, three were.
     mechanism: passthrough
     no_log: false
     min_ndfc_version: "12.6.0.267"
@@ -114,13 +102,6 @@ bindings:
     max: 50
     presence_model: two_axis
     emit_when: explicit_only
-    # passthrough, corrected 2026-09-19. This row said child_pti, inherited from the phase0
-    # ledger's prediction, and was never committed so nobody had to reconcile it. The module
-    # writes this value into the PARENT's nvPairs and NDFC's own DSL instantiates
-    # interface_bfd_interval_11_1 from it -- the module never touches the child. That is exactly
-    # how every OSPF field works: `ip ospf cost` is rendered by ospf_interface_cost_11_1 and its
-    # binding is passthrough. The ledger over-predicted child_pti and it is measured: of the ten
-    # nvPairs it labelled that way, three were.
     mechanism: passthrough
     no_log: false
     min_ndfc_version: "12.6.0.267"

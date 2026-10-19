@@ -1,4 +1,5 @@
-# Phase 0B — first registry slice (3 bindings). Offline, design-only. No engine, no live.
+# Registry slice 0b — first registry slice (3 bindings). Authored offline (design-only);
+# live measurements are marked inline.
 # Keyed by (parent_template, parent_nvpair). mechanism vocabulary: ledger inline_passthrough -> passthrough.
 # NOTE: enum values "on"/"off" are quoted — in YAML 1.1 bare on/off parse as booleans.
 - parent_template: int_access_host
@@ -7,7 +8,7 @@
   applicable_interface_type: eth
   applicable_mode: access
   type: enum
-  reset_wire: "off"          # measured live: W-E1 f, 2026-09-22
+  reset_wire: "off"          # measured live
   valid_values: ["on", "off"]
   default_template: "off"          # template default; NEVER emitted when the user omits the field
   presence_model: two_axis

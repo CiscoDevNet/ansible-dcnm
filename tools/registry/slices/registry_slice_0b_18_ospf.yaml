@@ -1,48 +1,27 @@
-# WP98 — OSPF on int_routed_host. VERTICAL SLICE: the four bindings needed to exercise
-# child_pti on a ROUTED parent for the first time.
+# Registry slice 0b_18 — OSPF on int_routed_host: four bindings (gate, tag, area, cost).
 #
-# WHY FOUR AND NOT ONE
-#   Every OSPF field on this template is gated IsShow="ENABLE_OSPF==true", so no single
-#   field can be exercised alone. The smallest thing that produces observable CLI is the
-#   gate, the process tag, the area, and one value field. OSPF_COST is that value field:
-#   an integer with unambiguous CLI (`ip ospf cost N`), no secret, and no dependency on an
-#   adjacency actually forming.
+# Every OSPF field here is gated IsShow="ENABLE_OSPF==true", so the smallest set that produces CLI is
+# the gate, the process tag, the area and one value field. OSPF_COST is that field: integer, clear CLI
+# (`ip ospf cost N`), no secret, no dependency on an adjacency forming.
 #
-# WHY THIS IS NOT YET THE OTHER 52
-#   The template creates a child per field and NEVER deletes one. `deleteChildTemplate`
-#   exists and is called three times -- twice for ip-redirects, never for OSPF. The only
-#   thing that clears an OSPF child is delete(), which drops every PTI on the interface.
+# Removal: the template creates one child per field and never deletes one (`deleteChildTemplate` is
+# called only for ip-redirects); only delete() clears an OSPF child, and it drops every PTI on the
+# interface. A template read says what setting creates, not what clearing does, so `removal_semantics`
+# is "unresolved" on all four on purpose (see the measured result on ospfCost below).
 #
-#   So `removal_semantics` is "unresolved" on all four ON PURPOSE. Reading the template
-#   tells us what setting a value creates; it does not tell us what clearing one does, and
-#   this project has been burned before by treating a template reading as a measurement.
-#   The slice includes a removal step precisely to settle it.
+# OSPF_TAG and OSPF_AREA_ID carry IsMandatory="ENABLE_OSPF==true" (template declaration, hence
+# required_when_gate). Both feed the same base child (ospf_interface_11_1), so they form a shared effect
+# with the gate. The `== true` gate form does not suffer the "absent reads as non-empty" failure of
+# `!= ""` mandatory rules.
 #
-# WHAT THE TEMPLATE ITSELF SETTLES
-#   OSPF_TAG and OSPF_AREA_ID carry IsMandatory="ENABLE_OSPF==true", so required_when_gate
-#   is the template's declaration and not our judgement call. Both feed the SAME base child
-#   (ospf_interface_11_1), which is why they are a shared effect with the gate rather than
-#   three independent bindings.
+# Mechanism is passthrough, not child_pti: delegating to a child template inside NDFC is not what
+# child_pti marks (test_delegation_to_a_child_template_does_not_make_it_child_pti). child_pti is for
+# bindings with a dedicated compat path (the fabric-loopback OSPF-MD trio). gie_guarded_keys collects
+# only passthrough keys, so a mislabelled binding would bypass the invalid-parent guard. Other routed
+# bindings (DISABLE_LLDP, DISABLE_BFD_ECHO, ...) also delegate and are passthrough.
 #
-#   The gate uses the `== true` form, which per the 17-nvPair rule does not suffer the
-#   "absent reads as non-empty" failure that `!= ""` mandatory rules do.
-#
-#
-# MECHANISM IS passthrough, NOT child_pti -- corrected after the tests rejected it.
-#   The phase-0 ledger predicted child_pti for all 56 OSPF fields and I copied that. It is
-#   wrong, and test_delegation_to_a_child_template_does_not_make_it_child_pti exists to say
-#   so: delegating to a child template inside NDFC is not what child_pti marks in this table.
-#   child_pti marks a binding that owns a dedicated compat path -- the fabric-loopback OSPF-MD
-#   trio, with its own HAVE reconciliation. Nothing here has one.
-#
-#   The consequence of getting it wrong is not cosmetic: gie_guarded_keys collects only
-#   passthrough keys, so a mislabelled binding is routed AROUND the generic invalid-parent
-#   guard. The four routed bindings already in the table (DISABLE_LLDP, DISABLE_BFD_ECHO and
-#   friends) also delegate to children and are all passthrough. These follow them.
-#
-# OSPF_TAG IS DELIBERATELY NOT 'UNDERLAY'
-#   The fabric runs its underlay in a process NDFC manages. A routed host port peering with
-#   an external neighbour must not join it. The lab uses WP98.
+# OSPF_TAG must not be the fabric underlay process (e.g. 'UNDERLAY'): a routed host port peering with an
+# external neighbour must not join it. The lab uses a dedicated tag.
 
 shared_effects:
   - effect_id: ospf_base@int_routed_host
@@ -139,19 +118,12 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: routed
     type: integer
-    # G37 P2-ospfcost-probe: MEDIDO EN VIVO en leaf-A Ethernet1/20, 2026-09-24, NDFC 12.6.0.267 /
-    # NX-OS 10.5(5). El entero publico rechaza "" antes de construir peticion, asi que el valor de
-    # alambre se midio con un POST raw de bulk modify preservante (array de 1 DTO, 70 nvPairs del
-    # readback fresco, solo este campo a ""), respuesta 207 Multi-Status con un unico SUCCESS.
-    #
-    # LA REPRESENTACION DEL READBACK ES STRING VACIO ("42" -> ""), no ausente ni null ni un
-    # default materializado. En el equipo desaparecio `ip ospf cost 42` y SOBREVIVIO
-    # `ip router ospf WP98 area 0.0.0.0`: OSPF quedo habilitado con el mismo tag y area, no se
-    # apago la feature para retirar el valor. Todos los demas nvPairs identicos, In-Sync.
-    #
-    # ESTO RESUELVE removal_semantics PARA ESTA FILA. El template crea un hijo por campo y nunca
-    # llama deleteChildTemplate para OSPF, que es la razon registrada de "unresolved"; medido,
-    # limpiar el nvPair del padre a "" SI retira la linea del hijo.
+    # Measured live (Ethernet1/20, NDFC 12.6.0.267 / NX-OS 10.5(5)). The public integer rejects "" before
+    # building a request, so the wire value was measured with a raw preserving bulk modify POST (one DTO,
+    # all nvPairs from a fresh readback, only this field set to ""): 207 Multi-Status, single SUCCESS.
+    # Readback shows empty string ("42" -> ""), not absent/null/default. On the device `ip ospf cost 42`
+    # was removed and `ip router ospf <tag> area 0.0.0.0` survived (OSPF stayed enabled); all other
+    # nvPairs identical, In-Sync. So, measured: clearing the parent nvPair to "" does remove the child line.
     reset_wire: ""
     min: 1
     max: 65535

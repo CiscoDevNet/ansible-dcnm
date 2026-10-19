@@ -1,105 +1,66 @@
-# Registry slice 0b_16 — int_routed_host, el primer parent ruteado.
+# Registry slice 0b_16 — int_routed_host (first routed parent), 5 bindings.
 #
-# QUE SE REGISTRA
-#   int_routed_host   5   pol_types[12]["eth_routed"]
+# Scope: int_routed_host, reached from `mode: routed` on an Ethernet (pol_types[12]["eth_routed"];
+# the module builds the policy key as <type>_<mode>). Other routed templates are separate parents,
+# not registered here:
+#   int_routed_host_sub_11_1   subinterface
+#   int_port_channel_routed*   routed port-channel
+#   int_fabric_loopback_11_1   already covered by slice 0b
 #
-#   Es el parent que un playbook alcanza con `mode: routed` sobre una interfaz Ethernet. El
-#   modulo arma la clave de politica como <type>_<mode>; "eth_routed" existe en pol_types y
-#   resuelve a int_routed_host. Los otros templates ruteados NO se registran aqui:
+# Mechanism: passthrough for all five, although each ends in a child template:
+#   DISABLE_LLDP           interface_lldp_disable              (creation gate)
+#   DISABLE_BFD_ECHO       bfd_no_echo_interface               (creation gate)
+#   IPV4_ACL_IN            interface_ip_access_group_in_11_1   (gate + value)
+#   DISABLE_QOS_STATS      interface_qos_service_policy        (DISABLE_STATS parameter)
+#   DISABLE_QUEUING_STATS  interface_queuing_service_policy    (DISABLE_STATS parameter)
+# Delegation does not decide the mechanism (precedent: slice 0b_15): `mechanism` records who owns
+# validation, the invalid-parent guard, generic prof_spec, carry-forward and wire-form
+# conversion. int_routed_host has no dedicated machinery for any of these; child_pti would skip
+# wire-form conversion and revive the fixed boolean defect (a native bool compared against NDFC's
+# "true" never converges). int_port_channel_trunk_host::DISABLE_LLDP also delegates and is
+# registered passthrough, validated live.
 #
-#     int_routed_host_sub_11_1   subinterfaz, otro parent
-#     int_port_channel_routed*   port-channel ruteado, otro parent
-#     int_fabric_loopback_11_1   ya cubierto por el slice 0b
+# All five child templates exist on the controller: GET
+# /configtemplate/rest/config/templates/<name> on 12.6.0.267 returned 200 with a real body for
+# each. This matters because a missing child gives no error: the parent nvPair travels, the call
+# succeeds and no CLI is produced. Each child's CLI was read from the controller, not deduced.
 #
-# MECANISMO: passthrough en los cinco. POR QUE, AUNQUE LOS CINCO DELEGUEN
-#   Este parent casi no emite CLI por si mismo. Los cinco campos terminan en un template hijo:
-#
-#     DISABLE_LLDP           interface_lldp_disable              (gate de creacion)
-#     DISABLE_BFD_ECHO       bfd_no_echo_interface               (gate de creacion)
-#     IPV4_ACL_IN            interface_ip_access_group_in_11_1   (gate + valor)
-#     DISABLE_QOS_STATS      interface_qos_service_policy        (parametro DISABLE_STATS)
-#     DISABLE_QUEUING_STATS  interface_queuing_service_policy    (parametro DISABLE_STATS)
-#
-#   Esa delegacion NO decide el mecanismo. Vale el precedente que ya fijo el slice 0b_15:
-#   `mechanism` dice quien es dueño de la validacion, del guardia de parent invalido, del
-#   prof_spec generico, del carry-forward y de la conversion a forma de cable — no dice como
-#   esta hecho el template por dentro. int_routed_host no tiene maquinaria dedicada para
-#   ninguna de esas cinco piezas. Registrarlo child_pti lo dejaria exento de la conversion a
-#   forma de cable y reviviria el defecto de los booleanos ya corregido (un bool nativo
-#   comparado contra el "true" que devuelve NDFC nunca converge).
-#
-#   El precedente literal ya estaba en la tabla: int_port_channel_trunk_host::DISABLE_LLDP
-#   tambien delega a un hijo y esta registrado passthrough, validado en vivo.
-#
-# LOS CINCO TEMPLATES HIJO EXISTEN EN EL CONTROLADOR
-#   GET /configtemplate/rest/config/templates/<nombre> en 12.6.0.267, los cinco 200 con cuerpo
-#   real. Importa porque un hijo ausente NO da error: el nvPair del padre viaja, la llamada
-#   responde exito y no sale CLI. El CLI de cada hijo se leyo del controlador, no se dedujo.
-#
-# LOS DOS DE STATS TRAEN IsShow — Y AQUI SI ES ALCANZABLE
+# The two stats fields carry IsShow, reachable here:
 #   DISABLE_QOS_STATS      IsShow="ENABLE_QOS==true"
 #   DISABLE_QUEUING_STATS  IsShow="QUEUING_POLICY!=''"
+# They gate nothing: the policy creates the child (`if qosPolicyName:` / `if QUEUING_POLICY:`) and
+# the boolean travels as DISABLE_STATS. Without QoS scaffolding they transport but produce no CLI
+# (the same gap as the dot1q port-channel), but here the scaffolding is native to
+# eth_prof_spec_routed_host (enable_qos / qos_policy / queuing_policy), so it comes from the data
+# model without patching the module.
 #
-#   No son gate de nada: el hijo lo crea la politica (`if qosPolicyName:` / `if QUEUING_POLICY:`)
-#   y el booleano viaja como parametro DISABLE_STATS. Sin andamiaje de QoS transportan bien y no
-#   producen CLI — el mismo hueco que tuvo el port-channel dot1q. La diferencia es que aqui el
-#   andamiaje ya es nativo de eth_prof_spec_routed_host (enable_qos / qos_policy /
-#   queuing_policy), asi que sale del data model sin parchar el modulo.
+# ARP_TIMEOUT is deliberately excluded. int_routed_host declares it (L187), but int_subif and
+# int_vlan declare it too and all three are reachable (pol_types "sub_int_subint" -> int_subif,
+# "svi_vlan" -> int_vlan, "eth_routed"). Committing it on one parent would make the module answer
+# "not supported on this interface" on the other two, which is false. The generator enforces
+# this: it rejects a row claiming a public profile_key already committed from an uncommitted
+# parent, instead of skipping it silently. ARP_TIMEOUT belongs in a three-parent batch with its
+# own prof_spec and live run, which must keep two facts already measured:
+#   - The declaration is `integer ARP_TIMEOUT;` (no defaultValue, min or max), but the body
+#     validates: `if int(arpTimeout) <= 0` fails with "ARP timeout must be a positive integer"
+#     (L636). The schema has min_length/max_length only for strings, so 0 or a negative value is
+#     rejected by the controller, not the engine.
+#   - No default_template: asserting a default the template does not declare would make the engine
+#     read an absence on the controller as a match.
 #
-# ARP_TIMEOUT SE QUEDA FUERA DE ESTE SLICE, A PROPOSITO
-#   int_routed_host tambien declara ARP_TIMEOUT (L187) y el binding estaba escrito. Se saco al
-#   descubrir que int_subif e int_vlan lo declaran igual, y que los TRES son alcanzables desde
-#   un playbook: pol_types trae "sub_int_subint" -> int_subif y "svi_vlan" -> int_vlan ademas de
-#   "eth_routed". Comprometerlo solo en el parent ruteado haria que el modulo respondiera "no
-#   soportado en esta interfaz" en los otros dos — que es falso, y es justo el defecto que esta
-#   tabla existe para evitar.
+# Removal, measured live. Two distinct behaviours:
+#   value set to its inert form (false / "")  ->  the CLI IS RETIRED from the device
+#   field OMITTED from the payload            ->  the value SURVIVES intact
+# removal_semantics describes the second, hence `preserves_on_absent` (`deletes_on_absent` would
+# be false); this is the emit_when: explicit_only contract, confirmed on the device. The first has
+# no field of its own: the gates are `if <value> == "true":` / `!= "":` + createOrUpdate with no
+# else branch deleting the child (unlike the slice 0b OSPF pair's explicit value_false -> delete),
+# yet NDFC reconciles and removes what the new pass does not create. Verified on the switch, not
+# on the controller. (DISABLE_LLDP is still registered unresolved.)
 #
-#   El generador lo hace cumplir por si solo: rechaza una fila que reclama un profile_key
-#   publico ya comprometido desde un parent no comprometido, en vez de saltarsela en silencio.
-#   Fue el generador, no una revision manual, quien detuvo el intento.
-#
-#   Entra como un lote de tres parents, con su prof_spec y su corrida en vivo propios. Dos cosas
-#   ya medidas que ese lote debe conservar:
-#
-#     - La declaracion es `integer ARP_TIMEOUT;` — sin defaultValue, sin minimo, sin maximo. Pero
-#       el cuerpo SI valida: `if int(arpTimeout) <= 0` corta con "ARP timeout must be a positive
-#       integer" (L636). La cota existe y vive en el cuerpo, no en el tipo. El schema solo tiene
-#       min_length/max_length para strings, asi que un 0 o un negativo NO lo rechaza el motor:
-#       lo rechaza el controlador.
-#     - No debe llevar default_template. Afirmar un default que el template no declara haria que
-#       el motor leyera una ausencia del controlador como match.
-#
-# REMOCION: NO VERIFICADA, POR ESO unresolved EN LOS CINCO
-#   Los tres gates son `if <valor> == "true":` / `!= "":` seguidos de createOrUpdate. NO hay
-#   rama else que borre el hijo — a diferencia del par de OSPF del slice 0b, que si trae un
-#   `value_false -> delete` explicito.
-#
-#   Eso NO prueba que el hijo sobreviva al quitar el valor: el modelo PTI es declarativo y NDFC
-#   podria reconciliar y borrar lo que la pasada nueva no creo. No se asume ninguna de las dos.
-#   removal_semantics: medido -- ver la nota de REMOCION arriba.
-#
-#
-# REMOCION: MEDIDA EN VIVO (corrida r1..r4 del 15sep2026)
-#   Estos bindings pasan de `unresolved` a `preserves_on_absent`. El valor es nuevo en el
-#   vocabulario: antes solo existian "no sabemos" y "omitir borra", y ninguno describia lo que
-#   resulto ser cierto. Son DOS comportamientos distintos y conviene no confundirlos:
-#
-#     r3  el valor cambia a su forma inerte (false / "")  ->  el CLI SE RETIRA del dispositivo
-#     r4  el campo se OMITE del payload                   ->  el valor SOBREVIVE intacto
-#
-#   removal_semantics habla de la segunda. Marcarlos `deletes_on_absent` habria sido FALSO: la
-#   omision no borra, preserva -- que es exactamente el contrato que emit_when: explicit_only
-#   ya declara, ahora comprobado en el dispositivo y no solo en el diseño.
-#
-#   Lo de r3 tambien importa y no tiene campo propio: el template no trae rama `else` que borre
-#   el hijo, asi que NO estaba dicho si NDFC lo retiraria. Lo hace -- reconcilia y elimina lo
-#   que la pasada nueva no crea. Verificado en el switch, no en el controlador.
-#
-# QUE NO PRUEBA ESTE SLICE
-#   evidence_ref apunta a la declaracion en el template: prueba que el parametro EXISTE y donde,
-#   y el CLI de cada hijo se leyo del controlador. No prueba que el binding FUNCIONE extremo a
-#   extremo. Eso lo cierra la corrida r1→r4 sobre leaf-A/104 contra el ToR, pendiente al
-#   escribir esto.
+# Limits: evidence_ref points to the template declaration (proves the parameter exists and
+# where); child CLI was read from the controller. Neither proves end-to-end function; that was
+# left to the live run against the ToR, pending when this was written.
 
 - parent_template: int_routed_host
   parent_nvpair: DISABLE_LLDP
@@ -195,12 +156,10 @@
   applicable_interface_type: eth
   applicable_mode: routed
   type: boolean
-  # G33 F1-s2: medido en vivo, apply+clear en leaf-A Ethernet1/22, 2026-09-23, con
-  # ENABLE_QOS=true y QOS_POLICY=port_qos_policy -- una politica que YA existe en el chasis,
-  # leida antes de usarla, no inventada. El clear dejo el nvPair en "false" y la linea
-  # `service-policy type qos input port_qos_policy` SOBREVIVIO sin el fragmento ` no-stats`,
-  # mientras la de queuing conservo el suyo. Confirma en el equipo los dos primeros
-  # effect_rules de abajo, que hasta ahora solo estaban declarados.
+  # Measured live (apply + clear on a lab Ethernet) with ENABLE_QOS=true and
+  # QOS_POLICY=port_qos_policy, a policy already on the chassis. The clear set the nvPair to
+  # "false"; `service-policy type qos input port_qos_policy` survived without ` no-stats`, while
+  # the queuing line kept its own. Confirms the first two effect_rules below on the device.
   reset_wire: "false"
   default_template: false
   presence_model: two_axis
@@ -236,10 +195,10 @@
   applicable_interface_type: eth
   applicable_mode: routed
   type: boolean
-  # G33 F2-s2: medido en vivo, apply+clear en leaf-A Ethernet1/22, 2026-09-23, con
-  # QUEUING_POLICY=port_queuing_policy (existente en el chasis). El clear dejo el nvPair en
-  # "false" y la linea `service-policy type queuing output port_queuing_policy` SOBREVIVIO sin
-  # ` no-stats`, mientras la de qos conservo el suyo: las dos direcciones son independientes.
+  # Measured live (apply + clear on a lab Ethernet) with QUEUING_POLICY=port_queuing_policy
+  # (already on the chassis). The clear set the nvPair to "false"; `service-policy type queuing
+  # output port_queuing_policy` survived without ` no-stats`, while the qos line kept its own:
+  # the two directions are independent.
   reset_wire: "false"
   default_template: false
   presence_model: two_axis

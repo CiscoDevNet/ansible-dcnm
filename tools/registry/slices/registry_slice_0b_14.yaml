@@ -1,83 +1,57 @@
-# Registry slice 0b_14 — los CUATRO campos de host que los parents de PORT-CHANNEL tambien
-# declaran y que no estaban registrados.
+# Registry slice 0b_14 — four host fields also declared by the port-channel host parents
+# (int_port_channel_access_host, _trunk_host, _dot1q_tunnel_host): 12 bindings.
 #
-# POR QUE EXISTE ESTE SLICE
-#   Cada campo se registro en su propia fase, mirando solo los parents que estaban bajo prueba
-#   en ese momento. Con SPANNING_TREE_PORT_TYPE se probaba sobre ethernet, se registraron los
-#   dos parents de ethernet, y no se pregunto donde mas existia el campo.
+# Why: each field was first registered only for the parents under test (e.g.
+# SPANNING_TREE_PORT_TYPE on Ethernet only). A sweep of the 98 templates found 92 declarations of
+# the 11 registered nvPairs against 22 table rows; only FLOWCONTROL, the one field swept at
+# registration, had full coverage. This slice closes the 12 port-channel gaps; the vPC and
+# routed/subif/vlan/loopback gaps are in separate slices.
 #
-#   Un barrido de los 98 templates encontro 92 declaraciones de los 11 nvPairs registrados,
-#   contra 22 filas en la tabla. FLOWCONTROL es el unico campo con cobertura completa, y es
-#   exactamente el unico donde ese barrido si se hizo en su momento.
+# The gap was invisible: an unregistered binding does not fail, it does not exist. The module
+# answers "'<field>' is not supported on this interface", which is false (the template declares
+# it), and the integrity tests pinned the chosen set, so they confirmed the omission.
 #
-#   Este slice cierra los 12 huecos de port-channel. Los 3 de DISABLE_LLDP llevan una nota
-#   aparte al final: se registran para MEDIR si el valor llega al miembro.
-#   Quedan tambien los de vPC y los de routed/subif/vlan/loopback, en slices aparte.
+# Mechanism: passthrough for all twelve. `mechanism` records who owns validation and
+# carry-forward, not what NDFC does with the value. child_pti means a dedicated module validator
+# governs the binding (the OSPF key: pair atomicity, range, keychain exclusion); none of these
+# needs that. Three emit CLI on the parent itself (read from the DSL):
+#   SPANNING_TREE_PORT_TYPE  ->  spanning-tree port type {}
+#   DISABLE_QOS_STATS        ->  service-policy type qos input {}{}
+#   DISABLE_QUEUING_STATS    ->  service-policy type queuing output {}{}
+# DISABLE_LLDP delegates to the member; see its note below.
 #
-# POR QUE EL FALLO ERA INVISIBLE
-#   Un binding no registrado no falla: simplemente no existe. El modulo responde
-#   "'<campo>' is not supported on this interface" -- una frase que resulta FALSA, porque el
-#   template si lo declara. Quien no lo soportaba era el registry.
+# Metadata read from all twelve declarations (not copied); the three templates are identical to
+# each other and to their Ethernet counterparts:
+#   SPANNING_TREE_PORT_TYPE  enum    no,network,normal   defaultValue=no
+#   DISABLE_LLDP             boolean                     defaultValue=false
+#   DISABLE_QOS_STATS        boolean                     defaultValue=false
+#   DISABLE_QUEUING_STATS    boolean                     defaultValue=false
+# As on Ethernet, a registered default must not turn omission into "set the default": these
+# passthrough fields enter carry-forward, so omission preserves.
 #
-#   Y los tests de integridad fijan el conjunto que decidimos registrar, asi que confirmaban
-#   nuestra propia omision.
-#
-# MECANISMO: passthrough en los doce
-#   `mechanism` NO describe lo que NDFC hace con el valor; describe quien es dueño de la
-#   validacion y del carry-forward. `child_pti` significa "un validador dedicado del modulo lo
-#   gobierna" -- el caso de la clave OSPF, con su atomicidad de par, su rango y la exclusion de
-#   keychain.
-#
-#   Ninguno de estos doce necesita eso: el motor les basta, igual que a sus pares de ethernet.
-#
-#   Tres de ellos emiten CLI en el PROPIO padre -- verificado leyendo el DSL:
-#     SPANNING_TREE_PORT_TYPE  ->  spanning-tree port type {}
-#     DISABLE_QOS_STATS        ->  service-policy type qos input {}{}
-#     DISABLE_QUEUING_STATS    ->  service-policy type queuing output {}{}
-#   DISABLE_LLDP es el cuarto y si delega; ver su nota al final.
-#
-# METADATOS LEIDOS, NO COPIADOS
-#   Se verificaron las doce declaraciones en los tres templates. Los tres son identicos entre
-#   si e identicos a sus pares de ethernet:
-#     SPANNING_TREE_PORT_TYPE  enum    no,network,normal   defaultValue=no
-#     DISABLE_LLDP             boolean                     defaultValue=false
-#     DISABLE_QOS_STATS        boolean                     defaultValue=false
-#     DISABLE_QUEUING_STATS    boolean                     defaultValue=false
-#
-# Sin `default_template`, por la misma razon que en los parents de ethernet: registrar el
-# default convertiria la omision en "poner el default" en lugar de "preservar", y al ser
-# passthrough el campo entra al carry-forward.
-#
-# DEPENDENCIAS, heredadas de las anotaciones IsShow de cada template
+# Dependencies (template IsShow), not registered because the precondition lives in fields the
+# registry does not know (same as Ethernet):
 #   SPANNING_TREE_PORT_TYPE  PORTTYPE_FAST_ENABLED != true
-#   DISABLE_QOS_STATS        ENABLE_QOS == true  Y un QOS_POLICY resoluble
+#   DISABLE_QOS_STATS        ENABLE_QOS == true and a resolvable QOS_POLICY
 #   DISABLE_QUEUING_STATS    QUEUING_POLICY != ''
-#   Las mismas que en ethernet, y por el mismo motivo no se registran: la precondicion vive en
-#   campos que el registry no conoce.
 #
 # ------------------------------------------------------------------------------------
-# DISABLE_LLDP en los _host: REGISTRADO PARA MEDIRLO, no porque se sepa que funciona
+# DISABLE_LLDP on the _host parents: registered to MEASURE it, not because it is known to work
 # ------------------------------------------------------------------------------------
-#   A diferencia de los tres campos de arriba, el padre NO emite el CLI: pasa el valor a la
-#   policy del puerto MIEMBRO, y el miembro escribe 'no lldp transmit' / 'no lldp receive'.
+#   The parent emits no CLI: it passes the value to the MEMBER port policy, which writes
+#   'no lldp transmit' / 'no lldp receive'.
 #
-#   Hay una decision previa que difiere los SEIS bindings de DISABLE_LLDP sobre templates
-#   *_member_11_1, con una razon solida: esos parents viven en pol_pc_member_types y no en
-#   pol_types, y la clave de policy se arma como <type>_<mode>, asi que NINGUNA combinacion que
-#   un usuario pueda escribir resuelve a ellos. Ese diferimiento SIGUE EN PIE.
+#   The six DISABLE_LLDP bindings on *_member_11_1 templates stay deferred: those parents live in
+#   pol_pc_member_types, not pol_types, and the policy key is <type>_<mode>, so no user input
+#   resolves to them.
 #
-#   Los _host son otro caso y ese es el dato nuevo: SI son alcanzables (type: pc + mode:
-#   trunk/access/dot1q). La pregunta de si el valor llega al miembro por la cadena del template
-#   es EMPIRICA, no de criterio, y el lab la contesta:
+#   The _host parents are reachable (type: pc + mode: trunk/access/dot1q). Whether the value
+#   reaches the member is empirical: send disable_lldp: true to a port-channel and check for
+#   'no lldp transmit' on its member Ethernet. If it appears, it is confirmed; if not, the
+#   deferral extends to the _host parents, backed by a measurement.
 #
-#       mandar disable_lldp: true a port-channel32
-#       -> aparece 'no lldp transmit' en Ethernet1/4, su puerto miembro?
-#
-#   Se registran para medir eso. Si el CLI aparece, queda confirmado con evidencia. Si no
-#   aparece, el diferimiento se extiende a los _host -- documentado con una medicion en lugar de
-#   una suposicion, que es la unica forma de cerrarlo bien.
-#
-#   PENDIENTE DE VALIDACION EN VIVO al momento de escribir esto.
+#   PENDING LIVE VALIDATION when written (slice 0b_15 cites
+#   int_port_channel_trunk_host::DISABLE_LLDP as validated live).
 
 - parent_template: int_port_channel_access_host
   parent_nvpair: DISABLE_LLDP
@@ -145,7 +119,7 @@
 # ------------------------------------------------------ SPANNING_TREE_PORT_TYPE ---
 - parent_template: int_port_channel_access_host
   parent_nvpair: spanningTreePortType
-  reset_wire: "no"   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  reset_wire: "no"   # measured live (apply + clear)
   profile_key: spanning_tree_port_type
   applicable_interface_type: pc
   applicable_mode: access
@@ -168,7 +142,7 @@
 
 - parent_template: int_port_channel_trunk_host
   parent_nvpair: spanningTreePortType
-  reset_wire: "no"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  reset_wire: "no"   # measured live (apply + clear)
   profile_key: spanning_tree_port_type
   applicable_interface_type: pc
   applicable_mode: trunk
@@ -191,7 +165,7 @@
 
 - parent_template: int_port_channel_dot1q_tunnel_host
   parent_nvpair: spanningTreePortType
-  reset_wire: "no"   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  reset_wire: "no"   # measured live (apply + clear)
   profile_key: spanning_tree_port_type
   applicable_interface_type: pc
   applicable_mode: dot1q
@@ -215,7 +189,7 @@
 # ------------------------------------------------------------ DISABLE_QOS_STATS ---
 - parent_template: int_port_channel_access_host
   parent_nvpair: qosStatsSuppressed
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  reset_wire: "false"   # measured live (apply + clear)
   profile_key: disable_qos_stats
   applicable_interface_type: pc
   applicable_mode: access
@@ -239,7 +213,7 @@
 
 - parent_template: int_port_channel_trunk_host
   parent_nvpair: qosStatsSuppressed
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  reset_wire: "false"   # measured live (apply + clear)
   profile_key: disable_qos_stats
   applicable_interface_type: pc
   applicable_mode: trunk
@@ -263,7 +237,7 @@
 
 - parent_template: int_port_channel_dot1q_tunnel_host
   parent_nvpair: qosStatsSuppressed
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  reset_wire: "false"   # measured live (apply + clear)
   profile_key: disable_qos_stats
   applicable_interface_type: pc
   applicable_mode: dot1q
@@ -288,7 +262,7 @@
 # -------------------------------------------------------- DISABLE_QUEUING_STATS ---
 - parent_template: int_port_channel_access_host
   parent_nvpair: queuingStats
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  reset_wire: "false"   # measured live (apply + clear)
   profile_key: disable_queuing_stats
   applicable_interface_type: pc
   applicable_mode: access
@@ -312,7 +286,7 @@
 
 - parent_template: int_port_channel_trunk_host
   parent_nvpair: queuingStats
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  reset_wire: "false"   # measured live (apply + clear)
   profile_key: disable_queuing_stats
   applicable_interface_type: pc
   applicable_mode: trunk
@@ -336,7 +310,7 @@
 
 - parent_template: int_port_channel_dot1q_tunnel_host
   parent_nvpair: queuingStats
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  reset_wire: "false"   # measured live (apply + clear)
   profile_key: disable_queuing_stats
   applicable_interface_type: pc
   applicable_mode: dot1q

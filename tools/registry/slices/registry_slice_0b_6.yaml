@@ -1,8 +1,9 @@
-# Phase 0B — slice 6: Dampening on int_routed_host (conditional-composition canary).
-# Offline, design-only. No engine, no live. Format B, one shared effect + conditional_requirements.
-# UNLIKE BFD: gate=true with no values is valid (required_when_gate: []). The finer rules
-# (verified in child interface_dampening.template#L55-67 + IsShow/IsMandatory) are expressed
-# as conditional_requirements. Ranges from catalog. removal_semantics: unresolved.
+# Registry slice 0b_6 — dampening on int_routed_host (conditional-composition canary).
+#
+# Format B: one shared effect + conditional_requirements; designed offline (no engine, no live run).
+# Unlike BFD, gate=true with no values is valid (required_when_gate: []). The finer rules (verified
+# in child interface_dampening.template#L55-67 + IsShow/IsMandatory) are expressed as
+# conditional_requirements. Ranges from the catalog. removal_semantics: unresolved.
 shared_effects:
   - effect_id: dampening@int_routed_host
     parent_template: int_routed_host
@@ -98,66 +99,48 @@ bindings:
      min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
      effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L801"}
 
-# =====================================================================================
-# CORRECCION 2026-09-20 — el mecanismo de las siete filas de dampening: child_pti -> passthrough
-# =====================================================================================
+# -------------------------------------------------------------------------------------
+# Mechanism for all seven rows: passthrough (not child_pti)
+# -------------------------------------------------------------------------------------
+# The module writes the values into the PARENT's nvPairs; the int_routed_host DSL instantiates
+# `interface_dampening` from them (installed body :1186-1196). The module does not build the
+# child. Same reasoning as the BFD rows (slices 0b_4/0b_5), which were confirmed live by measuring
+# the device line. Note: the generator silently skips any row not listed in COMMITTED_BINDINGS.
 #
-# Estas siete llevaban escritas desde este slice y NUNCA llegaron a la tabla: no estaban en
-# COMMITTED_BINDINGS, y el generador salta en silencio una fila que no este en esa lista. Es
-# exactamente lo que habia pasado con las ocho de BFD.
+# That live confirmation is NOT possible here: the `dampening` CLI does not exist on either lab
+# image. Probed through NDFC with the command the child produces, `dampening 10 1500 3000 60`:
+#     nxos64-cs-lite.10.5.5.M  -> CLI command is invalid
+#     nxos64-cs.10.6.2.F       -> CLI command is invalid
+# The full image rejects it too, so the cause is not the lite image: the command is absent from
+# the C9300v NX-OS.
 #
-# POR QUE passthrough Y NO child_pti
-#   El modulo escribe los valores en los nvPairs del PADRE y es el DSL de int_routed_host el que
-#   instancia `interface_dampening` con ellos (:1186-1196 del cuerpo instalado). El modulo no
-#   construye el hijo. Ese es el mismo razonamiento por el que las ocho de BFD se corrigieron, y
-#   ahi la ronda en vivo lo confirmo midiendo la linea en el equipo.
+# Validation scope: device layer IMPOSSIBLE (no value of these seven produces a line here).
+# Controller layer possible: the POST evaluates the template before deploy, so the four dependency
+# rules are exercised and the read-back can be read.
 #
-#   Aqui esa confirmacion NO se puede hacer, y conviene decirlo en vez de dejarlo implicito:
-#   `dampening` no existe en el NX-OS de estos switches.
+# Dependency chain (four levels, the deepest in the registry):
+#     ENABLE_DAMPENING                 boolean, defaultValue=false
+#       DAMPENING_HALF_LIFE            1..30      IsShow ENABLE==true
+#         DAMPENING_REUSE              1..20000   IsShow ENABLE && HALF_LIFE!=''
+#         DAMPENING_SUPPRESS           1..20000   same
+#         DAMPENING_MAX_SUPPRESS       1..255     same
+#         DAMPENING_RESTART            boolean    IsShow ENABLE && REUSE!=''
+#           DAMPENING_RESTART_PENALTY  1..20000   IsShow ENABLE && RESTART==true
 #
-# EL CLI NO EXISTE EN NINGUNA DE LAS DOS IMAGENES DEL LAB
-#   Sondeado por NDFC con el comando que el hijo produce:
+# Four template rules, enforced by NDFC on POST (none are ours):
+#     "Dampening half-life is required when reuse, suppress, or max suppress is configured."
+#     "Dampening reuse, suppress, and max suppress must be configured together."
+#     "Dampening restart can only be configured with half-life, reuse, suppress, and max
+#      suppress values."
+#     "Dampening restart penalty requires dampening restart to be enabled."
+# The second ties THREE registered fields together (the first such rule in the registry).
 #
-#     FAB1  nxos64-cs-lite.10.5.5.M   `dampening 10 1500 3000 60` -> CLI command is invalid
-#     FAB4  nxos64-cs.10.6.2.F        `dampening 10 1500 3000 60` -> CLI command is invalid
+# Six fields render one line, in five variants (installed child interface_dampening):
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart $RESTART_PENALTY
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS
+#     dampening $HALF_LIFE
+#     dampening
+# Even on hardware that supports it, counting lines would prove nothing.
 #
-#   La fase 33 lo midio en FAB1 y lo atribuyo a la imagen lite. FAB4 corre la COMPLETA -- la que
-#   si soporta EIGRP, que la lite no -- y tambien lo rechaza. La causa no es "lite": el comando
-#   no esta en el NX-OS de C9300v. Eso corrige el hallazgo anterior.
-#
-# ALCANCE DE LO QUE SE PUEDE VALIDAR
-#   Capa de dispositivo: IMPOSIBLE. Ningun valor de estos siete producira una linea aqui.
-#   Capa de controlador: SI. El POST evalua el template antes del deploy, asi que las cuatro
-#   reglas de dependencia se ejercitan y el read-back se lee.
-#
-# CUATRO NIVELES DE DEPENDENCIA -- la cadena mas profunda del registro
-#       ENABLE_DAMPENING                 boolean, defaultValue=false
-#         DAMPENING_HALF_LIFE            1..30      IsShow ENABLE==true
-#           DAMPENING_REUSE              1..20000   IsShow ENABLE && HALF_LIFE!=''
-#           DAMPENING_SUPPRESS           1..20000   idem
-#           DAMPENING_MAX_SUPPRESS       1..255     idem
-#           DAMPENING_RESTART            boolean    IsShow ENABLE && REUSE!=''
-#             DAMPENING_RESTART_PENALTY  1..20000   IsShow ENABLE && RESTART==true
-#
-# CUATRO REGLAS DEL TEMPLATE, NINGUNA NUESTRA
-#       "Dampening half-life is required when reuse, suppress, or max suppress is configured."
-#       "Dampening reuse, suppress, and max suppress must be configured together."
-#       "Dampening restart can only be configured with half-life, reuse, suppress, and max
-#        suppress values."
-#       "Dampening restart penalty requires dampening restart to be enabled."
-#
-#   La segunda liga TRES campos registrados entre si -- la primera de ese tipo en el registro;
-#   HSRP tenia pares. NDFC las impone en el POST, que es justo lo que las hace medibles aqui.
-#
-# SEIS CAMPOS EN UNA SOLA LINEA, CON CINCO VARIANTES
-#   Del hijo interface_dampening, instalado:
-#       dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart $RESTART_PENALTY
-#       dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart
-#       dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS
-#       dampening $HALF_LIFE
-#       dampening
-#   BFD fundia tres campos en una linea y HSRP dos mas un nativo; aqui son seis y la forma de la
-#   linea cambia segun cuales esten puestos. Si algun dia corre en hardware que lo soporte,
-#   contar lineas no probara nada.
-#
-#   SOLO int_routed_host declara dampening: int_subif, int_vlan e int_loopback, 0 de 7.
+# Only int_routed_host declares dampening; int_subif, int_vlan and int_loopback declare none of the 7.

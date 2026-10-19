@@ -1,75 +1,53 @@
-# Registry slice 0b_17 — DISABLE_LLDP se parte en dos.
+# Registry slice 0b_17 — DISABLE_LLDP split into DISABLE_LLDP_TRANSMIT and DISABLE_LLDP_RECEIVE
+# (16 bindings: 2 fields x 8 parents).
 #
-# QUE CAMBIA
-#   La entrega de engineering del 14sep2026 ELIMINA el campo DISABLE_LLDP de los ocho parents
-#   que lo declaraban y lo reemplaza por dos:
-#
+# The engineering template update removed DISABLE_LLDP from the eight parents that declared it and
+# replaced it with:
 #     DISABLE_LLDP_TRANSMIT   ->  no lldp transmit
 #     DISABLE_LLDP_RECEIVE    ->  no lldp receive
+# Not a rename: the old field disabled both directions; the new ones allow disabling one. Hence two
+# bindings, not one renamed.
 #
-#   No es un rename. El campo viejo apagaba las dos direcciones de golpe; los nuevos permiten
-#   apagar solo una. Es funcionalidad que antes no existia, por eso son dos bindings y no uno
-#   renombrado.
+# The eight earlier disable_lldp bindings are RETIRED: the nvPair no longer exists in any template.
+# Registering it would still look correct via API (a PTI accepts undeclared nvPairs) but would never
+# produce CLI — the failure mode this registry exists to prevent.
 #
-#   Los ocho bindings de disable_lldp del slice anterior quedan RETIRADOS: su nvPair ya no
-#   existe en ningun template. Registrarlo seguiria pareciendo correcto por API -- un PTI acepta
-#   nvPairs que su template no declara -- y no produciria CLI nunca. Ese es justo el modo de
-#   fallo que este registry existe para evitar.
-#
-# EL CODIGO DEL PADRE CAMBIO EN CONSECUENCIA
-#   Antes:   if disableLldp == "true":          -> emitia las DOS lineas juntas
-#   Ahora:   if disableLldpTransmit == "true":  -> 'no lldp transmit'
+# Parent code (read from the template, not assumed):
+#   before:  if disableLldp == "true":          -> both lines together
+#   now:     if disableLldpTransmit == "true":  -> 'no lldp transmit'
 #            if disableLldpReceive == "true":   -> 'no lldp receive'
+# The conditions are independent: one true and the other false must produce ONE line. That is the
+# live check that distinguishes a real split from a rename.
 #
-#   Leido del template, no supuesto. Las dos condiciones son independientes: poner uno en true y
-#   el otro en false debe producir UNA sola linea. Eso es lo que la corrida en vivo tiene que
-#   comprobar, y es la prueba que distingue "se partio de verdad" de "se renombro y emite las
-#   dos igual".
+# mechanism: passthrough on all sixteen (see slices 0b_15/0b_16). On port-channel and vPC parents
+# the value is delegated to a member template; that does not decide the mechanism, which records
+# ownership of validation, invalid-parent guard, generic prof_spec, carry-forward and wire-form
+# conversion. None of the eight parents has its own machinery for those.
 #
-# MECANISMO: passthrough en los dieciseis
-#   Mismo razonamiento que ya fijaron los slices 0b_15 y 0b_16. En los parents de port-channel y
-#   vPC el valor se delega a un template de miembro; eso no decide el mecanismo. `mechanism` dice
-#   quien es dueño de la validacion, del guardia de parent invalido, del prof_spec generico, del
-#   carry-forward y de la conversion a forma de cable. Ninguno de los ocho parents tiene
-#   maquinaria propia para eso.
+# Member templates changed too: int_port_channel_*_member_11_1 and int_vpc_*_po_member_11_1 now
+# declare both fields instead of DISABLE_LLDP. Patching only the _host leaves the nvPair propagating
+# with no CLI and the switch In-Sync (see slice 0b_12). Members were verified updated on the
+# controller before registering.
 #
-# LOS TEMPLATES DE MIEMBRO TAMBIEN CAMBIARON
-#   int_port_channel_*_member_11_1 e int_vpc_*_po_member_11_1 declaran ahora los dos campos en
-#   lugar de DISABLE_LLDP. Importa por la leccion del slice 0b_12: parchear solo el _host deja
-#   el nvPair propagandose sin CLI y el switch In-Sync. Los miembros se verificaron actualizados
-#   en el controlador antes de registrar esto.
+# Known defect in the same template update (patched in the lab only): the seventeen templates that
+# received this change call normalize() on the two new values, but none of them defines it
+# (normalize() exists in thirty-two other templates). Measured effect: NameError during template
+# execution, config-save 500 "An unexpected error occurred during template execution", without
+# naming the field. Lab fix: add the four-line definition copied verbatim from int_routed_host.
+# Without that fix these bindings cannot be exercised.
 #
-# UN DEFECTO DE LA MISMA ENTREGA, YA CORREGIDO EN EL LAB
-#   Los diecisiete templates que recibieron este cambio llaman a normalize() sobre los dos
-#   valores nuevos, y DIECISIETE no la definen. normalize() ya existia -- treinta y dos templates
-#   la traian desde la entrega anterior -- pero no se propago junto con el cambio.
+# Removal: MEASURED LIVE. removal_semantics: preserves_on_absent (new vocabulary value; neither
+# "unknown" nor "omission deletes" described the result). Two distinct behaviours:
+#   value set to its inert form (false / "")  ->  CLI IS REMOVED from the device
+#   field OMITTED from the payload            ->  value SURVIVES intact
+# removal_semantics describes the second; `deletes_on_absent` would be FALSE. This confirms on the
+# device the emit_when: explicit_only contract. The first has no field of its own: the template has
+# no `else` branch deleting the child, yet NDFC reconciles and removes what the new pass does not
+# create. Verified on the switch, not on the controller.
 #
-#   Efecto medido: NameError al ejecutar el template, config-save 500 con
-#   "An unexpected error occurred during template execution", sin nombrar el campo. Se corrigio
-#   en el lab agregando las cuatro lineas de la definicion, copiadas verbatim de int_routed_host.
-#   Sin ese arreglo estos bindings no se pueden ejercitar.
-#
-#
-# REMOCION: MEDIDA EN VIVO (corrida r1..r4 del 15sep2026)
-#   Estos bindings pasan de `unresolved` a `preserves_on_absent`. El valor es nuevo en el
-#   vocabulario: antes solo existian "no sabemos" y "omitir borra", y ninguno describia lo que
-#   resulto ser cierto. Son DOS comportamientos distintos y conviene no confundirlos:
-#
-#     r3  el valor cambia a su forma inerte (false / "")  ->  el CLI SE RETIRA del dispositivo
-#     r4  el campo se OMITE del payload                   ->  el valor SOBREVIVE intacto
-#
-#   removal_semantics habla de la segunda. Marcarlos `deletes_on_absent` habria sido FALSO: la
-#   omision no borra, preserva -- que es exactamente el contrato que emit_when: explicit_only
-#   ya declara, ahora comprobado en el dispositivo y no solo en el diseño.
-#
-#   Lo de r3 tambien importa y no tiene campo propio: el template no trae rama `else` que borre
-#   el hijo, asi que NO estaba dicho si NDFC lo retiraria. Lo hace -- reconcilia y elimina lo
-#   que la pasada nueva no crea. Verificado en el switch, no en el controlador.
-#
-# QUE NO PRUEBA ESTE SLICE
-#   evidence_ref apunta a la declaracion en el template: prueba que los campos EXISTEN y donde.
-#   La independencia de las dos direcciones, y que cada una emita su linea, lo cierra la corrida
-#   r1..r4 -- pendiente al escribir esto.
+# Limits: evidence_ref points to the template declaration (proves the fields exist and where).
+# Independence of the two directions and per-direction CLI rest on the live run, which was recorded
+# as pending when this note was written.
 
 # ---------------------------------------------------------------- eth · access
 - parent_template: int_access_host
@@ -78,7 +56,7 @@
   applicable_interface_type: eth
   applicable_mode: access
   type: boolean
-  reset_wire: "false"          # measured live: W-B1 f, 2026-09-22
+  reset_wire: "false"          # measured live
   default_template: false
   presence_model: two_axis
   emit_when: explicit_only
@@ -176,7 +154,7 @@
   applicable_interface_type: eth
   applicable_mode: routed
   type: boolean
-  reset_wire: "false"         # measured live: M2-tx-false, 2026-09-28 (PR725-SMU-LLDP-ROUTED-002)
+  reset_wire: "false"         # measured live
   default_template: false
   presence_model: two_axis
   emit_when: explicit_only
@@ -201,7 +179,7 @@
   applicable_interface_type: eth
   applicable_mode: routed
   type: boolean
-  reset_wire: "false"         # measured live: M4-rx-false, 2026-09-28 (PR725-SMU-LLDP-ROUTED-002)
+  reset_wire: "false"         # measured live
   default_template: false
   presence_model: two_axis
   emit_when: explicit_only
@@ -223,7 +201,7 @@
 # ------------------------------------------------------------- pc · access
 - parent_template: int_port_channel_access_host
   parent_nvpair: lldpTransmit
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  reset_wire: "false"   # measured live: apply+clear on Port-channel301
   profile_key: disable_lldp_transmit
   applicable_interface_type: pc
   applicable_mode: access
@@ -248,7 +226,7 @@
 
 - parent_template: int_port_channel_access_host
   parent_nvpair: lldpReceive
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  reset_wire: "false"   # measured live: apply+clear on Port-channel301
   profile_key: disable_lldp_receive
   applicable_interface_type: pc
   applicable_mode: access
@@ -274,7 +252,7 @@
 # -------------------------------------------------------------- pc · trunk
 - parent_template: int_port_channel_trunk_host
   parent_nvpair: lldpTransmit
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  reset_wire: "false"   # measured live: apply+clear on Port-channel302
   profile_key: disable_lldp_transmit
   applicable_interface_type: pc
   applicable_mode: trunk
@@ -299,7 +277,7 @@
 
 - parent_template: int_port_channel_trunk_host
   parent_nvpair: lldpReceive
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  reset_wire: "false"   # measured live: apply+clear on Port-channel302
   profile_key: disable_lldp_receive
   applicable_interface_type: pc
   applicable_mode: trunk
@@ -325,7 +303,7 @@
 # -------------------------------------------------------------- pc · dot1q
 - parent_template: int_port_channel_dot1q_tunnel_host
   parent_nvpair: lldpTransmit
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  reset_wire: "false"   # measured live: apply+clear on Port-channel303
   profile_key: disable_lldp_transmit
   applicable_interface_type: pc
   applicable_mode: dot1q
@@ -350,7 +328,7 @@
 
 - parent_template: int_port_channel_dot1q_tunnel_host
   parent_nvpair: lldpReceive
-  reset_wire: "false"   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  reset_wire: "false"   # measured live: apply+clear on Port-channel303
   profile_key: disable_lldp_receive
   applicable_interface_type: pc
   applicable_mode: dot1q

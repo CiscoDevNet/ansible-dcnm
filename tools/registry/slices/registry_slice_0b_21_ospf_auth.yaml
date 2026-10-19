@@ -1,61 +1,28 @@
-# WP98 — the five OSPF authentication fields, on all three overlay parents at once.
+# Registry slice 0b_21 — the five OSPF authentication fields on int_routed_host, int_subif and int_vlan.
 #
-# WHY ONE SLICE FOR THREE PARENTS
-#   The other OSPF slices are per parent, because the three templates model the same concepts
-#   DIFFERENTLY (passive is an enum on routed and vlan, a boolean on subif; retransmit is absent
-#   on routed). Authentication is the exception: all five fields are byte-identical in type,
-#   default, range and valid values across int_routed_host, int_subif and int_vlan. That was
-#   read from the three templates, not assumed -- and it is the reason the mechanism decision is
-#   made once here rather than three times.
+# One slice for three parents: unlike other OSPF fields (passive is an enum on routed/vlan and a boolean
+# on subif; retransmit is absent on routed), the five auth fields are identical in type, default, range
+# and valid values across the three templates (read from the templates, not assumed).
+# Sources: the int_routed_host, int_subif and int_vlan template bodies (see each row's evidence_ref).
+# The subif/vlan files match the existing OSPF slices (14 of 14 non-auth fields on type/min/max). The
+# `evidence_ref` shas are of the API-returned template content, so they differ from these files' sha256.
 #
-# WHERE THESE FACTS COME FROM
-#   int_routed_host : <internal evidence record>
-#   int_subif       : templates/new engineering templates/14sep2026/int_subif.template
-#   int_vlan        : templates/new engineering templates/14sep2026/int_vlan.template
+# Not the loopback case: retired slice 0b_10 (int_fabric_loopback_11_1) was withdrawn because fabric
+# loopback auth is underlay auth owned by fabricSettings. On these parents it is self-contained on the
+# interface, which is why the two global validators that blocked it were removed.
 #
-#   The subif and vlan files were confirmed to be the source behind the existing OSPF slices by
-#   replaying every non-auth field already registered for those parents against them: 14 of 14
-#   matched on type, min and max. The `evidence_ref` shas below are of the API-returned template
-#   content, which is why they do not equal the sha256 of these files.
+# no_log: only OSPF_AUTH_KEY and OSPF_AUTHENTICATION_KEY carry key material (the only `no_log: true` rows
+# in the registry). The key ID and encryption-type selector are not marked: Ansible scrubs by string
+# match, so marking a value like "1" or "7" would corrupt unrelated output. `no_log` has two consumers:
+# the module registers the values for scrubbing on arrival, and the engine emits `no_log=True` in the
+# generated prof_spec entry (it replaced the unused `sensitive` annotation).
 #
-# THIS IS NOT THE LOOPBACK CASE
-#   Retired slice 0b_10 registered OSPF auth on int_fabric_loopback_11_1. That was withdrawn
-#   because authentication on a FABRIC loopback is underlay authentication that fabricSettings
-#   owns, and the interface value was a mere override a keychain setting deletes. On these three
-#   parents the fabric has no part in it: the feature is self-contained on the interface, which
-#   is exactly why the two global validators that blocked it were removed.
+# `enum OSPF_AUTHENTICATION_KEY_TYPE { validValues=0,3,7; }` maps to the `str` validator like every enum
+# (nvPairs are strings; NDFC returns "3"), so a playbook must write `ospf_authentication_key_type: "3"`.
+# Unquoted `3` is rejected on purpose (no raw-type coercion); the error names the expected type.
 #
-# no_log
-#   TWO of the five carry key material: OSPF_AUTH_KEY and OSPF_AUTHENTICATION_KEY. They are the
-#   only rows marked `no_log: true` in the whole registry.
-#
-#   The key ID and the encryption-type selector are deliberately NOT marked. Ansible scrubs by
-#   STRING MATCH, so marking OSPF_AUTH_KEY_ID would make it replace the bare digits of that id
-#   -- "1", or "7" -- everywhere they appear in every result, corrupting unrelated output while
-#   protecting nothing. An id is not a secret; neither is "3".
-#
-#   `no_log` is ONE property with two consumers: the module registers these keys' values for
-#   scrubbing on arrival, over the whole config, and the engine emits `no_log=True` in the
-#   generated prof_spec entry. It replaced the old `sensitive` annotation, which nothing read.
-##
-# THE ENCRYPTION-TYPE SELECTOR IS A STRING, AND ITS VALUES LOOK LIKE NUMBERS
-#   The template declares `enum OSPF_AUTHENTICATION_KEY_TYPE { validValues=0,3,7; }`. Every enum
-#   in this registry maps to the `str` validator, because nvPairs are a string-valued map and
-#   NDFC returns "3", not 3. So the valid values are QUOTED here and a playbook must write
-#   `ospf_authentication_key_type: "3"`.
-#
-#   This is a sharp edge worth naming: for every other enum the values are words, so nobody was
-#   ever tempted to write them unquoted. Here `3` is the natural thing to type and it is
-#   REJECTED -- deliberately, by the same rule that rejects "false" for a boolean. The engine
-#   does not coerce raw types, because a module that quietly reinterprets what the operator
-#   wrote is how a playbook ends up meaning something other than it says. The rejection names
-#   the expected type.
-#
-# WHY THE KEY IS A PLAIN STRING WITH NO LENGTH BOUNDS
-#   The template declares `string OSPF_AUTH_KEY;` with no braces at all -- no default, no
-#   min_length, no max_length. NDFC's description says "in 3DES encrypted form", but the
-#   template does not enforce a shape and neither do we: a bound invented here would reject
-#   valid controller input. Validation of the encrypted form belongs to NDFC.
+# `string OSPF_AUTH_KEY;` has no default and no length bounds in the template ("in 3DES encrypted form"
+# per NDFC's description), so none are added here; validating the encrypted form belongs to NDFC.
 
 bindings:
   - parent_template: int_routed_host

@@ -1,45 +1,28 @@
-# WP98 — interface BFD. ONE new binding, not nine.
+# Registry slice 0b_24 — interface BFD. ONE new binding, not nine.
 #
-# WHAT THIS SLICE IS NOT
-#   The first version of this file registered all nine BFD rows. The generator refused it:
+# The other eight BFD rows live in registry_slice_0b_4.yaml (int_subif) and
+#   registry_slice_0b_5.yaml (int_vlan); registering them here again fails the generator with
+#   `ValueError: duplicate committed binding ('int_subif', 'ENABLE_BFD_INTERVAL')`. Rows whose
+#   (parent, nvpair) is not in the generator's COMMITTED_BINDINGS allowlist are SKIPPED silently,
+#   by design, which is why those eight showed as pending. Their type, minimum and maximum were
+#   checked against the bodies the controller runs (eight for eight) before allowlisting.
 #
-#       ValueError: duplicate committed binding ('int_subif', 'ENABLE_BFD_INTERVAL')
+# New here: int_vlan DISABLE_BFD_ECHO. The public key `disable_bfd_echo` already exists on
+#   int_routed_host, so this adds a (parent, nvpair) pair, not a new public field. It has its own
+#   child and line, `no bfd echo`.
 #
-#   EIGHT of the nine were already written, long before this lot, in registry_slice_0b_4.yaml
-#   (int_subif) and registry_slice_0b_5.yaml (int_vlan). They sat in the registry and never
-#   reached the binding table, because a row whose (parent, nvpair) is not in the generator's
-#   COMMITTED_BINDINGS allowlist is SKIPPED -- silently, by design, so an in-progress slice does
-#   not ship itself. That is why they showed up as pending: the Pending sheet derives from the
-#   binding table, which is the honest source, and they were genuinely not in it.
-#
-#   Their content was checked against the bodies the controller is running before committing
-#   them, rather than trusted: eight for eight on type, minimum and maximum. So the work for
-#   those eight was allowlisting them, not rewriting them -- and writing them again would have
-#   produced two sources for one binding, which is exactly what the duplicate check exists to
-#   stop.
-#
-# THE ONE THAT IS NEW
-#   int_vlan's DISABLE_BFD_ECHO. The public key `disable_bfd_echo` already exists on
-#   int_routed_host, so this adds a (parent, nvpair) PAIR rather than a new public field -- which
-#   is what keying bindings by parent is for.
-#
-# THREE FIELDS, ONE LINE
-#   Worth stating because nothing else in this registry behaves this way. The interval child
-#   renders all three values into a single line:
-#
+# THREE FIELDS, ONE LINE (unique in this registry): the interval child renders all three values
+#   into a single line, so transport is proven by reading the three VALUES, not by "one line
+#   changed":
 #       interface_bfd_interval_11_1  ->  bfd interval $TX min_rx $MIN_RX multiplier $MULT
 #
-#   So in the live round "exactly one line moved" proves less than it did for OSPF, where each
-#   field owned a line. What proves transport here is reading the three VALUES inside that line.
-#   DISABLE_BFD_ECHO is the ordinary shape: its own child, its own line, `no bfd echo`.
-#
-# THE TEMPLATE ENFORCES THE GATE, SO NOTHING HERE DOES
+# THE TEMPLATE ENFORCES THE GATE, SO NOTHING HERE DOES (int_subif:650, int_vlan:1119, installed
+#   bodies):
 #       "BFD TX interval, minimum RX interval, and multiplier are required when interface BFD
 #        interval is enabled."
-#   int_subif:650, int_vlan:1119, read from the installed bodies. The three intervals also carry
-#   IsShow="ENABLE_BFD_INTERVAL==true". Same decision as EIGRP's process tag and for the reason
-#   the architect gave in Q2: a module rule demanding all three in every profile would break a
-#   valid partial update whose other two come from HAVE.
+#   The three intervals also carry IsShow="ENABLE_BFD_INTERVAL==true". Same decision as EIGRP's
+#   process tag: a module rule requiring all three in every profile would break a valid partial
+#   update whose other two values come from HAVE.
 
 bindings:
   - parent_template: int_vlan

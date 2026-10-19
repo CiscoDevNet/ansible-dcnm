@@ -1,9 +1,7 @@
-# WP98 — OSPF on int_subif. First bindings ever registered for this parent.
+# Registry slice 0b_20 — OSPF on int_subif (first bindings for this parent).
 #
-# EXTRACTED FROM THIS TEMPLATE, NOT COPIED FROM int_routed_host.
-#   The three OSPF parents model the same concepts DIFFERENTLY, which is why the table is keyed
-#   by (parent_template, parent_nvpair) and why copying a slice would have registered nvPairs
-#   that do not exist here:
+# Extracted from this template, not copied from int_routed_host. The three OSPF parents model the
+# same concepts differently (hence the (parent_template, parent_nvpair) key):
 #
 #       concept      int_routed_host        int_subif                int_vlan
 #       passive      OSPF_PASSIVE_MODE      OSPF_PASSIVE_INTERFACE   OSPF_PASSIVE_MODE
@@ -12,32 +10,34 @@
 #                    enum                   BOOLEAN                  enum
 #       retransmit   absent                 OSPF_RETRANSMIT_INTERVAL OSPF_RETRANSMIT_INTERVAL
 #
-#   Every type, default, range and length below is read from the installed template
-#   (sha a66388c2f21c5507), never inferred from a sibling parent.
+# Every type, default, range and length is read from the installed template (sha a66388c2f21c5507),
+# never inferred from a sibling parent.
 #
-# applicable_interface_type / applicable_mode
-#   These are DESCRIPTIVE: nothing in the engine or the module reads them -- resolve_binding
-#   matches on parent_template alone. They are still set to the module's own vocabulary, since
-#   `pol_ind_str = delem["type"] + "_" + profile["mode"]` is what selects the policy, and a
-#   reviewer comparing the registry against a playbook should see the same words.
+# applicable_interface_type / applicable_mode are DESCRIPTIVE (resolve_binding matches on
+# parent_template alone) but use the module's vocabulary
+# (`pol_ind_str = delem["type"] + "_" + profile["mode"]` selects the policy).
 #
-# MODULE WIRING
-#   This parent had NO engine hook before this slice. Two calls were added to dcnm_interface.py,
-#   mirroring the eth path exactly: gie_extend_prof_spec in its validator and
-#   gie_contribute_nvpairs in its builder. No feature-specific key was added to either.
+# Module wiring: two calls added to dcnm_interface.py for this parent, mirroring the eth path:
+# gie_extend_prof_spec in its validator and gie_contribute_nvpairs in its builder. No
+# feature-specific key added.
 #
-# THE FIVE AUTHENTICATION FIELDS ARE EXCLUDED
-#   ENABLE_OSPF_AUTH, OSPF_AUTH_KEY, OSPF_AUTHENTICATION_KEY, OSPF_AUTH_KEY_ID and
-#   OSPF_AUTHENTICATION_KEY_TYPE carry or gate secrets and go in their own lot, on all parents
-#   at once, so the mechanism decision is made once rather than three times.
+# Excluded: ENABLE_OSPF_AUTH, OSPF_AUTH_KEY, OSPF_AUTHENTICATION_KEY, OSPF_AUTH_KEY_ID and
+# OSPF_AUTHENTICATION_KEY_TYPE carry or gate secrets; handled in a separate slice for all parents.
 #
-# MECHANISM IS passthrough THROUGHOUT
-#   None owns a dedicated validation path. test_gie_mechanism_contract.py fails if a child_pti
-#   binding is registered without an implementation that actually guards it.
+# mechanism: passthrough throughout; none owns a dedicated validation path
+# (test_gie_mechanism_contract.py fails if a child_pti binding lacks a guarding implementation).
 #
-# REMOVAL SEMANTICS
-#   unresolved, as on int_routed_host: the template creates a child per field and never deletes
-#   one. Withdrawal is contract A per the architect, pending s5.
+# removal_semantics: unresolved, as on int_routed_host: the template creates a child per field and
+# never deletes one. Withdrawal is contract A, pending confirmation.
+#
+# Integer reset (rows marked "MEASURED LIVE" below): measured on int_subif Ethernet1/21.3001
+# (encapsulation dot1q 3001, no IP), NDFC 12.6.0.267 / NX-OS 10.5(5). The public integer rejects ""
+# before building a request, so the wire value was measured with a raw preserving bulk-modify POST.
+# The DTO was derived from THIS parent (56 nvPairs, envelope with `skipResourceCheck`, which
+# int_routed_host lacks): 207 Multi-Status, single SUCCESS. Readback EMPTY STRING (not absent, null
+# or a materialized default). The field's line disappeared while `ip router ospf <tag> area 0.0.0.0`
+# and `encapsulation dot1q 3001` SURVIVED (OSPF still enabled, same tag and area); other nvPairs
+# identical, In-Sync. Answers the removal question for that row on THIS parent.
 
 bindings:
   - parent_template: int_subif
@@ -103,17 +103,7 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: integer
-    # G39 P1-ospfcost: MEDIDO EN VIVO sobre int_subif, leaf-A Ethernet1/21.3001 (encapsulation dot1q
-    # 3001, sin IP), 2026-09-24, NDFC 12.6.0.267 / NX-OS 10.5(5). El entero publico rechaza "" antes
-    # de construir peticion, asi que el valor de alambre se midio con un POST raw de bulk modify
-    # preservante. EL DTO SE DERIVO DE ESTE PADRE, no del de routed: 56 nvPairs y un envelope que
-    # incluye `skipResourceCheck`, que int_routed_host no lleva. Respuesta 207 Multi-Status con un
-    # unico SUCCESS para <lab-serial>~Ethernet1/21.3001.
-    #
-    # READBACK = STRING VACIO ("42" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf cost 42` y SOBREVIVIERON `ip router ospf WP98 area 0.0.0.0` y
-    # `encapsulation dot1q 3001`: OSPF quedo habilitado con el mismo tag y area. Resto de nvPairs
-    # identico, In-Sync. Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "42" -> ""; `ip ospf cost 42` removed.
     reset_wire: ""
     min: 1
     max: 65535
@@ -133,17 +123,7 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: integer
-    # G39 P-deadint: MEDIDO EN VIVO sobre int_subif, leaf-A Ethernet1/21.3001 (encapsulation dot1q
-    # 3001, sin IP), 2026-09-24, NDFC 12.6.0.267 / NX-OS 10.5(5). El entero publico rechaza "" antes
-    # de construir peticion, asi que el valor de alambre se midio con un POST raw de bulk modify
-    # preservante. EL DTO SE DERIVO DE ESTE PADRE, no del de routed: 56 nvPairs y un envelope que
-    # incluye `skipResourceCheck`, que int_routed_host no lleva. Respuesta 207 Multi-Status con un
-    # unico SUCCESS para <lab-serial>~Ethernet1/21.3001.
-    #
-    # READBACK = STRING VACIO ("44" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf dead-interval 44` y SOBREVIVIERON `ip router ospf WP98 area 0.0.0.0` y
-    # `encapsulation dot1q 3001`: OSPF quedo habilitado con el mismo tag y area. Resto de nvPairs
-    # identico, In-Sync. Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "44" -> ""; `ip ospf dead-interval 44` removed.
     reset_wire: ""
     min: 1
     max: 65535
@@ -163,17 +143,7 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: integer
-    # G39 P-helloint: MEDIDO EN VIVO sobre int_subif, leaf-A Ethernet1/21.3001 (encapsulation dot1q
-    # 3001, sin IP), 2026-09-24, NDFC 12.6.0.267 / NX-OS 10.5(5). El entero publico rechaza "" antes
-    # de construir peticion, asi que el valor de alambre se midio con un POST raw de bulk modify
-    # preservante. EL DTO SE DERIVO DE ESTE PADRE, no del de routed: 56 nvPairs y un envelope que
-    # incluye `skipResourceCheck`, que int_routed_host no lleva. Respuesta 207 Multi-Status con un
-    # unico SUCCESS para <lab-serial>~Ethernet1/21.3001.
-    #
-    # READBACK = STRING VACIO ("11" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf hello-interval 11` y SOBREVIVIERON `ip router ospf WP98 area 0.0.0.0` y
-    # `encapsulation dot1q 3001`: OSPF quedo habilitado con el mismo tag y area. Resto de nvPairs
-    # identico, In-Sync. Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "11" -> ""; `ip ospf hello-interval 11` removed.
     reset_wire: ""
     min: 1
     max: 65535
@@ -193,7 +163,7 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: boolean
-    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-alpha
+    reset_wire: "false"     # measured live
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -249,17 +219,7 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: integer
-    # G39 P-priority: MEDIDO EN VIVO sobre int_subif, leaf-A Ethernet1/21.3001 (encapsulation dot1q
-    # 3001, sin IP), 2026-09-24, NDFC 12.6.0.267 / NX-OS 10.5(5). El entero publico rechaza "" antes
-    # de construir peticion, asi que el valor de alambre se midio con un POST raw de bulk modify
-    # preservante. EL DTO SE DERIVO DE ESTE PADRE, no del de routed: 56 nvPairs y un envelope que
-    # incluye `skipResourceCheck`, que int_routed_host no lleva. Respuesta 207 Multi-Status con un
-    # unico SUCCESS para <lab-serial>~Ethernet1/21.3001.
-    #
-    # READBACK = STRING VACIO ("77" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf priority 77` y SOBREVIVIERON `ip router ospf WP98 area 0.0.0.0` y
-    # `encapsulation dot1q 3001`: OSPF quedo habilitado con el mismo tag y area. Resto de nvPairs
-    # identico, In-Sync. Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "77" -> ""; `ip ospf priority 77` removed.
     reset_wire: ""
     min: 0
     max: 255
@@ -279,17 +239,7 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: integer
-    # G39 P-retxint: MEDIDO EN VIVO sobre int_subif, leaf-A Ethernet1/21.3001 (encapsulation dot1q
-    # 3001, sin IP), 2026-09-24, NDFC 12.6.0.267 / NX-OS 10.5(5). El entero publico rechaza "" antes
-    # de construir peticion, asi que el valor de alambre se midio con un POST raw de bulk modify
-    # preservante. EL DTO SE DERIVO DE ESTE PADRE, no del de routed: 56 nvPairs y un envelope que
-    # incluye `skipResourceCheck`, que int_routed_host no lleva. Respuesta 207 Multi-Status con un
-    # unico SUCCESS para <lab-serial>~Ethernet1/21.3001.
-    #
-    # READBACK = STRING VACIO ("9" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf retransmit-interval 9` y SOBREVIVIERON `ip router ospf WP98 area 0.0.0.0` y
-    # `encapsulation dot1q 3001`: OSPF quedo habilitado con el mismo tag y area. Resto de nvPairs
-    # identico, In-Sync. Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "9" -> ""; `ip ospf retransmit-interval 9` removed.
     reset_wire: ""
     min: 1
     max: 65535
@@ -309,7 +259,7 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: boolean
-    reset_wire: "false"     # union B01: measured live by pr725-smu-b01-alpha
+    reset_wire: "false"     # measured live
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -346,17 +296,7 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: integer
-    # G39 P-txdelay: MEDIDO EN VIVO sobre int_subif, leaf-A Ethernet1/21.3001 (encapsulation dot1q
-    # 3001, sin IP), 2026-09-24, NDFC 12.6.0.267 / NX-OS 10.5(5). El entero publico rechaza "" antes
-    # de construir peticion, asi que el valor de alambre se midio con un POST raw de bulk modify
-    # preservante. EL DTO SE DERIVO DE ESTE PADRE, no del de routed: 56 nvPairs y un envelope que
-    # incluye `skipResourceCheck`, que int_routed_host no lleva. Respuesta 207 Multi-Status con un
-    # unico SUCCESS para <lab-serial>~Ethernet1/21.3001.
-    #
-    # READBACK = STRING VACIO ("3" -> ""), no ausente ni null ni default materializado.
-    # Desaparecio `ip ospf transmit-delay 3` y SOBREVIVIERON `ip router ospf WP98 area 0.0.0.0` y
-    # `encapsulation dot1q 3001`: OSPF quedo habilitado con el mismo tag y area. Resto de nvPairs
-    # identico, In-Sync. Resuelve removal_semantics para esta fila sobre ESTE padre.
+    # MEASURED LIVE (see header): readback "3" -> ""; `ip ospf transmit-delay 3` removed.
     reset_wire: ""
     min: 1
     max: 450

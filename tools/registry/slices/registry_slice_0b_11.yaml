@@ -1,32 +1,20 @@
-# Registry slice 0b_11 — FLOWCONTROL_SEND sobre interfaces ethernet de host.
+# Registry slice 0b_11 — FLOWCONTROL_SEND on host Ethernet interfaces (2 bindings).
 #
-# Companera directa de FLOWCONTROL_RECEIVE (slice 0b, A1.5), con forma IDENTICA. Las dos
-# declaraciones viven juntas en los mismos dos templates:
+# Companion of FLOWCONTROL_RECEIVE (slice 0b), identical shape, declared in the same templates:
+#   int_trunk_host:152/158, int_access_host:137/143  enum { validValues=on,off; defaultValue=off; }
+# A sweep of the 90+ templates found FLOWCONTROL only on these two parents (not port-channel,
+# vPC or dot1q), so these rows cover the field completely.
 #
-#   int_trunk_host:152   enum FLOWCONTROL_RECEIVE { validValues=on,off; defaultValue=off; }
-#   int_trunk_host:158   enum FLOWCONTROL_SEND    { validValues=on,off; defaultValue=off; }
-#   int_access_host:137  (receive, idem)
-#   int_access_host:143  (send, idem)
-#
-# Barrido de los 90+ templates: SOLO estos dos parents llevan FLOWCONTROL. Ni port-channel,
-# ni vPC, ni dot1q. Estas dos filas cierran el universo del campo.
-#
-# MECANISMO: passthrough. El DSL consume el valor en linea, sin crear ningun hijo:
-#
+# Mechanism: passthrough; the DSL consumes the value inline, no child:
 #   int_trunk_host:588   if flowcontrolSend == "on":
 #   int_trunk_host:589       config_builder.add_config('flowcontrol send on', ...)
+# Only "on" emits CLI, so "off" is a real off path: a valid value, not an emptied field (the
+# removal path the OSPF key pair lacks).
 #
-# Solo "on" emite CLI, asi que "off" es una ruta de apagado real y simetrica. Eso es lo que
-# le da a este campo la ruta de borrado que al par de clave OSPF le falta (evidencia doc 29
-# y doc 31): apagar es un VALOR VALIDO, no vaciar el campo.
-#
-# Al ser passthrough entra al carry-forward de HAVE, por lo que omitir la clave PRESERVA el
-# valor actual del controlador en vez de ser un no-op silencioso. Medido para `receive` en
-# la etapa f4 de los dos parents (doc 31).
-#
-# Sin `default_template`: el default del template es "off", pero registrarlo convertiria la
-# omision en "poner off" en lugar de "preservar". La omision ya esta cubierta por el
-# carry-forward, que es el comportamiento correcto y el que se midio.
+# As passthrough, the field enters HAVE carry-forward: omitting the key preserves the
+# controller's value. Measured for `receive` on both parents (doc 31). The template default
+# "off" must not turn omission into "set off"; emit_when: explicit_only keeps it from being
+# emitted on omission (see slice 0b).
 
 - parent_template: int_trunk_host
   parent_nvpair: flowcontrolSend
@@ -56,8 +44,8 @@
     - predicate: value_off
       ndfc_effect: no_config
       phase: current
-      # "off" no emite CLI. El motor de compliance de NDFC genera el `no` por su cuenta
-      # cuando la linea desaparece del intent; medido para `receive` en f3 (doc 31).
+      # "off" emits no CLI; NDFC's compliance engine generates the `no` itself when the
+      # line leaves the intent. Measured for `receive` (doc 31).
       evidence_ref: int_trunk_host.template#L588
 
 - parent_template: int_access_host

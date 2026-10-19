@@ -1,24 +1,13 @@
-# CANDIDATE — READY GROUP. Parallel line WP98-GIE-PASSTHROUGH-PARALLEL-001.
-# VALIDATED_AGAINST_SNAPSHOT — REVALIDATION_REQUIRED_BEFORE_INTEGRATION
+# Registry slice 0b_9 — aclFilter (acl_filter) on five Ethernet/port-channel parents.
+# Status: validated against a snapshot; revalidate before integration. No DSL dependency.
 #
-# Group: READY (no DSL dependency). 5 of the 9 integrable candidates.
-# ACL_FILTER carries NO IsShow condition on any of the five parents — verified in the DSL.
-# type string, minLength 1 / maxLength 64.
-#
-# ACL_FILTER is mixed-mechanism: child_pti on int_vpc_access_host / int_vpc_trunk_host.
-# Those two are deliberately excluded.
-#
-# CORRECCION (slice 0b_15): la frase de arriba usa `child_pti` en el sentido del TEMPLATE --
-# "el padre reparte el valor a un hijo" -- que es cierto para vPC. Pero `mechanism` en el
-# motor significa otra cosa: quien es dueño de la validacion, del guardia de parent invalido,
-# del prof_spec generico, del carry-forward y de la conversion a forma de cable. vPC no tiene
-# maquinaria propia para ninguna de esas, asi que sus bindings se registraron como
-# `passthrough`, igual que int_port_channel_trunk_host::DISABLE_LLDP, que tambien delega.
-# Verificado en vivo antes de registrar: ver registry_slice_0b_15.yaml.
-#
-# NOTE: the DSL declares NO defaultValue for ACL_FILTER on any of the five parents, so
-# `default_template` is absent here — an absent template default cannot be invented, and
-# an absent user value is never emitted regardless (emit_when: explicit_only).
+# aclFilter has NO IsShow condition on any of the five parents (verified in the DSL); string, length 1-64.
+# The DSL declares NO defaultValue on any of them, so `default_template` is absent (it cannot be invented;
+# an absent user value is never emitted anyway, emit_when: explicit_only).
+# The vPC parents (int_vpc_access_host / int_vpc_trunk_host) are excluded here. Their template hands the
+# value to a child, but `mechanism` records who owns validation, the invalid-parent guard, generic
+# prof_spec, carry-forward and wire-form conversion; vPC owns none of these, so they are `passthrough`
+# (see registry_slice_0b_15.yaml, validated live there).
 
 - parent_template: int_access_host
   parent_nvpair: aclFilter
@@ -27,7 +16,7 @@
   applicable_mode: access
   type: string
   string_compare: exact
-  reset_wire: ""          # measured live: W-T1 f, 2026-09-22
+  reset_wire: ""          # measured live
   min_length: 1                    # decl int_access_host.template#L205
   max_length: 64
   presence_model: two_axis
@@ -47,7 +36,7 @@
   applicable_mode: trunk
   type: string
   string_compare: exact
-  reset_wire: ""          # measured live: W-T2 a3, 2026-09-22
+  reset_wire: ""          # measured live
   min_length: 1                    # decl int_trunk_host.template#L220
   max_length: 64
   presence_model: two_axis
@@ -62,7 +51,7 @@
 
 - parent_template: int_port_channel_access_host
   parent_nvpair: aclFilter
-  reset_wire: ""   # G25 B1: medido en vivo, apply+clear en Port-channel301
+  reset_wire: ""   # measured live: apply+clear on Port-channel301
   profile_key: acl_filter
   applicable_interface_type: pc
   applicable_mode: access
@@ -82,7 +71,7 @@
 
 - parent_template: int_port_channel_trunk_host
   parent_nvpair: aclFilter
-  reset_wire: ""   # G25 B1: medido en vivo, apply+clear en Port-channel302
+  reset_wire: ""   # measured live: apply+clear on Port-channel302
   profile_key: acl_filter
   applicable_interface_type: pc
   applicable_mode: trunk
@@ -102,7 +91,7 @@
 
 - parent_template: int_port_channel_dot1q_tunnel_host
   parent_nvpair: aclFilter
-  reset_wire: ""   # G25 B1: medido en vivo, apply+clear en Port-channel303
+  reset_wire: ""   # measured live: apply+clear on Port-channel303
   profile_key: acl_filter
   applicable_interface_type: pc
   applicable_mode: dot1q

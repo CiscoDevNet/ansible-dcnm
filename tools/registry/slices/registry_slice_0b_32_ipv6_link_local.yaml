@@ -1,67 +1,46 @@
-# WP98 — IPv6_LINK_LOCAL. Tres filas: un campo en los tres padres overlay.
+# Registry slice 0b_32 — IPv6_LINK_LOCAL: one field on three overlay parents.
 #
-#   int_loopback NO lo declara, asi que no entra. Tres de cuatro, como ARP_TIMEOUT.
+# int_loopback does not declare it (3 of 4 parents, like ARP_TIMEOUT).
 #
-# MEDIDO CONTRA LOS CUERPOS QUE EL CONTROLADOR CORRE HOY, bajados antes de leerles un atributo:
-#
+# Attributes read from the bodies installed on the controller:
 #     int_routed_host.template@65426107b3d1cdcf
 #     int_subif.template@a66388c2f21c5507
 #     int_vlan.template@0efb09af7f837b30
-#     interface_ipv6_link_local_address_11_1.template@06189db540f73b04   (el hijo)
+#     interface_ipv6_link_local_address_11_1.template@06189db540f73b04   (child)
+# The child is installed and renders:
+#     ipv6 link-local $$IPV6_LINK_LOCAL$$
 #
-#   El hijo esta INSTALADO y su contenido leido:
-#       ipv6 link-local $$IPV6_LINK_LOCAL$$
+# Name trap: parent and child spell the nvPair differently.
+#     parent:  ipV6Address IPv6_LINK_LOCAL;      <- lower-case "v"
+#     child:   ipV6Address IPV6_LINK_LOCAL;      <- all upper-case
+# The parent translates it, identically in all three:
+#     ipv6LinkLocal = normalize(IPv6_LINK_LOCAL)              (routed:607, subif:437, vlan:767)
+#     {"INTF_NAME": INTF_NAME, "IPV6_LINK_LOCAL": ipv6LinkLocal}
+# The binding targets the PARENT form, `IPv6_LINK_LOCAL`, because the module writes the parent's
+# nvPairs. The child form (the one visible in the CLI) is wrong here: NDFC accepts unknown nvPairs
+# silently, so the module would report success, the controller would store a key nobody reads and
+# the device would get no line -- a silent failure at all four layers (the same failure was
+# measured with four port-channel bindings). Same pattern as PREFIXv6 (int_vlan) vs IPv6_PREFIX
+# (int_subif, int_routed_host).
 #
-# =====================================================================================
-# LA TRAMPA: EL PADRE Y EL HIJO ESCRIBEN EL NOMBRE DISTINTO
-# =====================================================================================
+# Type: `ipV6Address` in the template, `string` here. _TYPE_TO_VALIDATOR knows only
+# boolean/enum/string/integer, and gie_validator_type raises GieBindingError on an unknown type
+# (fail-closed), which would make the binding unreachable (as `long` would have for
+# PIM_DR_PRIORITY). Precedent: HSRP_VIPv6 is `ipV6Address` in the template and is registered
+# `type: string, max_length: 45`; same treatment and same 45 here. NDFC validates the format and
+# fails loudly; the engine transports.
 #
-#   El PADRE declara          ipV6Address IPv6_LINK_LOCAL;      <- "v" MINUSCULA
-#   El HIJO declara           ipV6Address IPV6_LINK_LOCAL;      <- todo MAYUSCULAS
+# Independent: zero IsShow and no defaultValue on all three parents; the emission gate is a plain
+# `if ipv6LinkLocal != ""`. No template refusals (like PIM and ARP_TIMEOUT).
 #
-#   y el padre hace la traduccion el mismo, identico en los tres:
+# Not native: `ipv6_link_local` and both nvPair spellings have 0 uses in dcnm_interface.py. By
+# contrast `ipv6_addr` (24 uses) and `ipv6_mask_len` (13) came in through the native SVI arg spec;
+# registering those would break int_subif and int_routed_host through the global guard, as
+# happened with ipv6_addr.
 #
-#       ipv6LinkLocal = normalize(IPv6_LINK_LOCAL)              (routed:607, subif:437, vlan:767)
-#       ...
-#       {"INTF_NAME": INTF_NAME, "IPV6_LINK_LOCAL": ipv6LinkLocal}
-#
-#   ESTA FILA LLEVA LA FORMA DEL PADRE, `IPv6_LINK_LOCAL`, porque el modulo escribe en los
-#   nvPairs del PADRE. La forma del hijo es la que se ve al mirar el CLI, y es la equivocada
-#   aqui: NDFC acepta nvPairs desconocidos sin quejarse, asi que copiarla haria que el modulo
-#   reportara exito, el controlador guardara una clave que nadie lee, y el equipo no recibiera
-#   la linea. Fallo silencioso en las cuatro capas -- exactamente lo que la fase 10 midio con
-#   los cuatro bindings de port-channel.
-#
-#   Es la misma forma que PREFIXv6 (int_vlan) frente a IPv6_PREFIX (int_subif,
-#   int_routed_host): el mismo concepto con dos grafias segun donde se mire.
-#
-# EL TIPO: `ipV6Address` EN EL TEMPLATE, `string` EN EL REGISTRO
-#
-#   _TYPE_TO_VALIDATOR conoce boolean/enum/string/integer y NO conoce `ipV6Address`. Registrarlo
-#   con ese nombre dejaria el binding INALCANZABLE por fail-closed: gie_validator_type lanza
-#   GieBindingError ante un tipo que no conoce. Es lo mismo que habria pasado con `long` en
-#   PIM_DR_PRIORITY.
-#
-#   Precedente identico en este mismo registro: HSRP_VIPv6 es `ipV6Address` en el template y
-#   esta registrado `type: string, max_length: 45`. Se usa el mismo tratamiento y el mismo 45.
-#   El FORMATO lo valida NDFC y falla ruidoso; el motor transporta.
-#
-# INDEPENDIENTE: CERO IsShow EN LOS TRES PADRES
-#   Sin precondiciones, sin defaultValue. El gate de emision es `if ipv6LinkLocal != ""`, un `if`
-#   suelto. Asi que este lote no tiene negativas de template -- como PIM y ARP_TIMEOUT.
-#
-# NO ES NATIVO
-#   `ipv6_link_local` da 0 usos en dcnm_interface.py, y las dos grafias del nvPair tambien 0.
-#   Contrasta con la otra mitad de este lote: `ipv6_addr` da 24 e `ipv6_mask_len` 13, porque
-#   entraron por el arg spec NATIVO de SVI el 20sep. Registrar esos dos rompería int_subif e
-#   int_routed_host por el guard global, que es justo lo que paso ese dia con ipv6_addr.
-#
-# RETIRADA: `unresolved`, pero ya no se predice residuo
-#   Ninguno de los tres padres llama deleteChildTemplate para este hijo. Eso NO predice residuo:
-#   ARP_TIMEOUT y PIM lo midieron y en ambos la linea se retira -- al borrar la interfaz en ARP,
-#   y al limpiar el campo en PIM. La explicacion que la fase 38 dejo escrita ("el residuo es de
-#   las negaciones que el template no retira explicitamente") ya no se sostiene con dos familias
-#   en contra, asi que aqui NO se repite la prediccion: se mide y punto.
+# Removal: unresolved. No parent calls deleteChildTemplate for this child, but that does NOT
+# predict residue: ARP_TIMEOUT and PIM measured the line being withdrawn (on interface delete for
+# ARP, on field clear for PIM). No residue prediction is made here; it has to be measured.
 
 shared_effects: []
 
@@ -74,7 +53,7 @@ bindings:
     applicable_mode: routed
     type: string
     string_compare: casefold
-    reset_wire: ""          # union B01: measured live by pr725-smu-b01-alpha
+    reset_wire: ""          # measured live
     max_length: 45
     presence_model: two_axis
     emit_when: explicit_only
@@ -93,7 +72,7 @@ bindings:
     applicable_mode: subint
     type: string
     string_compare: casefold
-    reset_wire: ""          # union B01: measured live by pr725-smu-b01-alpha
+    reset_wire: ""          # measured live
     max_length: 45
     presence_model: two_axis
     emit_when: explicit_only
@@ -112,7 +91,7 @@ bindings:
     applicable_mode: vlan
     type: string
     string_compare: casefold
-    reset_wire: ""          # union B01: measured live by pr725-smu-b01-beta
+    reset_wire: ""          # measured live
     max_length: 45
     presence_model: two_axis
     emit_when: explicit_only
