@@ -2981,10 +2981,9 @@ class DcnmNetwork:
         and overlays nvPairs.CONF onto the matching have_attach entries so
         diff_for_attach_deploy can detect freeform-only updates and explicit clears.
 
-        Policy-to-network matching is a two-stage best-effort:
-          1. If only one attached network exists on the switch, that network wins.
-          2. Otherwise match by entityName == networkName, then by
-             description containing the network name.
+        Match NDFC's Config_Profile secondary entity first, then legacy network
+        hints in entityName, description or nvPairs. A sole task candidate is
+        not proof of ownership: the switch may have unrelated freeform policies.
         Raw policy dicts are logged at debug level so we can refine matching once
         we have concrete NDFC responses.
         """
@@ -3050,11 +3049,24 @@ class DcnmNetwork:
     def _match_freeform_policy_to_network(policy, candidate_networks):
         """Best-effort match a switch_freeform_config policy to one of the
         candidate networks attached to the same switch. Returns the matched
-        network name or None."""
+        network name or None. Even a single candidate requires a network hint;
+        otherwise switch-wide policies could be mistaken for attachment CLI.
+        """
         if not candidate_networks:
             return None
-        if len(candidate_networks) == 1:
-            return candidate_networks[0]
+
+        nv_pairs = policy.get("nvPairs") or {}
+        # Overlay freeform policies identify their network as a secondary
+        # Config_Profile; their primary entity is just SWITCH. Generated CLI
+        # policies expose top-level fields, while the parent Python policy also
+        # carries SECENTTYPE/SECENTITY in nvPairs. Explicit ownership outside
+        # this task must not fall through to a weaker description match.
+        for entity_type, profile_name in (
+            (policy.get("secondaryEntityType"), policy.get("secondaryEntityName")),
+            (nv_pairs.get("SECENTTYPE"), nv_pairs.get("SECENTITY")),
+        ):
+            if str(entity_type).lower() == "config_profile" and profile_name:
+                return profile_name if profile_name in candidate_networks else None
 
         entity_name = policy.get("entityName") or ""
         for net in candidate_networks:
@@ -3066,7 +3078,6 @@ class DcnmNetwork:
             if net and net in description:
                 return net
 
-        nv_pairs = policy.get("nvPairs") or {}
         for candidate_field in ("NETWORK_NAME", "networkName", "network_name"):
             value = nv_pairs.get(candidate_field)
             if not value:
