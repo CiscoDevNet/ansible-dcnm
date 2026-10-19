@@ -12,8 +12,7 @@ What is asserted (deterministic, CI-safe):
 - replaced / overridden omission withdraw them to their reset (no general carry-forward);
 - a persistently failing interface read keeps the refusal with zero writes and a bounded number of requests and scheduled sleeps.
 
-What is NOT asserted: wall-clock time (see `pr725_scale_benchmark.py` for repeatable measurements), controller limits, controller CPU,
-or any live performance. Synthetic identities only (RFC 2544 benchmarking range); NOT LIVE TESTED.
+What is NOT asserted: wall-clock time, controller limits, controller CPU, or any live performance. Synthetic identities only (RFC 2544 benchmarking range); NOT LIVE TESTED.
 """
 
 from __future__ import absolute_import, division, print_function
