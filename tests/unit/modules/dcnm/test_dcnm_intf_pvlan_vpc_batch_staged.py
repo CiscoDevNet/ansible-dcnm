@@ -1,7 +1,7 @@
 """PR725-VPC-FINAL-INTEGRATION: the batch gate (VPC-BATCH-GATE / VPC-READS) and the staged deployment (STAGED, check_deploy_resend) together.
 
 Two PVLAN host vPCs of ONE pair are saved with ``deploy: false`` and then deployed together by one request with ``deploy: true`` and
-``check_deploy: true``. The controller double is MultiVpc (test_dcnm_intf_pvlan_vpc_batch) with the MEASURED shape of a saved vPC (Beta
+``check_deploy: true``. The controller double is MultiVpc (test_dcnm_intf_pvlan_vpc_batch) with the MEASURED shape of a saved vPC (live
 S1/S3b): its parent is listed with ``complianceStatus`` null and its child port-channels are Out-of-Sync until a deploy of that vPC
 succeeded. Real main(); only the controller boundary and time are intercepted. Values are SYNTHETIC. NOT LIVE TESTED by this file."""
 

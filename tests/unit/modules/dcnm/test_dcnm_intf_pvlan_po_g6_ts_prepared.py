@@ -1,6 +1,6 @@
-"""PO G6 (Alpha): trunk secondary from a member PREPARED as access/routed, and equivalent member names.
+"""PO G6: trunk secondary from a member PREPARED as access/routed, and equivalent member names.
 
-MEASURED inputs (fixtures/pvlan_po_ts_exp1_measured.json, Alpha3's EXP-1 on placeholder-sw-2 Ethernet1/8 / port-channel504, NX-OS 10.5(5),
+MEASURED inputs (fixtures/pvlan_po_ts_exp1_measured.json, live EXP-1 on placeholder-sw-2 Ethernet1/8 / port-channel504, NX-OS 10.5(5),
 NDFC 12.6.0.267), extracted read-only:
   * per branch T (trunk), R (routed), A (access): the member state before the creation (intent, policies, running), the creation
     preview (full pending, running/expected stanzas), the deploy answer (T 500 device ERROR; R/A 200) and the post stanzas;
@@ -28,7 +28,7 @@ from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController, markdelete_ok
 FX = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_ts_exp1_measured.json")))
 MEM, PO_DEV, PO = "Ethernet1/8", "port-channel504", "Port-channel504"
 TS = "trunk secondary"
-TS1_PROFILE = {  # Alpha3 models/g1/PO_TS1_TS5_replaced_2210_2212_G1.yml (resources PO_TS_RESOURCES.yml)
+TS1_PROFILE = {  # live model TS1 (replaced, 2210/2212)
     "mode": "pvlan",
     "pvlan_mode": TS,
     "members": [MEM],

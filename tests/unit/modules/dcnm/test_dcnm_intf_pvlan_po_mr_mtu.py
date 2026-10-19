@@ -1,10 +1,10 @@
-"""C1-R4 (Alpha, PR725-PVLAN-COMPANIONS-001): the member MTU ADDITION inherited from the port-channel (default -> jumbo), as MEASURED in MR-G1.
+"""C1-R4: the member MTU ADDITION inherited from the port-channel (default -> jumbo), as MEASURED in MR-G1.
 
 MEASURED inputs (fixtures/pvlan_po_mr_measured.json, provenance per field inside it):
   * OPERATOR: the GUI preview pending -- the port-channel stanza re-emitted with `mtu 9216`, no member block, no force (supplied by the
-    operator, not captured by Alpha);
-  * ALPHA: intents before/after, the controller's runningConfig before (MR-PRE recompute preview) and expectedConfig after (MR-POST recompute
-    preview), device stanzas and operational MTU (1500 -> 9216 on BOTH port-channel and member);
+    operator, not captured by the lab reads);
+  * ALPHA (the lab's read-only captures): intents before/after, the controller's runningConfig before (MR-PRE recompute preview) and
+    expectedConfig after (MR-POST recompute preview), device stanzas and operational MTU (1500 -> 9216 on BOTH port-channel and member);
   * stage `s6`: the module's own S6 recompute preview, pre-S6 intents and S6 modify body from the T2-R2-G1 C-S6 natural log (refused by C1-R3).
 The module request reproducing the GUI change is `merged` with `mtu: jumbo` (the GUI payload is not known and not invented). Real main() on
 the existing harness; only the controller boundary is simulated. DERIVED inputs are marked; they are predictions. vPC untouched.

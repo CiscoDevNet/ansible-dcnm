@@ -1,4 +1,4 @@
-"""PO G5 / NEXT_MODES (Alpha): promiscuous, trunk promiscuous and trunk secondary on a regular port-channel with ONE member.
+"""PO G5 / NEXT_MODES: promiscuous, trunk promiscuous and trunk secondary on a regular port-channel with ONE member.
 
 NOT LIVE TESTED. G3 refused these creations before any write because the member's `channel-group N force` transition was
 measured only for host (H1 preview). G5 models the same transition for the other three modes as an explicit INFERENCE
@@ -7,7 +7,7 @@ PVLAN trunk native/allowed lines; every other member line is kept from the membe
 own pending line. The gate is unchanged.
 
 Every preview below is SYNTHETIC (the measured host form transposed, through the existing g1 builders); the profiles are
-the existing battery ones (Alpha P1, Alpha2 TP1/TP2/TP4, Alpha3 TS1/TS2), on the harness port-channel10/Ethernet1/7. The
+the existing battery ones (P1, TP1/TP2/TP4, TS1/TS2), on the harness port-channel10/Ethernet1/7. The
 networks 2410 (primary) and 2412 (isolated) are SYNTHETIC additions to the harness fixture for the second primary.
 """
 
@@ -269,13 +269,13 @@ def test_trunk_secondary_creation_with_a_community_secondary_for_the_second_prim
 # ------------------------------------------------------------------ merged preserves native/allowed, member and the current list
 MERGED = {
     "trunk promiscuous": (
-        {"pvlan_mapping": [{"primary_vlan": 2410, "secondary_vlans": "2411-2412"}]},  # Alpha2 TP2
+        {"pvlan_mapping": [{"primary_vlan": 2410, "secondary_vlans": "2411-2412"}]},  # TP2
         ["switchport private-vlan mapping trunk 2410 2411"],
         [(2210, 2211), (2210, 2212), (2410, 2411), (2410, 2412)],
         "MAPPING_LIST",
     ),
     "trunk secondary": (
-        {"pvlan_association": [{"primary_vlan": 2510, "secondary_vlan": 2512}]},  # Alpha3 TS2 form, third primary
+        {"pvlan_association": [{"primary_vlan": 2510, "secondary_vlan": 2512}]},  # TS2 form, third primary
         ["switchport private-vlan association trunk 2510 2512"],
         [(2210, 2212), (2410, 2412), (2510, 2512)],
         "ASSOCIATION_LIST",
@@ -348,9 +348,9 @@ def test_a_confirmed_markdelete_of_a_port_channel_in_another_mode_releases_and_d
     assert PO not in ctrl.detail and ctrl.detail[IF7]["policy"] == TRUNK and PO_HOST not in json.dumps(ctrl.detail[IF7])
 
 
-# ================================================================== live host findings during G5 (Alpha4 G4R1 run)
-# MEASURED (fixtures/pvlan_po_g4r1_host_measured.json, extracted read-only from Alpha4's G4R1 live captures by
-# runtime/g5/extract_g4r1_fixture.py; only port-channel502 / Ethernet1/10): H4 (host association 2210/2212 -> 2410/2412 on a
+# ================================================================== live host findings during G5 (G4R1 run)
+# MEASURED (fixtures/pvlan_po_g4r1_host_measured.json, extracted read-only from the G4R1 live captures;
+# only port-channel502 / Ethernet1/10): H4 (host association 2210/2212 -> 2410/2412 on a
 # deployed Po: member pending EMPTY) and the R-B deletion of that DEPLOYED Po (Po listed as interface_delete until the
 # deploy; member withdrawn with `no channel-group 502 force mode active`; released member ADMIN_STATE "true").
 # SIMULATED: the networks 2410/2412 typing, the legacy modify answer, and the post-correction deletion preview (named below).
@@ -454,7 +454,7 @@ H4_ITEM = {
         "description": "PR725-POH-DESC-1",
         "pvlan_association": [{"primary_vlan": 2410, "secondary_vlan": 2412}],
     },
-}  # Alpha4 models/POH4_replaced_2410_2412.yml
+}  # live model POH4 (replaced, 2410/2412)
 
 
 def test_main_h4_replay_with_the_measured_preview_modifies_and_deploys():

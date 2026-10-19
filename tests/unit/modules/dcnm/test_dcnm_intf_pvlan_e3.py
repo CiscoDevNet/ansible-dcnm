@@ -1,7 +1,7 @@
 """Native Ethernet PVLAN E3: the corrected behavior for architect review R2 findings R2-01/R2-02.
 
 Every case drives the real main() through test_dcnm_intf_pvlan_harness; only external I/O is
-mocked. Case IDs E3-0x follow the E3 mandate; R2 probe cases are in review/R2/probe_e2.py, which
+mocked. Case IDs E3-0x follow the E3 plan; R2 cases follow the review R2 probe, which
 asserted the E2 DEFECTS. Response labels: MEASURED (G5/G6 discovery capture), SYNTHETIC
 (robustness counterexample built on a measured capture, NOT a claim that NDFC emits it),
 TEMPLATE-PREDICTED (rendered from the pinned installed template, not measured).

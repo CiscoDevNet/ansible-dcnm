@@ -634,7 +634,7 @@ def test_a_sparse_have_without_any_registry_nvpair_is_not_a_withdrawal_trigger()
     `AttributeError: 'NoneType' object has no attribute 'strip'` when one is missing. That
     crash reproduces IDENTICALLY on the base `7e386863` (line 6058 there, 6066 here -- the
     same code, shifted by this work's insertion), so it is pre-existing and out of scope.
-    Its reproduction is preserved in `evidence/W2/G17-portable/` rather than repaired here.
+    It is recorded here rather than repaired.
     """
     from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
         BINDING_TABLE,

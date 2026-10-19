@@ -83,7 +83,7 @@ def test_coherent_creation_keeps_its_exact_request_sequence_and_payloads():
     calls = [(m, p.split("/appcenter/cisco/ndfc/api/v1/lan-fabric")[-1]) for m, p, _d in ctrl.calls]
     writes = [d for m, _p, d in ctrl.calls if m in ("POST", "PUT", "DELETE")]
     # measured on the unmodified base 3bfa68cb with the same double: 26 calls, create + deploy (unchanged through d76094b0).
-    # PREWRITE-REUSE (Kapa): the pre-write vPC compare reuses this invocation's own complete generic reads of the same physical serial:
+    # PREWRITE-REUSE: the pre-write vPC compare reuses this invocation's own complete generic reads of the same physical serial:
     # the policy list of FDO00000001 and FDO00000002 and the bulk detail of FDO00000002 are no longer read twice -> 23 calls.
     # The writes (create + deploy payloads) are byte-identical to the base.
     assert len(calls) == 23

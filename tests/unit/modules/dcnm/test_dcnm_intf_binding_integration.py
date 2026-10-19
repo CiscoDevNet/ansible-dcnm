@@ -228,7 +228,7 @@ def test_malformed_have_nvpairs_hits_a_PREEXISTING_legacy_limit_not_the_carry_fo
     `None.get(...)` -> AttributeError, and it happens BEFORE either carry-forward runs.
 
     This is pre-existing behaviour, not something the merged carry-forward introduced,
-    and hardening the legacy comparator is outside this mandate's authority (it would change
+    and hardening the legacy comparator is outside this change's scope (it would change
     behaviour for every unregistered field on every parent). The contribution proven here is
     fail-closed independently by `test_non_dict_have_carries_nothing`.
 

@@ -10,7 +10,7 @@ conventional aggregate released it on THAT physical serial (pre-state member lis
 pending block withdraws that aggregate's channel-group. Everything else stays refused.
 
 Shapes: the T5 module arguments (sanitized: harness serials/IPs) and the T5 forced-preview pending lines for the released members
-(T5_PENDING_DIAGNOSIS.md). Real main() through the existing Po and vPC harnesses; only the controller boundary is faked.
+(T5 live diagnosis). Real main() through the existing Po and vPC harnesses; only the controller boundary is faked.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -53,7 +53,7 @@ CONV_VPC_PROFILE = {
 
 
 def released_block(member, pcid=301, withdrawal=True):
-    """The T5 forced-preview pending of a conventional member released by its port-channel (T5_PENDING_DIAGNOSIS.md)."""
+    """The T5 forced-preview pending of a conventional member released by its port-channel (T5 live diagnosis)."""
     lines = ["interface %s" % member.lower()]
     if withdrawal:
         lines.append("  no channel-group %d force mode active" % pcid)

@@ -1,10 +1,10 @@
-"""C1-R3 (Alpha, PR725-PVLAN-COMPANIONS-001): the member MTU withdrawal inherited from the port-channel, as MEASURED in M-G1 M1.
+"""C1-R3: the member MTU withdrawal inherited from the port-channel, as MEASURED in M-G1 M1.
 
 MEASURED inputs (fixtures/pvlan_po_m1_measured.json, provenance per field inside it):
-  * OPERATOR: the GUI preview pending `interface port-channel501` / `no mtu 9216` (supplied by the operator, not captured by Alpha);
-  * ALPHA: the intents before/after, the controller's runningConfig before M1 (M2 U1R recompute preview) and its expectedConfig after M1
-    (post-M1 recompute preview, intent unchanged since the GUI save), the device running stanzas and the operational MTU (9216 -> 1500 on
-    BOTH port-channel and member).
+  * OPERATOR: the GUI preview pending `interface port-channel501` / `no mtu 9216` (supplied by the operator, not captured by the lab reads);
+  * ALPHA (the lab's read-only captures): the intents before/after, the controller's runningConfig before M1 (M2 U1R recompute preview)
+    and its expectedConfig after M1 (post-M1 recompute preview, intent unchanged since the GUI save), the device running stanzas and the
+    operational MTU (9216 -> 1500 on BOTH port-channel and member).
 The module request that reproduces the GUI change is `merged` with `mtu: default` on the existing port-channel (the GUI payload itself is
 not known and not invented). Real main() on the existing harness; only the controller boundary is simulated (207 SUCCESS modifies).
 DERIVED inputs are marked in each test; they are predictions, never live evidence. vPC is not touched by C1-R3.
@@ -112,7 +112,7 @@ def test_measured_m1_parent_only_withdrawal_deploys_through_the_inherited_member
 
 
 def test_measured_m1_device_effect_is_recorded_in_the_fixture():
-    """Fact recorded by Alpha's reads: both lost `mtu 9216` and run at operational MTU 1500 after a parent-only withdrawal."""
+    """Fact recorded by the lab reads: both lost `mtu 9216` and run at operational MTU 1500 after a parent-only withdrawal."""
     assert [l for l in FX["pre"]["running_stanzas"] if l.strip() == "mtu 9216"] == ["  mtu 9216", "  mtu 9216"]
     assert not [l for l in FX["post"]["running_stanzas"] if l.strip().startswith("mtu")]
     assert all(v.startswith("MTU 1500 ") for v in FX["post"]["operational_mtu"].values())

@@ -238,8 +238,7 @@ HSRP_CTX = {"ipv4_addr": "192.0.2.1", "ipv4_mask_len": 24, "enable_hsrp": True,
 
 # ---------------------------------------------------------------- DAMPENING
 # EXPERIMENTAL / CONTROLLER-ONLY generation. These seven resets are candidates,
-# not accepted device resets, and are not part of the 157 integration. See
-# investigations/pr725-dampening-all/EXPERIMENTAL_LEDGER.md.
+# not accepted device resets, and are not part of the 157 integration.
 #
 # The parent declares FIVE conditional rules over this family, measured against
 # `interface_dampening.template`, and they decide every context below:
@@ -641,8 +640,8 @@ PILOT = {
     # template body, it only emits `ospf: 'false'` when the field is omitted. The context's
     # `int_vrf` is here so the fixture represents THE SCENARIO IN WHICH THE RESET WAS DEMONSTRATED,
     # not because the emission changes with it. The boundary -- that in the `default` VRF this reset
-    # does not remove the line, because another input produces it -- is documented in the worklog,
-    # not in the table.
+    # does not remove the line, because another input produces it -- is documented outside the table,
+    # not in it.
     (LOOPBACK, "ospf"): ("enable_ospf", True, "false",
                          dict(OSPF_CTX, ospf_tag="PILOT-OSPF", int_vrf="PILOT-VRF")),
     # B01: the two int_loopback OSPF booleans. Their reset is the wire STRING
@@ -1178,7 +1177,7 @@ def _transport(calls, have):
                 # The old double hardcoded `isPhysical: True`, which was the wrong TYPE for
                 # every parent and the wrong VALUE for a subinterface; a subinterface test
                 # driven against it would have been asserting a response NDFC never sends.
-                # Evidence: evidence/W2/G35-subif-pair/baseline/K1POST-detail-all.json.
+                # Measured: the interface detail after a subinterface-pair POST (NDFC 12.6.0.267).
                 return {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": [
                     {"ifName": i["ifName"], "serialNo": i["serialNumber"],
                      "fabricName": FABRIC,

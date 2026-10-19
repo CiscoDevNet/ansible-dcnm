@@ -1,4 +1,4 @@
-"""Interaction of two independent changes (Kapa G7 mixed creation x Beta child ids): a conventional vPC and a PVLAN vPC whose peers use port-channel
+"""Interaction of two independent changes (G7 mixed creation x vPC child ids): a conventional vPC and a PVLAN vPC whose peers use port-channel
 numbers different from the vPC id, created in ONE call with deploy true. The PVLAN part is judged with each peer's own Po (11 / 12); the conventional
 child ownership still comes from the conventional vPC's own PEERn_PCID. NOT LIVE TESTED."""
 

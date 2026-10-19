@@ -1,9 +1,9 @@
 """VPC-HOST-E3: the Po G2 deletion verifier (verified=False, failure after the reads run out, members not empty) is adopted into this copy with
-Beta's `kind == "po"` filter. These tests show the two halves of that integration with the real main():
+a `kind == "po"` filter. These tests show the two halves of that integration with the real main():
 
   * a deleted vPC is verified by the vPC verifier and the Po verifier does not touch it (it issues no request for a vPC target); a vPC target has
     no `members`, which the G2 Po verifier REJECTS ("names no member"), so without the filter a valid vPC deletion would fail (the fail-before is
-    the mutant that removes the filter, recorded in evidence/VPC-HOST-E3/results);
+    the mutant that removes the filter);
   * a vPC whose release cannot be verified still fails (the vPC verifier, not the Po one).
 NOT LIVE TESTED; same synthetic harness as the other vPC tests."""
 

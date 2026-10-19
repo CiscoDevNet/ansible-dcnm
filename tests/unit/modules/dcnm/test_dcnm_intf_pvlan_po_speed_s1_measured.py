@@ -1,10 +1,10 @@
 """Speed inheritance on a PVLAN port-channel member: the MEASURED S1 refusal and the boundaries any future inheritance rule must keep.
 
-Source: fixtures/pvlan_po_speed_s1_measured.json, extracted read-only from Alpha2's RC2 live run (RC2-20261012T050257Z, RC2-PO-SF S1,
+Source: fixtures/pvlan_po_speed_s1_measured.json, extracted read-only from the RC2 live run (RC2-20261012T050257Z, RC2-PO-SF S1,
 NDFC 12.6.0.267). After a merged `speed: 1Gb` on an existing host port-channel with one member, the controller's EXPECTED configuration
 holds `speed 1000` on the port-channel AND on the member, the PENDING holds only the port-channel stanza (the whole stanza, with
 `speed 1000`) and NO member stanza, and both running stanzas lack the line. RC2/IQ1/IQ1-D1 refuse the deploy (fail-before).
-SP1: Alpha2's speed-inheritance diagnosis (DIAG-20261012T091312Z) MEASURED that NX-OS applies the port-channel's speed to the member and
+SP1: the speed-inheritance diagnosis (DIAG-20261012T091312Z) MEASURED that NX-OS applies the port-channel's speed to the member and
 that the return to Auto removes it from both; the S1 shape is that measured form, so SP1 deploys it. The boundaries below stay refused.
 """
 
@@ -58,7 +58,7 @@ def _replace(lines, old, new):
 
 # ====================================================================================== the measured S1 preview (fail-before on IQ1-D1)
 def test_the_measured_s1_preview_deploys_through_the_measured_speed_inheritance():
-    # IQ1-D1 (and RC2) refused exactly this entry with the measured message (evidence/SP1/fail-before-IQ1-D1.txt); SP1 deploys it.
+    # IQ1-D1 (and RC2) refused exactly this entry with the measured message; SP1 deploys it.
     assert REFUSAL in FX["module_refusal"]
     decision, problems = _assess(_entry())
     assert (decision, problems) == ("deploy", [])

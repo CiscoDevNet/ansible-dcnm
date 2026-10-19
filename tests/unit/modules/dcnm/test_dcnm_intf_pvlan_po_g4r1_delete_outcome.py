@@ -1,6 +1,6 @@
-"""PO G4-R1 (Alpha): the mark-delete of a registered PVLAN port-channel deletion must be CONFIRMED before anything else.
+"""PO G4-R1: the mark-delete of a registered PVLAN port-channel deletion must be CONFIRMED before anything else.
 
-Reproduces the architect probe review/PO_G4_R1/probe_uncertain_markdelete.py through real main() and the existing G4
+Reproduces the review probe for an uncertain mark-delete (PO G4-R1) through real main() and the existing G4
 ReleaseController: the mark-delete APPLIES the measured release (the member becomes the HR-post int_trunk_host,
 ADMIN_STATE "true") but its ANSWER is not the measured success. G4 retried that DELETE 20 times, the generic parser turned
 the HTTP 500 into a synthetic 200/OK (changed=False), the member release was skipped and, with a down-looking preview,

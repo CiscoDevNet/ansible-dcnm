@@ -69,7 +69,7 @@ class TestProbeReplacedCase:
         assert len(c.requests("POST", DEPLOY)) == 0 or c.order().index("PREVIEW") < c.order().index("DEPLOY")
 
     def test_deleted_variant_stays_a_no_op(self):
-        # Not generalized (mandate): the review probe returns no operation for deleted in this harness.
+        # Not generalized (out of scope): the review probe returns no operation for deleted in this harness.
         c = nonphysical(ctrl(), TRUNK)
         status, res = run(c, [{"name": IF7, "switch": [SWITCH_IP]}], state="deleted")
         assert writes(c) == []

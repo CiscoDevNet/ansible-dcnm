@@ -969,7 +969,7 @@ _R1_BASE = dict(PVLAN_MODE="host", ADMIN_STATE="false", DESC="", BPDUGUARD_ENABL
 @pytest.mark.parametrize("key", ["aclFilter", "QUEUING_POLICY"])
 @pytest.mark.parametrize("child_value,differs", [("POLICY_A", False), ("policy_a", True), ("Policy_A", True), ("POLICY_B", True)])
 def test_r1_child_object_names_are_compared_exactly(key, child_value, differs):
-    """Architect probe review/C1_R1: an expected POLICY_A against a child policy_a was reported equal. Object names keep case."""
+    """Review probe C1-R1: an expected POLICY_A against a child policy_a was reported equal. Object names keep case."""
     expected = dict(_R1_BASE, **{key: "POLICY_A"})
     child = dict(expected, **{key: child_value})
     assert (key in P.vpc_child_differences(child, expected)) is differs

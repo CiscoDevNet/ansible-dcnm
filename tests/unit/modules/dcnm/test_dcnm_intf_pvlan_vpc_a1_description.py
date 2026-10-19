@@ -246,7 +246,7 @@ def test_helper_unilateral_description_decision_and_copy_description_guard():
 
 
 def test_description_plus_members_of_one_peer_stays_refused_as_a_documented_limit():
-    """A1 limit: the combination was composed offline in a throwaway copy with a hand-built fixture (probes/probe_combo.py) but no real pending
+    """A1 limit: the combination was composed offline in a throwaway copy with a hand-built fixture (an out-of-tree probe) but no real pending
     shape exists for a join next to a description change, so it keeps the existing refusal. Membership-only and description-only stay admitted."""
     have = created_ctrl().parents[VPC]["nvPairs"]
     both = reconcile({"peer1_members": [M1, "Ethernet1/9"], "peer1_description": "a"}, have)

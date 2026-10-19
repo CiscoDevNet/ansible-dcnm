@@ -10350,7 +10350,7 @@ class DcnmIntf:
             leg["post_po"], leg["post_member"] = po_post, mem_post
             leg["expect"] = "deploy" if leg["joining"] or pvlan_vpc_leg_cli_changes(
                 (leg["pre_po"], leg["pre_member"]), (po_post, mem_post)) else "converged"
-        # STAGED (Beta live S3b/S3d): a vPC created with deploy false and repeated unchanged with deploy true is a SAVED CREATION, not a
+        # STAGED (live S3b/S3d): a vPC created with deploy false and repeated unchanged with deploy true is a SAVED CREATION, not a
         # deployed baseline. It is recognised only from the controller's own state (dcnm_intf_pvlan_vpc_saved_creation); each leg is then
         # judged exactly as a creation (the child Po absent from the device, the member joining from a standalone trunk host) and the vPC
         # gets the creation rule: BOTH peers must still need the deploy. Nothing is rewritten; only the deploy is sent.
@@ -10460,7 +10460,7 @@ class DcnmIntf:
     @staticmethod
     def dcnm_intf_pvlan_vpc_saved_creation(snaps):
         """True when the controller lists this vPC's parent, on EVERY peer's authoritative summary, exactly once and with complianceStatus
-        present and null: the MEASURED shape of a vPC whose intent was saved and never deployed (NDFC 12.6.0.267, Beta S1/S3b). A peer that
+        present and null: the MEASURED shape of a vPC whose intent was saved and never deployed (NDFC 12.6.0.267, live S1/S3b). A peer that
         reports any compliance value, a missing or duplicated parent, or an unreadable summary is not a saved creation."""
         if not snaps:
             return False

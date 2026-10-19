@@ -412,8 +412,7 @@ MACSEC_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in MACSEC_ADDITIONS)
 # EXPERIMENTAL generation so that the omission path can be executed and observed at the
 # controller. They are NOT accepted device resets, they are NOT part of the 157 integration,
 # and 134 is NOT a portfolio figure. Nothing was deployed in the campaign that produced them,
-# so no device acceptance exists for any of the seven. See
-# investigations/pr725-dampening-all/EXPERIMENTAL_LEDGER.md.
+# so no device acceptance exists for any of the seven.
 #
 # Kept apart from the other lots for the same reason they are kept apart from each other:
 # folding an experimental group into an accepted total is exactly how an unaccepted row gets

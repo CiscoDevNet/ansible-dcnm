@@ -1,6 +1,6 @@
 """F2: resetting a physical port to its role default also withdraws registered drift.
 
-Review finding F2 (Kapa, KAPA-OCT12-1): named `deleted` and `overridden` compare the role default
+Review finding F2: named `deleted` and `overridden` compare the role default
 payload with the controller's policy on legacy nvPairs only, and the default payload carries no
 registered nvPair. A port whose only drift was a registered field (an ACL, flow control) read as
 already default; a reset that was sent for another reason left the field in place.

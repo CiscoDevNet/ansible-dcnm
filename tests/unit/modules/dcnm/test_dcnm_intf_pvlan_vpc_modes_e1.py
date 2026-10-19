@@ -1,4 +1,4 @@
-"""VPC-MODES-E1 (Alpha): promiscuous, trunk promiscuous and trunk secondary for a vPC in mode 'pvlan' (int_vpc_pvlan_host).
+"""VPC-MODES-E1: promiscuous, trunk promiscuous and trunk secondary for a vPC in mode 'pvlan' (int_vpc_pvlan_host).
 
 NOT LIVE TESTED. Real main() through the EXISTING vPC harness (VpcController: two peers, per-serial previews). Labels:
   [SRC] the installed templates (VPC-TEMPLATE-READ): the parent's per-submode lists and per-peer PVLAN native/allowed (HOST 192-229,

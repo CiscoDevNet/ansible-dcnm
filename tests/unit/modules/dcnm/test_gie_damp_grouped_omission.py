@@ -4,7 +4,7 @@ EXPERIMENTAL / CONTROLLER-ONLY. The seven resets these cases rely on are CANDIDA
 local experimental generation, registered so the omission path can be executed and observed at
 a controller. They are NOT accepted device resets, they are NOT part of the 157 integration,
 and nothing was deployed in the campaign that produced them -- so no device acceptance exists
-for any of the seven. See investigations/pr725-dampening-all/EXPERIMENTAL_LEDGER.md.
+for any of the seven.
 
 WHY THIS FILE EXISTS RATHER THAN SEVEN PER-ROW FIXTURES
 

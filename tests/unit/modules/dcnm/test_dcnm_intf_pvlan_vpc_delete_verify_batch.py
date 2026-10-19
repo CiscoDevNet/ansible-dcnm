@@ -184,7 +184,7 @@ def test_a_reversed_switch_order_keeps_the_controller_peer_identity():
     assert B.post_gets(ctrl) == 2 and all(v["state"] == "verified" for v in result["pvlan_verification"].values())
 
 
-# ============================================================== Alpha review F-1 / F-3: each remaining check has a discriminating test
+# ============================================================== review F-1 / F-3: each remaining check has a discriminating test
 class _PostDeploy(B.MultiVpc):
     """MultiVpc + post-deploy SUMMARY changes the harness does not offer: the member's listed policy (`post_policy`, (serial, ifName) ->
     template) and a compliance status from a given verification round on (`late_status`, (serial, ifName) -> (rounds waited, status));
@@ -225,7 +225,7 @@ def post_deploy_setup(n):
 
 def marked_parent(pair_serial, name):
     """The MEASURED V-7a listing (NDFC 12.6.0.267) of a mark-deleted vPC parent in a peer's summary: markDeleted, Out-of-Sync, no underlay
-    policy, while its intent (bulk detail) is already gone. Adopted from Alpha's control C-A (alpha-df2-review/controls)."""
+    policy, while its intent (bulk detail) is already gone. Adopted from review control C-A."""
     return {"ifName": name, "serialNo": pair_serial, "fabricName": "test_fabric", "ifType": "INTERFACE_VPC", "isPhysical": "False",
             "deletable": "True", "editAllowed": "True", "markDeleted": "True", "alias": "", "deleteReason": None,
             "complianceStatus": "Out-of-Sync", "underlayPolicies": [], "interfaces": [{"nvPairs": {}}]}

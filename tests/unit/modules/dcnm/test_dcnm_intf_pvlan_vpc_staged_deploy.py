@@ -1,12 +1,12 @@
 """PR725-VPC-STAGED-DEPLOY-CHECKER: a PVLAN host vPC deployed in two stages, and check_deploy on a vPC creation/update.
 
-A  (MEASURED live by Beta, S3b/S3d, NDFC 12.6.0.267): a vPC created with ``deploy: false`` (intent saved, nothing on the devices) could not be
+A  (MEASURED live, S3b/S3d, NDFC 12.6.0.267): a vPC created with ``deploy: false`` (intent saved, nothing on the devices) could not be
    continued with ``deploy: true``: the pre-write gate judged the saved creation as a deployed baseline (no Po on the device, the member still
    a standalone trunk) and refused, and the code stated that completing an unapplied vPC was not implemented.
-B  (MEASURED live by Beta, S3j): ``check_deploy: true`` on a vPC creation converged, then the safety re-deploy gate (check_deploy_resend)
+B  (MEASURED live, S3j): ``check_deploy: true`` on a vPC creation converged, then the safety re-deploy gate (check_deploy_resend)
    judged the vPC again with the creation rule "every peer must still need a deploy" and failed although the deploy had converged.
 
-The never-deployed vPC parent is listed with ``complianceStatus`` null (MEASURED, Beta S1/S3b); the children report Out-of-Sync before the
+The never-deployed vPC parent is listed with ``complianceStatus`` null (MEASURED, live S1/S3b); the children report Out-of-Sync before the
 deploy. Previews: the harness creation/converged stanzas (members down, H1 shape) and the MEASURED up-member vPC previews of
 fixtures/pvlan_admin_up_join_measured.json (M3, pre/post deploy). Real main(); only the controller boundary and time are intercepted.
 NOT LIVE TESTED by this file."""

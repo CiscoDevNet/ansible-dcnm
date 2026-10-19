@@ -1,6 +1,6 @@
-"""PO G3 (Alpha, PR725-PVLAN-PO-PLAN-001): the member comparison against the MEASURED H1 capture.
+"""PO G3: the member comparison against the MEASURED H1 capture.
 
-MEASURED inputs (fixtures/pvlan_po_h1_measured.json, from Alpha4's live G2/R2 run on NDFC 12.6.0.267): the forced-preview
+MEASURED inputs (fixtures/pvlan_po_h1_measured.json, from the live G2/R2 run on NDFC 12.6.0.267): the forced-preview
 pending (complete) and the expected/running stanzas of port-channel502 and Ethernet1/10, their intents and policies. The
 member pending held `channel-group 502 force mode active`; the controller's expected member held
 `channel-group 502 mode active` plus the inherited PVLAN mode and host-association; G2 refused that expected line.

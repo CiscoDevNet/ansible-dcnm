@@ -1,4 +1,4 @@
-"""C1-R6 (PROMPT_ALPHA_C1_R6_T4.md): F1 (vPC release prevalidation of members released already down) and the bounded extension of the
+"""C1-R6: F1 (vPC release prevalidation of members released already down) and the bounded extension of the
 inherited member MTU rule to the SAME supported PVLAN mode on parent and member (host, promiscuous, trunk promiscuous, trunk secondary).
 
 NOT LIVE TESTED for the three non-host modes. Every preview below is DERIVED: the existing per-mode harness stanzas (SYNTHETIC, from the

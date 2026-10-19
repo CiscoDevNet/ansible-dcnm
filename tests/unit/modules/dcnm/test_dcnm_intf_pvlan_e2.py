@@ -1,7 +1,7 @@
 """Native Ethernet PVLAN E2: the corrected behavior for architect review R1 findings F1-F5.
 
 Every case drives the real main() through test_dcnm_intf_pvlan_harness; only external I/O is
-mocked. Case IDs R1-xx refer to review/R1/probe_candidate.py, which asserted the E1 DEFECTS; the
+mocked. Case IDs R1-xx refer to the review R1 probe, which asserted the E1 DEFECTS; the
 cases here assert the corrected result. Response labels: MEASURED (G5/G6 discovery capture),
 DOCUMENTED (module source), SYNTHETIC (robustness counterexample, not a claim the controller
 emits it), TEMPLATE-PREDICTED (rendered from the pinned installed template, not measured).

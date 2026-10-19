@@ -60,8 +60,7 @@ remains `3 + N`), and NOT a ceiling on the summary, breakout, access-mode or
 `query` endpoints, which stay outside this budget and keep their current
 behaviour — see the `24` group in the characterization file.
 
-Baseline for comparison, one switch, N interfaces (measured, see
-`evidence/B1-baseline/11_read-call-bounds-table.md`):
+Baseline for comparison, one switch, N interfaces (measured on the diagnostic base):
     persistent failure   3 + 3N requests, 3(N + 1) scheduled seconds
     malformed HTTP 200   1 + N requests, 0 seconds
 

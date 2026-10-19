@@ -13,7 +13,8 @@ the effective NX-OS CLI, OSPF adjacency and keychain behavior are NOT LIVE TESTE
 in this offline generation.
 
 Run:
-    pytest tests/unit/modules/dcnm/test_dcnm_ospfmd_parent_child_contract.py
+    DCNM_TEMPLATE_DIR=/path/to/ndfc/templates \
+        pytest tests/unit/modules/dcnm/test_dcnm_ospfmd_parent_child_contract.py
 """
 
 import os
@@ -24,10 +25,13 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
-# The shipping templates are reference copies kept next to the investigation.
+# The shipping NDFC templates are not part of this repository. Point DCNM_TEMPLATE_DIR at a directory
+# holding them to run the template checks; without it they are skipped.
 _TEMPLATE_DIRS = [
-    "/Users/dacasti2/NAC_CONTRI/templates",
-    os.path.join(os.path.dirname(__file__), "fixtures", "templates"),
+    d for d in (
+        os.environ.get("DCNM_TEMPLATE_DIR"),
+        os.path.join(os.path.dirname(__file__), "fixtures", "templates"),
+    ) if d
 ]
 PARENT = "int_fabric_loopback_11_1.template"
 CHILD_MD = "ospf_interface_auth_message_digest_11_1.template"

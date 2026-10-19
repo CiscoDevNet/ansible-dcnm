@@ -11,7 +11,7 @@ E4 (VPC-HOST-E4-G6) labelling of the shapes taken from the regular Po campaign (
   successfully' with ONE `value` item; the controller releases the member as int_trunk_host with ADMIN_STATE "true".
   Nothing of this has been observed for a vPC: it is the extrapolation L1 measures.
 
-Three kinds of data, never mixed (the worklog's "contract of the source / synthetic fixture / future live measurement"):
+Three kinds of data, never mixed:
   * contract of the source   -- what the captured templates and the existing module code say (cited in the tests);
   * SYNTHETIC fixture        -- every preview/summary/policy shape below is written BY HAND from those templates. The fake applies
                                  on a create/delete exactly what the templates are PREDICTED to do (children per peer, member flip,
@@ -107,7 +107,7 @@ class VpcController(FakeController):
         self.markdeleted = False
         # IQ1: False = the CORRECTED parent (qosPolicy/queuingPolicy locals: the reference int_vpc_trunk_host and every Engineering
         # set) hands ENABLE_QOS/QOS_POLICY/ENABLE_PFC/QUEUING_POLICY to both children. True = the revision INSTALLED on the test ND
-        # (MEASURED, Alpha2 S1): its UnboundLocalError resets those four to false/'' on every save, while queuingStats and
+        # (MEASURED, live S1): its UnboundLocalError resets those four to false/'' on every save, while queuingStats and
         # qosStatsSuppressed (interfaceOptions) still follow the parent.
         self.defective_qos_template = False
 

@@ -2,7 +2,7 @@
 # Offline status: the argspec, payload and pre-deploy gate exist and pass the focused offline tests; the
 # first live run is what measures the controller's behaviour for a port-channel.
 #
-# Future check chain (to be recorded by the live mandate, per step):
+# Future check chain (to be recorded by a live run, per step):
 #   model -> module args -> payload (POST globalInterface) -> parent intent + child intent
 #         -> config-preview (forceShowRun=true, `!Time:` freshness) -> device CLI (Po and member)
 #

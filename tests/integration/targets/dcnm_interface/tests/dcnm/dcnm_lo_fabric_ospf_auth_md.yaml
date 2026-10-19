@@ -261,7 +261,7 @@
     that:
       # G6A.1 finding 4: reject an ABSENT feature key before mutating.
       #
-      # The observed homelab baseline omits ENABLE_OSPF_AUTH_MESSAGE_DIGEST on
+      # The observed lab baseline omits ENABLE_OSPF_AUTH_MESSAGE_DIGEST on
       # both loopbacks. Restoring an absent key would require emitting an explicit
       # false, which converts absence into false rather than reproducing absence -
       # and whether NDFC canonicalizes an omitted key back to absent or to false
@@ -277,7 +277,7 @@
          | string | trim | lower) in ['true', 'false']
     fail_msg: >-
       The captured ENABLE_OSPF_AUTH_MESSAGE_DIGEST is absent or not a recognized
-      boolean, so it cannot be restored faithfully. On the observed homelab it is
+      boolean, so it cannot be restored faithfully. On the observed lab it is
       absent on both loopbacks; this gate refuses rather than converting absence
       into an explicit false. Nothing has been mutated.
     success_msg: "Captured feature values are present and recognizable booleans"

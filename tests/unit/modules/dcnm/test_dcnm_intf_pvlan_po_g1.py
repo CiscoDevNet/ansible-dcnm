@@ -1,4 +1,4 @@
-"""PO G1 (Alpha, PR725-PVLAN-PO-P-001): focused tests for the four PVLAN modes on a regular port-channel with ONE member.
+"""PO G1: focused tests for the four PVLAN modes on a regular port-channel with ONE member.
 
 NOT LIVE TESTED. Real main(); only the external boundary is mocked, through the EXISTING harness (FakeController +
 the E2 PoController). Every pending/running/expected stanza below is SYNTHETIC, written BY HAND from the captured

@@ -1,4 +1,4 @@
-"""API-REUSE (Kapa, PR725 night closure): two read reuses, local to ONE invocation and to the phase BEFORE its first write.
+"""API-REUSE: two read reuses, local to ONE invocation and to the phase BEFORE its first write.
 
 1. PLANNING-REUSE: the saved-state recognition reads ONE forced preview per queried serial and every candidate on that switch judges it;
    the gates keep their own fresh preview. Measured before (G8 d76094b0): a saved mixed Po retry recomputed the same switch 3 times

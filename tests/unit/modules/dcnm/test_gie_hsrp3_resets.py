@@ -191,12 +191,12 @@ def test_the_deferred_ipv6_rows_stay_unregistered():
 
 def test_the_arithmetic_is_197_plus_three():
     """246 identities, 219 resets, and these three are the only int_vlan HSRP rows with one."""
-    con_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
+    with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     assert len(BINDING_TABLE) == 234 + 11 + 1   # 228 + six dot1q rows + eleven PLAN-2 C1 PVLAN companion rows + one IQ1 row
     # 200 + six dot1q resets + int_vlan::privateVlanMapping = 207, + 11 C1 PVLAN companion resets (inferred) = 218, + 1 IQ1 = 219.
-    assert len(con_reset) == 197 + 3 + 6 + 1 + 11 + 1, (
-        "the table carries %d resets, expected 219" % len(con_reset))
-    hsrp = {r["profile_key"] for r in con_reset
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1, (
+        "the table carries %d resets, expected 219" % len(with_reset))
+    hsrp = {r["profile_key"] for r in with_reset
             if r["parent_template"] == SVI and r["profile_key"].startswith("hsrp")}
     assert hsrp == set(IDS), sorted(hsrp)
 

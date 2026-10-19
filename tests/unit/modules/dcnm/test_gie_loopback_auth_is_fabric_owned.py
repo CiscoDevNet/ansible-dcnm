@@ -573,6 +573,6 @@ def test_the_keychain_is_refused_on_both_parents():
     """
     for mode in ("fabric", "lo"):
         rejected, kwargs = _validate_with_resolved_parents(
-            mode, {"ospf_auth_keychain_name": "LLAVERO"}
+            mode, {"ospf_auth_keychain_name": "KEYCHAIN-1"}
         )
         assert rejected, "the keychain was accepted on mode '{0}'".format(mode)

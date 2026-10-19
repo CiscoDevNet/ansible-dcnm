@@ -3,7 +3,7 @@
 NOT LIVE TESTED. Real main() through the EXISTING vPC harness; previews are SYNTHETIC, written by hand from the CORRECTED templates
 (the parent's QoS block with qosPolicy/queuingPolicy locals as in the reference int_vpc_trunk_host and every Engineering set; the
 child's `service-policy type qos input <p>[ no-stats]` as in the regular templates). The INSTALLED revision on the test ND drops the
-values parent -> children (MEASURED for QUEUING_POLICY, Alpha2 S1) and its child renders a `type ENABLE_QOS` literal: the harness
+values parent -> children (MEASURED for QUEUING_POLICY, live S1) and its child renders a `type ENABLE_QOS` literal: the harness
 reproduces that loss with `defective_qos_template`, and those cases must fail WITHOUT a deploy.
 
 The REFERENCE section drives the regular vPC parents (trunk, dot1q) through the same main() and reads the request the module sends.

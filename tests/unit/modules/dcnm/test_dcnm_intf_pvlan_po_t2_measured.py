@@ -1,4 +1,4 @@
-"""C1-R2 (Alpha, PR725-PVLAN-COMPANIONS-001): the two pre-deploy refusals MEASURED live in T2-LIVE-G1 (NDFC 12.6.0.267, FAB1 Leaf-102,
+"""C1-R2: the two pre-deploy refusals MEASURED live in T2-LIVE-G1 (NDFC 12.6.0.267, FAB1 Leaf-102,
 port-channel501 host 2210/2212 with member Ethernet1/8, 2026-10-09), replayed offline through the real main().
 
 MEASURED inputs (fixtures/pvlan_po_t2_measured.json, from the redacted natural logs of the T2 run, previews reduced to the two target

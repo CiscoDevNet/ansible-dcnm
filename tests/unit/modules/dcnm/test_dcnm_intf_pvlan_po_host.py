@@ -49,7 +49,7 @@ RUNNING_MEMBER = ["interface Ethernet1/7", "  switchport", "  switchport mode tr
 PO_STANZA = ["interface port-channel10", "  switchport", "  switchport mode private-vlan host",
              "  switchport private-vlan host-association 2210 2212", "  mtu 9216",
              "  spanning-tree bpduguard enable", "  spanning-tree port type edge trunk", "  shutdown"]
-# PO G3 (Alpha): MEASURED member forms of the H1 creation (fixtures/pvlan_po_h1_measured.json, port-channel502 /
+# PO G3: MEASURED member forms of the H1 creation (fixtures/pvlan_po_h1_measured.json, port-channel502 /
 # Ethernet1/10), TRANSPOSED to this harness's names (port-channel10 / Ethernet1/7). The controller's expected member holds
 # `channel-group N mode active` (no `force`) plus the inherited PVLAN mode and list line; the member pending holds only
 # `no spanning-tree port type edge trunk` (before the parent block) and `channel-group N force mode active` + `shutdown`.
@@ -596,7 +596,7 @@ def test_models_carry_only_placeholders_and_declare_not_run():
 
 
 # ------------------------------------------------------------------ existing routes that could reach a PVLAN Po/member
-# Found by probing (evidence/.../tools/probe_unprotected_routes.py): before the guard these four reached the
+# Found by probing the existing routes: before the guard these four reached the
 # controller (markdelete / modify / deploy). Each is now refused before any write.
 def _eth(name, mode="trunk"):
     return {"name": name, "type": "eth", "switch": [SWITCH_IP], "deploy": False, "profile": {"mode": mode}}

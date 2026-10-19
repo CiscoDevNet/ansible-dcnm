@@ -1,5 +1,5 @@
 """MIXED-CREATE (F-1): a conventional and a PVLAN aggregate CREATED in ONE dcnm_interface call with deploy true (live 2026-10-17,
-DCNM f3b5ef3b, alpha-saved-delete-retry/evidence/live/po-setup-a1).
+cisco.dcnm f3b5ef3b).
 
 The module created Port-channel301 (conventional, member Eth1/14) and Port-channel310 (PVLAN host, member Eth1/16) on Leaf-102, both
 answered 200, and sent one deploy batch [Port-channel301, Port-channel310]. The PVLAN pre-deploy gate (`deploy`) read the fresh pending,
@@ -143,7 +143,7 @@ def test_saved_mixed_creation_deploy_false_is_unchanged():
 
 
 def test_conventional_member_added_by_an_update_in_the_same_call_is_owned():
-    """The update analogue (Alpha's open limit): Po301 [Eth1/14] -> [Eth1/14, Eth1/15] next to a saved PVLAN member removal."""
+    """The update analogue (an open limit of the live run): Po301 [Eth1/14] -> [Eth1/14, Eth1/15] next to a saved PVLAN member removal."""
     ctrl = MB.po_ctrl(conv_members=(MB.C14,))
     status, result = MB.t5_po_call(ctrl, join_block(MB.C15), conv=MB.conv_po_item(members=(MB.C14, MB.C15)))
     assert status == "exit" and result["changed"] is True, result.get("msg")

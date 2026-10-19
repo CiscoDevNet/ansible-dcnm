@@ -319,8 +319,7 @@ def test_persistent_failure_costs_one_bulk_cycle_and_one_probe(
     new is that the number of FAILED invocations per serial is bounded at two, so
     the cost no longer scales with the interface count. Before this change the
     same scenario spent `3 + 3N` requests and `3(N + 1)` scheduled seconds --
-    3,003 of each at N = 1000. Those figures remain true of the diagnostic base
-    and are preserved in `evidence/B1-baseline/11_read-call-bounds-table.md`.
+    3,003 of each at N = 1000. Those figures remain true of the diagnostic base.
 
     The conclusion is unchanged: every requested interface is still unavailable,
     nothing is cached, and no absence is invented for the interfaces never read.

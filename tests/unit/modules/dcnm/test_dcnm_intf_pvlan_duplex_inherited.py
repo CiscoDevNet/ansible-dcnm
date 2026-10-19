@@ -1,6 +1,6 @@
 """DUPLEX: the member's `duplex full` of a PVLAN port-channel / vPC leg carried by the port-channel's own pending (MEASURED inheritance), plus F-A.
 
-Sources (sanitized, read-only extracts of Alpha2's live diagnostics NEXT-A2-SD; raw captures stay outside the product):
+Sources (sanitized, read-only extracts of the live duplex diagnostics; raw captures stay outside the product):
   fixtures/pvlan_po_duplex_measured.json  -- G1: Po521 / Ethernet1/8, speed 1000 fixed, `duplex full` apply and withdrawal, previews before the
                                              deploy and the converged previews after each;
   fixtures/pvlan_vpc_duplex_measured.json -- G2: vPC522, Ethernet1/9, the same cases on BOTH peers, each on its own serial.

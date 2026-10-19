@@ -1902,14 +1902,14 @@ PO_TEMPLATE_DEFAULTS = (
     ("queuingStats", "false"),
     ("ADMIN_STATE", "true"),
 )
-# PVLAN_NATIVE_VLAN is declared `integer` 1-4094 on BOTH the Ethernet and the port-channel template (G1-CORR-1 §2a).
+# PVLAN_NATIVE_VLAN is declared `integer` 1-4094 on BOTH the Ethernet and the port-channel template.
 # Neutral value: the empty string (E2). A non-empty native VLAN is sent as a string of digits, the form MEASURED as
 # accepted for the integer-declared Ethernet field over the same legacy transport (E6 live). Whether the port-channel
 # create/modify path accepts it, and how it reads it back, is NOT measured: first measured by the trunk roles (G1 gate).
 PO_NATIVE_NEUTRAL = ""
 PO_NAME = re.compile(r"^port-channel[1-9][0-9]{0,3}$", re.IGNORECASE)
 PO_PHYSICAL_MEMBER = re.compile(r"^ethernet[0-9]+/[0-9]+$", re.IGNORECASE)
-# Every nvPair the host template declares (29, TEMPLATE_CONTRACT_G1 §2) plus the bookkeeping keys the controller adds.
+# Every nvPair the host template declares (29) plus the bookkeeping keys the controller adds.
 PO_KNOWN_HAVE_NVPAIRS = frozenset(
     tuple(k for k, _d in PO_TEMPLATE_DEFAULTS)
     + ("SERIAL_NUMBER", "PO_ID", "MEMBER_INTERFACES", "DESC", "CONF", "PTP", "PVLAN_MODE", ALLOWED_VLANS, NATIVE_VLAN,
@@ -2970,11 +2970,11 @@ def po_member_force_reassertion(body, observed, desired, reassert):
 # C1-R3 (M-G1 measurement M1, NDFC 12.6.0.267 / NX-OS 10.5(5), regular port-channel, PVLAN host, one admin-down member): the operator's GUI
 # change of port-channel501 MTU jumbo -> default produced a pending of ONLY `interface port-channel501` / `no mtu 9216` (operator-provided
 # preview, no member block, no force); afterwards BOTH the port-channel and its member had lost `mtu 9216` from the running configuration and
-# ran at operational MTU 1500, and the controller was In-Sync (Alpha's PRE/POST reads).
+# ran at operational MTU 1500, and the controller was In-Sync (read-only PRE/POST reads).
 # C1-R4 (MR-G1 measurement, same platform/resource, S1 companions present): the operator's GUI change of the same port-channel MTU
 # default -> jumbo produced a pending of ONLY the port-channel stanza re-emitted with `mtu 9216` (operator-provided preview, no member block,
 # no force); afterwards BOTH the port-channel and its member held `mtu 9216` in the running configuration and ran at operational MTU 9216,
-# nothing else changed, and the controller was In-Sync (Alpha's PRE/POST reads).
+# nothing else changed, and the controller was In-Sync (read-only PRE/POST reads).
 # The mechanism (NX-OS propagating the port-channel MTU to its member) is an inference; force played no part. Only these two transitions
 # between the two template values (`mtu 9216` present / absent) are modeled.
 PO_MTU_INHERITED_WITHDRAWAL = "mtu 9216"
@@ -3004,7 +3004,7 @@ def po_member_mtu_inherited_state(entry, observed, desired, member_body, ctx):
     lines, and the rest of the validation is unchanged. Otherwise (other MTU values, mixed states, a mode outside the rule below, up interfaces, an
     explicit member MTU command) the observed state is returned untouched and the ordinary validation applies.
 
-    C1-R6 (PROMPT_ALPHA_C1_R6_T4.md): the mode condition is "parent and member, observed and intended, all in the SAME mode of PVLAN_MODES"
+    C1-R6: the mode condition is "parent and member, observed and intended, all in the SAME mode of PVLAN_MODES"
     instead of host only; every other condition above is unchanged. MEASURED for host on a regular Po (M1/MR) and on a vPC child/member per
     peer (T3-G1, C1-R5: S1/V-MD/V-RD withdrawal, V-MJ/S5 addition). Promiscuous / trunk promiscuous / trunk secondary are NOT measured; the
     T4 cases measure them."""
@@ -3092,7 +3092,7 @@ def po_member_inherited_state(observed, desired, parent_observed):
     return state, not same_state(state, observed)
 
 
-# SP1 (Alpha2 speed-inheritance diagnosis DIAG-20261012T091312Z, MEASURED on NDFC 12.6.0.267 / N9K-C9300v 10.5(5), host mode, one member,
+# SP1 (speed-inheritance diagnosis DIAG-20261012T091312Z, MEASURED on NDFC 12.6.0.267 / N9K-C9300v 10.5(5), host mode, one member,
 # admin down): after a SPEED change of a PVLAN port-channel host (Po521) or of a vPC PVLAN host (vPC522, BOTH peers, each child Po and member
 # on its own serial), the controller's expected member stanza gains / loses `speed 1000` while the pending holds ONLY the port-channel
 # stanza (the whole stanza with `speed 1000` on apply, `no speed 1000` on withdrawal); deploying only the port-channel makes NX-OS apply /
@@ -3168,7 +3168,7 @@ def po_member_speed_inherited_state(entry, observed, desired, member_body, ctx):
     return Model(scalars, observed.list_kind, observed.pairs, observed.modeled, observed.foreign), True
 
 
-# DUPLEX (Alpha2 G1 on Po521 and G2 on vPC522, NEXT-A2-SD, MEASURED on NDFC 12.6.0.267 / N9K-C9300v 10.5(5), host mode, ONE member per Po / per leg,
+# DUPLEX (G1 on Po521 and G2 on vPC522, MEASURED on NDFC 12.6.0.267 / N9K-C9300v 10.5(5), host mode, ONE member per Po / per leg,
 # admin down, border switches): with the speed already fixed at 1000 (parent and member, unchanged), `duplex full` on the port-channel (on each vPC
 # child) is accepted, the member inherits it, the controller pending holds ONLY the port-channel stanza (apply: its baseline lines, `speed 1000`
 # among them, plus `duplex full`; withdrawal: `no duplex full` alone) and the member's intent and expected carry the line; the withdrawal returns
@@ -3389,7 +3389,7 @@ VPC_NATIVE_COMPANIONS = (
     # 792-796 inherited by every member; POVPC 258-269 render).
     ("speed", "SPEED", "speed"),
     # IQ1: ingress QoS, the regular vPC public keys (enable_qos bool, qos_policy one policy-map name). Handed to both children by the
-    # CORRECTED parent (qosPolicy/queuingPolicy locals, the reference int_vpc_trunk_host and every Engineering set; QVPC-ENG-3 §1.4) and
+    # CORRECTED parent (qosPolicy/queuingPolicy locals, the reference int_vpc_trunk_host and every Engineering set) and
     # rendered by the corrected child as `service-policy type qos input <policy>[ no-stats]`. The revision INSTALLED on the test ND does
     # neither (QVPC analysis): the gate then refuses, it never models the defect as success.
     ("enable_qos", "ENABLE_QOS", "bool"),

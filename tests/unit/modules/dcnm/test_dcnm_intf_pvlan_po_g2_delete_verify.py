@@ -1,4 +1,4 @@
-"""PO G2 (Alpha, PR725-PVLAN-PO-PLAN-001, review/G1_PRODUCT_R1 P1): the post-deletion readback of a PVLAN port-channel
+"""PO G2 (review finding G1-R1 P1): the post-deletion readback of a PVLAN port-channel
 must distinguish "release verified" from "release could not be verified".
 
 NOT LIVE TESTED. Real main() in state `deleted`; only the controller boundary is intercepted, through the EXISTING harness

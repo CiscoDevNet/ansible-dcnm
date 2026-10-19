@@ -1,6 +1,6 @@
 """F1: a case-only change of a registered string whose case is part of its value is sent.
 
-Review finding F1 (Kapa, KAPA-OCT12-1): the legacy scalar comparison lower-cased both sides, so a
+Review finding F1: the legacy scalar comparison lower-cased both sides, so a
 case-only change of an OSPF key or an ACL name compared equal and was never sent -- in merged,
 replaced and overridden alike. The registry now carries, per (parent template, nvPair), how a
 string binding compares (`string_compare`): only 'exact' bindings stop lower-casing; booleans,

@@ -89,7 +89,7 @@ PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 # Each value here is the one the live positive stage really sent and the device really rendered --
 # `normal` on access and `network` on trunk deliberately differ, so an enum that collapsed to a
 # single constant could not pass by accident.
-FILAS = [
+VPC_ROWS = [
     (VPC_ACCESS, "acl_filter", "aclFilter", "string", "", "pr725_vpc13_acl"),
     (VPC_ACCESS, "disable_lldp_receive", "lldpReceive", "boolean", "false", "true"),
     (VPC_ACCESS, "disable_lldp_transmit", "lldpTransmit", "boolean", "false", "true"),
@@ -105,26 +105,26 @@ FILAS = [
     (VPC_TRUNK, "guard_mode", "GUARD_MODE", "enum", "no", "root"),
 ]
 
-CASOS = [pytest.param(*f, id="{0}-{1}".format(f[0].replace("int_vpc_", "").replace("_host", ""), f[1]))
-         for f in FILAS]
+VPC_CASES = [pytest.param(*f, id="{0}-{1}".format(f[0].replace("int_vpc_", "").replace("_host", ""), f[1]))
+         for f in VPC_ROWS]
 
 
 def test_the_lot_is_thirteen_and_the_fixture_matches_the_table():
     """Guard the guard, before any case below can pass for the wrong reason.
 
     Two failure modes this closes. First, a fixture that drifts from the table: every case below
-    reads its expectations from ``FILAS``, so a row silently dropped from the registry would simply
+    reads its expectations from ``VPC_ROWS``, so a row silently dropped from the registry would simply
     stop being tested rather than fail. Second, a lot that grew or shrank: the campaign's claim is
     thirteen identities on these two parents, and if the table ever carries a fourteenth this case
-    fails instead of the count quietly changing underneath the worklog.
+    fails instead of the count quietly changing underneath the documented claim.
     """
-    en_tabla = {(r["parent_template"], r["profile_key"]) for r in BINDING_TABLE
+    in_table = {(r["parent_template"], r["profile_key"]) for r in BINDING_TABLE
                 if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
-    en_fixture = {(f[0], f[1]) for f in FILAS}
-    assert len(FILAS) == 13, "the fixture lists {0} rows, not 13".format(len(FILAS))
-    assert en_tabla == en_fixture, (
+    in_fixture = {(f[0], f[1]) for f in VPC_ROWS}
+    assert len(VPC_ROWS) == 13, "the fixture lists {0} rows, not 13".format(len(VPC_ROWS))
+    assert in_table == in_fixture, (
         "the table and this fixture disagree: only in table {0}, only in fixture {1}".format(
-            en_tabla - en_fixture, en_fixture - en_tabla))
+            in_table - in_fixture, in_fixture - in_table))
 
 
 def test_guard_mode_is_declared_by_the_trunk_parent_only():
@@ -140,9 +140,9 @@ def test_guard_mode_is_declared_by_the_trunk_parent_only():
         "guard_mode appeared on the access parent; the lot is no longer 6 + 7 = 13")
 
 
-@pytest.mark.parametrize("parent,key,nvpair,tipo,reset,_applied", CASOS)
+@pytest.mark.parametrize("parent,key,nvpair,nv_type,reset,_applied", VPC_CASES)
 def test_the_row_declares_the_measured_reset_with_the_right_type(
-        parent, key, nvpair, tipo, reset, _applied):
+        parent, key, nvpair, nv_type, reset, _applied):
     """The registration itself, including the PYTHON type of the reset.
 
     The type matters as much as the value. The controller returns these nvPairs as STRINGS, so a
@@ -156,14 +156,14 @@ def test_the_row_declares_the_measured_reset_with_the_right_type(
     assert b is not None, "{0}::{1} is not registered".format(parent, key)
     assert b["parent_nvpair"] == nvpair, (
         "{0}::{1} wire name is {2!r}, expected {3!r}".format(parent, key, b["parent_nvpair"], nvpair))
-    assert b["type"] == tipo
+    assert b["type"] == nv_type
     assert b.get("reset_wire") == reset, (
         "{0}::{1} reset is {2!r}, expected {3!r}".format(parent, key, b.get("reset_wire"), reset))
     assert isinstance(b.get("reset_wire"), str), (
         "{0}::{1} reset must be a str, got {2}".format(parent, key, type(b.get("reset_wire")).__name__))
 
 
-@pytest.mark.parametrize("parent,key,_nv,_t,reset,applied", CASOS)
+@pytest.mark.parametrize("parent,key,_nv,_t,reset,applied", VPC_CASES)
 def test_the_engine_withdraws_a_configured_value(parent, key, _nv, _t, reset, applied):
     """A HAVE the field actually had yields the measured reset, exactly.
 
@@ -174,7 +174,7 @@ def test_the_engine_withdraws_a_configured_value(parent, key, _nv, _t, reset, ap
         GIE_WITHDRAW_RESET, reset)
 
 
-@pytest.mark.parametrize("parent,key,_nv,_t,reset,_applied", CASOS)
+@pytest.mark.parametrize("parent,key,_nv,_t,reset,_applied", VPC_CASES)
 def test_the_engine_withdraws_nothing_when_the_value_already_is_the_reset(
         parent, key, _nv, _t, reset, _applied):
     """NEGATIVE CONTROL. Nothing to withdraw is not the same as withdrawing the reset.
@@ -187,7 +187,7 @@ def test_the_engine_withdraws_nothing_when_the_value_already_is_the_reset(
         GIE_WITHDRAW_NONE, None)
 
 
-@pytest.mark.parametrize("parent,key,_nv,_t,reset,applied", CASOS)
+@pytest.mark.parametrize("parent,key,_nv,_t,reset,applied", VPC_CASES)
 def test_the_reset_is_refused_below_the_minimum_version(parent, key, _nv, _t, reset, applied):
     """NEGATIVE CONTROL on the version axis.
 
@@ -198,8 +198,8 @@ def test_the_reset_is_refused_below_the_minimum_version(parent, key, _nv, _t, re
     """
     b = resolve_binding(parent, key)
     assert b["min_ndfc_version"] == SUPPORTED
-    accion, valor = gie_withdrawal_action(parent, key, applied, "12.6.0.266", PATCH)
-    assert (accion, valor) != (GIE_WITHDRAW_RESET, reset), (
+    action, value = gie_withdrawal_action(parent, key, applied, "12.6.0.266", PATCH)
+    assert (action, value) != (GIE_WITHDRAW_RESET, reset), (
         "{0}::{1} withdrew on a controller below its declared floor".format(parent, key))
 
 
@@ -210,9 +210,9 @@ def test_the_two_parents_are_independent_identities():
     fails if the two parents ever start resolving to the same object, which would make half the lot
     untested while every case above still passed.
     """
-    compartidas = ("acl_filter", "disable_lldp_receive", "disable_lldp_transmit",
+    shared_keys = ("acl_filter", "disable_lldp_receive", "disable_lldp_transmit",
                    "disable_qos_stats", "disable_queuing_stats", "spanning_tree_port_type")
-    for key in compartidas:
+    for key in shared_keys:
         a = resolve_binding(VPC_ACCESS, key)
         t = resolve_binding(VPC_TRUNK, key)
         assert a is not None and t is not None
@@ -233,7 +233,7 @@ def test_the_previous_lot_is_untouched():
     ``disable_lldp_receive`` and ``disable_lldp_transmit``, and it is the row a substring match
     would have hit instead. It is not part of this lot and must stay unregistered.
     """
-    con_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
+    with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows (PR725-VPC-DOT1Q-001); 245 = 234 + eleven PLAN-2 C1 PVLAN companion rows; 246 = + IQ1.
     assert len(BINDING_TABLE) == 246, "the table has {0} identities".format(len(BINDING_TABLE))
     # 197 integrated + 3 PR725-HSRP5 int_vlan rows (test_gie_hsrp3_resets.py) = 200, + the six
@@ -241,14 +241,14 @@ def test_the_previous_lot_is_untouched():
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
     # access/trunk set below is unchanged.
     # + the eleven PLAN-2 C1 PVLAN companion resets (inferred, other parents) = 218, + the IQ1 vPC PVLAN qosStatsSuppressed reset = 219.
-    assert len(con_reset) == 197 + 3 + 6 + 1 + 11 + 1, (
-        "the integrated table carries {0} resets, expected 219".format(len(con_reset)))
-    nuestras = {(r["parent_template"], r["profile_key"]) for r in con_reset
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1, (
+        "the integrated table carries {0} resets, expected 219".format(len(with_reset)))
+    lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset
                 if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
-    assert nuestras == {(f[0], f[1]) for f in FILAS}
+    assert lot_rows == {(f[0], f[1]) for f in VPC_ROWS}
     for parent in (VPC_ACCESS, VPC_TRUNK):
-        vecina = resolve_binding(parent, "disable_lldp")
-        if vecina is not None:
-            assert vecina.get("reset_wire") is None, (
+        neighbour = resolve_binding(parent, "disable_lldp")
+        if neighbour is not None:
+            assert neighbour.get("reset_wire") is None, (
                 "{0}::disable_lldp got a reset; it is not part of this lot and is the row a "
                 "substring match on `disable_lldp` would have hit".format(parent))

@@ -408,7 +408,7 @@ def gie_validate_binding_value(
     # 'ip port access-group' line was gone from the device while the untouched port-channel32
     # kept its own. The registered min_length of 1 is copied from the template's
     # metaProperties, but the controller does not enforce it -- and "" is the very encoding it
-    # hands back for that state. See evidence/generic-interface-engine/phase18-acl-empty-probe.
+    # hands back for that state (measured with an empty-ACL probe on NDFC 12.6.0.267).
     #
     # Scoped to bindings with no valid_values so an empty ENUM still fails closed: for an enum
     # the "off" value is a named choice (GUARD_MODE "no", SPANNING_TREE_PORT_TYPE "no"), never

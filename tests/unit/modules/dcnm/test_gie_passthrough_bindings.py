@@ -203,7 +203,7 @@ def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
 def test_generator_enforces_the_registry_schema_per_row():
     """The per-row schema gate, which used to live in a standalone checker that went stale.
 
-    There were TWO validator scripts under evidence/generic-interface-engine/, and both had been
+    There were TWO out-of-tree validator scripts, and both had been
     dead for four lots without anyone noticing: one still expected a flat list of rows when every
     slice had become a mapping with a `bindings:` key, the other required a `sensitive` field
     that only one surviving slice declares. Neither failed loudly, because nothing ran them --

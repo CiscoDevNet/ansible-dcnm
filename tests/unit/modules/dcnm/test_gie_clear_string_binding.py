@@ -12,7 +12,7 @@ controller stored ``""``, and after deploy ``ip port access-group`` was gone fro
 while the untouched ``port-channel32`` kept its own. ``""`` is also the exact encoding NDFC
 returns for "no ACL configured" -- the same value its own template claims is too short.
 
-Evidence: evidence/generic-interface-engine/phase18-acl-empty-probe.
+Evidence: an empty-ACL probe on NDFC 12.6.0.267 (raw capture kept outside the repository).
 
 Two things are deliberately NOT relaxed, and are asserted here so a future edit cannot widen
 the hole by accident:

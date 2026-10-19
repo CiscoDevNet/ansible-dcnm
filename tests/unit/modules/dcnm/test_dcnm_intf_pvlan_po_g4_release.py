@@ -1,10 +1,10 @@
-"""PO G4 (Alpha, PR725-PVLAN-PO-PLAN-001): deletion of an owned PVLAN host port-channel without enabling its member.
+"""PO G4: deletion of an owned PVLAN host port-channel without enabling its member.
 
-Architect decision B (review/PO_G3_R1): after the accepted mark-delete and BEFORE any deploy, the released standalone
+Review decision B (PO G3-R1): after the accepted mark-delete and BEFORE any deploy, the released standalone
 member's ADMIN_STATE is set to "false" with its complete writable nvPairs (legacy interface/modify), then the normal
 gate, deploy and G2 verification run.
 
-MEASURED inputs (fixtures/pvlan_po_h1_measured.json, Alpha4's live G2/R2 run): the parent/member intents before the
+MEASURED inputs (fixtures/pvlan_po_h1_measured.json, the live G2/R2 run): the parent/member intents before the
 deletion (H1-post), the member AS RELEASED by the controller after the mark-delete (HR-post: int_trunk_host, 55 nvPairs,
 ADMIN_STATE "true", pending `no shutdown`), and the state after the operator's correction (H1-verify: ADMIN_STATE "false",
 In-Sync, 0 pending, member expected/running trunk + shutdown).

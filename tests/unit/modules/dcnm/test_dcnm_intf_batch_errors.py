@@ -112,9 +112,9 @@ def test_error_matching_is_case_insensitive():
     [
         {"RETURN_CODE": 207},                                   # missing DATA
         {"RETURN_CODE": 207, "DATA": None},
-        {"RETURN_CODE": 207, "DATA": {"message": "not a list"}},  # objeto, no lote
-        {"RETURN_CODE": 207, "DATA": ["texto", None, 5]},        # elementos malformados
-        {},                                                      # respuesta vacia
+        {"RETURN_CODE": 207, "DATA": {"message": "not a list"}},  # an object, not a batch
+        {"RETURN_CODE": 207, "DATA": ["text", None, 5]},         # malformed items
+        {},                                                      # empty response
         None,                                                    # not even a dict
     ],
     ids=["no_data", "null_data", "dict_data", "junk_items", "empty", "not_a_dict"],

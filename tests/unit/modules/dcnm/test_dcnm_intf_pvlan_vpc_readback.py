@@ -241,7 +241,7 @@ def test_a_member_that_already_contradicts_its_model_is_refused_before_any_write
 # channel-group fields, a modelable member and the policy residue -- is made on the FRESH release, BEFORE the deploy (phase C of
 # dcnm_intf_pvlan_vpc_release_members), in the same invocation and also when a new process completes a saved deletion. After the deploy only
 # the peers' summaries are read. So a divergence the controller RELEASES is refused before any deploy; a change made after the deploy is not
-# re-read by the module (OUTPUT_SEMANTICS.md; the external test harness checks the member's intent and running configuration).
+# re-read by the module (the external test harness checks the member's intent and running configuration).
 class Released(VpcController):
     """`when` = "release": `drift` is applied when the controller releases the member (at the mark-delete); "deploy": right after the deploy
     answer (G11's probe shape)."""

@@ -939,7 +939,7 @@ def test_a_residue_policy_on_the_second_peer_only_is_refused_before_the_deploy()
 
 
 def test_a_residue_that_appears_only_after_the_deploy_is_not_read_again_by_the_module():
-    """DF-2 contract (decision recorded in OUTPUT_SEMANTICS.md): after the deploy only the summaries are read; a policy written by another
+    """DF-2 contract: after the deploy only the summaries are read; a policy written by another
     party after the pre-deploy proof is outside the module's verification (the external test harness checks the policy list)."""
     ctrl = LateResidue().seed_baseline().seed_vpc()
     ctrl.next_invocation()
