@@ -106,7 +106,7 @@ VPC_ROWS = [
 ]
 
 VPC_CASES = [pytest.param(*f, id="{0}-{1}".format(f[0].replace("int_vpc_", "").replace("_host", ""), f[1]))
-         for f in VPC_ROWS]
+             for f in VPC_ROWS]
 
 
 def test_the_lot_is_thirteen_and_the_fixture_matches_the_table():
