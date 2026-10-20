@@ -2891,6 +2891,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_nvpair_keymap,
     gie_carry_forward_bindings,
     gie_withdrawal_action,
+    gie_binding_inert,
     gie_binding_is_owned_elsewhere,
     gie_patch_supported,
     GIE_READONLY_METADATA_NVPAIRS,
@@ -12319,6 +12320,7 @@ class DcnmIntf:
                                     #                     never shown -- the exact defect
                                     #                     measured on the carry-forward.
                                     if state in ("replaced", "overridden"):
+                                        _w_gated = []
                                         for _w_b in gie_carry_forward_bindings(
                                             want.get("policy")
                                         ):
@@ -12410,15 +12412,38 @@ class DcnmIntf:
                                                 # diffed. main() raises it after the whole
                                                 # comparison pass. The value is never
                                                 # recorded -- a binding may carry a secret.
-                                                self.withdrawal_blocked.append(
-                                                    {
-                                                        "parent": want.get("policy"),
-                                                        "field": _w_key,
-                                                        "nvpair": _w_nvp,
-                                                        "interface": name,
-                                                        "reason": _w_action,
-                                                    }
-                                                )
+                                                _w_entry = {
+                                                    "parent": want.get("policy"),
+                                                    "field": _w_key,
+                                                    "nvpair": _w_nvp,
+                                                    "interface": name,
+                                                    "reason": _w_action,
+                                                }
+                                                _w_row = gie_resolve_by_nvpair(want.get("policy"), _w_nvp)
+                                                if _w_row is not None and _w_row.get("inert_when"):
+                                                    # Judged after this loop, against the gate's
+                                                    # final value (explicit, or reset above).
+                                                    _w_gated.append((_w_row, _w_entry))
+                                                else:
+                                                    self.withdrawal_blocked.append(_w_entry)
+                                        # A field inert under its gate (inert_when) is not withdrawn
+                                        # when the gate ends at its inert value: the template neither
+                                        # validates nor renders it, so the stored value is kept by
+                                        # the carry-forward below and nothing new is transported. The
+                                        # gate is taken from WANT when this pass sets it, else from
+                                        # the authoritative HAVE the carry-forward will preserve.
+                                        for _w_b, _w_entry in _w_gated:
+                                            _w_gate = _w_b["inert_when"]["nvpair"]
+                                            _w_gate_nv = {}
+                                            if _w_gate in want[k][0][ik]:
+                                                _w_gate_nv[_w_gate] = want[k][0][ik][_w_gate]
+                                            else:
+                                                for intf in d[k]:
+                                                    if isinstance(intf.get(ik), dict) and _w_gate in intf[ik]:
+                                                        _w_gate_nv[_w_gate] = intf[ik][_w_gate]
+                                                        break
+                                            if not gie_binding_inert(_w_b, _w_gate_nv):
+                                                self.withdrawal_blocked.append(_w_entry)
 
                                     # Preserve an authoritative current value for every omitted
                                     # registry passthrough binding on this SAME parent.  This is
@@ -12867,6 +12892,8 @@ class DcnmIntf:
             except GieBindingError:
                 blocked.append(dict(entry, reason="unreadable"))
                 continue
+            if action != GIE_WITHDRAW_RESET and gie_binding_inert(binding, have_nv):
+                continue    # inert under its gate on the source (inert_when): nothing configured to withdraw
             if src == dst:
                 if action == GIE_WITHDRAW_RESET:
                     resets[nvpair] = wire
@@ -12883,6 +12910,11 @@ class DcnmIntf:
                     continue    # proven: already the destination's neutral value
                 # UNSUPPORTED, UNCLASSIFIED and INAPPLICABLE prove nothing about the destination:
                 # an inapplicable destination binding cannot even carry the field.
+            gate = binding.get("inert_when")
+            gate_binding = gie_resolve_by_nvpair(src, gate["nvpair"]) if gate else None
+            if gate_binding is not None:
+                # Disabling the gate on the current policy makes this field inert; the message names that remedy.
+                entry["gate"] = gate_binding["profile_key"]
             blocked.append(dict(entry, reason="transition", source_reset=action == GIE_WITHDRAW_RESET))
         return resets, blocked
 
@@ -15569,7 +15601,14 @@ def main():
             {
                 (b["interface"], b["serial"], b["parent"], b["destination"], b["field"], b["nvpair"])
                 for b in dcnm_intf.default_reset_blocked
-                if b["reason"] == "transition" and not b.get("source_reset")
+                if b["reason"] == "transition" and not b.get("source_reset") and not b.get("gate")
+            }
+        )
+        moved_gated = sorted(
+            {
+                (b["interface"], b["serial"], b["parent"], b["destination"], b["field"], b["nvpair"], b["gate"])
+                for b in dcnm_intf.default_reset_blocked
+                if b["reason"] == "transition" and not b.get("source_reset") and b.get("gate")
             }
         )
         # R-F2-1: a remedy is offered only where the module has one. An explicit empty value is
@@ -15618,6 +15657,15 @@ def main():
                     module.params["state"],
                     ", ".join("{4} ({5}) on {0} [{1}], {2} -> {3}".format(*b) for b in moved_unverified),
                     no_withdrawal,
+                )
+            )
+        if moved_gated:
+            parts.append(
+                (moved_head + " The field configures nothing while its gate is off: disable {2} on the current "
+                 "policy first, then repeat the reset.").format(
+                    module.params["state"],
+                    ", ".join("{4} ({5}) on {0} [{1}], {2} -> {3}".format(*b) for b in moved_gated),
+                    ", ".join(sorted(set(b[6] for b in moved_gated))),
                 )
             )
         parts.append("No configuration or deployment request was sent.")

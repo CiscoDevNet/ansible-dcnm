@@ -658,6 +658,20 @@ def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version
     return GIE_WITHDRAW_UNCLASSIFIED, None
 
 
+def gie_binding_inert(binding, nvpairs):
+    """True when `binding` declares `inert_when` and `nvpairs` holds that gate at the declared value.
+
+    A binding that is inert under its gate produces no configuration while the gate is off, so a
+    stored value is not something a replacement or a reset must withdraw. The gate value is compared
+    in wire form (`_have_comparison_wire`), so native False and "false" agree. A gate absent from
+    `nvpairs`, or any other value, is not inert: the caller keeps its normal classification.
+    """
+    gate = binding.get("inert_when") if binding else None
+    if not gate or not isinstance(nvpairs, dict) or gate["nvpair"] not in nvpairs:
+        return False
+    return _have_comparison_wire(nvpairs[gate["nvpair"]]) == gate["value"]
+
+
 def gie_all_registered_keys():
     """Every public profile key known to the packaged registry, across all parents.
 

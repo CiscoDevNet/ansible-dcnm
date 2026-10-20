@@ -330,8 +330,10 @@ class TestPV09InventoryInvariants:
         # byte-identical from the 33 slices before the addition).
         # F1: regenerated from the same 34 slices with `string_compare` added to the 45 committed string rows (was
         # 3820250c...; the unannotated slices reproduced it byte-identical, and the new generator rejects them).
+        # R-F4: regenerated from the same 34 slices with `inert_when` added to the ospf_tag rows of int_routed_host,
+        # int_subif and int_vlan (was b6f88798...).
         assert PROVENANCE_SHA256 == (
-            "b6f88798ccfccc7950f922ca4f3934ecab31d6732e0d80a6383248e2081ac9a5"
+            "d5281a22a41b43c654fca412f980b172d0cc936f0574d908417487398156a5c8"
         )
 
 

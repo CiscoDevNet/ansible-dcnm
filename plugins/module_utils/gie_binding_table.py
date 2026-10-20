@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = b6f88798ccfccc7950f922ca4f3934ecab31d6732e0d80a6383248e2081ac9a5
+# provenance_sha256 = d5281a22a41b43c654fca412f980b172d0cc936f0574d908417487398156a5c8
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "b6f88798ccfccc7950f922ca4f3934ecab31d6732e0d80a6383248e2081ac9a5"
+PROVENANCE_SHA256 = "d5281a22a41b43c654fca412f980b172d0cc936f0574d908417487398156a5c8"
 
 BINDING_TABLE = (
     {
@@ -1540,6 +1540,7 @@ BINDING_TABLE = (
         'max_length': 20,
         'no_log': False,
         'string_compare': 'unverified',
+        'inert_when': {'nvpair': 'ospf', 'value': 'false'},
     },
     {
         'parent_template': 'int_routed_host',
@@ -2158,6 +2159,7 @@ BINDING_TABLE = (
         'max_length': 20,
         'no_log': False,
         'string_compare': 'unverified',
+        'inert_when': {'nvpair': 'ospf', 'value': 'false'},
     },
     {
         'parent_template': 'int_subif',
@@ -2960,6 +2962,7 @@ BINDING_TABLE = (
         'max_length': 20,
         'no_log': False,
         'string_compare': 'unverified',
+        'inert_when': {'nvpair': 'ospf', 'value': 'false'},
     },
     {
         'parent_template': 'int_vlan',

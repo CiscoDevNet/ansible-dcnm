@@ -819,7 +819,8 @@ rebuild_binding_indexes()
 FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interface_type",
           "applicable_mode", "type", "valid_values", "default_template", "reset_wire",
           "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
-          "max_value", "no_log", "wire_values", "smu_unsupported", "string_compare"]
+          "max_value", "no_log", "wire_values", "smu_unsupported", "string_compare",
+          "inert_when"]
 
 # `smu_unsupported` -- this identity has NO counterpart in the installed SMU build. The
 # row is KEPT so its history and provenance survive; the engine refuses explicit input for
@@ -849,6 +850,13 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 #
 # Stored already in wire form so the comparison path performs no type inference at reconcile
 # time: `_to_nvpair_wire` semantics are applied once, here, by the author of the row.
+
+# `inert_when` -- {nvpair, value}: this binding produces no configuration while the gate nvPair of
+# the SAME parent holds `value`, so a stored value under that gate is not a withdrawal target. It is
+# declared per row from the template body (the field is neither validated nor rendered with the gate
+# off), never inferred from an effect relationship: int_loopback's OSPF tag stays live with OSPF off
+# (fabric underlay fallback) and carries no marker. Compiled as the same mapping. The gate
+# must be a committed binding of the same parent and `value` its verified reset or declared default.
 
 # `string_compare` -- how the module compares a WANT and a HAVE value of a `type: string`
 # binding, for the exact (parent_template, parent_nvpair) it is declared on. Required on every
@@ -1005,6 +1013,14 @@ def _check_registry_schema(r, key):
             "binding {0!r} declares smu_unsupported {1!r}; the marker is the boolean True "
             "or absent".format(key, r["smu_unsupported"])
         )
+    if "inert_when" in r:
+        iw = r["inert_when"]
+        if (not isinstance(iw, dict) or set(iw) != {"nvpair", "value"}
+                or not all(isinstance(iw[k], str) and not isinstance(iw[k], bool) for k in iw)):
+            raise ValueError(
+                "binding {0!r} declares inert_when {1!r}; it must be a mapping with string keys "
+                "'nvpair' and 'value' (the gate nvPair and its wire value)".format(key, iw)
+            )
     if "reset_wire" in r:
         v = r["reset_wire"]
         if isinstance(v, bool) or not isinstance(v, str):
@@ -1068,6 +1084,28 @@ def compile_rows(slice_rows):
     if seen != set(COMMITTED_BINDINGS):
         missing = sorted(set(COMMITTED_BINDINGS) - seen)
         raise ValueError("missing committed bindings {0!r}".format(missing))
+    by_key = dict(((x["parent_template"], x["parent_nvpair"]), x) for x in out)
+    for x in out:
+        if "inert_when" not in x:
+            continue
+        gate = by_key.get((x["parent_template"], x["inert_when"]["nvpair"]))
+        if gate is None or gate is x:
+            raise ValueError(
+                "binding {0!r} declares inert_when on {1!r}, which is not another committed binding "
+                "of the same parent".format((x["parent_template"], x["parent_nvpair"]), x["inert_when"]["nvpair"])
+            )
+        neutral = set()
+        if "reset_wire" in gate:
+            neutral.add(gate["reset_wire"])
+        if "default_template" in gate:
+            d = gate["default_template"]
+            neutral.add(json.dumps(d) if isinstance(d, bool) else str(d))
+        if x["inert_when"]["value"] not in neutral:
+            raise ValueError(
+                "binding {0!r} declares inert_when value {1!r}; it must be the gate's verified reset or "
+                "declared default ({2!r})".format((x["parent_template"], x["parent_nvpair"]), x["inert_when"]["value"],
+                                                  sorted(neutral))
+            )
     out.sort(key=lambda x: (x["parent_template"], x["parent_nvpair"]))
     return out
 

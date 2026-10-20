@@ -274,6 +274,12 @@ bindings:
   - parent_template: int_subif
     parent_nvpair: ospfTag
     profile_key: ospf_tag
+    # Inert while OSPF is disabled (read from the int_subif body e9f9bd9c, not measured): ospfTag is
+    # validated and rendered only under `ospf == true`, and with OSPF off the template neither checks it nor
+    # creates the OSPF child. A stored tag with ospf "false" is therefore not a configured withdrawal target.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: string

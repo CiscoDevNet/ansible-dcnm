@@ -166,15 +166,17 @@ def test_capability_disabled_keeps_the_published_noop(role, state):
 # ------------------------------------------------------------------ no established reset: refused before any write
 @pytest.mark.parametrize("state", STATES)
 @pytest.mark.parametrize(
-    "nvpair, value, field, reason",
+    "nvpair, value, field, reason, gate",
     [
-        ("eigrpIpv4Passive", "true", "eigrp_ipv4_passive", "no verified reset is established"),
-        ("ospfTag", "SYNTHETIC-TAG", "ospf_tag", "no verified reset is established"),
+        ("eigrpIpv4Passive", "true", "eigrp_ipv4_passive", "no verified reset is established", {}),
+        # ospfTag is inert while OSPF is off (inert_when); with OSPF on it is configured and still refused.
+        ("ospfTag", "SYNTHETIC-TAG", "ospf_tag", "no verified reset is established", {"ospf": "true"}),
     ],
 )
-def test_registered_drift_without_a_reset_is_refused_before_any_write(state, nvpair, value, field, reason):
+def test_registered_drift_without_a_reset_is_refused_before_any_write(state, nvpair, value, field, reason, gate):
     have = default_have("border")
     have[0]["interfaces"][0]["nvPairs"][nvpair] = value
+    have[0]["interfaces"][0]["nvPairs"].update(gate)
     result, calls = run(state, have, "border")
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")
     msg = result["msg"]
@@ -258,16 +260,16 @@ def test_a_refused_secret_is_named_by_field_and_never_emitted():
 # ------------------------------------------------------------------ R-F2-1: message per case, a remedy only where one exists
 @pytest.mark.parametrize("state", STATES)
 def test_policy_change_without_a_source_reset_offers_no_module_remedy(state):
-    """leaf: default int_trunk_host; HAVE is int_routed_host with an OSPF tag (no verified reset on the source,
-    not registered on the destination): refused, and no clear-on-current-policy advice."""
+    """leaf: default int_trunk_host; HAVE is int_routed_host with EIGRP IPv4 passive set (no verified reset on the
+    source, not registered on the destination, no gate that makes it inert): refused, and no clear-on-current-policy
+    advice."""
     have = default_have("border")
-    have[0]["interfaces"][0]["nvPairs"]["ospfTag"] = "SYNTHETIC-TAG"
+    have[0]["interfaces"][0]["nvPairs"]["eigrpIpv4Passive"] = "true"
     result, calls = run(state, have, "leaf")
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")
     msg = result["msg"]
-    assert "ospf_tag (ospfTag) on %s [%s], int_routed_host -> int_trunk_host" % (h.IF_A, h.SERIAL) in msg
-    assert NO_WITHDRAWAL in msg and "clear the field on that policy" not in msg
-    assert "SYNTHETIC-TAG" not in msg
+    assert "eigrp_ipv4_passive (eigrpIpv4Passive) on %s [%s], int_routed_host -> int_trunk_host" % (h.IF_A, h.SERIAL) in msg
+    assert NO_WITHDRAWAL in msg and "clear the field on that policy" not in msg and "disable " not in msg
 
 
 @pytest.mark.parametrize("state", STATES)
