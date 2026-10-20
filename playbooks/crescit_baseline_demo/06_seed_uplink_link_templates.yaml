@@ -1,0 +1,25 @@
+---
+# Seed link templates so PR impact analysis can reason about underlay dependencies.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    deploy_changes: false
+
+  tasks:
+    - name: Seed underlay link intent across leaf-spine uplinks
+      cisco.dcnm.dcnm_links:
+        state: merged
+        config:
+          - source_fabric: "{{ fabric_name }}"
+            dest_fabric: "{{ fabric_name }}"
+            template_name: int_routed_host
+            profile:
+              ADMIN_STATE: "true"
+              MTU: "9216"
+              BFD_ECHO_DISABLE: "false"
+              ROUTING_TAG: "BASELINE_UNDERLAY"
+        deploy: "{{ deploy_changes }}"
