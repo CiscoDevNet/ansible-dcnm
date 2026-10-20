@@ -332,8 +332,10 @@ class TestPV09InventoryInvariants:
         # 3820250c...; the unannotated slices reproduced it byte-identical, and the new generator rejects them).
         # R-F4: regenerated from the same 34 slices with `inert_when` added to the ospf_tag rows of int_routed_host,
         # int_subif and int_vlan (was b6f88798...).
+        # OSPF dependencies: regenerated from the same 34 slices with `inert_when` on the OSPF options and
+        # authentication rows of the same three parents and `required` on ospf_tag (was d5281a22...).
         assert PROVENANCE_SHA256 == (
-            "d5281a22a41b43c654fca412f980b172d0cc936f0574d908417487398156a5c8"
+            "acc3629a9f0aa5eeab4a1f7af9a75c03d0017263b4576f42cc6698b75d5793e5"
         )
 
 

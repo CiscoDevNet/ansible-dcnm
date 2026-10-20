@@ -672,6 +672,123 @@ def gie_binding_inert(binding, nvpairs):
     return _have_comparison_wire(nvpairs[gate["nvpair"]]) == gate["value"]
 
 
+def gie_binding_neutral_wires(binding):
+    """Wire values at which `binding` configures nothing: its verified reset, its declared default and
+    its `inert_when` clear. Empty when none is declared (an ospf_tag has no neutral value)."""
+    out = set()
+    if binding.get("reset_wire") is not None:
+        out.add(binding["reset_wire"])
+    default_wire = gie_declared_default_wire(binding)
+    if default_wire is not None:
+        out.add(default_wire)
+    clear = (binding.get("inert_when") or {}).get("clear")
+    if clear is not None:
+        out.add(clear)
+    return out
+
+
+_GIE_ABSENT = object()
+
+
+def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nvpairs, neutralize,
+                        ndfc_version, patch_version=None):
+    """Dependent-field (`inert_when`) handling for ONE interface. Pure: nothing is sent or changed.
+
+    `want_nvpairs` is the outgoing nvPair set as built so far (explicit, builder output, resets);
+    `have_nvpairs` the authoritative HAVE of the SAME parent (`{}` for a new interface or a policy
+    change); `explicit_nvpairs` the nvPairs the caller set in this invocation. `neutralize` is True for
+    `merged`, where an explicit disable of a gate must also bring that gate's stored dependents to
+    neutral; `replaced`/`overridden` already withdraw omitted dependents and pass False.
+
+    Returns (writes, conflicts):
+      * writes -- {nvpair: wire}. Merged only, for dependents of a gate this call turned off,
+        including chained gates (disabling OSPF disables message-digest authentication, which clears
+        its key). A dependent with no neutral value (ospf_tag) is kept as stored: it configures nothing.
+      * conflicts -- dicts with field, nvpair, gate and reason, never a value:
+          "set_while_off": an explicit non-neutral value for a `strict` dependent whose gate ends off
+                           (the template refuses it). An explicit `clear` field is the caller's own
+                           value and is sent as given; only an omitted one is cleared.
+          "empty_while_on": a `required` dependent set to "" while its gate ends on, or left empty in HAVE
+                           while this call turns its gate on (enabling OSPF requires a tag).
+    A gate whose state cannot be established (absent, or "" for a non-empty inert value) is not judged.
+    Bindings this controller or capability cannot carry are skipped, as for withdrawal.
+    """
+    passthrough = parent_bindings_by_mechanism(parent_template, GIE_MECH_PASSTHROUGH) if parent_template else ()
+    rows = [b for b in passthrough if b.get("inert_when")]
+    by_nvpair = dict((b["parent_nvpair"], b) for b in passthrough)
+    have_nvpairs = have_nvpairs if isinstance(have_nvpairs, dict) else {}
+    writes, conflicts = {}, []
+
+    def applicable(b):
+        return gie_version_supported(ndfc_version, b["min_ndfc_version"]) and gie_patch_supported(patch_version)
+
+    def current(nvpair):
+        if nvpair in writes:
+            return writes[nvpair]
+        if nvpair in want_nvpairs:
+            return want_nvpairs[nvpair]
+        return have_nvpairs.get(nvpair, _GIE_ABSENT)
+
+    def gate_state(b):
+        gate = b["inert_when"]
+        value = current(gate["nvpair"])
+        if value is _GIE_ABSENT or value is None:
+            return None
+        wire = _have_comparison_wire(value)
+        if wire == gate["value"]:
+            return "off"
+        if wire == "":
+            return None
+        return "on"
+
+    def gate_key(b):
+        gate_binding = by_nvpair.get(b["inert_when"]["nvpair"])
+        return gate_binding["profile_key"] if gate_binding else b["inert_when"]["nvpair"]
+
+    if neutralize:
+        turned_off = set(n for n in explicit_nvpairs if n in by_nvpair)
+        changed = True
+        while changed:
+            changed = False
+            for b in rows:
+                nvpair = b["parent_nvpair"]
+                if nvpair in explicit_nvpairs or nvpair in writes or b["inert_when"]["nvpair"] not in turned_off:
+                    continue
+                if gate_state(b) != "off" or not applicable(b):
+                    continue
+                if nvpair not in turned_off:
+                    turned_off.add(nvpair)      # its own dependents follow (chained gate)
+                    changed = True
+                value = current(nvpair)
+                if value is _GIE_ABSENT or value is None or value == "":
+                    continue
+                target = b["reset_wire"] if "reset_wire" in b else b["inert_when"].get("clear")
+                if target is None or _have_comparison_wire(value) in gie_binding_neutral_wires(b):
+                    continue
+                writes[nvpair] = target
+                changed = True
+
+    for b in rows:
+        nvpair, gate = b["parent_nvpair"], b["inert_when"]
+        if not applicable(b):
+            continue
+        entry = {"field": b["profile_key"], "nvpair": nvpair, "gate": gate_key(b)}
+        if nvpair in explicit_nvpairs and gate.get("strict") and gate_state(b) == "off":
+            if _have_comparison_wire(want_nvpairs.get(nvpair)) not in gie_binding_neutral_wires(b):
+                conflicts.append(dict(entry, reason="set_while_off"))
+                continue
+        if gate.get("required") and gate_state(b) == "on":
+            # An explicit empty value, or a gate this call turns on over a value the controller holds empty
+            # (a key cleared by an earlier disable). A field absent from both is not judged here: a new
+            # interface without a tag is left to the controller, as before.
+            explicit_empty = nvpair in explicit_nvpairs and want_nvpairs.get(nvpair) in ("", None)
+            stored_empty = (gate["nvpair"] in explicit_nvpairs and nvpair not in explicit_nvpairs
+                            and nvpair not in want_nvpairs and have_nvpairs.get(nvpair, _GIE_ABSENT) in ("", None))
+            if explicit_empty or stored_empty:
+                conflicts.append(dict(entry, reason="empty_while_on"))
+    return writes, conflicts
+
+
 def gie_all_registered_keys():
     """Every public profile key known to the packaged registry, across all parents.
 

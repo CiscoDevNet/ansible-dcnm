@@ -81,6 +81,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfBfd
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_bfd
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -99,6 +105,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfCost
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_cost
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -119,6 +131,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfDeadInterval
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_dead_interval
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -139,6 +157,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfHelloInterval
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_hello_interval
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -159,6 +183,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfMtuIgnore
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_mtu_ignore
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -177,6 +207,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfNetworkType
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
     profile_key: ospf_network_type
     applicable_interface_type: sub_int
@@ -197,6 +233,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfPassiveInterface
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_passive_interface
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -215,6 +257,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfPriority
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_priority
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -235,6 +283,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfRetransmitInterval
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_retransmit_interval
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -255,6 +309,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfShutdown
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_shutdown
     applicable_interface_type: sub_int
     applicable_mode: subint
@@ -280,6 +340,7 @@ bindings:
     inert_when:
       nvpair: ospf
       value: 'false'
+      required: true
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: string
@@ -298,6 +359,12 @@ bindings:
 
   - parent_template: int_subif
     parent_nvpair: ospfTransmitDelay
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_transmit_delay
     applicable_interface_type: sub_int
     applicable_mode: subint

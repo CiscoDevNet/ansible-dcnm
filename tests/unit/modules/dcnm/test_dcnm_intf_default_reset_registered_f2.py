@@ -166,14 +166,16 @@ def test_capability_disabled_keeps_the_published_noop(role, state):
 # ------------------------------------------------------------------ no established reset: refused before any write
 @pytest.mark.parametrize("state", STATES)
 @pytest.mark.parametrize(
-    "nvpair, value, field, reason, gate",
+    "nvpair, value, field, reason, gate, remedy",
     [
-        ("eigrpIpv4Passive", "true", "eigrp_ipv4_passive", "no verified reset is established", {}),
-        # ospfTag is inert while OSPF is off (inert_when); with OSPF on it is configured and still refused.
-        ("ospfTag", "SYNTHETIC-TAG", "ospf_tag", "no verified reset is established", {"ospf": "true"}),
+        ("eigrpIpv4Passive", "true", "eigrp_ipv4_passive", "no verified reset is established", {}, None),
+        # ospfTag is inert while OSPF is off (inert_when); with OSPF on it is configured and still refused,
+        # and the module's own remedy is named: disable OSPF on the current policy, then reset.
+        ("ospfTag", "SYNTHETIC-TAG", "ospf_tag", "no verified reset is established", {"ospf": "true"},
+         "disable enable_ospf on the current policy first, then repeat the reset"),
     ],
 )
-def test_registered_drift_without_a_reset_is_refused_before_any_write(state, nvpair, value, field, reason, gate):
+def test_registered_drift_without_a_reset_is_refused_before_any_write(state, nvpair, value, field, reason, gate, remedy):
     have = default_have("border")
     have[0]["interfaces"][0]["nvPairs"][nvpair] = value
     have[0]["interfaces"][0]["nvPairs"].update(gate)
@@ -182,8 +184,13 @@ def test_registered_drift_without_a_reset_is_refused_before_any_write(state, nvp
     msg = result["msg"]
     assert reason in msg and "%s (%s) on %s [%s], parent int_routed_host" % (field, nvpair, h.IF_A, h.SERIAL) in msg
     assert "No configuration or deployment request was sent" in msg
-    # R-F2-1: no module remedy is promised; an explicit empty value is not a verified withdrawal
-    assert NO_WITHDRAWAL in msg and "clear the field on that policy" not in msg and "Clear the field explicitly" not in msg
+    # R-F2-1: an explicit empty value is not a verified withdrawal, so it is never offered; the only remedy
+    # named is the module's own (disabling the field's gate), and only for a field that has one.
+    assert "clear the field on that policy" not in msg and "Clear the field explicitly" not in msg
+    if remedy is None:
+        assert NO_WITHDRAWAL in msg
+    else:
+        assert remedy in msg and NO_WITHDRAWAL not in msg
     assert value not in msg
 
 

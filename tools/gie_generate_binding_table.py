@@ -857,6 +857,13 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 # off), never inferred from an effect relationship: int_loopback's OSPF tag stays live with OSPF off
 # (fabric underlay fallback) and carries no marker. Compiled as the same mapping. The gate
 # must be a committed binding of the same parent and `value` its verified reset or declared default.
+# Optional markers, each read from the same template body:
+#   required: the template requires a non-empty value while the gate is active ("OSPF process tag is
+#             required"); an empty value with the gate active is refused before any request.
+#   strict:   the template refuses a non-neutral value while the gate is off; the row must have a
+#             reset_wire, which an explicit merged disable of the gate sends.
+#   clear:    "" only, on a string row without a reset_wire: the value sent when the gate ends off,
+#             so stored material (an authentication key) is cleared rather than kept.
 
 # `string_compare` -- how the module compares a WANT and a HAVE value of a `type: string`
 # binding, for the exact (parent_template, parent_nvpair) it is declared on. Required on every
@@ -1015,11 +1022,28 @@ def _check_registry_schema(r, key):
         )
     if "inert_when" in r:
         iw = r["inert_when"]
-        if (not isinstance(iw, dict) or set(iw) != {"nvpair", "value"}
-                or not all(isinstance(iw[k], str) and not isinstance(iw[k], bool) for k in iw)):
+        if (not isinstance(iw, dict) or not {"nvpair", "value"} <= set(iw)
+                or not set(iw) <= {"nvpair", "value", "required", "strict", "clear"}
+                or not all(isinstance(iw[k], str) and not isinstance(iw[k], bool) for k in ("nvpair", "value"))):
             raise ValueError(
                 "binding {0!r} declares inert_when {1!r}; it must be a mapping with string keys "
-                "'nvpair' and 'value' (the gate nvPair and its wire value)".format(key, iw)
+                "'nvpair' and 'value' (the gate nvPair and its wire value), optionally 'required', "
+                "'strict' and 'clear'".format(key, iw)
+            )
+        for flag in ("required", "strict"):
+            if flag in iw and not isinstance(iw[flag], bool):
+                raise ValueError(
+                    "binding {0!r} declares inert_when {1} {2!r}; the marker is a boolean".format(key, flag, iw[flag])
+                )
+        if iw.get("strict") and "reset_wire" not in r:
+            raise ValueError(
+                "binding {0!r} declares inert_when strict without a reset_wire; disabling the gate needs a "
+                "verified neutral value to send".format(key)
+            )
+        if "clear" in iw and (iw["clear"] != "" or r.get("type") != "string" or "reset_wire" in r):
+            raise ValueError(
+                "binding {0!r} declares inert_when clear {1!r}; only an empty clear on a string binding "
+                "without a reset_wire is supported".format(key, iw["clear"])
             )
     if "reset_wire" in r:
         v = r["reset_wire"]
@@ -1079,6 +1103,9 @@ def compile_rows(slice_rows):
                 v = r[src]
                 if isinstance(v, list):
                     v = tuple(v)
+                if f == "inert_when":
+                    # Fixed key order, so the rendered table does not depend on how a slice orders them.
+                    v = dict((k, v[k]) for k in ("nvpair", "value", "required", "strict", "clear") if k in v)
                 row[f] = v
         out.append(row)
     if seen != set(COMMITTED_BINDINGS):
@@ -1106,6 +1133,14 @@ def compile_rows(slice_rows):
                 "declared default ({2!r})".format((x["parent_template"], x["parent_nvpair"]), x["inert_when"]["value"],
                                                   sorted(neutral))
             )
+        seen_chain, cur = {id(x)}, gate
+        while "inert_when" in cur:
+            if id(cur) in seen_chain:
+                raise ValueError(
+                    "binding {0!r} declares an inert_when chain that loops".format((x["parent_template"], x["parent_nvpair"]))
+                )
+            seen_chain.add(id(cur))
+            cur = by_key[(cur["parent_template"], cur["inert_when"]["nvpair"])]
     out.sort(key=lambda x: (x["parent_template"], x["parent_nvpair"]))
     return out
 

@@ -150,10 +150,10 @@ def test_loopback_tag_is_not_inert_and_is_still_refused():
 # ------------------------------------------------------------------ engine and generator contract
 def test_engine_inertness_compares_the_gate_in_wire_form():
     row = table.resolve_by_nvpair("int_routed_host", "ospfTag")
-    assert row["inert_when"] == {"nvpair": "ospf", "value": "false"}
+    assert row["inert_when"] == {"nvpair": "ospf", "value": "false", "required": True}
     assert engine.gie_binding_inert(row, {"ospf": "false"}) and engine.gie_binding_inert(row, {"ospf": False})
     assert not engine.gie_binding_inert(row, {"ospf": "true"}) and not engine.gie_binding_inert(row, {})
-    assert not engine.gie_binding_inert(table.resolve_by_nvpair("int_routed_host", "ospfCost"), {"ospf": "false"})
+    assert not engine.gie_binding_inert(table.resolve_by_nvpair("int_routed_host", "aclFilter"), {"ospf": "false"})
 
 
 def _rows_with(parent, nvpair, **row_update):

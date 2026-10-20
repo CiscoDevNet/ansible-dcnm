@@ -75,6 +75,7 @@ bindings:
     inert_when:
       nvpair: ospf
       value: 'false'
+      required: true
     applicable_interface_type: eth
     applicable_mode: routed
     type: string
@@ -120,6 +121,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfCost
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_cost
     applicable_interface_type: eth
     applicable_mode: routed

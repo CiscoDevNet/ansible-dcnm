@@ -31,6 +31,12 @@
 bindings:
   - parent_template: int_routed_host
     parent_nvpair: ospfMtuIgnore
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_mtu_ignore
     applicable_interface_type: eth
     applicable_mode: routed
@@ -49,6 +55,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfShutdown
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_shutdown
     applicable_interface_type: eth
     applicable_mode: routed
@@ -67,6 +79,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfHelloInterval
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_hello_interval
     applicable_interface_type: eth
     applicable_mode: routed
@@ -95,6 +113,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfDeadInterval
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_dead_interval
     applicable_interface_type: eth
     applicable_mode: routed
@@ -117,6 +141,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfTransmitDelay
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_transmit_delay
     applicable_interface_type: eth
     applicable_mode: routed
@@ -139,6 +169,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfPriority
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     profile_key: ospf_priority
     applicable_interface_type: eth
     applicable_mode: routed
@@ -161,6 +197,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfPassiveMode
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     wire_values: {no_change: noChange, passive: passive, no_passive: noPassive}   # SMU enum vocabulary; public valid_values unchanged
     profile_key: ospf_passive_mode
     applicable_interface_type: eth
@@ -181,6 +223,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfNetworkType
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
     profile_key: ospf_network_type
     applicable_interface_type: eth
@@ -201,6 +249,12 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ospfBfdMode
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
     wire_values: {no_change: noChange, enable: enable, disable: disable}   # SMU enum vocabulary; public valid_values unchanged
     profile_key: ospf_bfd_mode
     applicable_interface_type: eth

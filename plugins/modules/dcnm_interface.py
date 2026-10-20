@@ -131,6 +131,20 @@ options:
       configured, or skipped by scope) is not affected, and a former port-channel member reset
       after its port-channel is deleted is not covered. With the capability disabled these
       fields are left unchanged, as before.
+    - Some registered fields depend on another option of the same interface on
+      int_routed_host, int_subif and int_vlan - the OSPF options, process tag and
+      authentication fields on C(enable_ospf), the message-digest key and key ID on
+      C(enable_ospf_auth), the simple-key encryption type on C(ospf_authentication_key). While
+      that option is disabled they configure nothing. Disabling it sends the neutral value of
+      each dependent option, keeps a stored process tag or encryption type as inert stored
+      data, and clears a stored message-digest key. In C(merged), an explicit C(enable_ospf)
+      or C(enable_ospf_auth) false does the same for the stored dependents; omitting it
+      preserves them as usual. Before any request, the module refuses an explicit non-neutral
+      OSPF option while OSPF ends disabled, an explicit empty C(ospf_tag) or C(ospf_auth_key)
+      while its option is enabled, and enabling message-digest authentication over a cleared
+      key without a new key. A port reset while such an option is still enabled is refused and
+      names the option to disable first. int_loopback is not covered (its OSPF follows the
+      fabric underlay in the default VRF).
     - Registered string fields whose letter case is part of the value (authentication keys and
       ACL, prefix-list or MACsec key-chain and policy names) are compared case-sensitively, so
       a change of case alone is sent. IPv6 text, numeric fields, booleans and enumerations keep
@@ -2892,6 +2906,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_carry_forward_bindings,
     gie_withdrawal_action,
     gie_binding_inert,
+    gie_dependency_plan,
     gie_binding_is_owned_elsewhere,
     gie_patch_supported,
     GIE_READONLY_METADATA_NVPAIRS,
@@ -3788,6 +3803,8 @@ class DcnmIntf:
         # Bindings whose required withdrawal cannot be completed. Collected during the
         # comparison pass and raised ONCE by main(), before anything is sent.
         self.withdrawal_blocked = []
+        # Dependent fields (inert_when) set against their gate, collected and raised before any request.
+        self.dependency_blocked = []
         # F2: registered fields a reset-to-default (named deleted, overridden) must withdraw but
         # cannot, one entry per interface and field. Raised ONCE by main(), before anything is sent.
         self.default_reset_blocked = []
@@ -12042,6 +12059,32 @@ class DcnmIntf:
         self.want = want
         self.have = have
 
+    def dcnm_intf_gie_dependencies(self, state, want, have_nvpairs, pb_keys, name):
+        """Dependent-field rules (inert_when, gie_dependency_plan) for one interface WANT.
+
+        Conflicts are recorded in self.dependency_blocked and raised by main() before any request.
+        In merged, an explicit disable of a gate also brings its stored dependents to neutral: the
+        returned writes are applied to WANT by the caller. `have_nvpairs` is {} unless HAVE has the
+        same parent (a new interface or a policy change has no stored dependents)."""
+        if state not in ("merged", "replaced", "overridden"):
+            return {}
+        policy = want.get("policy")
+        explicit = set(
+            b["parent_nvpair"] for b in gie_carry_forward_bindings(policy) if b["profile_key"] in pb_keys
+        )
+        writes, conflicts = gie_dependency_plan(
+            policy,
+            want["interfaces"][0]["nvPairs"],
+            have_nvpairs,
+            explicit,
+            state == "merged",
+            getattr(self, "ndfc_version", None),
+            getattr(self, "patch_version", None),
+        )
+        for conflict in conflicts:
+            self.dependency_blocked.append(dict(conflict, interface=name, parent=policy))
+        return writes
+
     def dcnm_intf_compare_want_and_have(self, state):
         """
         Compare want and have states for each interface
@@ -12232,6 +12275,12 @@ class DcnmIntf:
                 # A new vPC continues in the generic creation path below.
             if not match_have:
                 self.dcnm_intf_require_detail_authority(name, sno)
+                # A new interface has no stored dependents: only its explicit input is judged.
+                self.dcnm_intf_gie_dependencies(state, want, {}, [
+                    key for pb in self.pb_input
+                    if name.lower() == pb["ifname"].lower() and sno == pb["sno"] and fabric == pb["fabric"]
+                    for key in pb
+                ], name)
                 changed_dict = copy.deepcopy(want)
 
                 if (
@@ -12279,6 +12328,8 @@ class DcnmIntf:
                         # The OSPF-MD policy-mismatch guard that ran here went with the bindings
                         # it protected: it only inspected the message-digest nvPair across a
                         # parent change, and nothing loopback-specific is left to guard.
+                        # The stored values belong to the other parent: only explicit input is judged.
+                        self.dcnm_intf_gie_dependencies(state, want, {}, pb_keys, name)
                         action = "update"
                         continue
 
@@ -12444,6 +12495,30 @@ class DcnmIntf:
                                                         break
                                             if not gie_binding_inert(_w_b, _w_gate_nv):
                                                 self.withdrawal_blocked.append(_w_entry)
+                                            elif "clear" in _w_b["inert_when"]:
+                                                # Key material is cleared, not kept, once its gate ends off.
+                                                _w_clear = _w_b["inert_when"]["clear"]
+                                                want[k][0][ik][_w_b["parent_nvpair"]] = _w_clear
+                                                if _w_b["parent_nvpair"] not in nv_keys:
+                                                    nv_keys.append(_w_b["parent_nvpair"])
+                                                changed_dict[k][0][ik][_w_b["parent_nvpair"]] = _w_clear
+
+                                    # Dependent fields (inert_when): explicit contradictions and empty required
+                                    # fields are refused before any request; an explicit merged disable of a
+                                    # gate brings its stored dependents to neutral, before the carry-forward
+                                    # below would preserve them.
+                                    _d_have = next(
+                                        (intf[ik] for intf in d[k] if isinstance(intf.get(ik), dict)), {}
+                                    )
+                                    _d_written = set()
+                                    for _d_nvp, _d_wire in self.dcnm_intf_gie_dependencies(
+                                        state, want, _d_have, pb_keys, name
+                                    ).items():
+                                        _d_written.add(_d_nvp)
+                                        want[k][0][ik][_d_nvp] = _d_wire
+                                        if _d_nvp not in nv_keys:
+                                            nv_keys.append(_d_nvp)
+                                        changed_dict[k][0][ik][_d_nvp] = _d_wire
 
                                     # Preserve an authoritative current value for every omitted
                                     # registry passthrough binding on this SAME parent.  This is
@@ -12633,7 +12708,9 @@ class DcnmIntf:
                                                 want[k][0][ik][nk],
                                                 d[k][index][ik].get(nk),
                                                 nk,
-                                                state,
+                                                # A dependent neutralized by an explicit merged disable is
+                                                # requested, not copied back from HAVE.
+                                                "replaced" if nk in _d_written else state,
                                                 exact_string=exact_nv,
                                             )
                                             if res == "dont_add":
@@ -12892,8 +12969,19 @@ class DcnmIntf:
             except GieBindingError:
                 blocked.append(dict(entry, reason="unreadable"))
                 continue
-            if action != GIE_WITHDRAW_RESET and gie_binding_inert(binding, have_nv):
-                continue    # inert under its gate on the source (inert_when): nothing configured to withdraw
+            if gie_binding_inert(binding, have_nv) and (action != GIE_WITHDRAW_RESET or src != dst):
+                # Inert under its gate on the source (inert_when): it configures nothing, so there is nothing
+                # to withdraw before a policy change (measured: the int_trunk_host intent carries no OSPF key
+                # after routed -> trunk). On the same policy a verified reset is still sent, and key material
+                # (clear) is cleared rather than kept.
+                if src == dst and "clear" in binding["inert_when"]:
+                    resets[nvpair] = binding["inert_when"]["clear"]
+                continue
+            gate = binding.get("inert_when")
+            gate_binding = gie_resolve_by_nvpair(src, gate["nvpair"]) if gate else None
+            if gate_binding is not None:
+                # Disabling the gate on the current policy makes this field inert; the message names that remedy.
+                entry["gate"] = gate_binding["profile_key"]
             if src == dst:
                 if action == GIE_WITHDRAW_RESET:
                     resets[nvpair] = wire
@@ -12910,11 +12998,6 @@ class DcnmIntf:
                     continue    # proven: already the destination's neutral value
                 # UNSUPPORTED, UNCLASSIFIED and INAPPLICABLE prove nothing about the destination:
                 # an inapplicable destination binding cannot even carry the field.
-            gate = binding.get("inert_when")
-            gate_binding = gie_resolve_by_nvpair(src, gate["nvpair"]) if gate else None
-            if gate_binding is not None:
-                # Disabling the gate on the current policy makes this field inert; the message names that remedy.
-                entry["gate"] = gate_binding["profile_key"]
             blocked.append(dict(entry, reason="transition", source_reset=action == GIE_WITHDRAW_RESET))
         return resets, blocked
 
@@ -15533,6 +15616,41 @@ def main():
         )
         module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
 
+    if dcnm_intf.dependency_blocked:
+        # Dependent fields (inert_when) set against their gate. Names only, never values.
+        set_off = sorted(
+            {
+                (b["interface"], b["parent"], b["field"], b["gate"])
+                for b in dcnm_intf.dependency_blocked
+                if b["reason"] == "set_while_off"
+            }
+        )
+        empty_on = sorted(
+            {
+                (b["interface"], b["parent"], b["field"], b["gate"])
+                for b in dcnm_intf.dependency_blocked
+                if b["reason"] == "empty_while_on"
+            }
+        )
+        parts = []
+        if set_off:
+            parts.append(
+                "These fields depend on an option that this request leaves disabled, so they would "
+                "configure nothing, and the controller refuses them or would keep their key material: {0}. "
+                "Omit the field or give its neutral value when the option is disabled.".format(
+                    ", ".join("{2} (needs {3}) on {0}, parent {1}".format(*b) for b in set_off)
+                )
+            )
+        if empty_on:
+            parts.append(
+                "These fields are required while the option they depend on is enabled, and this request "
+                "leaves them empty: {0}. Set the field, or disable the option.".format(
+                    ", ".join("{2} (with {3} enabled) on {0}, parent {1}".format(*b) for b in empty_on)
+                )
+            )
+        parts.append("No configuration or deployment request was sent.")
+        module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
+
     if dcnm_intf.withdrawal_blocked:
         unsupported = sorted(
             {
@@ -15580,7 +15698,14 @@ def main():
             {
                 (b["interface"], b["serial"], b["parent"], b["field"], b["nvpair"])
                 for b in dcnm_intf.default_reset_blocked
-                if b["reason"] in (GIE_WITHDRAW_UNSUPPORTED, GIE_WITHDRAW_UNCLASSIFIED)
+                if b["reason"] in (GIE_WITHDRAW_UNSUPPORTED, GIE_WITHDRAW_UNCLASSIFIED) and not b.get("gate")
+            }
+        )
+        same_gated = sorted(
+            {
+                (b["interface"], b["serial"], b["parent"], b["field"], b["nvpair"], b["gate"])
+                for b in dcnm_intf.default_reset_blocked
+                if b["reason"] in (GIE_WITHDRAW_UNSUPPORTED, GIE_WITHDRAW_UNCLASSIFIED) and b.get("gate")
             }
         )
         unreadable = sorted(
@@ -15626,6 +15751,17 @@ def main():
                     module.params["state"],
                     ", ".join("{3} ({4}) on {0} [{1}], parent {2}".format(*b) for b in same),
                     no_withdrawal,
+                )
+            )
+        if same_gated:
+            parts.append(
+                "Resetting these interfaces to their default policy in state '{0}' must withdraw a "
+                "registered field that holds a configured value, and no verified reset is established "
+                "for it on that parent: {1}. The field configures nothing while its gate is off: disable {2} "
+                "on the current policy first, then repeat the reset.".format(
+                    module.params["state"],
+                    ", ".join("{3} ({4}) on {0} [{1}], parent {2}".format(*b) for b in same_gated),
+                    ", ".join(sorted(set(b[5] for b in same_gated))),
                 )
             )
         if unreadable:
