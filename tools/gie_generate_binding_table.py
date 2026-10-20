@@ -820,7 +820,7 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
           "applicable_mode", "type", "valid_values", "default_template", "reset_wire",
           "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
           "max_value", "no_log", "wire_values", "smu_unsupported", "string_compare",
-          "inert_when"]
+          "inert_when", "dropped_on_policy_change"]
 
 # `smu_unsupported` -- this identity has NO counterpart in the installed SMU build. The
 # row is KEPT so its history and provenance survive; the engine refuses explicit input for
@@ -864,6 +864,14 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 #             reset_wire, which an explicit merged disable of the gate sends.
 #   clear:    "" only, on a string row without a reset_wire: the value sent when the gate ends off,
 #             so stored material (an authentication key) is cleared rather than kept.
+
+# `dropped_on_policy_change` -- True or absent. The source parent realizes this binding only in
+# interface-scoped child policies (entity and source = the interface), and its delete() removes every
+# such child, so when a reset to the role default replaces this parent with another one the stored value
+# leaves with the parent and needs no withdrawal on the destination (which may not declare it). Allowed
+# only on the parents listed in POLICY_CHANGE_DROPS_CHILDREN, each with the template body that shows it.
+# It is never a reset: on the same parent the row's reset_wire still applies, and the value is never
+# written into the destination template.
 
 # `string_compare` -- how the module compares a WANT and a HAVE value of a `type: string`
 # binding, for the exact (parent_template, parent_nvpair) it is declared on. Required on every
@@ -928,6 +936,18 @@ SCHEMA_REQUIRED_FIELDS = (
 )
 
 SCHEMA_TYPES = frozenset({"boolean", "integer", "string", "enum"})
+
+# Parents whose delete() removes every interface-scoped child policy (PTIWrapper.delete(serial,
+# "INTERFACE", INTF_NAME, INTF_NAME)) and whose children are all created with entity and source =
+# INTF_NAME, read from the installed template body. Only rows of these parents may declare
+# dropped_on_policy_change.
+POLICY_CHANGE_DROPS_CHILDREN = {
+    # Installed int_routed_host body (sha256 6d37ea6a...): 57 of 57 createOrUpdate calls use
+    # entity = source = INTF_NAME, and delete() removes them all. Measured on 12.6.0.267: after a reset
+    # from int_routed_host to int_trunk_host the intent kept no routed key and the switch's policy ids
+    # returned to their baseline set.
+    "int_routed_host",
+}
 
 
 def _check_registry_schema(r, key):
@@ -1020,6 +1040,17 @@ def _check_registry_schema(r, key):
             "binding {0!r} declares smu_unsupported {1!r}; the marker is the boolean True "
             "or absent".format(key, r["smu_unsupported"])
         )
+    if "dropped_on_policy_change" in r:
+        if r["dropped_on_policy_change"] is not True:
+            raise ValueError(
+                "binding {0!r} declares dropped_on_policy_change {1!r}; the marker is the boolean True "
+                "or absent".format(key, r["dropped_on_policy_change"])
+            )
+        if r["parent_template"] not in POLICY_CHANGE_DROPS_CHILDREN:
+            raise ValueError(
+                "binding {0!r} declares dropped_on_policy_change on {1!r}, which is not a parent whose "
+                "delete() is shown to remove every interface-scoped child".format(key, r["parent_template"])
+            )
     if "inert_when" in r:
         iw = r["inert_when"]
         if (not isinstance(iw, dict) or not {"nvpair", "value"} <= set(iw)

@@ -334,8 +334,10 @@ class TestPV09InventoryInvariants:
         # int_subif and int_vlan (was b6f88798...).
         # OSPF dependencies: regenerated from the same 34 slices with `inert_when` on the OSPF options and
         # authentication rows of the same three parents and `required` on ospf_tag (was d5281a22...).
+        # RT-1: regenerated from the same 34 slices with `dropped_on_policy_change` on five int_routed_host rows
+        # (was acc3629a...).
         assert PROVENANCE_SHA256 == (
-            "acc3629a9f0aa5eeab4a1f7af9a75c03d0017263b4576f42cc6698b75d5793e5"
+            "f36ad7532abcaf2ede689e2858ed2e221ca1578f32c499f16523818cd015db75"
         )
 
 

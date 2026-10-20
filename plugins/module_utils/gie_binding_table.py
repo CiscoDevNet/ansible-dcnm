@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = acc3629a9f0aa5eeab4a1f7af9a75c03d0017263b4576f42cc6698b75d5793e5
+# provenance_sha256 = f36ad7532abcaf2ede689e2858ed2e221ca1578f32c499f16523818cd015db75
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "acc3629a9f0aa5eeab4a1f7af9a75c03d0017263b4576f42cc6698b75d5793e5"
+PROVENANCE_SHA256 = "f36ad7532abcaf2ede689e2858ed2e221ca1578f32c499f16523818cd015db75"
 
 BINDING_TABLE = (
     {
@@ -1214,6 +1214,7 @@ BINDING_TABLE = (
         'max_length': 64,
         'no_log': False,
         'string_compare': 'exact',
+        'dropped_on_policy_change': True,
     },
     {
         'parent_template': 'int_routed_host',
@@ -1226,6 +1227,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'dropped_on_policy_change': True,
     },
     {
         'parent_template': 'int_routed_host',
@@ -1240,6 +1242,7 @@ BINDING_TABLE = (
         'max_length': 45,
         'no_log': False,
         'string_compare': 'casefold',
+        'dropped_on_policy_change': True,
     },
     {
         'parent_template': 'int_routed_host',
@@ -1253,6 +1256,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'dropped_on_policy_change': True,
     },
     {
         'parent_template': 'int_routed_host',
@@ -1265,6 +1269,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'dropped_on_policy_change': True,
     },
     {
         'parent_template': 'int_routed_host',

@@ -121,6 +121,9 @@
 
 - parent_template: int_routed_host
   parent_nvpair: ipv4AclIn
+  # RT-1: a child policy of int_routed_host (entity = source = INTF_NAME); its delete() drops it with the
+  # policy change to the role default (body 6d37ea6a). Pending live proof on one routed port.
+  dropped_on_policy_change: true
   profile_key: ipv4_acl_in
   reset_wire: ''
   applicable_interface_type: eth
