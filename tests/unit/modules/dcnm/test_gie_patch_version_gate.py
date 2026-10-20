@@ -335,9 +335,10 @@ class TestPV09InventoryInvariants:
         # OSPF dependencies: regenerated from the same 34 slices with `inert_when` on the OSPF options and
         # authentication rows of the same three parents and `required` on ospf_tag (was d5281a22...).
         # RT-1: regenerated from the same 34 slices with `dropped_on_policy_change` on five int_routed_host rows
-        # (was acc3629a...).
+        # (was acc3629a...). Retirement scope: the marker is computed for every int_routed_host row from the
+        # generator's parent declaration; the slices are back to their earlier content (was f36ad753...).
         assert PROVENANCE_SHA256 == (
-            "f36ad7532abcaf2ede689e2858ed2e221ca1578f32c499f16523818cd015db75"
+            "8ea855abc99dc326a178f49d2d897259d783acf77f5a952f3a44a69da4464241"
         )
 
 

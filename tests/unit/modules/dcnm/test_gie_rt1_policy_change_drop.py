@@ -15,6 +15,7 @@ __metaclass__ = type
 import copy
 import importlib.util
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -75,9 +76,12 @@ def test_second_run_over_the_reset_it_wrote_is_a_noop(state):
 
 # ------------------------------------------------------------------ boundaries kept
 @pytest.mark.parametrize("state", STATES)
-def test_an_unmarked_source_only_field_still_refuses_and_names_only_itself(state):
+def test_a_row_without_the_marker_still_refuses_and_names_only_itself(state):
+    """The refusal stays for a binding whose parent is not declared: simulated on one int_routed_host row by
+    removing its marker for the duration of the test."""
     have = routed_have(eigrpIpv4Passive="true", **{k: v[1] for k, v in DROPPED.items()})
-    result, calls = run(state, have, "leaf")
+    with patch.dict(table.resolve_by_nvpair(h.ROUTED, "eigrpIpv4Passive"), {"dropped_on_policy_change": False}):
+        result, calls = run(state, have, "leaf")
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")
     msg = result["msg"]
     assert "eigrp_ipv4_passive (eigrpIpv4Passive) on %s [%s], int_routed_host -> int_trunk_host" % (h.IF_A, h.SERIAL) in msg
@@ -88,9 +92,10 @@ def test_an_unmarked_source_only_field_still_refuses_and_names_only_itself(state
 
 
 @pytest.mark.parametrize("state", STATES)
-def test_ospf_active_still_refuses_the_reset_with_its_gate_remedy(state):
+def test_ospf_active_on_the_same_parent_still_refuses_with_its_gate_remedy(state):
+    """border: the parent stays int_routed_host, nothing is dropped, and the gate rule is unchanged."""
     have = routed_have(ospf="true", ospfTag="SYNTHETIC-TAG", ipv4AclIn="SYNTHETIC-ACL")
-    result, calls = run(state, have, "leaf")
+    result, calls = run(state, have, "border")
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")
     assert "disable enable_ospf on the current policy first" in result["msg"]
     assert "ipv4_acl_in (ipv4AclIn)" not in result["msg"]
@@ -124,11 +129,12 @@ def test_border_policy_change_from_trunk_is_unchanged(state):
 
 
 # ------------------------------------------------------------------ registry: exactly these rows, and the generator gate
-def test_only_the_five_int_routed_host_rows_carry_the_marker():
+def test_every_int_routed_host_row_and_no_other_carries_the_marker():
     marked = sorted((r["parent_template"], r["parent_nvpair"]) for r in table.BINDING_TABLE if r.get("dropped_on_policy_change"))
-    assert marked == sorted(("int_routed_host", n) for n in DROPPED)
-    assert all(table.BINDING_TABLE[i]["dropped_on_policy_change"] is True
-               for i, r in enumerate(table.BINDING_TABLE) if r.get("dropped_on_policy_change"))
+    routed = sorted((r["parent_template"], r["parent_nvpair"]) for r in table.BINDING_TABLE if r["parent_template"] == h.ROUTED)
+    assert marked == routed and len(routed) == 56
+    assert set(("int_routed_host", n) for n in DROPPED) <= set(marked)
+    assert all(r["dropped_on_policy_change"] is True for r in table.BINDING_TABLE if r.get("dropped_on_policy_change"))
 
 
 def _generator():
@@ -149,17 +155,22 @@ def _row(**over):
     return row
 
 
-def test_generator_accepts_the_marker_on_a_declared_parent():
+def test_generator_declares_only_the_child_policy_parent():
+    assert _generator().POLICY_CHANGE_DROPS_CHILDREN == {"int_routed_host"}
+    _generator()._check_registry_schema(_row(), ("int_routed_host", "ipv4AclIn"))
+
+
+def test_generator_accepts_a_row_that_repeats_the_computed_marker():
     _generator()._check_registry_schema(_row(dropped_on_policy_change=True), ("int_routed_host", "ipv4AclIn"))
 
 
-@pytest.mark.parametrize("bad, text", [
-    (dict(dropped_on_policy_change="true"), "the marker is the boolean True"),
-    (dict(dropped_on_policy_change=False), "the marker is the boolean True"),
-    (dict(dropped_on_policy_change=True, parent_template="int_trunk_host", parent_nvpair="aclFilter",
-          profile_key="acl_filter", applicable_mode="trunk"), "not a parent whose delete() is shown"),
+@pytest.mark.parametrize("bad", [
+    dict(dropped_on_policy_change="true"),
+    dict(dropped_on_policy_change=False),
+    dict(dropped_on_policy_change=True, parent_template="int_trunk_host", parent_nvpair="aclFilter",
+         profile_key="acl_filter", applicable_mode="trunk"),
 ])
-def test_generator_refuses_a_bad_marker(bad, text):
+def test_generator_refuses_a_marker_that_differs_from_the_parent(bad):
     with pytest.raises(ValueError) as err:
         _generator()._check_registry_schema(_row(**bad), (bad.get("parent_template", "int_routed_host"), "x"))
-    assert text in str(err.value)
+    assert "a row may only repeat the computed value" in str(err.value)

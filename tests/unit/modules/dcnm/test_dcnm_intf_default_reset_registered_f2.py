@@ -268,11 +268,13 @@ def test_a_refused_secret_is_named_by_field_and_never_emitted():
 @pytest.mark.parametrize("state", STATES)
 def test_policy_change_without_a_source_reset_offers_no_module_remedy(state):
     """leaf: default int_trunk_host; HAVE is int_routed_host with EIGRP IPv4 passive set (no verified reset on the
-    source, not registered on the destination, no gate that makes it inert): refused, and no clear-on-current-policy
-    advice."""
+    source, not registered on the destination, no gate that makes it inert). int_routed_host drops every binding with
+    the policy change (dropped_on_policy_change), so the message branch is exercised with the marker removed from
+    this one row for the duration of the test: refused, and no clear-on-current-policy advice."""
     have = default_have("border")
     have[0]["interfaces"][0]["nvPairs"]["eigrpIpv4Passive"] = "true"
-    result, calls = run(state, have, "leaf")
+    with patch.dict(table.resolve_by_nvpair(h.ROUTED, "eigrpIpv4Passive"), {"dropped_on_policy_change": False}):
+        result, calls = run(state, have, "leaf")
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")
     msg = result["msg"]
     assert "eigrp_ipv4_passive (eigrpIpv4Passive) on %s [%s], int_routed_host -> int_trunk_host" % (h.IF_A, h.SERIAL) in msg

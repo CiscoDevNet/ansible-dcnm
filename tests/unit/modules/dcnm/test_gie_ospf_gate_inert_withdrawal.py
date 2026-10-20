@@ -116,13 +116,26 @@ def test_retiring_after_disabling_resets_to_trunk(state):
 
 
 @pytest.mark.parametrize("state", STATES)
-def test_retiring_with_ospf_on_names_the_gate_as_the_remedy(state):
+def test_retiring_with_ospf_on_to_the_leaf_default_drops_ospf_with_the_policy(state):
+    """int_routed_host drops every binding with a policy change (its delete() removes the OSPF child policies), so a
+    leaf reset with OSPF still on proceeds with one write and sends neither ospf nor the tag."""
     result, calls = retire(state, real_have())
+    assert not result.get("failed"), result.get("msg")
+    pol = sent_policies(calls)
+    assert len(pol) == 1 and pol[0]["policy"] == "int_trunk_host"
+    nv = pol[0]["interfaces"][0]["nvPairs"]
+    assert "ospf" not in nv and "ospfTag" not in nv
+    assert FIXTURE["nvPairs"]["ospfTag"] not in str(calls)
+
+
+@pytest.mark.parametrize("state", STATES)
+def test_resetting_with_ospf_on_to_the_same_parent_names_the_gate_as_the_remedy(state):
+    """border: the default is int_routed_host itself, nothing leaves with a policy change, and the gate is named."""
+    result, calls = F2.run(state, real_have(), "border", configs=None if state == "deleted" else [])
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")
     msg = result["msg"]
-    assert "ospf_tag (ospfTag) on %s [%s], int_routed_host -> int_trunk_host" % (h.IF_A, h.SERIAL) in msg
+    assert "ospf_tag (ospfTag) on %s [%s], parent int_routed_host" % (h.IF_A, h.SERIAL) in msg
     assert "disable enable_ospf on the current policy first, then repeat the reset" in msg
-    assert "enable_ospf (ospf)" in msg and "clear the field on that policy first" in msg
     assert FIXTURE["nvPairs"]["ospfTag"] not in msg
 
 

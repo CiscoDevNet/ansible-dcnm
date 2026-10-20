@@ -12923,9 +12923,9 @@ class DcnmIntf:
           * same parent, verified reset: that parent's own `reset_wire` is added to the payload;
           * same parent, unsupported or unclassified: blocked, named;
           * policy change (HAVE parent != default parent): the source value is NOT assumed to
-            disappear with the policy change (not measured), except for rows that declare
-            dropped_on_policy_change (their source parent's delete() removes the child policy that
-            realizes them; RT-1). Only when the destination parent
+            disappear with the policy change (not measured), except for the bindings of a parent
+            declared in the generator as dropping all its interface-scoped child policies on a
+            policy change (dropped_on_policy_change; int_routed_host). Only when the destination parent
             registers the same nvPair and either has a verified reset for the value (its own wire
             is used) or classifies it as already withdrawn (GIE_WITHDRAW_NONE -- the only proof of
             neutrality; INAPPLICABLE is not one) does the reset proceed; otherwise blocked as a
@@ -13001,9 +13001,10 @@ class DcnmIntf:
                 # UNSUPPORTED, UNCLASSIFIED and INAPPLICABLE prove nothing about the destination:
                 # an inapplicable destination binding cannot even carry the field.
             if binding.get("dropped_on_policy_change"):
-                # RT-1: the source parent realizes this field only in an interface-scoped child policy that its
-                # delete() removes when the policy is replaced (declared per row, see the generator). The stored
-                # value leaves with the source parent; nothing is withdrawn on, or written into, the destination.
+                # The source parent realizes this field only in an interface-scoped child policy that its delete()
+                # removes when the policy is replaced (declared per parent, see POLICY_CHANGE_DROPS_CHILDREN in the
+                # generator). The stored value leaves with the source parent; nothing is withdrawn on, or written
+                # into, the destination.
                 continue
             blocked.append(dict(entry, reason="transition", source_reset=action == GIE_WITHDRAW_RESET))
         return resets, blocked

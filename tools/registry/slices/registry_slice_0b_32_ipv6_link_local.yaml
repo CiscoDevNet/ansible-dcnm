@@ -48,9 +48,6 @@ bindings:
 
   - parent_template: int_routed_host
     parent_nvpair: ipv6LinkLocal
-    # RT-1: a child policy of int_routed_host (entity = source = INTF_NAME); its delete() drops it with the
-    # policy change to the role default (body 6d37ea6a). Pending live proof on one routed port.
-    dropped_on_policy_change: true
     profile_key: ipv6_link_local
     applicable_interface_type: eth
     applicable_mode: routed

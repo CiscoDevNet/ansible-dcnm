@@ -865,13 +865,14 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 #   clear:    "" only, on a string row without a reset_wire: the value sent when the gate ends off,
 #             so stored material (an authentication key) is cleared rather than kept.
 
-# `dropped_on_policy_change` -- True or absent. The source parent realizes this binding only in
-# interface-scoped child policies (entity and source = the interface), and its delete() removes every
-# such child, so when a reset to the role default replaces this parent with another one the stored value
-# leaves with the parent and needs no withdrawal on the destination (which may not declare it). Allowed
-# only on the parents listed in POLICY_CHANGE_DROPS_CHILDREN, each with the template body that shows it.
-# It is never a reset: on the same parent the row's reset_wire still applies, and the value is never
-# written into the destination template.
+# `dropped_on_policy_change` -- True or absent, COMPUTED per parent, never written in a slice. Every
+# binding of a parent listed in POLICY_CHANGE_DROPS_CHILDREN carries it: that parent realizes all its
+# configuration in interface-scoped child policies (entity and source = the interface) and its delete()
+# removes every such child, so when a reset to the role default replaces the parent with another one the
+# stored value leaves with it and needs no withdrawal on the destination (which may not declare it). It is
+# never a reset: on the same parent the row's reset_wire still applies, a field the destination also
+# registers still uses the destination's verified reset, and the value is never written into the
+# destination template. A row that writes a different value is refused, so it cannot drift from its parent.
 
 # `string_compare` -- how the module compares a WANT and a HAVE value of a `type: string`
 # binding, for the exact (parent_template, parent_nvpair) it is declared on. Required on every
@@ -939,10 +940,12 @@ SCHEMA_TYPES = frozenset({"boolean", "integer", "string", "enum"})
 
 # Parents whose delete() removes every interface-scoped child policy (PTIWrapper.delete(serial,
 # "INTERFACE", INTF_NAME, INTF_NAME)) and whose children are all created with entity and source =
-# INTF_NAME, read from the installed template body. Only rows of these parents may declare
-# dropped_on_policy_change.
+# INTF_NAME, read from the installed template body. Every row of these parents carries
+# dropped_on_policy_change. int_trunk_host and int_access_host are NOT listed: they render their
+# configuration inline (setGeneratedConfig, no child policy), so a policy change removes no child and the
+# cleanup of their lines is not established.
 POLICY_CHANGE_DROPS_CHILDREN = {
-    # Installed int_routed_host body (sha256 6d37ea6a...): 57 of 57 createOrUpdate calls use
+    # Installed int_routed_host body (sha256 6d37ea6a...): 59 of 59 createOrUpdate calls use
     # entity = source = INTF_NAME, and delete() removes them all. Measured on 12.6.0.267: after a reset
     # from int_routed_host to int_trunk_host the intent kept no routed key and the switch's policy ids
     # returned to their baseline set.
@@ -1040,17 +1043,13 @@ def _check_registry_schema(r, key):
             "binding {0!r} declares smu_unsupported {1!r}; the marker is the boolean True "
             "or absent".format(key, r["smu_unsupported"])
         )
-    if "dropped_on_policy_change" in r:
-        if r["dropped_on_policy_change"] is not True:
-            raise ValueError(
-                "binding {0!r} declares dropped_on_policy_change {1!r}; the marker is the boolean True "
-                "or absent".format(key, r["dropped_on_policy_change"])
-            )
-        if r["parent_template"] not in POLICY_CHANGE_DROPS_CHILDREN:
-            raise ValueError(
-                "binding {0!r} declares dropped_on_policy_change on {1!r}, which is not a parent whose "
-                "delete() is shown to remove every interface-scoped child".format(key, r["parent_template"])
-            )
+    if "dropped_on_policy_change" in r and (
+            r["dropped_on_policy_change"] is not True or r["parent_template"] not in POLICY_CHANGE_DROPS_CHILDREN):
+        raise ValueError(
+            "binding {0!r} declares dropped_on_policy_change {1!r}; it is computed from the parent "
+            "(POLICY_CHANGE_DROPS_CHILDREN) and a row may only repeat the computed value".format(
+                key, r["dropped_on_policy_change"])
+        )
     if "inert_when" in r:
         iw = r["inert_when"]
         if (not isinstance(iw, dict) or not {"nvpair", "value"} <= set(iw)
@@ -1138,6 +1137,8 @@ def compile_rows(slice_rows):
                     # Fixed key order, so the rendered table does not depend on how a slice orders them.
                     v = dict((k, v[k]) for k in ("nvpair", "value", "required", "strict", "clear") if k in v)
                 row[f] = v
+        if r["parent_template"] in POLICY_CHANGE_DROPS_CHILDREN:
+            row["dropped_on_policy_change"] = True
         out.append(row)
     if seen != set(COMMITTED_BINDINGS):
         missing = sorted(set(COMMITTED_BINDINGS) - seen)
