@@ -92,13 +92,15 @@ def test_a_row_without_the_marker_still_refuses_and_names_only_itself(state):
 
 
 @pytest.mark.parametrize("state", STATES)
-def test_ospf_active_on_the_same_parent_still_refuses_with_its_gate_remedy(state):
-    """border: the parent stays int_routed_host, nothing is dropped, and the gate rule is unchanged."""
+def test_ospf_active_on_the_same_parent_is_reset_with_the_acl_in_one_write(state):
+    """border: the parent stays int_routed_host; the reset sends ospf "false" (the tag is inert under that final gate,
+    D-3) together with the ACL's verified reset."""
     have = routed_have(ospf="true", ospfTag="SYNTHETIC-TAG", ipv4AclIn="SYNTHETIC-ACL")
     result, calls = run(state, have, "border")
-    assert result.get("failed") and h.writes(calls) == [], result.get("msg")
-    assert "disable enable_ospf on the current policy first" in result["msg"]
-    assert "ipv4_acl_in (ipv4AclIn)" not in result["msg"]
+    assert not result.get("failed"), result.get("msg")
+    sent = nvpairs_of_reset(calls)
+    assert sent["ospf"] == "false" and "ospfTag" not in sent
+    assert sent["ipv4AclIn"] == reset_wire(h.ROUTED, "ipv4AclIn")
 
 
 @pytest.mark.parametrize("state", STATES)

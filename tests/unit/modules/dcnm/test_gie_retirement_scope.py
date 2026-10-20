@@ -89,8 +89,6 @@ def test_second_leaf_run_over_the_reset_is_a_noop(state):
 @pytest.mark.parametrize("state", STATES)
 @pytest.mark.parametrize("group, text", [
     ("eigrp_passive", "eigrp_ipv4_passive (eigrpIpv4Passive) on %s [%s], parent int_routed_host"),
-    ("ospf_active", "disable enable_ospf on the current policy first"),
-    ("ospf_auth_md5", "on the current policy first, then repeat the reset"),
 ])
 def test_border_same_parent_refusals_are_unchanged(state, group, text):
     result, calls = run(state, eth_have(h.ROUTED, ROUTED_GROUPS[group]), "border")
@@ -114,13 +112,17 @@ def test_border_transition_from_an_inline_parent_still_refuses(state, parent, nv
 
 
 @pytest.mark.parametrize("state", STATES)
-@pytest.mark.parametrize("group", ["arp_bfd", "dampening", "pim", "eigrp_routing", "macsec", "rt1_five", "ospf_base"])
+@pytest.mark.parametrize("group", ["arp_bfd", "dampening", "pim", "eigrp_routing", "macsec", "rt1_five", "ospf_base",
+                                   "ospf_active"])
 def test_border_same_parent_resets_with_verified_wires(state, group):
     result, calls = run(state, eth_have(h.ROUTED, ROUTED_GROUPS[group]), "border")
     assert not result.get("failed"), result.get("msg")
     sent = nvpairs_of_reset(calls)
     assert reset_policies(calls)[0]["policy"] == h.ROUTED
     for nvpair in ROUTED_GROUPS[group]:
+        if nvpair == "ospfTag":
+            assert nvpair not in sent        # D-3: inert under the final gate, kept stored, never sent
+            continue
         if ROUTED_GROUPS[group][nvpair] == reset_wire(h.ROUTED, nvpair):
             continue                    # already the neutral value (e.g. area 0.0.0.0): nothing to withdraw
         assert sent.get(nvpair) == reset_wire(h.ROUTED, nvpair), nvpair

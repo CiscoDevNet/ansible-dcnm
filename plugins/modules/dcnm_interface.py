@@ -12921,7 +12921,10 @@ class DcnmIntf:
           * already withdrawn, or capability disabled (inapplicable): nothing -- the published
             contract while the capability is off is unchanged;
           * same parent, verified reset: that parent's own `reset_wire` is added to the payload;
-          * same parent, unsupported or unclassified: blocked, named;
+          * same parent, unsupported or unclassified: blocked, named -- unless the row is gated
+            (inert_when) and the gate, as this same reset leaves it (HAVE + role default payload +
+            the verified resets queued here), makes it inert: then it stays stored, or is cleared
+            when it declares `clear` (D-3: a border reset with OSPF on already sends ospf "false");
           * policy change (HAVE parent != default parent): the source value is NOT assumed to
             disappear with the policy change (not measured), except for the bindings of a parent
             declared in the generator as dropping all its interface-scoped child policies on a
@@ -12937,7 +12940,7 @@ class DcnmIntf:
         the reset is actually queued, so an interface that stays configured or is skipped by
         scope never produces a refusal. Values are never recorded (a binding may be a secret).
         """
-        resets, blocked = {}, []
+        resets, blocked, gated = {}, [], []
         if not have or not uelem:
             return resets, blocked
         src = have.get("policy")
@@ -12987,6 +12990,10 @@ class DcnmIntf:
             if src == dst:
                 if action == GIE_WITHDRAW_RESET:
                     resets[nvpair] = wire
+                elif gate_binding is not None:
+                    # D-3: no reset of its own, but the same reset may turn its gate off. Decided below, against the
+                    # gate this reset leaves in place, once every verified reset of this interface is known.
+                    gated.append((nvpair, binding, entry, action))
                 else:
                     blocked.append(dict(entry, reason=action))
                 continue
@@ -13007,6 +13014,22 @@ class DcnmIntf:
                 # into, the destination.
                 continue
             blocked.append(dict(entry, reason="transition", source_reset=action == GIE_WITHDRAW_RESET))
+        if gated:
+            # D-3: the gate as this same-parent reset leaves it -- HAVE, then the role default payload, then the verified
+            # resets queued above (e.g. ospf "false"). Only verified resets move a gate; an unreadable gate was blocked
+            # above and never reaches `resets`. Every gate of a dependent row is itself a row with a verified reset, so
+            # one pass decides them all. A dependent that is inert under the final gate configures nothing: it stays
+            # stored (the controller keeps an inert ospfTag, measured) unless it declares `clear`, in which case key
+            # material is cleared rather than kept. Otherwise it is refused exactly as before.
+            final_nv = dict(have_nv)
+            final_nv.update((uelem.get("interfaces") or [{}])[0].get("nvPairs") or {})
+            final_nv.update(resets)
+            for nvpair, binding, entry, action in gated:
+                if gie_binding_inert(binding, final_nv):
+                    if "clear" in binding["inert_when"]:
+                        resets[nvpair] = binding["inert_when"]["clear"]
+                    continue
+                blocked.append(dict(entry, reason=action))
         return resets, blocked
 
     def dcnm_intf_queue_default_registered_resets(self, uelem, resets, blocked):

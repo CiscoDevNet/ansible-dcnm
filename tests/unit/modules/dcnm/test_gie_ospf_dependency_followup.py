@@ -81,10 +81,13 @@ def have_for(parent, **profile):
 
 # ------------------------------------------------------------------ R1: reset guidance on a same-parent role default
 @pytest.mark.parametrize("state", ("deleted", "overridden"))
-def test_border_reset_with_ospf_on_names_the_module_remedy(state):
+def test_border_reset_with_ospf_on_disables_the_gate_in_the_same_reset(state):
+    """D-3: the border default is int_routed_host itself and its reset sends ospf "false", so the stored tag is inert under
+    the final gate: one reset, no remedy needed (test_gie_border_ospf_reset.py has the full matrix)."""
     result, calls = F2.run(state, G.real_have(), "border", configs=None if state == "deleted" else [])
-    refused(result, calls, "ospf_tag (ospfTag)", "disable enable_ospf on the current policy first")
-    assert "separate, verified procedure" not in result["msg"]
+    accepted(result, calls)
+    nv = F2.nvpairs_of_reset(calls)
+    assert nv["ospf"] == "false" and "ospfTag" not in nv
 
 
 @pytest.mark.parametrize("state", ("deleted", "overridden"))
