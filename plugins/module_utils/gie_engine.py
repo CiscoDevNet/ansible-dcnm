@@ -44,9 +44,12 @@ GIE_MECH_CHILD_PTI = "child_pti"
 # `min_ndfc_version` floor -- a supported patch/ND release never bypasses that floor, and
 # meeting the floor never substitutes for this capability declaration.
 #
-# Match dcnm_network's PR730 version policy: exact approved SMU, or numeric ND >=4.4.1.
-# Below that ND floor, adjacent SMU builds remain unsupported. No trimming or suffixes.
-GIE_ENABLED_PATCH_VERSIONS = frozenset({"4.3.1.0175006011"})
+# Exact approved SMU, or numeric ND >=4.4.1 (the numeric release path is an assumption of the existing
+# selector: its templates were not read). The approved SMU is 4.3.1.0175006017. The earlier
+# 4.3.1.0175006011 no longer unlocks the registered capabilities because its templates declare
+# different OSPF nvPair names. Below the ND floor, adjacent SMU builds remain unsupported.
+# No trimming or suffixes.
+GIE_ENABLED_PATCH_VERSIONS = frozenset({"4.3.1.0175006017"})
 GIE_MIN_ND_VERSION = (4, 4, 1)
 
 
@@ -516,6 +519,52 @@ GIE_OWNED_BY_OTHER_PATH = frozenset(
     (GIE_LOOPBACK_OWNER_PARENT, nvpair)
     for nvpair in (set(GIE_FABRIC_OWNED_LOOPBACK_NVPAIRS) | set(GIE_OSPF_MD_DOMAIN_NVPAIRS))
 )
+
+
+# --------------------------------------------------------------------- legacy OSPF boolean inputs
+# SMU 4.3.1.0175006017 replaced the boolean nvPairs ospfBfd (int_loopback, int_subif) and
+# ospfPassiveInterface (int_subif) with the enums ospfBfdMode and ospfPassiveMode, and the registry
+# binds the enum profile keys ospf_bfd_mode and ospf_passive_mode on those parents. The public
+# booleans ``ospf_bfd`` and ``ospf_passive_interface`` stay accepted as an INPUT alias so existing
+# playbooks keep working. True keeps its old meaning (enable / passive). False keeps its old
+# meaning too -- no local override -- and therefore becomes no_change, never the explicit
+# ``disable`` / ``no_passive``; those two states are reachable only through the mode keys.
+GIE_OSPF_BOOLEAN_ALIASES = {
+    ("int_loopback", "ospf_bfd"): ("ospf_bfd_mode", "enable"),
+    ("int_subif", "ospf_bfd"): ("ospf_bfd_mode", "enable"),
+    ("int_subif", "ospf_passive_interface"): ("ospf_passive_mode", "passive"),
+}
+GIE_OSPF_BOOLEAN_ALIAS_KEYS = frozenset(key for (_parent, key) in GIE_OSPF_BOOLEAN_ALIASES)
+
+
+def gie_normalize_ospf_aliases(parent_template, profile):
+    """Translate the legacy OSPF boolean inputs of one profile to their mode keys.
+
+    Returns ``(profile, None)`` -- the SAME dict, edited in place -- or ``(None, reason)``.
+    ``reason`` is one of ``"not_applicable:<key>"`` (the key is a legacy alias on another
+    parent), ``"not_boolean:<key>:<type>"`` (the raw value is not a boolean; the value itself is
+    never echoed) or ``"conflict:<alias>:<mode_key>"`` (both spellings given and they mean
+    different things). Two spellings that agree are accepted. A profile without a legacy key is
+    returned untouched, so this is a no-op for every other interface.
+    """
+    if not isinstance(profile, dict):
+        return profile, None
+    for alias in sorted(GIE_OSPF_BOOLEAN_ALIAS_KEYS):
+        if alias not in profile:
+            continue
+        target = GIE_OSPF_BOOLEAN_ALIASES.get((parent_template, alias))
+        if target is None:
+            return None, "not_applicable:{0}".format(alias)
+        mode_key, positive = target
+        value = profile[alias]
+        if not isinstance(value, bool):
+            return None, "not_boolean:{0}:{1}".format(alias, type(value).__name__)
+        translated = positive if value else "no_change"
+        if mode_key in profile and profile[mode_key] != translated:
+            return None, "conflict:{0}:{1}".format(alias, mode_key)
+        profile[mode_key] = translated
+        del profile[alias]
+    return profile, None
 
 
 def gie_binding_is_owned_elsewhere(parent_template, parent_nvpair):
@@ -1013,7 +1062,7 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
             # never echoed -- only the public field name -- because a binding may carry a
             # secret (see gie_describe_value_type's reasoning for the same omission).
             return None, (
-                "'{0}' requires caller-supplied patch_version 4.3.1.0175006011 or numeric "
+                "'{0}' requires caller-supplied patch_version 4.3.1.0175006017 or numeric "
                 "ND >= 4.4.1 for this interface capability; no change was sent.".format(pk)
             )
         supported = gie_version_supported(ndfc_version, b["min_ndfc_version"])

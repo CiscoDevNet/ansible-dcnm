@@ -186,18 +186,17 @@ ROUTED_OSPF_ROWS = {
 
 
 # The two parents registered for the OSPF work. Listed separately from ROUTED_OSPF_ROWS because
-# they are NOT the same set: int_subif models passive and bfd as booleans where the other two use
-# enums, and both carry OSPF_RETRANSMIT_INTERVAL, which int_routed_host does not declare at all.
+# they are NOT the same set: int_subif and int_vlan both carry OSPF_RETRANSMIT_INTERVAL, which int_routed_host does not declare at all.
 SUBIF_OSPF_ROWS = {
     ("int_subif", "ospf", "enable_ospf"),
     ("int_subif", "OSPF_AREA_ID", "ospf_area_id"),
-    ("int_subif", "ospfBfd", "ospf_bfd"),
+    ("int_subif", "ospfBfdMode", "ospf_bfd_mode"),
     ("int_subif", "ospfCost", "ospf_cost"),
     ("int_subif", "ospfDeadInterval", "ospf_dead_interval"),
     ("int_subif", "ospfHelloInterval", "ospf_hello_interval"),
     ("int_subif", "ospfMtuIgnore", "ospf_mtu_ignore"),
     ("int_subif", "ospfNetworkType", "ospf_network_type"),
-    ("int_subif", "ospfPassiveInterface", "ospf_passive_interface"),
+    ("int_subif", "ospfPassiveMode", "ospf_passive_mode"),
     ("int_subif", "ospfPriority", "ospf_priority"),
     ("int_subif", "ospfRetransmitInterval", "ospf_retransmit_interval"),
     ("int_subif", "ospfShutdown", "ospf_shutdown"),
@@ -283,7 +282,7 @@ LOOPBACK_OSPF_ROWS = {
         ("ospfMtuIgnore", "ospf_mtu_ignore"),
         ("ospfShutdown", "ospf_shutdown"),
         ("ospfNetworkType", "ospf_network_type"),
-        ("ospfBfd", "ospf_bfd"),
+        ("ospfBfdMode", "ospf_bfd_mode"),
         # The five the architect ruled in scope here while they stay retired on the fabric
         # parent: the retirement was about ownership, and a user loopback is not underlay.
         ("ospfAuthentication", "enable_ospf_auth"),
@@ -938,8 +937,8 @@ def test_all_registered_and_guarded_keys():
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost", "ospf_mtu_ignore",
         "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay",
         "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
-        # These three only ever came from the second lot (int_subif / int_vlan).
-        "ospf_bfd", "ospf_passive_interface", "ospf_retransmit_interval",
+        # Only from the second lot (int_subif / int_vlan). ospf_bfd and ospf_passive_interface are input aliases since SMU 017.
+        "ospf_retransmit_interval",
         # The authentication lot, on all three OSPF parents. Passthrough like the rest, so
         # the generic guard owns it too: a key on the wrong parent is refused by the engine,
         # not by a validator written for this family.
@@ -1028,7 +1027,7 @@ def test_all_registered_and_guarded_keys():
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost", "ospf_mtu_ignore",
         "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay",
         "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
-        "ospf_bfd", "ospf_passive_interface", "ospf_retransmit_interval",
+        "ospf_retransmit_interval",
         # The authentication lot, on all three OSPF parents. Passthrough like the rest, so
         # the generic guard owns it too: a key on the wrong parent is refused by the engine,
         # not by a validator written for this family.

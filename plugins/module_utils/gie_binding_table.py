@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 15061dfcd914ef5920bf2b6e3ace8db1b9e0a1e494ee4bfdeb340f3eec18f0c0
+# provenance_sha256 = bcf144bc4176666c0e019f3ca2cd1348aa6e5a362478de6185812b2ba6f0b2b7
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "15061dfcd914ef5920bf2b6e3ace8db1b9e0a1e494ee4bfdeb340f3eec18f0c0"
+PROVENANCE_SHA256 = "bcf144bc4176666c0e019f3ca2cd1348aa6e5a362478de6185812b2ba6f0b2b7"
 
 BINDING_TABLE = (
     {
@@ -349,16 +349,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_loopback',
-        'parent_nvpair': 'ospfBfd',
-        'profile_key': 'ospf_bfd',
+        'parent_nvpair': 'ospfBfdMode',
+        'profile_key': 'ospf_bfd_mode',
         'applicable_interface_type': 'lo',
         'applicable_mode': 'lo',
-        'type': 'boolean',
-        'default_template': False,
-        'reset_wire': 'false',
+        'type': 'enum',
+        'valid_values': ('no_change', 'enable', 'disable'),
+        'default_template': 'no_change',
+        'reset_wire': 'noChange',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'wire_values': {'no_change': 'noChange', 'enable': 'enable', 'disable': 'disable'},
     },
     {
         'parent_template': 'int_loopback',
@@ -2095,16 +2097,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_subif',
-        'parent_nvpair': 'ospfBfd',
-        'profile_key': 'ospf_bfd',
+        'parent_nvpair': 'ospfBfdMode',
+        'profile_key': 'ospf_bfd_mode',
         'applicable_interface_type': 'sub_int',
         'applicable_mode': 'subint',
-        'type': 'boolean',
-        'default_template': False,
-        'reset_wire': 'false',
+        'type': 'enum',
+        'valid_values': ('no_change', 'enable', 'disable'),
+        'default_template': 'no_change',
+        'reset_wire': 'noChange',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'wire_values': {'no_change': 'noChange', 'enable': 'enable', 'disable': 'disable'},
         'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True},
     },
     {
@@ -2184,16 +2188,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_subif',
-        'parent_nvpair': 'ospfPassiveInterface',
-        'profile_key': 'ospf_passive_interface',
+        'parent_nvpair': 'ospfPassiveMode',
+        'profile_key': 'ospf_passive_mode',
         'applicable_interface_type': 'sub_int',
         'applicable_mode': 'subint',
-        'type': 'boolean',
-        'default_template': False,
-        'reset_wire': 'false',
+        'type': 'enum',
+        'valid_values': ('no_change', 'passive', 'no_passive'),
+        'default_template': 'no_change',
+        'reset_wire': 'noChange',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'wire_values': {'no_change': 'noChange', 'passive': 'passive', 'no_passive': 'noPassive'},
         'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True},
     },
     {

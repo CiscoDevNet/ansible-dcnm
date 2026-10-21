@@ -1,3 +1,8 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): the parent now instantiates interface_macsec, or
+# interface_macsec_fallback when a fallback key chain is set, instead of macsec_fallback_interface with its two branches. Parent nvPairs and
+# the parent-to-child name translation below are unchanged. Removing only the fallback now selects the other child; NOT LIVE TESTED
+# (no MACsec hardware in the lab).
+#
 # Registry slice 0b_33 — MACsec: four bindings on int_routed_host (the only parent that declares them).
 #
 #     ENABLE_MACSEC_INTERFACE_POLICY   boolean, defaultValue=false

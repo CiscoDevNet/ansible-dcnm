@@ -57,9 +57,10 @@ NEUTRAL_ROWS = sorted((b["parent_template"], b["profile_key"], b["parent_nvpair"
 NEUTRAL_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, _nv in NEUTRAL_ROWS]
 
 
-def test_the_derived_set_covers_all_eight_neutral_enum_rows():
-    """Guard the guard: eight rows over three fields and five parents."""
-    assert len(NEUTRAL_ROWS) == 8, NEUTRAL_ROWS
+def test_the_derived_set_covers_all_eleven_neutral_enum_rows():
+    """Guard the guard: eleven rows over three fields -- the eight of the earlier SMU plus the loopback BFD and
+    subinterface BFD and passive rows that SMU 017 turned into enums."""
+    assert len(NEUTRAL_ROWS) == 11, NEUTRAL_ROWS
     assert {nv for _p, _k, nv in NEUTRAL_ROWS} == set(REVIEWED_NEUTRAL)
 
 

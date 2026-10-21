@@ -75,8 +75,8 @@ SUBIF_FIELDS = {
     "ospf_mtu_ignore": ("ospfMtuIgnore", "boolean"),
     "ospf_shutdown": ("ospfShutdown", "boolean"),
     "ospf_network_type": ("ospfNetworkType", "enum"),
-    "ospf_passive_interface": ("ospfPassiveInterface", "boolean"),   # boolean here
-    "ospf_bfd": ("ospfBfd", "boolean"),                               # boolean here
+    "ospf_passive_mode": ("ospfPassiveMode", "enum"),   # SMU 017: enum, as on routed and vlan
+    "ospf_bfd_mode": ("ospfBfdMode", "enum"),           # SMU 017: enum, as on routed and vlan
 }
 
 VLAN_FIELDS = {
@@ -153,19 +153,15 @@ def test_the_parents_differ_where_the_templates_differ():
     Registering an nvPair a template does not declare is the quiet failure this whole table
     exists to prevent: the controller ignores the key and the module reports success.
     """
-    # passive: enum on routed and vlan, boolean on subif
-    assert resolve_binding("int_routed_host", "ospf_passive_mode")["type"] == "enum"
-    assert resolve_binding(VLAN, "ospf_passive_mode")["type"] == "enum"
-    assert resolve_binding(SUBIF, "ospf_passive_interface")["type"] == "boolean"
-    assert resolve_binding(SUBIF, "ospf_passive_mode") is None
-    assert resolve_binding(VLAN, "ospf_passive_interface") is None
+    # passive: the enum on all three parents since SMU 017; the retired boolean key is no longer registered anywhere
+    for parent in ("int_routed_host", VLAN, SUBIF):
+        assert resolve_binding(parent, "ospf_passive_mode")["type"] == "enum"
+        assert resolve_binding(parent, "ospf_passive_interface") is None
 
-    # bfd: same split
-    assert resolve_binding("int_routed_host", "ospf_bfd_mode")["type"] == "enum"
-    assert resolve_binding(VLAN, "ospf_bfd_mode")["type"] == "enum"
-    assert resolve_binding(SUBIF, "ospf_bfd")["type"] == "boolean"
-    assert resolve_binding(SUBIF, "ospf_bfd_mode") is None
-    assert resolve_binding(VLAN, "ospf_bfd") is None
+    # bfd: the same
+    for parent in ("int_routed_host", VLAN, SUBIF):
+        assert resolve_binding(parent, "ospf_bfd_mode")["type"] == "enum"
+        assert resolve_binding(parent, "ospf_bfd") is None
 
     # retransmit interval: absent on the routed parent, present on the other two
     assert resolve_binding("int_routed_host", "ospf_retransmit_interval") is None
@@ -242,7 +238,7 @@ SUBIF_PROFILE = {
 }
 SUBIF_OSPF = {
     "enable_ospf": True, "ospf_tag": "WP98", "ospf_area_id": "0.0.0.0", "ospf_cost": 110,
-    "ospf_passive_interface": False, "ospf_bfd": False, "ospf_retransmit_interval": 7,
+    "ospf_passive_mode": "passive", "ospf_bfd_mode": "enable", "ospf_retransmit_interval": 7,
     "ospf_hello_interval": 15, "ospf_priority": 42, "ospf_network_type": "point_to_point",
 }
 VLAN_PROFILE = {
@@ -280,7 +276,7 @@ def _run_chain(itype, name, validator, builder, parent, profile, ospf):
     ("sub_int", "eth1/5.100", "dcnm_intf_validate_sub_interface_input",
      "dcnm_intf_get_sub_intf_payload", SUBIF, SUBIF_PROFILE, SUBIF_OSPF,
      {"ospf": "true", "ospfCost": "110", "ospfRetransmitInterval": "7",
-      "ospfPassiveInterface": "false", "ospfBfd": "false",
+      "ospfPassiveMode": "passive", "ospfBfdMode": "enable",
       "ospfNetworkType": "pointToPoint"}),
     ("svi", "vlan1098", "dcnm_intf_validate_vlan_interface_input",
      "dcnm_intf_get_svi_payload", VLAN, VLAN_PROFILE, VLAN_OSPF,
@@ -304,7 +300,7 @@ def test_the_lot_reaches_the_payload_through_the_real_path(
 @pytest.mark.parametrize("itype,name,validator,builder,parent,profile,absent", [
     ("sub_int", "eth1/5.100", "dcnm_intf_validate_sub_interface_input",
      "dcnm_intf_get_sub_intf_payload", SUBIF, SUBIF_PROFILE,
-     ["ospf", "ospfCost", "ospfBfd", "ospfPassiveInterface"]),
+     ["ospf", "ospfCost", "ospfBfdMode", "ospfPassiveMode"]),
     ("svi", "vlan1098", "dcnm_intf_validate_vlan_interface_input",
      "dcnm_intf_get_svi_payload", VLAN, VLAN_PROFILE,
      ["ospf", "ospfCost", "ospfBfdMode", "ospfPassiveMode"]),
@@ -327,7 +323,7 @@ def test_an_omitted_field_emits_nothing(
 # parents -- the only OSPF slice that is not per parent.
 #
 # That shape is itself the claim being tested here. Everywhere else the three templates diverge
-# (passive is an enum on routed and vlan, a boolean on subif; retransmit does not exist on
+# (retransmit does not exist on
 # routed), which is why slices are never copied between parents. Authentication is the one
 # family where all five fields are byte-identical across the three, so the assertions below
 # compare the parents against EACH OTHER rather than against a hardcoded list: if a future

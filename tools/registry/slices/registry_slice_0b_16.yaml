@@ -1,3 +1,9 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): int_routed_host now creates
+# interface_lldp_transmit_disable and interface_lldp_receive_disable separately (there is no delete call when a flag is false, as before)
+# instead of the combined interface_lldp_disable, and selects interface_qos_service_policy_no_stats / interface_queuing_service_policy_no_stats
+# for the no-stats case. The plain QoS and queuing children no longer declare DISABLE_STATS. The parent nvPairs and CLI intent below are
+# unchanged; the child names in the effect rules describe the earlier SMU for the routed parent. Other parents keep interface_lldp_disable.
+#
 # Registry slice 0b_16 — int_routed_host (first routed parent), 5 bindings.
 #
 # Scope: int_routed_host, reached from `mode: routed` on an Ethernet (pol_types[12]["eth_routed"];

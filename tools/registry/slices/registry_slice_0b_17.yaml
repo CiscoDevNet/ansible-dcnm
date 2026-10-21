@@ -1,3 +1,8 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): int_port_channel_trunk_host now reads the member
+# policies with PTIWrapper.get, drops deleted policies and prefers the current int_port_channel_trunk_member_11_1 child, and passes a new
+# linkTransmitResetSkip (member value first, then the parent's). The registered LLDP, QoS and STP bindings are unchanged. Preservation of
+# admin state, freeform and FEC of the members is not exercised: follow-up.
+#
 # Registry slice 0b_17 — DISABLE_LLDP split into DISABLE_LLDP_TRANSMIT and DISABLE_LLDP_RECEIVE
 # (16 bindings: 2 fields x 8 parents).
 #

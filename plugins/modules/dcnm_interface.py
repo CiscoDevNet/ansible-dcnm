@@ -84,20 +84,29 @@ options:
     - The same declaration selects the nvPair names of two native SVI fields of C(int_vlan), because the
       installed parent template names them differently in its two bodies - with a supported value
       C(dhcp_server_addr4) and C(dhcp_relay_src_intf) use C(dhcpServerAddress4) and
-      C(dhcpRelaySourceInterface) (the body served with the activated SMU C(4.3.1.0175006011)); without it
+      C(dhcpRelaySourceInterface) (the body served with the activated SMU C(4.3.1.0175006017)); without it
       they keep C(dhcpServerAddr4) and C(DHCP_RELAY_SRC_INTF). These two fields stay native (an absent
       value does not reject them), only one family is ever sent, and the controller is not probed. A
       controller that serves the SMU body must be paired with this declaration (NOT LIVE TESTED; C(4.4.1)
       or later is an assumption of the shared selector, not an observation). When an SVI's stored values
       carry the other body's names, setting, clearing or (replaced/overridden) resetting these fields is
       refused before any change is sent.
-    - Accepts the exact SMU string C(4.3.1.0175006011) or a numeric Nexus Dashboard
+    - Accepts the exact SMU string C(4.3.1.0175006017) or a numeric Nexus Dashboard
       release C(4.4.1) or later, matching the version policy of C(dcnm_network).
       ND release strings require at least three dot-separated numeric components;
       additional build components must also be numeric. The first three components are
       compared numerically. No whitespace or suffixes are accepted. For example,
       C(4.4.1.10) and C(4.10.0) are supported, while C(4.4.0), C(4.4),
       C(4.4.1-rc1) and adjacent unapproved C(4.3.1) SMU builds are rejected.
+    - The only SMU build this module supports is C(4.3.1.0175006017). The earlier C(4.3.1.0175006011) is not
+      accepted, because its interface templates declare different OSPF nvPair names.
+    - On loopbacks and subinterfaces, C(ospf_bfd_mode) (C(no_change), C(enable), C(disable)) and, on subinterfaces,
+      C(ospf_passive_mode) (C(no_change), C(passive), C(no_passive)) carry the OSPF BFD and passive settings, as on
+      routed interfaces and SVIs. The earlier boolean inputs C(ospf_bfd) and C(ospf_passive_interface) are still accepted as
+      aliases - C(true) means C(enable) or C(passive); C(false) keeps its old meaning of no local override and therefore
+      means C(no_change), never the explicit C(disable) or C(no_passive). Give the mode key to request an explicit
+      negative setting. Giving both spellings is accepted only when they mean the same, and the alias is refused on a
+      parent that does not register it.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -2053,7 +2062,7 @@ EXAMPLES = """
     # context, the module rejects this whole task before any configuration/deployment call
     # -- there is no product default that enables these fields. See the patch_version
     # option documentation for the version/floor/migration contract.
-    patch_version: "4.3.1.0175006011"
+    patch_version: "4.3.1.0175006017"
     config:
       - name: vpc760                      # should be of the form vpc<port-id>
         type: vpc
@@ -2564,7 +2573,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
     state: merged
-    patch_version: "4.3.1.0175006011"   # required by disable_lldp_transmit and spanning_tree_port_type only
+    patch_version: "4.3.1.0175006017"   # required by disable_lldp_transmit and spanning_tree_port_type only
     config:
       - name: po10
         type: pc
@@ -2786,6 +2795,37 @@ EXAMPLES = """
       - name: vpc750
         switch:
           - "192.172.1.1"
+
+# OSPF BFD and passive on a loopback and a subinterface (SMU 4.3.1.0175006017). The boolean spelling keeps working:
+# ospf_bfd: true is enable; ospf_bfd: false is no_change (no local override), not an explicit disable.
+- name: Enable OSPF BFD with the boolean alias and set passive explicitly
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ fabric }}"
+    state: merged
+    patch_version: "4.3.1.0175006017"
+    config:
+      - name: lo120
+        type: lo
+        switch: ["{{ switch_ip }}"]
+        profile:
+          mode: lo
+          enable_ospf: true
+          ospf_tag: UNDERLAY
+          ospf_area_id: 0.0.0.0
+          ospf_bfd: true              # same as ospf_bfd_mode: enable
+      - name: eth1/20.100
+        type: sub_int
+        switch: ["{{ switch_ip }}"]
+        profile:
+          mode: subint
+          vlan: 100
+          ipv4_addr: 192.0.2.1
+          ipv4_mask_len: 30
+          enable_ospf: true
+          ospf_tag: UNDERLAY
+          ospf_area_id: 0.0.0.0
+          ospf_bfd_mode: disable      # explicit "ip ospf bfd disable"; there is no boolean for it
+          ospf_passive_mode: no_passive
 """
 
 import collections
@@ -2903,6 +2943,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_contribute_nvpairs,
     gie_invalid_parent_key,
     gie_nvpair_keymap,
+    gie_normalize_ospf_aliases,
     gie_carry_forward_bindings,
     gie_withdrawal_action,
     gie_binding_inert,
@@ -3067,7 +3108,8 @@ SVI_DHCP4_FIELDS = (
 #   0efb09af7f837b30b7a5dde37e7d4e7604fdd2fc4ca92ff6338e227802fde1a3  dhcpServerAddr4      DHCP_RELAY_SRC_INTF       (the legacy tuple above)
 #   f32ef5863d8757759154f5992eba9f009ecdf68425f8be9d58e5a0bb416313e4  dhcpServerAddress4   dhcpRelaySourceInterface  (the tuple below)
 # vrfDhcp4 is unchanged. NDFC reports 12.6.0.267 for both bodies, so the controller version cannot choose; the body that carries the activated SMU
-# 4.3.1.0175006011 (the ND upgrade history lists it with fixDetails naming dcnm-configtemplate) is f32ef586, and the existing patch_version
+# 4.3.1.0175006011 (the ND upgrade history lists it with fixDetails naming dcnm-configtemplate) is f32ef586. SMU 4.3.1.0175006017, the only SMU this
+# candidate supports, declares the same two names (read from its int_vlan body), and the existing patch_version
 # capability (gie_patch_supported: that SMU, or a numeric ND release >= 4.4.1 -- the latter is an assumption of the existing selector, not an
 # observation) is what already selects the SMU-schema names of the registered int_vlan fields. The same selector chooses these names. A missing or
 # unapproved patch keeps the legacy names, as for every native field; the module never sends both and never probes the controller.
@@ -5086,6 +5128,51 @@ class DcnmIntf:
                 name, sno
             )
         )
+
+    def dcnm_intf_gie_normalize_ospf_aliases(self):
+        """Translate the legacy OSPF boolean inputs (``ospf_bfd`` on loopback and subinterface,
+        ``ospf_passive_interface`` on subinterface) to the mode keys the registry binds for
+        SMU 4.3.1.0175006017, before any other validation reads the profile.
+
+        true keeps its old meaning (enable / passive); false keeps it too -- no local override --
+        and becomes no_change, never the explicit disable / no_passive. Both spellings in one
+        profile are accepted only when they mean the same. The value of a rejected field is never
+        echoed.
+        """
+        pol_map = getattr(self, "pol_types", {}).get(getattr(self, "dcnm_version", None), {})
+        for cfg_item in self.config:
+            profile = cfg_item.get("profile")
+            if not isinstance(profile, dict):
+                continue
+            parent = pol_map.get("{0}_{1}".format(cfg_item.get("type"), profile.get("mode")))
+            _normalized, reason = gie_normalize_ospf_aliases(parent, profile)
+            if reason is None:
+                continue
+            kind, _sep, rest = reason.partition(":")
+            if kind == "not_applicable":
+                msg = (
+                    "Invalid parameters in playbook: while processing interface {0}, '{1}' is not "
+                    "supported on this interface (type '{2}', mode '{3}'). No template metadata was "
+                    "queried and no change was sent.".format(
+                        cfg_item.get("name"), rest, cfg_item.get("type"), profile.get("mode")
+                    )
+                )
+            elif kind == "not_boolean":
+                key, _sep, given = rest.partition(":")
+                msg = (
+                    "Invalid parameters in playbook: while processing interface {0}, '{1}' must be a "
+                    "native boolean, given {2}. No template metadata was queried and no change was "
+                    "sent.".format(cfg_item.get("name"), key, given)
+                )
+            else:
+                alias, _sep, mode_key = rest.partition(":")
+                msg = (
+                    "Invalid parameters in playbook: while processing interface {0}, '{1}' and '{2}' "
+                    "give different settings for the same OSPF field; use only '{2}', which also "
+                    "expresses the explicit disabled states. No template metadata was queried and no "
+                    "change was sent.".format(cfg_item.get("name"), alias, mode_key)
+                )
+            self.module.fail_json(msg=msg)
 
     def dcnm_intf_gie_validate_parent_bindings(self):
         """Fail closed when a config item carries a registry-known GENERIC key that has no
@@ -15592,6 +15679,12 @@ def main():
     dcnm_intf.dcnm_translate_playbook_info(
         dcnm_intf.config, dcnm_intf.ip_sn, dcnm_intf.hn_sn
     )
+
+    # The legacy OSPF booleans become their mode keys BEFORE the config is flattened into pb_input: the merged
+    # comparison reads pb_input to tell an authored key from an omitted one, so an alias left there would
+    # compare as "not authored".
+    if module.params["state"] not in ("deleted", "query"):
+        dcnm_intf.dcnm_intf_gie_normalize_ospf_aliases()
 
     dcnm_intf.dcnm_intf_copy_config()
 

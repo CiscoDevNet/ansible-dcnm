@@ -714,7 +714,8 @@ def test_keymap_carries_every_new_nvpair():
     # was already in the int_routed_host keymap: three rows, two new keys.
     assert km["privateVlanMapping"] == "private_vlan_mapping"
     assert km["ENABLE_VPC_PEER_LINK"] == "enable_vpc_peer_link"
-    assert len(km) == 76
+    # 74 = 76 - ospfBfd and ospfPassiveInterface, which SMU 017 replaced by the already-mapped ospfBfdMode and ospfPassiveMode.
+    assert len(km) == 74
 
 
 def test_all_registered_keys():
@@ -730,8 +731,8 @@ def test_all_registered_keys():
         "enable_ospf", "ospf_tag", "ospf_area_id", "ospf_cost", "ospf_mtu_ignore",
         "ospf_shutdown", "ospf_hello_interval", "ospf_dead_interval", "ospf_transmit_delay",
         "ospf_priority", "ospf_passive_mode", "ospf_network_type", "ospf_bfd_mode",
-        # These three only ever came from the second lot (int_subif / int_vlan).
-        "ospf_bfd", "ospf_passive_interface", "ospf_retransmit_interval",
+        # Only from the second lot (int_subif / int_vlan). ospf_bfd and ospf_passive_interface are input aliases since SMU 017.
+        "ospf_retransmit_interval",
         # The authentication lot, shared by int_routed_host, int_subif and int_vlan.
         "enable_ospf_auth", "ospf_auth_key_id", "ospf_auth_key",
         "ospf_authentication_key_type", "ospf_authentication_key",

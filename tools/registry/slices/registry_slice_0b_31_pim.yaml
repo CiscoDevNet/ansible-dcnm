@@ -1,3 +1,8 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): int_routed_host now calls deleteChildTemplate on
+# pim_bfd_instance_interface when pimBfdInstance is false, which the 'no deleteChildTemplate for PIM' remark below did not have. The
+# removal path of enable_pim_bfd_instance=false therefore needs revalidation; the new branch is not a confirmed fix. int_subif and
+# int_l3_port_channel declare pimBfdInstance too and are not registered here.
+#
 # Registry slice 0b_31 — PIM. Eight bindings: three fields spread unevenly over four parents.
 #
 #     ENABLE_PIM_SPARSE        4   int_loopback, int_routed_host, int_subif, int_vlan

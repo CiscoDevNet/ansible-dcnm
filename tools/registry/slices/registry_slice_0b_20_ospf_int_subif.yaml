@@ -80,19 +80,24 @@ bindings:
     evidence_ref: int_subif.template@a66388c2f21c5507
 
   - parent_template: int_subif
-    parent_nvpair: ospfBfd
-    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
-    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    parent_nvpair: ospfBfdMode
+    # SMU 4.3.1.0175006017 replaced the boolean ospfBfd with this enum (int_subif body 1937c6a5, read, not exercised
+    # live). The public boolean ospf_bfd stays accepted as an input alias (true -> enable, false -> no_change) and is
+    # translated before validation; see gie_normalize_ospf_aliases.
+    # Depends on OSPF: rendered only when ospf is true, and refused with a non-neutral value while ospf is false.
+    # An explicit disable sends its reset.
     inert_when:
       nvpair: ospf
       value: 'false'
       strict: true
-    profile_key: ospf_bfd
+    wire_values: {no_change: noChange, enable: enable, disable: disable}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_bfd_mode
     applicable_interface_type: sub_int
     applicable_mode: subint
-    type: boolean
-    reset_wire: 'false'
-    default_template: false
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, enable, disable]
+    default_template: no_change
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -101,7 +106,7 @@ bindings:
     validated_on: 12.6.0.267
     parent_resolution: desired_parent
     removal_semantics: unresolved
-    evidence_ref: int_subif.template@a66388c2f21c5507
+    evidence_ref: int_subif.template@1937c6a5f49d0d48
 
   - parent_template: int_subif
     parent_nvpair: ospfCost
@@ -232,19 +237,24 @@ bindings:
     evidence_ref: int_subif.template@a66388c2f21c5507
 
   - parent_template: int_subif
-    parent_nvpair: ospfPassiveInterface
-    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
-    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    parent_nvpair: ospfPassiveMode
+    # SMU 4.3.1.0175006017 replaced the boolean ospfPassiveInterface with this enum (int_subif body 1937c6a5, read,
+    # not exercised live). The public boolean ospf_passive_interface stays accepted as an input alias
+    # (true -> passive, false -> no_change); see gie_normalize_ospf_aliases.
+    # Depends on OSPF: rendered only when ospf is true, and refused with a non-neutral value while ospf is false.
+    # An explicit disable sends its reset.
     inert_when:
       nvpair: ospf
       value: 'false'
       strict: true
-    profile_key: ospf_passive_interface
+    wire_values: {no_change: noChange, passive: passive, no_passive: noPassive}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_passive_mode
     applicable_interface_type: sub_int
     applicable_mode: subint
-    type: boolean
-    reset_wire: 'false'
-    default_template: false
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, passive, no_passive]
+    default_template: no_change
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -253,7 +263,7 @@ bindings:
     validated_on: 12.6.0.267
     parent_resolution: desired_parent
     removal_semantics: unresolved
-    evidence_ref: int_subif.template@a66388c2f21c5507
+    evidence_ref: int_subif.template@1937c6a5f49d0d48
 
   - parent_template: int_subif
     parent_nvpair: ospfPriority

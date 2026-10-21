@@ -131,7 +131,7 @@ def test_r2_coverage_the_checker_invents_no_identity():
     registry = set((r["profile_key"], r["parent_template"]) for r in REG.BINDING_TABLE)
     checker = set((k, p) for k, (_nv, _kind, parents) in S.R2_REGISTERED_BINDINGS.items() for p in parents)
     assert checker <= registry, sorted(checker - registry)
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 76
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 74
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():

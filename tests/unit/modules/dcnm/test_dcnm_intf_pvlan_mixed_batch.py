@@ -32,7 +32,7 @@ CONV_PO_POLICY, CONV_MEMBER_POLICY = "int_port_channel_trunk_host", "int_port_ch
 CONV_VPC, CONV_VPC_ITEM = "vPC305", "vpc305"
 V5, V6 = "Ethernet1/5", "Ethernet1/6"
 CONV_VPC_POLICY = "int_vpc_trunk_host"
-PATCH = "4.3.1.0175006011"  # the T5 invocation's patch_version (required by its disable_lldp_* fields)
+PATCH = "4.3.1.0175006017"  # the T5 invocation's patch_version (required by its disable_lldp_* fields)
 
 # T5 module arguments of the conventional items (profile verbatim from INT_T5-member-out_01.txt, members as in T5).
 CONV_PO_PROFILE = {

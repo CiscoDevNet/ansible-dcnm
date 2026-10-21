@@ -158,24 +158,24 @@ CANDIDATE_ADDITIONS = (
     #
     # `ospf_network_type` appears THREE times because these are THREE distinct bindings, one per
     # parent, not an inference from the routed row. And the passive pair is TWO fields: int_subif
-    # declares the BOOLEAN `ospfPassiveInterface` (reset 'false') while int_vlan declares the ENUM
+    # declared the BOOLEAN `ospfPassiveInterface` (reset 'false') on the earlier SMU, while int_vlan declares the ENUM
     # `ospfPassiveMode` (reset 'noChange'). Both emit the SAME CLI line, so reading the CLI does
     # not tell them apart: each needs its own row and its own reset.
     ("int_subif", "ospfNetworkType", "ospf_network_type", "noChange"),
-    ("int_subif", "ospfPassiveInterface", "ospf_passive_interface", "false"),
+    ("int_subif", "ospfPassiveMode", "ospf_passive_mode", "noChange"),   # SMU 017 row; not measured live
     ("int_loopback", "ospfNetworkType", "ospf_network_type", "noChange"),
     ("int_loopback", "ospfAdvertiseSubnet", "ospf_advertise_subnet", "false"),
     ("int_vlan", "ospfNetworkType", "ospf_network_type", "noChange"),
     ("int_vlan", "ospfPassiveMode", "ospf_passive_mode", "noChange"),
     # PR725-OSPF-ALL-001 profiles P2-BFD and P4-AREA, measured on 2026-09-28.
-    # BFD is asymmetric: ospfBfdMode on routed/vlan, ospfBfd on subif/loopback; no parent carries
-    # the other's field, and both render the same `ip ospf bfd` line.
+    # BFD: ospfBfdMode on all four parents since SMU 017 (subif/loopback carried the boolean ospfBfd
+    # on the earlier SMU, where the reset was measured; the 017 rows replace it unmeasured).
     # The area is the campaign's first reset that does NOT delete its line: it returns it to the
     # declared default 0.0.0.0. Demanding that every reset delete a line would have rejected
     # these four.
     ("int_routed_host", "ospfBfdMode", "ospf_bfd_mode", "noChange"),
-    ("int_subif", "ospfBfd", "ospf_bfd", "false"),
-    ("int_loopback", "ospfBfd", "ospf_bfd", "false"),
+    ("int_subif", "ospfBfdMode", "ospf_bfd_mode", "noChange"),   # SMU 017 row; not measured live
+    ("int_loopback", "ospfBfdMode", "ospf_bfd_mode", "noChange"),   # SMU 017 row; not measured live
     ("int_vlan", "ospfBfdMode", "ospf_bfd_mode", "noChange"),
     # routed::OSPF_AREA_ID is back: with the key GENUINELY ABSENT, the table without the metadata
     # REFUSES the `replaced` while the table with it withdraws the field. The control that had
@@ -741,15 +741,15 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
         ("int_vlan", "ipv6NdSuppressRa"), ("int_vlan", "ipv6LinkLocal"),
     }
     OSPF_ALL_P1 = {
-        ("int_subif", "ospfNetworkType"), ("int_subif", "ospfPassiveInterface"),
+        ("int_subif", "ospfNetworkType"), ("int_subif", "ospfPassiveMode"),
         ("int_loopback", "ospfNetworkType"), ("int_loopback", "ospfAdvertiseSubnet"),
         ("int_vlan", "ospfNetworkType"), ("int_vlan", "ospfPassiveMode"),
     }
     # P2/P4 is a group NAMED apart from P1: it shares parents with both P1 and B01, so a
     # parent-based partition would again file them under the wrong campaign.
     OSPF_ALL_P2_P4 = {
-        ("int_routed_host", "ospfBfdMode"), ("int_subif", "ospfBfd"),
-        ("int_loopback", "ospfBfd"), ("int_vlan", "ospfBfdMode"),
+        ("int_routed_host", "ospfBfdMode"), ("int_subif", "ospfBfdMode"),
+        ("int_loopback", "ospfBfdMode"), ("int_vlan", "ospfBfdMode"),
         ("int_routed_host", "OSPF_AREA_ID"), ("int_subif", "OSPF_AREA_ID"),
         ("int_loopback", "OSPF_AREA_ID"), ("int_vlan", "OSPF_AREA_ID"),
     }
@@ -1032,8 +1032,9 @@ def test_the_four_share_one_parent_and_did_not_spread_to_its_unmeasured_siblings
                      for key in ("disable_lldp_receive", "disable_lldp_transmit")})
     expected.update({(p, "ospf_network_type"): "noChange" for p in
                      ("int_loopback", "int_routed_host", "int_subif", "int_vlan")})
+    # int_subif joined with SMU 017 (it declared the boolean ospfPassiveInterface before); that row is not measured live.
     expected.update({(p, "ospf_passive_mode"): "noChange" for p in
-                     ("int_routed_host", "int_vlan")})
+                     ("int_routed_host", "int_subif", "int_vlan")})
     actual = {(r["parent_template"], r["profile_key"]): r["reset_wire"]
               for r in _rows()
               if r["profile_key"] in ("disable_lldp_receive", "disable_lldp_transmit",

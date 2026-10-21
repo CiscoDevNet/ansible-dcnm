@@ -519,14 +519,13 @@ PILOT = {
     # binding per parent -- three rows in the table, three separate reset registrations. The
     # routed one was accepted in an earlier campaign; these three were measured here.
     #
-    # AND WHY THE PASSIVE PAIR IS TWO FIELDS, NOT ONE. `int_subif` declares the BOOLEAN
-    # `ospfPassiveInterface`; `int_vlan` declares the ENUM `ospfPassiveMode`. Different
-    # nvPairs, different types, different reset vocabularies ('false' vs 'noChange') -- and
-    # both render the SAME CLI line, `ip ospf passive-interface`. Reading the CLI alone could
-    # not tell them apart, which is why each carries its own row and its own reset.
+    # SMU 4.3.1.0175006017 UNIFIED THE PASSIVE FIELD. `int_subif` used to declare the BOOLEAN
+    # `ospfPassiveInterface` (reset 'false'); it now declares the ENUM `ospfPassiveMode`, as
+    # `int_vlan` does (reset 'noChange'). The subinterface row below is the 017 row: it was NOT
+    # measured live, and the 2026-09-28 measurement of the boolean does not transfer to it.
     (SUBIF, "ospfNetworkType"): ("ospf_network_type", "point_to_point", "noChange",
                                  dict(OSPF_CTX)),
-    (SUBIF, "ospfPassiveInterface"): ("ospf_passive_interface", True, "false", dict(OSPF_CTX)),
+    (SUBIF, "ospfPassiveMode"): ("ospf_passive_mode", "passive", "noChange", dict(OSPF_CTX)),
     (LOOPBACK, "ospfNetworkType"): ("ospf_network_type", "point_to_point", "noChange",
                                     dict(OSPF_CTX)),
     (LOOPBACK, "ospfAdvertiseSubnet"): ("ospf_advertise_subnet", True, "false", dict(OSPF_CTX)),
@@ -536,17 +535,17 @@ PILOT = {
     # ------------------------------------------------------ P2-BFD and P4-AREA, OSPF-ALL
     # Measured live on 2026-09-28 on Leaf-103, stages P2-a3-clear and P4-a3-clear.
     #
-    # BFD IS ASYMMETRIC: `ospfBfdMode` (enum, reset 'noChange') exists on int_routed_host and
-    # int_vlan; `ospfBfd` (boolean, reset 'false') on int_subif and int_loopback. No parent
-    # declares the other's field. Both render the SAME CLI line, `ip ospf bfd`, so reading the CLI
-    # does not tell them apart -- just like the passive pair in P1.
+    # BFD: `ospfBfdMode` (enum, reset 'noChange') on all four parents since SMU 4.3.1.0175006017.
+    # int_subif and int_loopback used to declare the boolean `ospfBfd` (reset 'false'); those two
+    # rows below are the 017 rows and were NOT measured live. The 2026-09-28 measurement belongs to
+    # the retired boolean.
     #
     # PREREQUISITE: `feature bfd` on Leaf-103, enabled through NDFC with the operator's explicit
     # authorisation (policy POLICY-55670, priority 500) and verified in the device running-config.
     # Without it the device rejects `ip ospf bfd` with "CLI command is invalid".
     (ROUTED, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
-    (SUBIF, "ospfBfd"): ("ospf_bfd", True, "false", dict(OSPF_CTX)),
-    (LOOPBACK, "ospfBfd"): ("ospf_bfd", True, "false", dict(OSPF_CTX)),
+    (SUBIF, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
+    (LOOPBACK, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
     (SVI, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
     # THE AREA IS THIS CAMPAIGN'S FIRST RESET THAT DOES NOT DELETE A LINE.
     # `ip router ospf <tag> area 0.0.0.77` -> `ip router ospf <tag> area 0.0.0.0`: the line is STILL

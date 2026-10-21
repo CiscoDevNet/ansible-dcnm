@@ -113,7 +113,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # The boolean OSPF names, once. enable_ospf reaches this set from both lots; listing it
         # twice made the literal look like it pinned more than it does.
         "enable_ospf", "ospf_mtu_ignore", "ospf_shutdown",
-        "ospf_bfd", "ospf_passive_interface",
+        # ospf_bfd and ospf_passive_interface are input aliases since SMU 017, not registered keys.
         "enable_ospf_auth",
         # Split redirects + ND suppress-RA, slice 0b_28, on all three overlay parents.
         # The fourth field, disable_ip_redirects, is native and must stay out of the registry;
@@ -189,7 +189,9 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # int_port_channel_pvlan_host 3 and int_vpc_pvlan_host 3 (lldp x2 + queuingStats each). spanning_tree_port_type (enum)
     # and acl_filter (string) are the other three C1 rows. IQ1 registers the vPC PVLAN qosStatsSuppressed (disable_qos_stats,
     # boolean): 117 + 1.
-    assert len(BOOL_PASSTHROUGH) == 118
+    # 115 = 118 - the three OSPF booleans (ospf_bfd on int_loopback and int_subif, ospf_passive_interface on int_subif)
+    # that SMU 017 turned into the enums ospfBfdMode and ospfPassiveMode.
+    assert len(BOOL_PASSTHROUGH) == 115
 
 
 # ------------------------------------------------------- what the engine emits --

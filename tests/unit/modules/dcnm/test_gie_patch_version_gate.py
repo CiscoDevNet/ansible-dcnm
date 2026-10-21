@@ -70,6 +70,9 @@ UNAPPROVED_EXPLICIT = [
     pytest.param("not-a-patch", id="malformed"),
     pytest.param("4.3.1.0175006010", id="unapproved_6010_one_below"),
     pytest.param("4.3.1.0175006012", id="unapproved_6012_one_above"),
+    pytest.param("4.3.1.0175006011", id="retired_smu_6011"),
+    pytest.param("4.3.1.0175006016", id="unapproved_6016_one_below_017"),
+    pytest.param("4.3.1.0175006018", id="unapproved_6018_one_above_017"),
     pytest.param("4.3.1", id="truncated_4.3.1"),
     pytest.param("4.4.0.9999999999", id="below_nd_release_floor"),
     pytest.param("4.4.1-rc1", id="non_numeric_suffix"),
@@ -339,8 +342,10 @@ class TestPV09InventoryInvariants:
         # generator's parent declaration; the slices are back to their earlier content (was f36ad753...).
         # P2: `cleared_on_change_to` computed for every int_trunk_host and int_access_host row from the generator's
         # inline-compliance declaration (was 8ea855ab...).
+        # SMU 017: regenerated from the same 34 slices with the loopback and subinterface OSPF BFD rows and the
+        # subinterface passive row rebound to the enum nvPairs ospfBfdMode and ospfPassiveMode (was 15061dfc...).
         assert PROVENANCE_SHA256 == (
-            "15061dfcd914ef5920bf2b6e3ace8db1b9e0a1e494ee4bfdeb340f3eec18f0c0"
+            "bcf144bc4176666c0e019f3ca2cd1348aa6e5a362478de6185812b2ba6f0b2b7"
         )
 
 
@@ -394,19 +399,23 @@ class TestPatchPolicyApprovedSmuOrNdRelease:
     """Keep the exact SMU exception and compare numeric ND releases as PR730 does."""
 
     def test_only_the_one_smu_is_allowlisted(self):
-        assert GIE_ENABLED_PATCH_VERSIONS == frozenset({"4.3.1.0175006011"})
+        assert GIE_ENABLED_PATCH_VERSIONS == frozenset({"4.3.1.0175006017"})
 
     @pytest.mark.parametrize("value", [
-        None, "", "4.3.1", "4.3.1.0175006010", "4.3.1.0175006012", "4.3.99",
+        None, "", "4.3.1", "4.3.1.0175006010", "4.3.1.0175006011", "4.3.1.0175006012", "4.3.1.0175006016", "4.3.1.0175006018", "4.3.99",
         "4.4", "4.4.0", "4.4.0.9999999999", "4.4.1-rc1", "4.4.1.", "4.4.1.bad",
         "4.4.1.2.bad", "5.-1.0", " 4.4.1", "4.4.1 ", "not-a-version", "4.4.\u00b2",
-        " 4.3.1.0175006011", "4.3.1.0175006011 ", 4, True, [], {},
+        " 4.3.1.0175006017", "4.3.1.0175006017 ", 4, True, [], {},
     ])
     def test_missing_malformed_and_below_floor_are_unsupported(self, value):
         assert gie_patch_supported(value) is False
 
     def test_the_exact_approved_string_is_supported(self):
-        assert gie_patch_supported("4.3.1.0175006011") is True
+        assert gie_patch_supported("4.3.1.0175006017") is True
+
+    def test_the_retired_smu_is_no_longer_supported(self):
+        # 4.3.1.0175006011 declares the boolean OSPF nvPairs; this candidate supports only 017.
+        assert gie_patch_supported("4.3.1.0175006011") is False
 
     @pytest.mark.parametrize("value", ["4.4.1", "4.4.1.0", "4.4.2", "4.10.0", "5.0.0.0"])
     def test_numeric_nd_release_is_supported(self, value):

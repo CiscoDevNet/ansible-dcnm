@@ -178,7 +178,7 @@ def test_border_reset_clears_a_leftover_message_digest_key(state):
 @pytest.mark.parametrize("parent", PARENTS)
 def test_merged_explicit_disable_neutralizes_the_stored_options(parent):
     option = {h.ROUTED: ("ospf_passive_mode", "passive", "ospfPassiveMode", "noChange"),
-              h.SUBIF: ("ospf_passive_interface", True, "ospfPassiveInterface", "false"),
+              h.SUBIF: ("ospf_passive_mode", "passive", "ospfPassiveMode", "noChange"),
               h.SVI: ("ospf_passive_mode", "passive", "ospfPassiveMode", "noChange")}[parent]
     have = have_for(parent, enable_ospf=True, ospf_tag="LAB-OSPF", ospf_area_id="0.0.0.0", ospf_cost=10,
                     enable_ospf_auth=True, ospf_auth_key_id=5, ospf_auth_key=SYN_MD5, **{option[0]: option[1]})

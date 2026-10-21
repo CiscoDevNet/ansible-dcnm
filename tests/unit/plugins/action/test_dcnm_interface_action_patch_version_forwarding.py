@@ -23,7 +23,7 @@ def _bare_action_module():
     return object.__new__(action_module.ActionModule)
 
 
-@pytest.mark.parametrize("patch_version", ["4.3.1.0175006011", "4.4.1"])
+@pytest.mark.parametrize("patch_version", ["4.3.1.0175006017", "4.4.1"])
 def test_patch_version_survives_action_preprocessing_unchanged(patch_version):
     am = _bare_action_module()
     am._task = MagicMock()
@@ -82,7 +82,7 @@ def test_patch_version_survives_the_config_none_early_return_path():
     am._task.args = {
         "fabric": "FAB1",
         "state": "query",
-        "patch_version": "4.3.1.0175006011",
+        "patch_version": "4.3.1.0175006017",
         "config": None,
     }
     captured = {}
@@ -94,5 +94,5 @@ def test_patch_version_survives_the_config_none_early_return_path():
     with patch.object(action_module.ActionNetworkModule, "run", fake_super_run):
         result = am.run(task_vars={})
 
-    assert captured["args"]["patch_version"] == "4.3.1.0175006011"
+    assert captured["args"]["patch_version"] == "4.3.1.0175006017"
     assert result == {"changed": False}

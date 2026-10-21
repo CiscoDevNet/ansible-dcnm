@@ -1,3 +1,10 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): the child interface_dampening cited below no
+# longer declares the six DAMPENING_* parameters. int_routed_host now instantiates one of interface_dampening_half_life, _full,
+# _restart or _restart_penalty (or the bare interface_dampening) according to which values are set. The parent nvPairs, the
+# bounds and the conditional rules below are parent-level and unchanged, so the module's transport is unaffected; the child-level
+# evidence references (#L55-67, installed body :1186-1196) describe the earlier SMU. Partial combinations (half-life only, restart
+# without a penalty) now select different children: mapped offline, NOT LIVE TESTED (the dampening CLI is absent on the lab images).
+#
 # Registry slice 0b_6 — dampening on int_routed_host (conditional-composition canary).
 #
 # Format B: one shared effect + conditional_requirements; designed offline (no engine, no live run).

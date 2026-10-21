@@ -45,7 +45,7 @@ from . import test_dcnm_intf_svi_dhcp4_clear as f3
 from .dcnm_module import AnsibleExitJson, AnsibleFailJson, loadPlaybookData, set_module_args
 
 FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
-APPROVED_SMU = "4.3.1.0175006011"
+APPROVED_SMU = "4.3.1.0175006017"
 IFNAME = f3.IFNAME
 PROFILE_KEYS = ("dhcp_server_addr4", "vrf_dhcp4", "dhcp_relay_src_intf")
 
