@@ -1,4 +1,4 @@
-"""PR725-R2-BATCH: read planning of the PVLAN post-deploy verifier (dcnm_intf_pvlan_verify_after_deploy).
+""": read planning of the PVLAN post-deploy verifier (dcnm_intf_pvlan_verify_after_deploy).
 
 The REAL method runs on a REAL DcnmIntf; only the external boundary is replaced: dcnm_send by a serial-routed controller double that
 records every request before answering it, and time.sleep by a counter. Counts are of the HTTP GETs the module itself sends through

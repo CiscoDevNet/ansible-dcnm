@@ -13,7 +13,7 @@ Offline, at the engine boundary. What a stage means here:
 Every stage runs against all three parents, because the lot is one slice for three parents and
 that shortcut is only sound while they behave identically.
 
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted. What is
+NOT LIVE TESTED. No controller or switch is contacted. What is
 asserted is what the module hands the transport -- the device-level half belongs to the live
 cycles, per parent and per state.
 """
@@ -42,7 +42,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 
 PARENTS = ["int_routed_host", "int_subif", "int_vlan"]
 NDFC = "12.6.0.267"
-# PR725-PATCH-VERSION-001: declared explicitly for this file's one engine entry point, _emit.
+# Declared explicitly for this file's one engine entry point, _emit.
 PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 KEY_A = "3DES-KEY-ALPHA"

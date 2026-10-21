@@ -1,8 +1,8 @@
-"""E6 (E5-R1-01): the summary's ifType/isPhysical can no longer hide a PVLAN policy known in the detail.
+"""The summary's ifType/isPhysical can no longer hide a PVLAN policy known in the detail.
 
-E5 excluded a port whose summary entry said `isPhysical: false` (with a trunk underlay) BEFORE looking at
-the detail, so a `replaced` conversion of a port whose detail is int_pvlan_host was modified and deployed
-with no PVLAN gate. SYNTHETIC type/policy contradictions on the MEASURED response shape.
+A port whose summary entry said `isPhysical: false` (with a trunk underlay) used to be excluded BEFORE looking at the detail,
+so a `replaced` conversion of a port whose detail is int_pvlan_host was modified and deployed with no PVLAN gate. SYNTHETIC
+type/policy contradictions on the MEASURED response shape.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -65,11 +65,11 @@ class TestProbeReplacedCase:
         c = ctrl()
         c.previews = [reset_preview()]
         status, res = run(c, [trunk_item(IF7)], state="replaced")
-        assert c.requests(mark=PREVIEW_MARK), res  # reaches the pre-deploy gate (its verdict is E3's)
+        assert c.requests(mark=PREVIEW_MARK), res  # reaches the pre-deploy gate (its verdict is unchanged)
         assert len(c.requests("POST", DEPLOY)) == 0 or c.order().index("PREVIEW") < c.order().index("DEPLOY")
 
     def test_deleted_variant_stays_a_no_op(self):
-        # Not generalized (out of scope): the review probe returns no operation for deleted in this harness.
+        # Not generalized (out of scope): the probe returns no operation for deleted in this harness.
         c = nonphysical(ctrl(), TRUNK)
         status, res = run(c, [{"name": IF7, "switch": [SWITCH_IP]}], state="deleted")
         assert writes(c) == []

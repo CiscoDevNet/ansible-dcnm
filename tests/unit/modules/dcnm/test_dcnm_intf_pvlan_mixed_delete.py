@@ -1,19 +1,17 @@
-"""MIXED-DELETE: conventional and PVLAN aggregate DELETIONS in ONE dcnm_interface call (NaC T6 mix, live 2026-10-17, DCNM 269f363b).
+"""Conventional and PVLAN aggregate DELETIONS in ONE dcnm_interface call.
 
-NaC removes every interface it no longer wants in one `state: deleted` call, each item deploy false: conventional Po301 (member Eth1/14) and
-PVLAN Po310 (member Eth1/16) on Leaf-102. Both mark-deletes succeeded; the PVLAN saved-deletion gate (`delete_saved`) then read a fresh
-pending that also held the conventional `no interface port-channel301` and the released Eth1/14, and refused them ("outside interface
-scope" / "outside this deploy batch"). The MIXED-BATCH rule only covered members released by a confirmed UPDATE.
+A single `state: deleted` call, each item deploy false, can delete a conventional port-channel and a PVLAN one. The PVLAN
+saved-deletion gate (`delete_saved`) then reads a pending that also holds the conventional `no interface port-channel<id>` and
+its released member, and must not refuse them.
 
-Fixed rule: a conventional port-channel / vPC whose generic mark-delete THIS invocation sent, and whose ORIGINAL answer is the measured
-success naming exactly the requested items, leaves on each physical serial (vPC: both child port-channels, PEERn -> n-th serial) exactly
-(a) the global line `no interface port-channel<its id>` and (b) its pre-state members, each judged by the existing rule (block must withdraw
-that channel-group). Any other global line, interface, id or serial stays refused; an unconfirmed answer grants nothing; nothing survives
-the invocation.
+Rule: a conventional port-channel / vPC whose generic mark-delete THIS invocation sent, and whose ORIGINAL answer is the
+measured success naming exactly the requested items, leaves on each physical serial (vPC: both child port-channels, PEERn ->
+n-th serial) exactly (a) the global line `no interface port-channel<its id>` and (b) its pre-state members, each judged by the
+existing rule (the block must withdraw that channel-group). Any other global line, interface, id or serial stays refused; an
+unconfirmed answer grants nothing; nothing survives the invocation.
 
-Shapes: the T6 forced-preview pending of Leaf-102 (T6mix_preview: global `no interface port-channel301` + Eth1/14 block with
-`no channel-group 301 force mode active` and the trunk-host default) on the measured G4R1 HR deletion harness; the vPC on the existing vPC
-deletion harness. Real main(); only the controller boundary is faked.
+Shapes: a measured forced-preview pending on the measured deletion harness; the vPC on the existing vPC deletion harness. Real
+main(); only the controller boundary is faked.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -35,7 +33,7 @@ CONV_VPC, V5, V6 = "vPC305", "Ethernet1/5", "Ethernet1/6"
 
 
 def add_conv_po(ctrl, name=CONV_PO, members=(C14,)):
-    """A conventional trunk port-channel (Leaf-102 Po301 shape) with its members, next to the harness's PVLAN Po."""
+    """A conventional trunk port-channel ( Po301 shape) with its members, next to the harness's PVLAN Po."""
     nv = {"MEMBER_INTERFACES": ",".join(members), "PO_ID": name, "PC_MODE": "active", "DESC": "INTEG-PO-CONV-V2", "ADMIN_STATE": "true",
           "ALLOWED_VLANS": "none", "MTU": "jumbo", "SPEED": "Auto", "BPDUGUARD_ENABLED": "true", "PORTTYPE_FAST_ENABLED": "true", "CONF": ""}
     ctrl.detail[name] = {"policy": CONV_PO_POLICY, "nvPairs": nv}
@@ -46,7 +44,7 @@ def add_conv_po(ctrl, name=CONV_PO, members=(C14,)):
 
 
 def po_preview(extra_global, extra_blocks, base=None):
-    """The measured HR deletion pending of the PVLAN Po (its own `no interface` + released member) plus the conventional sibling's."""
+    """The measured deletion pending of the PVLAN Po (its own `no interface` + released member) plus the conventional sibling's."""
     resp = base or G5.corrected_hr_preview()
     entry = resp["DATA"][0]
     entry["pendingConfig"] = list(extra_global) + list(entry["pendingConfig"]) + list(extra_blocks)
@@ -65,7 +63,7 @@ T6_GLOBAL = ["no interface port-channel301"]
 
 
 def t6_po(ctrl, extra_global=None, extra_blocks=None, deploy=False, previews=1):
-    """The T6 shape on one switch: deleted, conventional Po301 and PVLAN Po502 (harness name of Po310), both deploy false, one call."""
+    """The measured shape on one switch: deleted, conventional Po301 and PVLAN Po502 (harness name of Po310), both deploy false, one call."""
     extra_global = T6_GLOBAL if extra_global is None else extra_global
     extra_blocks = released_block(C14, 301) if extra_blocks is None else extra_blocks
     ctrl.previews = [po_preview(extra_global, extra_blocks) for _i in range(previews)]
@@ -77,7 +75,7 @@ def writes(ctrl, start=0):
     return R.writes(type("C", (), {"calls": ctrl.calls[start:]}))
 
 
-# ================================================================== regular port-channels (Leaf-102 T6 shape)
+# ================================================================== regular port-channels
 def test_t6_conventional_deletion_in_the_same_call_owns_its_withdrawal_and_released_member():
     ctrl = hr_mixed_ctrl()
     status, result = t6_po(ctrl)
@@ -218,7 +216,7 @@ def test_overridden_without_the_conventional_deletion_still_refuses_its_pending(
     assert status == "fail" and "outside interface scope" in result["msg"], result.get("msg")
 
 
-# ================================================================== vPC (Leaf-103/104 shape)
+# ================================================================== vPC
 def vpc_mixed_ctrl(peer_members=(V5, V6), pcids=("305", "305")):
     """The PVLAN vPC10 deletion harness plus a conventional trunk vPC305 whose members DIFFER per peer (peer1 Eth1/5, peer2 Eth1/6), so a
     crossed assignment is visible."""

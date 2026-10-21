@@ -7,7 +7,7 @@ create bodies): M1 regular Po host, parent down; M2 the same with the parent up;
 three the member policy keeps ADMIN_STATE "true", the member pending is `no spanning-tree port type edge trunk` + `channel-group N force
 mode active` + `no shutdown`, and after the deploy the running member holds no `shutdown` and the switch is In-Sync. The measured stanzas
 are transposed to the harness names (port-channel10, Ethernet1/7 / Ethernet1/8). Mixed and multi-member previews are SYNTHETIC
-compositions of the measured up form and the measured (H1) down form. Real main(); only the controller boundary is intercepted.
+compositions of the measured up form and the measured down form. Real main(); only the controller boundary is intercepted.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -159,7 +159,7 @@ def test_po_repetition_after_the_up_join_writes_nothing():
     ctrl.previews = [po_preview()]
     assert H.run(ctrl, [H.po_item()])[0] == "exit"
     nv = MU.member_nv(IF7)
-    nv["ADMIN_STATE"] = "true"  # MEASURED: the member policy keeps "true" after the join (M1)
+    nv["ADMIN_STATE"] = "true"  # MEASURED: the member policy keeps "true" after the join
     ctrl.detail[IF7] = {"policy": H.PO_MEMBER, "nvPairs": nv}
     ctrl.next_invocation()
     ctrl.calls = []
@@ -170,7 +170,7 @@ def test_po_repetition_after_the_up_join_writes_nothing():
 
 
 def test_po_with_members_in_different_states_keeps_each_one():
-    # SYNTHETIC composition: Ethernet1/7 joins up (measured form), Ethernet1/9 joins down (H1 measured form).
+    # SYNTHETIC composition: Ethernet1/7 joins up (measured form), Ethernet1/9 joins down (measured form).
     ctrl = H.baseline_ctrl(up_nv())
     down = trunk_host_nv(E9)
     down["ADMIN_STATE"] = "false"
@@ -208,7 +208,7 @@ def test_po_lacp_rate_change_with_an_up_member_stays_refused_before_any_write():
 
 
 def test_po_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markdelete():
-    # RELEASE-ADMIN (supersedes the admin-down-only release): the up member is released to the fabric default; the full release lifecycle
+    # Supersedes the admin-down-only release: the up member is released to the fabric default; the full release lifecycle
     # is asserted in test_dcnm_intf_pvlan_release_admin.py. Here: the old refusal is gone and the deletion's first write is the mark-delete.
     ctrl = MU.seeded(members=(IF7,), spare=())
     ctrl.detail[IF7]["nvPairs"]["ADMIN_STATE"] = "true"
@@ -314,7 +314,7 @@ def test_vpc_repetition_after_the_up_join_writes_nothing():
 
 
 def test_vpc_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markdelete():
-    # RELEASE-ADMIN (supersedes the admin-down-only release): see test_dcnm_intf_pvlan_release_admin.py for the full lifecycle.
+    # Supersedes the admin-down-only release: see test_dcnm_intf_pvlan_release_admin.py for the full lifecycle.
     ctrl = V.VpcController()
     for serial, port in ((V.SN1, V.M1), (V.SN2, V.M2)):
         ctrl.nodes[serial][port] = {"policy": V.TRUNK, "nvPairs": up_nv(port)}

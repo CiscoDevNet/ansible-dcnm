@@ -1,20 +1,20 @@
-"""C1-R2: the two pre-deploy refusals MEASURED live in T2-LIVE-G1 (NDFC 12.6.0.267, FAB1 Leaf-102,
-port-channel501 host 2210/2212 with member Ethernet1/8, 2026-10-09), replayed offline through the real main().
+"""Two pre-deploy refusals MEASURED live (NDFC 12.6.0.267, a PVLAN host port-channel with one member),
+replayed offline through the real main().
 
-MEASURED inputs (fixtures/pvlan_po_t2_measured.json, from the redacted natural logs of the T2 run, previews reduced to the two target
-stanzas, serial/fabric sanitized): the intents after the P1 creation, the module's own recompute preview of the S1 companion update,
-the intents after S1 (never deployed), the member exactly as the controller released it after the R1 mark-delete, the G4 modify body,
-and the module's own delete_deploy preview.
+MEASURED inputs (fixtures/pvlan_po_t2_measured.json, redacted, previews reduced to the two target stanzas, serial/fabric
+sanitized): the intents after the creation, the module's own recompute preview of the companion update, the intents after that
+update (never deployed), the member exactly as the controller released it after the mark-delete, the admin-down modify body, and
+the module's own delete_deploy preview.
 
-What is NOT measured (and therefore not asserted): the DEVICE effect of either pending. S1 and R1 were refused by the C1-R1 gates, so
-no deploy was sent. Whether NX-OS makes the member follow the port-channel MTU, and what a re-issued `channel-group N force mode M` does
-on an existing member, are open; the corrected gate does not assume either.
+What is NOT measured (and therefore not asserted): the DEVICE effect of either pending. Both were refused by the earlier gates, so
+no deploy was sent. Whether NX-OS makes the member follow the port-channel MTU, and what a re-issued `channel-group N force mode M`
+does on an existing member, are open; the corrected gate does not assume either.
 
-DERIVED inputs (marked as such in each test): a variant of the measured S1 preview that edits ONLY the MTU lines (the port-channel keeps
-`mtu 9216`), so that the force re-assertion can be exercised without the open MTU question, and minimal edits of the measured previews
-for the safety negatives. They are predictions built from a measurement, never live evidence.
+DERIVED inputs (marked as such in each test): a variant of the measured update preview that edits ONLY the MTU lines (the
+port-channel keeps `mtu 9216`), so that the force re-assertion can be exercised without the open MTU question, and minimal edits of
+the measured previews for the safety negatives. They are predictions built from a measurement, never live evidence.
 
-SIMULATED, as in the existing G4 tests: the controller's answer to the legacy modifies (207 SUCCESS, sent nvPairs stored).
+SIMULATED: the controller's answer to the legacy modifies (207 SUCCESS, sent nvPairs stored).
 """
 
 from __future__ import absolute_import, division, print_function
@@ -73,8 +73,8 @@ RELEASED = harness_nv(stage("R1-release")["released"][MEM]["nvPairs"])  # MEASUR
 
 
 class T2Controller(PoLifecycleController):
-    """The existing Po harness (E2 PoController + G1 lifecycle) seeded with the MEASURED T2 intents. Its mark-delete removes the parent
-    and leaves the member as the controller released it in T2 (`released_nv`, default: the measured R1 release)."""
+    """The existing Po harness (PoController + lifecycle) seeded with the MEASURED intents. Its mark-delete removes the parent
+    and leaves the member as the controller released it (`released_nv`, default: the measured R1 release)."""
 
     def __init__(self, stage_name):
         super(T2Controller, self).__init__()
@@ -143,9 +143,9 @@ def test_s1_replay_sends_the_measured_live_modify_payload():
 
 # ------------------------------------------------------------------ S1: the measured refusal, corrected for the modeled part only
 def test_s1_measured_update_was_refused_by_c1r2_only_for_the_member_mtu_and_deploys_under_the_c1r3_m1_rule():
-    """C1-R2 refused S1 ONLY for the member's `mtu 9216` withdrawal (the force re-assertion was modeled). C1-R3 accounts for that one
-    withdrawal by inheritance from the port-channel's own `no mtu 9216` (M-G1 M1, measured in isolation). The COMBINED S1 update deploying
-    here is a PREDICTION from two separate measurements (M2 force re-assertion, M1 MTU inheritance); only the live replay can confirm it."""
+    """The earlier gate refused S1 ONLY for the member's `mtu 9216` withdrawal (the force re-assertion was modeled). That withdrawal
+    is now accounted for by inheritance from the port-channel's own `no mtu 9216` (measured in isolation). The COMBINED S1 update deploying
+    here is a PREDICTION from two separate measurements (force re-assertion, MTU inheritance); only the live replay can confirm it."""
     ctrl, status, result = update(measured_preview("S1-gate"))
     assert status == "exit" and result["changed"] is True, result.get("msg")
     assert ctrl.kinds() == ["modify", "deploy"]
@@ -184,7 +184,7 @@ def test_derived_update_without_mtu_change_deploys_through_the_force_reassertion
 
 
 def test_derived_update_without_mtu_change_was_refused_by_c1r1_only_for_the_force_line():
-    """The same derived case names the force re-assertion as its ONLY refusal on C1-R1 (recorded by the fail-before run); here it
+    """The same derived case names the force re-assertion as its ONLY refusal on the earlier gate (recorded by the fail-before run); here it
     documents that no other line of the measured member pending needs a rule."""
     _ctrl, status, result = update(derived_no_mtu_change(measured_preview("S1-gate")), s1_config(mtu=None))
     assert "withdrawal of" not in (result.get("msg") or "") and "unmodeled" not in (result.get("msg") or "")
@@ -360,7 +360,7 @@ def test_r1_the_member_mtu_withdrawal_must_be_in_the_pending():
 
 
 def test_r1_a_release_whose_intent_equals_the_model_reports_no_restoration_delta():
-    """DERIVED control: the measured release with MTU jumbo (the G5 case) and the measured preview with the member keeping `mtu 9216`."""
+    """DERIVED control: the measured release with MTU jumbo (the earlier case) and the measured preview with the member keeping `mtu 9216`."""
     pf = measured_preview("R1-gate")
     pf["pendingConfig"] = [l for l in pf["pendingConfig"] if l != "  no mtu 9216"]
     exp = []

@@ -1,22 +1,24 @@
-"""VPC-HOST-E1-OFFLINE: the minimal two-serial extension of the existing PVLAN harness.
+"""The minimal two-serial extension of the existing PVLAN harness.
 
 NOT LIVE TESTED. Real main(); only the external boundary is mocked, through the EXISTING harness
 (test_dcnm_intf_pvlan_harness.FakeController) plus the smallest subclass that teaches it a PAIR of switches: state per serial, the
 vPC parent that appears on both peers, per-serial previews/policy lists and a vPC create/delete. No new framework or simulator.
 
-E4 (VPC-HOST-E4-G6) labelling of the shapes taken from the regular Po campaign (fixtures/pvlan_po_h1_measured.json, NDFC 12.6.0.267):
-  MEASURED for a REGULAR host Po, SIMULATED here for a vPC: the member joins through the pending COMMAND `channel-group N force mode M` while the
-  controller's expected member and the device keep the PERSISTED `channel-group N mode M`; an existing member inherits its Po's association change with
-  NO member pending; a deployed member leaves with the command form `no channel-group N force mode M`; the mark-delete answers 200/OK 'Interface deleted
-  successfully' with ONE `value` item; the controller releases the member as int_trunk_host with ADMIN_STATE "true".
-  Nothing of this has been observed for a vPC: it is the extrapolation L1 measures.
+Shapes taken from the regular Po measurements (fixtures/pvlan_po_h1_measured.json, NDFC 12.6.0.267):
+  MEASURED for a REGULAR host Po, SIMULATED here for a vPC: the member joins through the pending COMMAND
+  `channel-group N force mode M` while the controller's expected member and the device keep the PERSISTED `channel-group N mode M`;
+  an existing member inherits its Po's association change with NO member pending; a deployed member leaves with the command form
+  `no channel-group N force mode M`; the mark-delete answers 200/OK 'Interface deleted successfully' with ONE `value` item; the
+  controller releases the member as int_trunk_host with ADMIN_STATE "true".
+  None of this was observed for a vPC here: it is an extrapolation for a live case to measure.
 
 Three kinds of data, never mixed:
   * contract of the source   -- what the captured templates and the existing module code say (cited in the tests);
-  * SYNTHETIC fixture        -- every preview/summary/policy shape below is written BY HAND from those templates. The fake applies
-                                 on a create/delete exactly what the templates are PREDICTED to do (children per peer, member flip,
-                                 member release); that prediction is the hypothesis under test, not a controller measurement;
-  * future live measurement  -- the first live case (L1) measures it. Nothing here certifies the controller.
+  * SYNTHETIC fixture        -- every preview/summary/policy shape below is written BY HAND from those templates. The fake
+                                 applies on a create/delete exactly what the templates are PREDICTED to do (children per peer,
+                                 member flip, member release); that prediction is the hypothesis under test, not a controller
+                                 measurement;
+  * future live measurement  -- nothing here certifies the controller.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -90,22 +92,22 @@ class VpcController(FakeController):
         self.create_responses = []
         self.children_on_save = True  # [INF] the parent's add() writes the children when the intent is saved (HOST 590-600): L1 measures it
         self.release_on_delete = True  # [UNK] V6: the members return to int_trunk_host after the vPC is deleted
-        self.release_admin_up = True  # MEASURED for a regular Po (HR), INFERRED for a vPC: the released member is int_trunk_host ADMIN_STATE "true"
+        self.release_admin_up = True  # MEASURED for a regular Po, INFERRED for a vPC: the released member is int_trunk_host ADMIN_STATE "true"
         self.markdelete_responses = []  # consumed in order; default: the measured Po answer with the PAIR identity (INFERRED for a vPC)
         self.member_modify_fail = set()  # serials whose member modify answers an ERROR item
-        self.children_marked_deleted = False  # MEASURED (L1-E4 live F): the deleted vPC's child Po stays listed as `interface_delete` until the deploy
+        self.children_marked_deleted = False  # MEASURED: the deleted vPC's child Po stays listed as `interface_delete` until the deploy
         self.marked_source = None  # the `interface_delete` source; None = the parent vPC (MEASURED: `vpc10`, lower case); set to model a foreign owner
-        self.parent_metadata = {"createVpc": "true"}  # MEASURED (L1-E4 live A1/A2): the controller adds `createVpc` "true" to the created parent
+        self.parent_metadata = {"createVpc": "true"}  # MEASURED: the controller adds `createVpc` "true" to the created parent
         self.list_parent_policy = False  # [UNK] V2: whether the parent policy is listed on a peer
         self.vpc_in_summary = True  # [UNK] V0: whether the vPC is an entry of the interface summary
-        # MEASURED (live V-7a, NDFC 12.6.0.267, 2026-10-16): after the vPC's mark-delete the PARENT stays listed on both peers' summaries,
-        # markDeleted True, Out-of-Sync, no underlay policy (L1-E4 F had it gone). Off by default: the older harness shape.
+        # MEASURED (NDFC 12.6.0.267): after the vPC's mark-delete the PARENT stays listed on both peers' summaries,
+        # markDeleted True, Out-of-Sync, no underlay policy. Off by default: the older harness shape.
         self.parent_marked_listed = False
         self.inherited_child = True  # the 'Inherited Commands' int_eth child of every member (HOST 755-780)
         self.summary_extra = {SN1: [], SN2: []}  # entries listed by the interface summary of a peer and by nothing else
         self.compliance_by = {}  # (serial, ifName) -> status
         self.markdeleted = False
-        # IQ1: False = the CORRECTED parent (qosPolicy/queuingPolicy locals: the reference int_vpc_trunk_host and every Engineering
+        # False = the CORRECTED parent (qosPolicy/queuingPolicy locals: the reference int_vpc_trunk_host and every Engineering
         # set) hands ENABLE_QOS/QOS_POLICY/ENABLE_PFC/QUEUING_POLICY to both children. True = the revision INSTALLED on the test ND
         # (MEASURED, live S1): its UnboundLocalError resets those four to false/'' on every save, while queuingStats and
         # qosStatsSuppressed (interfaceOptions) still follow the parent.
@@ -184,7 +186,7 @@ class VpcController(FakeController):
                     "PRIMARY_INTF": VPC,
                     "PVLAN_MODE": parent["PVLAN_MODE"],
                     "ASSOCIATION_LIST": parent["ASSOCIATION_LIST"],
-                    # VPC-MODES-E1: the other lists and the per-peer PVLAN native/allowed reach the child too (HOST 604-680 [SRC])
+                    # The other lists and the per-peer PVLAN native/allowed reach the child too (HOST 604-680 [SRC])
                     "MAPPING_LIST": parent.get("MAPPING_LIST", ""),
                     "PVLAN_NATIVE_VLAN": parent.get("PEER%d_PVLAN_NATIVE_VLAN" % n, ""),
                     "PVLAN_ALLOWED_VLANS": parent.get("PEER%d_PVLAN_ALLOWED_VLANS" % n, ""),
@@ -197,7 +199,7 @@ class VpcController(FakeController):
                     "CONF": parent.get("PEER%d_PO_CONF" % n, ""),
                 },
             }
-            # PLAN-2 C1: the other parent fields the template hands to each child (HOST 636-688 [SRC]), with its defaults.
+            # The other parent fields the template hands to each child (HOST 636-688 [SRC]), with its defaults.
             for key, default in (
                 ("spanningTreePortType", "no"),
                 ("SPEED", "Auto"),
@@ -208,13 +210,13 @@ class VpcController(FakeController):
                 ("QUEUING_POLICY", ""),
                 ("queuingStats", "false"),
                 ("aclFilter", ""),
-                # IQ1: ingress QoS (HOST 652-657 / 682-687)
+                # Ingress QoS (HOST 652-657 / 682-687)
                 ("ENABLE_QOS", "false"),
                 ("qosStatsSuppressed", "false"),
             ):
                 self.nodes[serial][po]["nvPairs"][key] = parent.get(key, default)
             child = self.nodes[serial][po]["nvPairs"]
-            # IQ1: the corrected parent hands QOS_POLICY only with QoS enabled (qosPolicy; no AI/ML fabric in this harness)
+            # The corrected parent hands QOS_POLICY only with QoS enabled (qosPolicy; no AI/ML fabric in this harness)
             child["QOS_POLICY"] = parent.get("QOS_POLICY", "") if str(parent.get("ENABLE_QOS", "false")).lower() == "true" else ""
             if self.defective_qos_template:
                 child.update({"ENABLE_PFC": "false", "ENABLE_QOS": "false", "QOS_POLICY": "", "QUEUING_POLICY": ""})
@@ -228,7 +230,7 @@ class VpcController(FakeController):
                         "PRIMARY_INTF": VPC,
                         "PC_MODE": parent["PC_MODE"],
                         "PVLAN_MODE": parent["PVLAN_MODE"],
-                        # PLAN-2 C1: CDP, LLDP and LACP come from the parent (HOST 764-768 / 854-858 [SRC]); DESC is the peer's
+                        # CDP, LLDP and LACP come from the parent (HOST 764-768 / 854-858 [SRC]); DESC is the peer's
                         # PEERn_PO_DESC when COPY_DESC is true, else the member's own (HOST 750-752 [SRC]).
                         "CDP_ENABLE": parent.get("CDP_ENABLE", "true"),
                         "lldpTransmit": parent.get("lldpTransmit", "false"),
@@ -432,7 +434,7 @@ class VpcController(FakeController):
         return out + copy.deepcopy(self.policies_extra.get(serial, []))
 
     def _summary_entry(self, serial, name, d, status):
-        physical = d["policy"] in (TRUNK, PO_MEMBER, "int_access_host", "int_routed_host")  # VPC-MODES-E1: prepared members are physical
+        physical = d["policy"] in (TRUNK, PO_MEMBER, "int_access_host", "int_routed_host")  # prepared members are physical
         return {
             "ifName": name,
             "serialNo": serial,
@@ -460,7 +462,7 @@ class VpcController(FakeController):
         }
 
     def _marked_deleted_entry(self, serial, name):
-        """MEASURED (L1-E4 live F) for the child of a vPC, as for a deployed regular Po (F-HR-deployed): listed until the deploy, marked for
+        """MEASURED for the child of a vPC, as for a deployed regular Po (F-HR-deployed): listed until the deploy, marked for
         deletion, ONE `interface_delete` policy whose source is the PARENT vPC (lower case `vpc10`)."""
         return {
             "ifName": name,
@@ -633,7 +635,7 @@ def member_after(port, pair=(PRIMARY, SECONDARY), pc_mode="active"):
 
 
 def create_pending(port, pair=(PRIMARY, SECONDARY), desc=None):
-    """The pending of a vPC creation on ONE peer. The member part has the MEASURED shape of a regular host Po (H1 preview): the member's own trunk
+    """The pending of a vPC creation on ONE peer. The member part has the MEASURED shape of a regular host Po (preview): the member's own trunk
     edge line goes away and the join is the COMMAND `channel-group N force mode M`; the PVLAN mode and list arrive with it (they are NOT separate
     pending lines). SIMULATED for a vPC."""
     lowered = port.lower()

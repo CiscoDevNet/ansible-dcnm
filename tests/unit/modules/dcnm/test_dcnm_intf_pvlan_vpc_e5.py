@@ -1,7 +1,7 @@
-"""VPC-HOST-E5: controls of the two corrections made after the first real cycle (L1-E4 live, 2026-10-08). NOT LIVE TESTED for E5.
+"""Controls of two corrections made after the first live vPC cycle. NOT LIVE TESTED for these corrections.
 
-F1: the created vPC parent carries `createVpc` = "true" (MEASURED A1/A2): read-only controller metadata, not a template field.
-F2: the child Po of a deleted vPC is listed `interface_delete` whose source is the PARENT vPC (`vpc10`) (MEASURED F).
+F1: the created vPC parent carries `createVpc` = "true" (MEASURED): read-only controller metadata, not a template field.
+F2: the child Po of a deleted vPC is listed `interface_delete` whose source is the PARENT vPC (MEASURED).
 The fixtures come from the sanitized captures in fixtures/pvlan_vpc_l1e4_measured.json; the harness stays SIMULATED elsewhere.
 """
 

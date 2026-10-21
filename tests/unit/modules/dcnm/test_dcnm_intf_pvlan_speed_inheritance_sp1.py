@@ -3,7 +3,7 @@
 Sources (sanitized, read-only extracts; raw captures and their sha256 stay outside the product):
   fixtures/pvlan_po_speed_diag_measured.json and pvlan_vpc_speed_diag_measured.json -- the speed-inheritance diagnosis,
   DIAG-20261012T091312Z: apply / withdraw previews before the deploy and the converged previews after it, Po521 and both peers of vPC522;
-  fixtures/pvlan_po_speed_s1_measured.json -- the RC2 S1 refusal (see test_dcnm_intf_pvlan_po_speed_s1_measured.py).
+  fixtures/pvlan_po_speed_s1_measured.json -- the measured S1 refusal (see test_dcnm_intf_pvlan_po_speed_s1_measured.py).
 Measured: `speed 1000`, host mode, one member, admin down, NDFC 12.6.0.267, N9K-C9300v 10.5(5). Everything else stays refused, and these
 tests are offline: they are not the module's live acceptance.
 Po cases run the module's own gate (DcnmIntf.dcnm_intf_pvlan_po_assess) on the real stanza names; the main() cases retarget the measured

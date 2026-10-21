@@ -47,7 +47,7 @@ from .test_dcnm_intf_pvlan_vpc_harness import (
     vpc_item,
 )
 
-#: (peer1 = SN1, peer2 = SN2). All differ from the vPC id 10; the second is asymmetric; the third swaps them.
+# (peer1 = SN1, peer2 = SN2). All differ from the vPC id 10; the second is asymmetric; the third swaps them.
 PCIDS = [("11", "11"), ("11", "12"), ("12", "11"), ("4096", "1")]
 BASE_VID = "10"
 

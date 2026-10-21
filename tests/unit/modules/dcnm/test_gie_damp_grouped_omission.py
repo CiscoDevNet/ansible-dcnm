@@ -1,9 +1,9 @@
 """Dampening: the SEVEN withdrawn as one group, through the real `main()`.
 
 EXPERIMENTAL / CONTROLLER-ONLY. The seven resets these cases rely on are CANDIDATES from a
-local experimental generation, registered so the omission path can be executed and observed at
+local experimental registration, registered so the omission path can be executed and observed at
 a controller. They are NOT accepted device resets, they are NOT part of the 157 integration,
-and nothing was deployed in the campaign that produced them -- so no device acceptance exists
+and nothing was deployed when they were observed -- so no device acceptance exists
 for any of the seven.
 
 WHY THIS FILE EXISTS RATHER THAN SEVEN PER-ROW FIXTURES
@@ -22,7 +22,7 @@ different statements.
 WHAT IS ASSERTED
 
 The captured REQUEST and the PUBLIC DIFF, never `changed` alone. Deploy flags are asserted
-FALSE on every case: this campaign's whole contract is that nothing reaches a device.
+FALSE on every case: the contract is that nothing reaches a device.
 
 Offline. No controller and no device.
 """
@@ -91,9 +91,9 @@ def _have():
 
 
 def _run(profile, state, **kw):
-    """Drive `main()` with `deploy: False`, which is what the live campaign used in EVERY
-    stage. The harness default is `deploy=True`; leaving it would assert against a model this
-    campaign never sent, and the deploy-flag assertions below would be meaningless."""
+    """Drive `main()` with `deploy: False`, as the live observation did in EVERY
+    step. The harness default is `deploy=True`; leaving it would assert against a model that
+    was never sent, and the deploy-flag assertions below would be meaningless."""
     return run_configs([cfg(IF_A, profile, deploy=False)], state, deploy=False, **kw)
 
 

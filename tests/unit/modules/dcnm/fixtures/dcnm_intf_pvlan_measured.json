@@ -1,5 +1,5 @@
 {
- "_provenance": "Sanitized from PR725-PVLAN-NATIVE-PLAN-001 discovery evidence (G5/G6, NDFC 12.6.0.267, NX-OS 10.5(5)); identity replaced, bookkeeping dropped. Builder: tooling/build_pvlan_fixtures.py in PR725-PVLAN-ETHERNET-001. Not live proof of module behavior.",
+ "_provenance": "Sanitized from discovery captures (NDFC 12.6.0.267, NX-OS 10.5(5)); identity replaced, bookkeeping dropped. Not live proof of module behavior.",
  "deploy_500": {
   "data": [
    {

@@ -152,7 +152,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (  # 
     gie_contribute_nvpairs, gie_extend_prof_spec, GIE_ENABLED_PATCH_VERSIONS,
 )
 
-# PR725-PATCH-VERSION-001: declared explicitly for this file's one direct engine call.
+# Declared explicitly for this file's one direct engine call.
 _PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 SECRET = "S3CR3T-WP98-NEVER-PRINT-ME"

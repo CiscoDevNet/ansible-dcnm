@@ -1,5 +1,5 @@
 {
-  "_comment": "MEASURED (Alpha2 NEXT-A2-SD G2, vPC522, Ethernet1/9, both peers, sanitized extracts). Peers are keyed by the synthetic aliases SN-A / SN-B; the mapping to the capturing serials is kept outside this repository.",
+  "_comment": "MEASURED (a vPC with one member per leg, both peers, sanitized extracts). Peers are keyed by the synthetic aliases SN-A / SN-B.",
   "peers": {
     "SN-A": {
       "after_apply_preview": {

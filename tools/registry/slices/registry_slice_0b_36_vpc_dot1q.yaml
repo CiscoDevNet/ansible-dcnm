@@ -17,7 +17,7 @@
 # spanningTreePortType 'no', the four booleans 'false'. Same forms as measured on the sibling vPC
 # parents, but NOT transferred from them: these values are loaded by the validation replay ONLY
 # after a clear stage has sent all six neutrals explicitly on a vPC and the device verdict
-# 'cleared' passed on BOTH peers (port-channel and member). If any field fails, the campaign stops
+# 'cleared' passed on BOTH peers (port-channel and member). If any field fails, the validation stops
 # and none is used; a partial registration needs a new, reviewed candidate. default_template is
 # unchanged, so omitting a field at its declared default still needs nothing.
 

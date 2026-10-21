@@ -1,4 +1,4 @@
-"""PR725-VPC-FINAL-INTEGRATION: the batch gate (VPC-BATCH-GATE / VPC-READS) and the staged deployment (STAGED, check_deploy_resend) together.
+""": the batch gate (VPC-BATCH-GATE / VPC-READS) and the staged deployment (STAGED, check_deploy_resend) together.
 
 Two PVLAN host vPCs of ONE pair are saved with ``deploy: false`` and then deployed together by one request with ``deploy: true`` and
 ``check_deploy: true``. The controller double is MultiVpc (test_dcnm_intf_pvlan_vpc_batch) with the MEASURED shape of a saved vPC (live

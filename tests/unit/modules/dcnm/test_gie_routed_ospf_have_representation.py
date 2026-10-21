@@ -15,7 +15,7 @@ WHY THIS FILE EXISTS
 
 WHAT WAS MEASURED (read-only, no mutation)
     ``GET /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface?serialNumber=<sno>`` — the
-    endpoint that feeds HAVE — against Leaf-103 on NDFC 12.6.0.267. 63 ``int_routed_host``
+    endpoint that feeds HAVE — against on NDFC 12.6.0.267. 63 ``int_routed_host``
     interfaces came back in TWO shapes:
 
       * 62 interfaces, 17-18 nvPairs: every OSPF key ABSENT.
@@ -248,7 +248,7 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_routed_host", "ospfPriority"),
         ("int_routed_host", "ospfTransmitDelay"),
         ("int_routed_host", "PIM_DR_PRIORITY"),
-        # The six BFD intervals, committed 2026-09-19. Reviewed individually, not generated
+        # The six BFD intervals, committed. Reviewed individually, not generated
         # into this list: each was read off the installed template (tx and min_rx 50-999,
         # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC
         # hands them back as strings. They are also the first bindings here with a narrow

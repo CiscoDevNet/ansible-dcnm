@@ -1,4 +1,4 @@
-"""PR725-PATCH-VERSION-001 -- action-plugin forwarding of the new `patch_version` argument.
+"""Action-plugin forwarding of the new `patch_version` argument.
 
 The action plugin's existing preprocessing only inspects/mutates `config` (flattening a
 `switch` list and renaming a misspelled `profile` key); it never reads or sets
@@ -6,7 +6,7 @@ The action plugin's existing preprocessing only inspects/mutates `config` (flatt
 `self._task.args` reaches the base `ActionNetworkModule.run()` call unchanged, and an
 absent value stays absent -- no implicit default is added at this layer either.
 
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
+NOT LIVE TESTED. No controller or switch is contacted.
 """
 from __future__ import absolute_import, division, print_function
 

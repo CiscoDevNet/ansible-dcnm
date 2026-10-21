@@ -1,5 +1,5 @@
 ## EXCERPT of the NDFC parent template int_vlan, for tests only. Not a template: do not upload.
-## Body: 0efb09af (pre-SMU body, captured 2026-09-20..24)
+## Body: 0efb09af (pre-SMU body)
 ## sha256: 0efb09af7f837b30b7a5dde37e7d4e7604fdd2fc4ca92ff6338e227802fde1a3 (96865 bytes)
 ## Declares dhcpServerAddr4 and DHCP_RELAY_SRC_INTF; reads them as plain variables.
 ## --- source lines 266-275 (verbatim) ---

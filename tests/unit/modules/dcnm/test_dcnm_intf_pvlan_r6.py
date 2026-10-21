@@ -1,11 +1,11 @@
-"""C1-R6: F1 (vPC release prevalidation of members released already down) and the bounded extension of the
-inherited member MTU rule to the SAME supported PVLAN mode on parent and member (host, promiscuous, trunk promiscuous, trunk secondary).
+"""vPC release prevalidation of members released already down, and the bounded extension of the inherited member MTU rule
+to the SAME supported PVLAN mode on parent and member (host, promiscuous, trunk promiscuous, trunk secondary).
 
-NOT LIVE TESTED for the three non-host modes. Every preview below is DERIVED: the existing per-mode harness stanzas (SYNTHETIC, from the
-templates: test_dcnm_intf_pvlan_po_g1 / _po_g5_next_modes for a regular Po, test_dcnm_intf_pvlan_vpc_modes_e1 for a vPC) carrying the pending
-FORMS measured for HOST only (M1: `no mtu 9216` on the port-channel only; MR: the port-channel stanza re-emitted with `mtu 9216`; T3-G1 the
-same per vPC peer). Whether NX-OS propagates the MTU to the member in the other modes is what T4 measures; these fixtures prove only the
-module's decision rule, never the device.
+NOT LIVE TESTED for the three non-host modes. Every preview below is DERIVED: the existing per-mode harness stanzas (SYNTHETIC, from
+the templates: test_dcnm_intf_pvlan_po_g1 / _po_g5_next_modes for a regular Po, test_dcnm_intf_pvlan_vpc_modes_e1 for a vPC)
+carrying the pending FORMS measured for HOST only (`no mtu 9216` on the port-channel only; the port-channel stanza re-emitted with
+`mtu 9216`; the same per vPC peer). Whether NX-OS propagates the MTU to the member in the other modes is not measured; these
+fixtures prove only the module's decision rule, never the device.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -38,9 +38,9 @@ def without_mtu(lines):
     return [l for l in lines if l.strip() != "mtu 9216"]
 
 
-# ================================================================== F1: already-down members are validated in phase A
+# ================================================================== already-down members are validated in phase A
 class UnsafeDown(ReleaseMtu):
-    """The controller releases ONE peer's member already administratively down but unsafe (the architect's probe, generalized)."""
+    """The controller releases ONE peer's member already administratively down but unsafe (generalized)."""
 
     def __init__(self, serial, port, key, value):
         super(UnsafeDown, self).__init__({})

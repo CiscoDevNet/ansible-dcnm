@@ -1,5 +1,5 @@
 {
- "_comment": "PO G6: MEASURED fixture of Alpha3's EXP-1 (placeholder-sw-2 Ethernet1/8 / port-channel504, NX-OS 10.5(5), NDFC 12.6.0.267), read-only",
+ "_comment": "MEASURED fixture (one member, NX-OS 10.5(5), NDFC 12.6.0.267), read-only.",
  "branches": {
   "A": {
    "create_preview": {

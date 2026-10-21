@@ -1,14 +1,14 @@
-"""PO G2 (review finding G1-R1 P1): the post-deletion readback of a PVLAN port-channel
-must distinguish "release verified" from "release could not be verified".
+"""The post-deletion readback of a PVLAN port-channel must distinguish "release verified" from "release could not be
+verified".
 
 NOT LIVE TESTED. Real main() in state `deleted`; only the controller boundary is intercepted, through the EXISTING harness
-(FakeController -> E2 PoController -> G1 PoLifecycleController). After the mark-delete, this controller can answer the
-interface-summary and/or policy-list reads with HTTP 500 for a given number of HTTP calls. The module's bounded GET
-retries each summary read 3 times (_dcnm_intf_get_with_retries), so one failed verifier attempt = 3 failed HTTP calls.
-Every scenario also asserts that no write other than the one mark-delete and the one deploy was sent (no rewrite of the
-member, no second deploy, no recovery write). Previews are SYNTHETIC (same as the G1 deletion tests).
+(FakeController -> PoController -> PoLifecycleController). After the mark-delete, this controller can answer the
+interface-summary and/or policy-list reads with HTTP 500 for a given number of HTTP calls. The module's bounded GET retries each
+summary read 3 times (_dcnm_intf_get_with_retries), so one failed verifier attempt = 3 failed HTTP calls. Every scenario also
+asserts that no write other than the one mark-delete and the one deploy was sent (no rewrite of the member, no second deploy, no
+recovery write). Previews are SYNTHETIC (same as the deletion tests).
 
-G1 (module 17029c48...) passes the all-summary-reads-fail scenario as a SUCCESS: that is the defect (fail-before).
+The fail-before is the earlier module, which passed the all-summary-reads-fail scenario as a SUCCESS.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -21,7 +21,7 @@ from .test_dcnm_intf_pvlan_po_host import PO, PO_MEMBER
 
 SUMMARY = "/rest/interface/detail?serialNumber="
 POLICIES = "/control/policies/switches/"
-# G3: host, the mode whose creation is measured (H1); the creation of the other modes is refused before any write.
+# Host, the mode whose creation is measured; the creation of the other modes is refused before any write.
 MODE = "host"
 LINES = ["switchport private-vlan host-association 2210 2212"]
 ASSOC = [{"primary_vlan": 2210, "secondary_vlan": 2212}]
@@ -29,7 +29,7 @@ ERROR = {"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": {}}
 
 
 class ReadbackController(PoLifecycleController):
-    """After the delete DEPLOY (G4: so that the post-deploy verifier, not the pre-deploy member release, is what meets
+    """After the delete DEPLOY (so that the post-deploy verifier, not the pre-deploy member release, is what meets
     them): the next `fail_summary` summary GETs and `fail_policies` policy-list GETs answer 500. `keep_parent` leaves the
     port-channel listed after the mark-delete (the controller did not remove it)."""
 
@@ -67,7 +67,7 @@ class ReadbackController(PoLifecycleController):
 
 
 def deleted_ctrl(**knobs):
-    """A host port-channel created through main() (same steps as the G1 `created` helper, on this controller),
+    """A host port-channel created through main() (same steps as the `created` helper, on this controller),
     then a fresh invocation ready for `deleted`."""
     ctrl = ReadbackController()
     ctrl.detail[IF7] = {"policy": TRUNK, "nvPairs": trunk_host_nv(IF7)}
@@ -107,7 +107,7 @@ def only_the_deletion_was_written(ctrl):
 
 
 def only_the_markdelete_was_written(ctrl):
-    """G4: a problem found by the pre-deploy member release stops the run after the mark-delete: no modify, no deploy."""
+    """A problem found by the pre-deploy member release stops the run after the mark-delete: no modify, no deploy."""
     writes = [c for c in ctrl.calls if c[0] in ("POST", "PUT", "DELETE") and "/config-preview" not in c[1]]
     return [c[1].rsplit("/", 2)[-2] + "/" + c[1].rsplit("/", 1)[-1] for c in writes] == ["interface/markdelete"]
 
@@ -118,7 +118,7 @@ def test_all_summary_reads_fail_is_an_error_never_a_verified_deletion():
     assert status == "fail", "six failed summary reads must not end as a successful deletion"
     assert "release could not be verified after 6 readback attempts" in result["msg"]
     assert "the interface summary could not be read authoritatively" in result["msg"]
-    # G4: the reads are counted after the delete deploy; one summary read before the verifier is not one of its attempts.
+    # The reads are counted after the delete deploy; one summary read before the verifier is not one of its attempts.
     assert ctrl.summary_reads_after_delete >= 6 * 3, "6 verifier attempts x 3 bounded GET retries"
     assert only_the_deletion_was_written(ctrl), "no rewrite, no second deploy, no recovery write"
     assert PO not in ctrl.detail and ctrl.detail[IF7]["policy"] == TRUNK, "the controller state is left as it is"
@@ -133,7 +133,7 @@ def test_transient_summary_failures_then_a_verified_release_succeed():
 
 
 def test_a_port_channel_that_stays_listed_is_an_error():
-    # G4: found by the member release BEFORE any deploy (it proves the parent absent first), not by the post-deploy verifier.
+    # Found by the member release BEFORE any deploy (it proves the parent absent first), not by the post-deploy verifier.
     ctrl = deleted_ctrl(keep_parent=True)
     status, result = run(ctrl, [del_item()], state="deleted")
     assert status == "fail" and "the port-channel is still listed" in result["msg"] and "No deployment request was sent" in result["msg"]
@@ -163,7 +163,7 @@ def test_a_persistent_child_policy_residue_is_an_error():
         }
     ]
     status, result = run(ctrl, [del_item()], state="deleted")
-    # G4: the surviving child claim is found by the member release BEFORE any deploy.
+    # The surviving child claim is found by the member release BEFORE any deploy.
     assert status == "fail" and "live policies still reference the port-channel" in result["msg"]
     assert only_the_markdelete_was_written(ctrl)
 

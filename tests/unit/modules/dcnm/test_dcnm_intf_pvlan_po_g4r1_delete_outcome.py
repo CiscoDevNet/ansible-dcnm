@@ -1,11 +1,10 @@
-"""PO G4-R1: the mark-delete of a registered PVLAN port-channel deletion must be CONFIRMED before anything else.
+"""The mark-delete of a registered PVLAN port-channel deletion must be CONFIRMED before anything else.
 
-Reproduces the review probe for an uncertain mark-delete (PO G4-R1) through real main() and the existing G4
-ReleaseController: the mark-delete APPLIES the measured release (the member becomes the HR-post int_trunk_host,
-ADMIN_STATE "true") but its ANSWER is not the measured success. G4 retried that DELETE 20 times, the generic parser turned
-the HTTP 500 into a synthetic 200/OK (changed=False), the member release was skipped and, with a down-looking preview,
-one deploy was sent. G4-R1: one attempt, measured answer only; any other answer stops the run before any member modify or
-deploy, whatever a later preview would look like.
+Reproduces an uncertain mark-delete through real main() and the existing ReleaseController: the mark-delete APPLIES the measured
+release (the member becomes an int_trunk_host with ADMIN_STATE "true") but its ANSWER is not the measured success. The earlier code
+retried that DELETE 20 times, the generic parser turned the HTTP 500 into a synthetic 200/OK (changed=False), the member release
+was skipped and, with a down-looking preview, one deploy was sent. Now: one attempt, measured answer only; any other answer stops the
+run before any member modify or deploy, whatever a later preview would look like.
 
 The error answers below are SYNTHETIC (none was observed live); the success answer is the MEASURED one (markdelete_ok).
 """

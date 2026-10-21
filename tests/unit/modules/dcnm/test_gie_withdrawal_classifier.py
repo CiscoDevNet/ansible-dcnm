@@ -6,7 +6,7 @@ function an external caller invokes on its own -- a compatibility probe, or a li
 batch's classification preflight. Such a caller never goes through `main()`, so the gate
 must live inside the function itself, and that copy needs its own proof.
 
-NOT LIVE TESTED IN THIS GENERATION.
+NOT LIVE TESTED.
 
 The unsupported routed fixture is now ``eigrp_ipv4_passive`` because PIM/BFD
 gained a measured reset. ``FIXTURE_CONTRACTS`` checks its registration and
@@ -36,7 +36,7 @@ ROUTED = "int_routed_host"
 SUBIF = "int_subif"
 SVI = "int_vlan"
 OK = "12.6.0.267"
-# PR725-PATCH-VERSION-001: this file tests the NDFC-version boundary of the withdrawal
+# This file tests the NDFC-version boundary of the withdrawal
 # classifier, which is independent of the (new, additional) patch boundary. Every case below
 # declares the approved patch explicitly so a result is attributable to the version alone;
 # the patch boundary itself is exercised in test_gie_patch_version_gate.py.
@@ -125,12 +125,12 @@ def test_normalisation_does_not_turn_an_empty_string_into_a_false():
 def test_an_integer_zero_is_not_an_empty_value():
     """The other half of the same rule: no empty-to-zero conversion in either direction.
 
-    The key is DERIVED, not named: this used `ospf_cost` until G37 measured its reset, which is
+    The key is DERIVED, not named: this used `ospf_cost` until its reset was measured, which is
     the second time a registration invalidated a hardcoded example here.
     """
     # REHOMED to `int_vlan`, for the same reason as the decision-table row below and one step
-    # further: the dampening generation consumed `int_routed_host`'s last unclassifiable integers,
-    # BETA moved this to `int_subif`, and this union registers the three BFD timers there too.
+    # further: the dampening rows consumed `int_routed_host`'s last unclassifiable integers,
+    # so this moved to `int_subif`, and this union registers the three BFD timers there too.
     # `int_vlan` still carries four (the HSRP integers). The harness asserts loudly when a parent
     # runs out, which is how this was caught.
     key = an_unclassifiable_key(SVI, "integer")
@@ -153,11 +153,11 @@ def test_an_integer_zero_is_not_an_empty_value():
     (ACCESS, "disable_lldp_receive", "false", GIE_WITHDRAW_NONE),   # at declared default
     # REHOMED: access disable_lldp_receive now carries a reset, so the
     # differs-without-a-reset row moves to a parent where that is still true.
-    # BFD echo and PIM/BFD gained measured resets in separate campaigns. The
+    # BFD echo and PIM/BFD gained measured resets separately. The
     # withheld EIGRP passive row remains a registered no-reset example.
     (ROUTED, "eigrp_ipv4_passive", "true", GIE_WITHDRAW_UNSUPPORTED),
-    # DERIVED, and REHOMED THREE TIMES NOW. `ospf_cost` held this slot until G37 measured its
-    # reset; the five dampening integers held it next, which is why BETA moved it to `int_subif`;
+    # DERIVED, and REHOMED THREE TIMES NOW. `ospf_cost` held this slot until its reset was
+    # measured; the five dampening integers held it next, which is why it moved to `int_subif`;
     # and THIS union registers the three BFD timers on `int_subif` as well, so that parent has run
     # out too. Measured on the integrated table: int_routed_host 0 candidates, int_subif 0,
     # int_vlan 4 (the HSRP integers). So it moves to `int_vlan`.

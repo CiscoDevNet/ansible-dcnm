@@ -16,7 +16,7 @@ installed. These tests pin the narrower contract the harness now implements -- o
 cleanup, leave everything else alone -- and would fail under either the leak or the
 sledgehammer.
 
-NOT LIVE TESTED IN THIS GENERATION.
+NOT LIVE TESTED.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -84,7 +84,7 @@ def test_an_unrelated_active_patch_survives_the_harness():
 
 
 def test_a_partial_setup_still_unwinds_the_patches_it_installed():
-    """The gap G18 characterized: `setUp()` used to run OUTSIDE the try.
+    """The gap: `setUp()` used to run OUTSIDE the try.
 
     `A161Base.setUp` starts six patchers in sequence and `ModuleTestCase.setUp` registers
     its cleanups as it goes. A failure partway through therefore leaves some already

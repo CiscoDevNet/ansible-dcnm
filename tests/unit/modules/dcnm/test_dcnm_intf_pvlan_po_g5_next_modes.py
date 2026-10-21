@@ -1,14 +1,13 @@
-"""PO G5 / NEXT_MODES: promiscuous, trunk promiscuous and trunk secondary on a regular port-channel with ONE member.
+"""Promiscuous, trunk promiscuous and trunk secondary on a regular port-channel with ONE member.
 
-NOT LIVE TESTED. G3 refused these creations before any write because the member's `channel-group N force` transition was
-measured only for host (H1 preview). G5 models the same transition for the other three modes as an explicit INFERENCE
-(PO_FORCE_INFERRED_MODES): the force carries from the parent the mode line, the list pairs and, for the trunk modes, the
-PVLAN trunk native/allowed lines; every other member line is kept from the member and must change, if at all, through its
-own pending line. The gate is unchanged.
+NOT LIVE TESTED. The member's `channel-group N force` transition was measured only for host (preview). The same transition is
+modeled for the other three modes as an explicit INFERENCE (PO_FORCE_INFERRED_MODES): the force carries from the parent the mode
+line, the list pairs and, for the trunk modes, the PVLAN trunk native/allowed lines; every other member line is kept from the member
+and must change, if at all, through its own pending line. The gate is unchanged.
 
-Every preview below is SYNTHETIC (the measured host form transposed, through the existing g1 builders); the profiles are
-the existing battery ones (P1, TP1/TP2/TP4, TS1/TS2), on the harness port-channel10/Ethernet1/7. The
-networks 2410 (primary) and 2412 (isolated) are SYNTHETIC additions to the harness fixture for the second primary.
+Every preview below is SYNTHETIC (the measured host form transposed, through the existing g1 builders); the profiles are the
+existing battery ones (P1, TP1/TP2/TP4, TS1/TS2), on the harness port-channel10/Ethernet1/7. The networks 2410 (primary) and 2412
+(isolated) are SYNTHETIC additions to the harness fixture for the second primary.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -348,7 +347,7 @@ def test_a_confirmed_markdelete_of_a_port_channel_in_another_mode_releases_and_d
     assert PO not in ctrl.detail and ctrl.detail[IF7]["policy"] == TRUNK and PO_HOST not in json.dumps(ctrl.detail[IF7])
 
 
-# ================================================================== live host findings during G5 (G4R1 run)
+# ================================================================== live host findings
 # MEASURED (fixtures/pvlan_po_g4r1_host_measured.json, extracted read-only from the G4R1 live captures;
 # only port-channel502 / Ethernet1/10): H4 (host association 2210/2212 -> 2410/2412 on a
 # deployed Po: member pending EMPTY) and the R-B deletion of that DEPLOYED Po (Po listed as interface_delete until the
@@ -469,7 +468,7 @@ def test_main_h4_replay_with_the_measured_preview_modifies_and_deploys():
 
 
 class DeployedReleaseController(PoLifecycleController):
-    """The g1 lifecycle harness + the MEASURED release of a DEPLOYED port-channel (G4R1 R-B): after the mark-delete the
+    """The g1 lifecycle harness + the MEASURED release of a DEPLOYED port-channel: after the mark-delete the
     Po's detail is empty, its summary entry stays (markDeleted, NA, interface_delete) and the policy list holds the
     interface_delete (deleted true) until the deploy; the member is the measured released int_trunk_host (ADMIN "true")."""
 

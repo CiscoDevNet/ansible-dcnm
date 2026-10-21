@@ -1,12 +1,14 @@
-"""RC2: the three LOW findings of the offline RC1 review (DELTA_SPEED_FREEFORM_REVIEW L1, L2, L3).
+"""Three low-severity review findings on speed and freeform handling.
 
-NOT LIVE TESTED. Real main() through the EXISTING harnesses, with the SYNTHETIC template-predicted previews of the RC1 file.
-  L1 - a command repeated inside ONE freeform request is kept once, in the order of its first appearance (creation, merged, replaced,
-       idempotency; port-channel and vPC);
-  L2 - the port-channel post-deploy intent readback compares SPEED and CONF, with the existing normalization; a difference is reported,
-       never retried or rewritten;
-  L3 - the INFERRED withdrawal of an adopted `no negotiate auto` when the speed returns to Auto: deployed only when the pending carries
-       it (as `negotiate auto`), refused before any deploy otherwise. This documents RC1 behaviour; it is not a behaviour change.
+NOT LIVE TESTED. Real main() through the EXISTING harnesses, with the SYNTHETIC template-predicted previews of the speed/freeform
+tests.
+  1 - a command repeated inside ONE freeform request is kept once, in the order of its first appearance (creation, merged, replaced,
+      idempotency; port-channel and vPC);
+  2 - the port-channel post-deploy intent readback compares SPEED and CONF, with the existing normalization; a difference is
+      reported, never retried or rewritten;
+  3 - the INFERRED withdrawal of an adopted `no negotiate auto` when the speed returns to Auto: deployed only when the pending
+      carries it (as `negotiate auto`), refused before any deploy otherwise. This documents existing behaviour; it is not a
+      behaviour change.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -35,7 +37,7 @@ from .test_dcnm_intf_pvlan_speed_freeform import (
 )
 
 
-# ====================================================================================== L1: repeated commands inside one request
+# ====================================================================================== repeated commands inside one request
 def test_freeform_request_keeps_each_command_once_in_first_appearance_order():
     assert P.freeform_request([FF_B, FF_A, FF_B, " " + FF_A, FF_A + " "]) == [FF_B, FF_A]
     assert P.freeform_request([]) == [] and P.freeform_request(None) == []

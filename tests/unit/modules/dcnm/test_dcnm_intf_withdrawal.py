@@ -27,10 +27,10 @@ carry-forward runs -- so a suite that trusts `changed` cannot see that class of 
 Helper-level tests are labelled `test_helper_*`. A direct helper assertion is not
 integration coverage and is not counted as such.
 
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
+NOT LIVE TESTED. No controller or switch is contacted.
 
 The C7 unsupported fixture is now ``int_routed_host::eigrp_ipv4_passive``. PIM/BFD gained
-a measured reset in BETA's campaign, so it could no longer prove the refusal. The
+a measured reset, so it could no longer prove the refusal. The
 per-parent ``FIXTURE_CONTRACTS`` guard checks that the replacement is registered,
 declares a default, and still has no reset. The ACCESS positive cases remain separate.
 serves as a positive example, and ``disable_bfd_echo`` is not registered on that parent at all, so
@@ -100,7 +100,7 @@ def test_the_fixture_matrix_covers_every_registered_reset():
     the suite was green anyway. This fails if a row is dropped, if one is registered
     without a fixture, or if the parameter set ever collects empty.
 
-    The parent filter was REMOVED in G25. It used to read `in (ACCESS, TRUNK)`, which meant
+    The parent filter was REMOVED. It used to read `in (ACCESS, TRUNK)`, which meant
     the guard could only ever police the two parents it already knew: registering the
     port-channel family would have left 19 rows untested with the suite still green --
     exactly the failure this test exists to prevent, reappearing one parent family later.
@@ -121,7 +121,7 @@ def test_the_fixture_matrix_covers_every_registered_reset():
     assert not undeclared, (
         "grouped-only names an identity that is not registered: %s" % sorted(undeclared))
     registered = registered - set(GROUPED_ONLY_NO_PER_ROW_FIXTURE)
-    # PLAN-2 C1: the PVLAN parents' registry companions never reach the generic comparator this matrix drives; their omission
+    # The PVLAN parents' registry companions never reach the generic comparator this matrix drives; their omission
     # contract is pinned per identity in test_dcnm_intf_pvlan_companions_c1.py. Declared by identity, and they must be exactly
     # the PVLAN parents' registered resets (a new PVLAN row without that coverage still fails here).
     from .test_dcnm_intf_pvlan_companions_c1 import PVLAN_ROUTE_RESET_IDENTITIES
@@ -435,10 +435,10 @@ def test_c8_unclassifiable_value_refuses_with_its_own_distinct_reason():
     """A registered row with no declared default and no verified reset. Nothing says whether
     the present value is untouched or deliberate, and unknown is not converged.
 
-    The row is DERIVED: this named `ospf_cost` until G37 measured its reset.
+    The row is DERIVED: this named `ospf_cost` until its reset was measured.
 
     THE VALUE IS DERIVED TOO, and that is not cosmetic. It used to be the literal `100`,
-    which silently assumed the derived row was an INTEGER. When a later generation registered
+    which silently assumed the derived row was an INTEGER. When later rows registered
     the last unclassifiable integers on this parent, the helper started returning a STRING row
     and `build_have` refused the int before any payload was built -- the case then failed deep
     inside the harness ("expected exactly one emitted policy payload, got 0") instead of

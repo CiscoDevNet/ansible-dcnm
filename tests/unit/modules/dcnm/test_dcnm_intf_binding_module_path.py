@@ -8,7 +8,7 @@ per-type profile validation via `validate_list_of_dicts` -> builder ->
 Which layer each group exercises:
 
   MODULE NORMALIZATION (raw playbook value -> validate_list_of_dicts coercion)
-      TestBindingRawTypeOnModulePath.*                — B1: raw type rejected pre-coercion
+      TestBindingRawTypeOnModulePath.*                — raw type rejected pre-coercion
   WANT / BUILDER / FINAL PAYLOAD
       TestBindingPayloadOnModulePath.*                — value survives into the parent nvPair
   HAVE / DIFF / COMPARE / IDEMPOTENCE
@@ -18,7 +18,7 @@ Which layer each group exercises:
   VERSION GATE
       TestBindingBelowMinimumVersionFailsClosed.*     — below minimum: fail, never withhold
 
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
+NOT LIVE TESTED. No controller or switch is contacted.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -40,7 +40,7 @@ PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
 
 SUPPORTED = "12.6.0.267"
 BELOW = "12.6.0.266"
-# PR725-PATCH-VERSION-001: run_config() below declares this explicitly for every caller in
+# Run_config() below declares this explicitly for every caller in
 # this file, so every pre-existing fixture here keeps exercising the NDFC-version boundary
 # it was written for, unaffected by the new, additional patch boundary.
 SUPPORTED_PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
@@ -165,10 +165,10 @@ class A161Base(TestDcnmModule):
 
 
 # =====================================================================================
-# B1 — MODULE NORMALIZATION: raw type is enforced BEFORE validate_list_of_dicts coerces
+# MODULE NORMALIZATION: raw type is enforced BEFORE validate_list_of_dicts coerces
 # =====================================================================================
 class TestBindingRawTypeOnModulePath(A161Base):
-    """Every case the architect reproduced, driven through the real module input path."""
+    """Every reproduced case, driven through the real module input path."""
 
     def _assert_rejected_without_echo(self, result, field, forbidden):
         msg = result["msg"]
@@ -227,7 +227,7 @@ class TestBindingRawTypeOnModulePath(A161Base):
         self.assert_no_mutating_calls()
 
     def test_unknown_legacy_field_is_not_tightened(self):
-        """B1 scope guard: non-registered fields keep their existing legacy behaviour."""
+        """Scope guard: non-registered fields keep their existing legacy behaviour."""
         result = self.run_config("eth_trunk_unknown_legacy_field", changed=True)
         assert result.get("failed") is not True
         for nvpairs in self.sent_nvpairs().values():

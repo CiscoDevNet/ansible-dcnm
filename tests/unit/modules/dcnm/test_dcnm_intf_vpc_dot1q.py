@@ -251,7 +251,7 @@ def test_the_sibling_vpc_access_parent_is_not_touched_by_a_dot1q_withdrawal():
     assert dq["policy"] == VPC_DOT1Q and dq["interfaces"][0]["nvPairs"]["lldpTransmit"] == "false"
 
 
-# ------------------------------------------------------------------ the campaign masks, offline
+# ------------------------------------------------------------------ the live masks, offline
 # The live stages use these exact profiles; each plan is proven here first.
 MASK_B_POS = {"spanning_tree_port_type": "network", "disable_queuing_stats": True,
               "disable_lldp_receive": True}

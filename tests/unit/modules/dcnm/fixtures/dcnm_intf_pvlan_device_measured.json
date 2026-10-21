@@ -1,5 +1,5 @@
 {
- "_provenance": "Measured legacy config-preview responses of PR725-PVLAN-NATIVE-PLAN-001 G5/G6 (NDFC 12.6.0.267, NX-OS 10.5(5)); Ethernet1/7 stanzas only; synthetic identity. Built by tooling/build_pvlan_device_fixtures.py (PR725-PVLAN-ETHERNET-001 E2). Discovery reads used ?forceShowRun=true (G5) or the same with a preceding Manage recompute (G6); the module's recomputeMapEnable request is NOT represented by these captures.",
+ "_provenance": "Measured legacy config-preview responses (NDFC 12.6.0.267, NX-OS 10.5(5)); Ethernet1/7 stanzas only; synthetic identity. Discovery reads used ?forceShowRun=true or the same with a preceding Manage recompute; the module's recomputeMapEnable request is NOT represented by these captures.",
  "cases": {
   "G6-L0a": {
    "kind": "apply",

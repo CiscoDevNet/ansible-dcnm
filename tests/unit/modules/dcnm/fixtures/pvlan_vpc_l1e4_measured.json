@@ -1,5 +1,5 @@
 {
- "_note": "MEASURED L1-E4 live 2026-10-08 (NDFC 12.6.0.267), sanitized; see evidence/VPC-HOST-E5/tools/make_fixture.py",
+ "_note": "MEASURED (NDFC 12.6.0.267), sanitized.",
  "child_marked_for_deletion_F": {
   "complianceStatus": "NA",
   "ifName": "Port-channel10",

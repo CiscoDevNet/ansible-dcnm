@@ -1,4 +1,4 @@
-"""VPC-MODES-E1: promiscuous, trunk promiscuous and trunk secondary for a vPC in mode 'pvlan' (int_vpc_pvlan_host).
+"""Promiscuous, trunk promiscuous and trunk secondary for a vPC in mode 'pvlan' (int_vpc_pvlan_host).
 
 NOT LIVE TESTED. Real main() through the EXISTING vPC harness (VpcController: two peers, per-serial previews). Labels:
   [SRC] the installed templates (VPC-TEMPLATE-READ): the parent's per-submode lists and per-peer PVLAN native/allowed (HOST 192-229,
@@ -67,7 +67,7 @@ def member_after(port, mode, pairs, native="", allowed=""):
     )
 
 
-ACCESS_RUNNING = ["shutdown", "spanning-tree port type edge", "mtu 9216"]  # MEASURED (EXP-1 A, regular Po)
+ACCESS_RUNNING = ["shutdown", "spanning-tree port type edge", "mtu 9216"]  # MEASURED (regular Po)
 
 
 def create_preview(serial, port, mode, pairs, native="", allowed="", baseline="trunk"):
@@ -296,7 +296,7 @@ def test_merged_list_addition_keeps_every_omitted_field_and_deploys_both_peers_w
         "switch": [IP1, IP2],
         "deploy": True,
         "profile": {"mode": "pvlan", "pvlan_mode": mode, field: add, "peer1_pcid": 10, "peer2_pcid": 10},
-    }  # PCIDs are always required (E5)
+    }  # PCIDs are always required
     status, result = run_vpc(ctrl, [upd], state="merged")
     assert status == "exit" and result["changed"] is True, result.get("msg")
     assert ctrl.creates() == [] and len(ctrl.modifies()) == 1 and len(ctrl.deploys()) == 1
@@ -451,7 +451,7 @@ def test_trunk_secondary_refuses_a_prepared_member_outside_the_contract_on_eithe
 
 
 class RoutedVpcController(VpcController):
-    """The vPC harness + the MEASURED routed behaviour (EXP-1 R, regular Po): the prepared routed member's self-sourced children disappear when
+    """The vPC harness + the MEASURED routed behaviour (regular Po): the prepared routed member's self-sourced children disappear when
     the port-channel is created (`children_vanish`); with it False they stay, which the post-deploy readback must refuse."""
 
     children_vanish = True
@@ -486,7 +486,7 @@ def routed_ctrl(child_source, vanish=True):
     for i, (serial, port, base) in enumerate(((SN1, M1, "access"), (SN2, M2, "routed"))):
         native, allowed = per_peer(TS, i)
         pv = create_preview(serial, port, TS, PAIRS[TS], native, allowed, "access")
-        if base == "routed":  # MEASURED routed shape (EXP-1 R): running `no switchport / mtu 9216`; no member line before the join
+        if base == "routed":  # MEASURED routed shape (R): running `no switchport / mtu 9216`; no member line before the join
             entry = pv["DATA"][0]
             entry["runningConfig"] = ["!Command: show running-config", "hostname placeholder-sw-1", "interface %s" % port, "  no switchport", "  mtu 9216"]
             entry["pendingConfig"] = [line for line in entry["pendingConfig"] if line != "  no spanning-tree port type edge"]

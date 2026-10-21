@@ -1,44 +1,13 @@
-"""The union-level guarantee neither source campaign could state: BOTH newly accepted
-reset families are present in ONE loaded table, together, with their vocabularies intact.
+"""Both newly accepted reset families must be present together in one loaded table.
 
-WHY THIS FILE EXISTS AT ALL
+The routed LLDP booleans and the routed OSPF enums were registered separately, and each
+family's own tests cannot see the other's rows. This file fails when either family is missing
+(4 of 8 cases fail with only one family, 6 on the 70-reset base) and passes only on the union.
 
-ALPHA measured and registered the two routed LLDP booleans; BETA measured and registered the
-two routed OSPF enums. Each shipped its own 72-reset candidate and its own test file, and
-neither file can see the other's rows: `test_gie_routed_lldp_reset.py` never names
-`ospf_passive_mode`, and `test_gie_routed_enum_omission_b3.py` never names
-`disable_lldp_transmit`.
+Row count, uniqueness, provenance, index freshness, fixture coverage and per-family
+withdrawal are covered by their own files and are not duplicated here.
 
-The consequence, stated precisely: EACH family's suite passes on ITS OWN candidate and cannot
-detect that the other family is missing, because it never asks about those rows. That is not
-the same as both suites passing together on an incomplete table -- they do not. Run both on
-either 72-reset candidate and the other family's file fails, since its rows carry no reset
-there. What is missing is a case that FAILS when one family is absent while the suite that
-would have noticed is the one nobody thought to run. So no single-family suite can certify the
-union, and the cheapest wrong ways to produce a "74-reset" artifact -- copying one 72-row
-candidate over the other, or concatenating two generated tables -- need a guarantee stated at
-the union level. That is this file. Measured: it fails 4 of its 8 cases on ALPHA's candidate,
-4 on BETA's, 6 on the 70-reset base, and passes 8/8 only on the union.
-
-WHAT THIS FILE DELIBERATELY DOES NOT DUPLICATE
-
-Two sources of the same truth drift apart, so the guards that already exist are referenced,
-not reimplemented:
-
-  * row count, identity uniqueness and the no-duplicate-row contract --
-    `test_gie_passthrough_bindings.py::test_table_rows_are_unique_and_the_count_is_pinned`;
-  * the table was not hand-edited after generation --
-    `test_gie_passthrough_bindings.py::test_provenance_recalculates_from_packaged_rows`;
-  * index freshness and a replaced table -- `test_gie_binding_indexes.py`;
-  * every registered reset has real-`main()` fixture coverage --
-    `test_dcnm_intf_withdrawal.py::test_the_fixture_matrix_covers_every_registered_reset`;
-  * per-family withdrawal behaviour -- each family's own file.
-
-What is left, and is only expressible once both families are present, is below.
-
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted. The four
-resets carry the live acceptance of their own source campaigns; this integrated tuple does
-not inherit a fresh live result from that.
+Offline only: no controller, switch or CI is contacted. The combined set is not live tested.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -70,54 +39,26 @@ FOUR_IDS = ["%s::%s" % (ROUTED, f[1]) for f in FOUR]
 PREVIOUS_RESET_TOTAL = 70
 UNION_RESET_TOTAL = 74
 
-# ------------------------------------------------------------------- base88
-# TEST-ONLY CHANGE. This file's union guarantee is unchanged: the four routed
-# resets must still be present together. What changed is the TOTAL this checkout
-# expects, because this checkout carries the OFFLINE B01 union -- the published
-# 74 plus the 8 rows ALPHA measured (`int_routed_host` and `int_subif`) and the
-# 6 BETA measured (`int_loopback` and `int_vlan`). The integrated portfolio
-# remains 74; nothing here asserts otherwise, and no live evidence is
-# invalidated or owed a replay by a change to an expectation. Each of the 14
-# carries the live acceptance of its OWN source campaign and no other.
+# Test-only pin of the registered total. The union guarantee above is unchanged.
+# Deliberately not `>=`, `skip`, `xfail`, or derived from the table under test.
 #
-# Deliberately NOT used: `>=`, `skip`, `xfail`, or deriving the expectation from
-# the table under test. Each would make the pin unable to fail.
+# 174 = 70 + 4 (this union) + 14 (base88) + 30 (OSPF) + 35 (EIGRP) + 4 (MACsec)
+#       + 10 (BFD) + 7 (dampening, controller-only).
+# Each lot is also named by identity below, with disjointness and closure asserted, so a
+# total cannot be reached by registering something else in place of a measured row.
 #
-# ------------------------------------------------------- smu174 integration
-# 174 = the 70 that preceded the union
-#     +   4  the union's own four
-#     +  14  base88
-#     +  30  OSPF-ALL
-#     +  35  EIGRP-ALL
-#     +   4  MACsec
-#     +  10  BFD-ALL              <- added by this generation
-#     +   7  dampening            <- added by this generation, CONTROLLER-ONLY
-#
-# The total on its own is reachable by registering something else in place of a measured
-# row, so the total is pinned AND EVERY LOT IS NAMED BY IDENTITY below, with pairwise
-# disjointness and closure asserted. No campaign's accounting is dissolved into a larger
-# one: that is the exact error these pins exist for.
-#
-# REGISTRATION IS NOT ACCEPTANCE, and in this generation the two genuinely differ:
-#   167 rows (the reviewed 157 + the 10 BFD) retain source-campaign live acceptance;
-#     7 rows (dampening) are CONTROLLER_OMISSION_VERIFIED / DEVICE_NOT_VALIDATED --
-#       observed at the controller with deploy false, never validated on NX-OS, and the
-#       lab platform does not support that CLI.
-# This file pins REGISTRATION only, which is what a table can be asked about. Acceptance
-# lives in the campaign reviews, and 174 must not be described as device-validated.
-# PR725-HSRP5 (2026-09-30) adds three int_vlan HSRP rows measured live on Leaf-103: the preempt
-# delay and the coordinated forwarding-threshold pair. 197 + 3 = 200.
-# PR725-VPC-DOT1Q-001 c2 adds the six int_vpc_dot1q_tunnel rows, registered only after their
-# explicit neutrals were measured on both peers of the pair. 200 + 6 = 206.
-# PR725-PVLAN2222 adds int_vlan::privateVlanMapping. 206 + 1 = 207.
-# PR725-PVLAN-COMPANIONS-001 (PLAN-2 C1) adds the eleven PVLAN companion rows (PVLANC1_ADDITIONS). Their resets are the
-# siblings' forms, INFERRED for the PVLAN parents and NOT measured live: registered, not accepted. 207 + 11 = 218.
-# IQ1 (PR725 ingress QoS) adds int_vpc_pvlan_host::qosStatsSuppressed (IQ1_ADDITIONS), reset inferred: 218 + 1 = 219.
+# Registration is not acceptance: the 7 dampening rows were observed at the controller only
+# and are not validated on NX-OS. This file pins registration only.
+# HSRP adds three int_vlan rows (preempt delay, forwarding-threshold pair): 197 + 3 = 200.
+# The int_vpc_dot1q_tunnel rows, measured on both vPC peers: 200 + 6 = 206.
+# int_vlan::privateVlanMapping: 206 + 1 = 207.
+# Eleven PVLAN companion rows (PVLANC1_ADDITIONS), resets inferred, not measured: 207 + 11 = 218.
+# int_vpc_pvlan_host::qosStatsSuppressed (IQ1_ADDITIONS), reset inferred: 218 + 1 = 219.
 CANDIDATE_RESET_TOTAL = 219
 
-# The additions this candidate is allowed to carry, and nothing else: ALPHA's
-# four `int_routed_host` and four `int_subif` rows, plus BETA's two
-# `int_loopback` and four `int_vlan` rows. Fourteen, over four parents.
+# The additions this candidate is allowed to carry, and nothing else: four
+# `int_routed_host` and four `int_subif` rows, plus two `int_loopback` and four
+# `int_vlan` rows. Fourteen, over four parents.
 # (parent_template, parent_nvpair, profile_key, reset_wire)
 #
 # WHY EVERY ROW IS LISTED SEPARATELY RATHER THAN AS A FIELD LIST PER PARENT.
@@ -134,26 +75,25 @@ CANDIDATE_RESET_TOTAL = 219
 # would have registered a reset that withdraws nothing, and a test that assumed
 # one value for all fourteen rows could not have caught that.
 CANDIDATE_ADDITIONS = (
-    # PR725-SMU-B01-ALPHA-001 group R, Leaf-103 Ethernet1/64, 2026-09-28
+    # Routed rows
     ("int_routed_host", "ospfMtuIgnore", "ospf_mtu_ignore", "false"),
     ("int_routed_host", "ospfShutdown", "ospf_shutdown", "false"),
     ("int_routed_host", "ipv6NdSuppressRa", "ipv6_nd_suppress_ra", "false"),
     ("int_routed_host", "ipv6LinkLocal", "ipv6_link_local", ""),
-    # PR725-SMU-B01-ALPHA-001 group S, Leaf-103 Ethernet1/64.3001, 2026-09-28
+    # Subinterface rows
     ("int_subif", "ospfMtuIgnore", "ospf_mtu_ignore", "false"),
     ("int_subif", "ospfShutdown", "ospf_shutdown", "false"),
     ("int_subif", "ipv6NdSuppressRa", "ipv6_nd_suppress_ra", "false"),
     ("int_subif", "ipv6LinkLocal", "ipv6_link_local", ""),
-    # PR725-SMU-B01-BETA-001, loopback and SVI groups
+    # Loopback and SVI rows
     ("int_loopback", "ospfMtuIgnore", "ospf_mtu_ignore", "false"),
     ("int_loopback", "ospfShutdown", "ospf_shutdown", "false"),
     ("int_vlan", "ospfMtuIgnore", "ospf_mtu_ignore", "false"),
     ("int_vlan", "ospfShutdown", "ospf_shutdown", "false"),
     ("int_vlan", "ipv6NdSuppressRa", "ipv6_nd_suppress_ra", "false"),
     ("int_vlan", "ipv6LinkLocal", "ipv6_link_local", ""),
-    # PR725-OSPF-ALL-001 profile P1 (options), measured in P1-g2-rM-clear on 2026-09-28 over
-    # Leaf-103: Ethernet1/64.3001, Loopback20 and Vlan3789, with the campaign's own SMU90RTD
-    # process and VLAN 3789 mounted. `int_routed_host` contributes no row here: those two fields
+    # The OSPF options profile, measured on a subinterface, a loopback and an SVI.
+    # `int_routed_host` contributes no row here: those two fields
     # were already registered on it and served as RETENTION CONTROLS -- the clear body excluded it.
     #
     # `ospf_network_type` appears THREE times because these are THREE distinct bindings, one per
@@ -167,10 +107,10 @@ CANDIDATE_ADDITIONS = (
     ("int_loopback", "ospfAdvertiseSubnet", "ospf_advertise_subnet", "false"),
     ("int_vlan", "ospfNetworkType", "ospf_network_type", "noChange"),
     ("int_vlan", "ospfPassiveMode", "ospf_passive_mode", "noChange"),
-    # PR725-OSPF-ALL-001 profiles P2-BFD and P4-AREA, measured on 2026-09-28.
+    # OSPF BFD and area, measured.
     # BFD: ospfBfdMode on all four parents since SMU 017 (subif/loopback carried the boolean ospfBfd
     # on the earlier SMU, where the reset was measured; the 017 rows replace it unmeasured).
-    # The area is the campaign's first reset that does NOT delete its line: it returns it to the
+    # The area is a reset that does NOT delete its line: it returns it to the
     # declared default 0.0.0.0. Demanding that every reset delete a line would have rejected
     # these four.
     ("int_routed_host", "ospfBfdMode", "ospf_bfd_mode", "noChange"),
@@ -185,8 +125,8 @@ CANDIDATE_ADDITIONS = (
     ("int_subif", "OSPF_AREA_ID", "ospf_area_id", "0.0.0.0"),
     ("int_loopback", "OSPF_AREA_ID", "ospf_area_id", "0.0.0.0"),
     ("int_vlan", "OSPF_AREA_ID", "ospf_area_id", "0.0.0.0"),
-    # PR725-OSPF-ALL-001 profile P3a message-digest: the gate (4) and the key-ID (4), measured on
-    # 2026-09-28. The gate was measured WITH the key and ID retained; the ID was measured with
+    # OSPF message-digest: the gate (4) and the key-ID (4), measured.
+    # The gate was measured WITH the key and ID retained; the ID was measured with
     # authentication ENABLED. `ospf_auth_key_id` is an `integer` and its reset travels as the
     # STRING '1', which is its declared defaultValue.
     ("int_routed_host", "ospfAuthentication", "enable_ospf_auth", "false"),
@@ -197,28 +137,27 @@ CANDIDATE_ADDITIONS = (
     ("int_subif", "OSPF_AUTH_KEY_ID", "ospf_auth_key_id", "1"),
     ("int_loopback", "OSPF_AUTH_KEY_ID", "ospf_auth_key_id", "1"),
     ("int_vlan", "OSPF_AUTH_KEY_ID", "ospf_auth_key_id", "1"),
-    # PR725-OSPF-ALL-001 profile P3b, SIMPLE authentication: the key, measured on 2026-09-29.
+    # OSPF SIMPLE authentication: the key, measured.
     # A mechanism independent of message-digest; its type stayed at the declared default 3.
     ("int_routed_host", "ospfAuthenticationKey", "ospf_authentication_key", ""),
     ("int_subif", "ospfAuthenticationKey", "ospf_authentication_key", ""),
     ("int_loopback", "ospfAuthenticationKey", "ospf_authentication_key", ""),
     ("int_vlan", "ospfAuthenticationKey", "ospf_authentication_key", ""),
-    # P5, the gate, on ALL FOUR parents.
+    # The OSPF gate, on ALL FOUR parents.
     #
-    # int_loopback joined on 2026-09-29, after correcting the SCENARIO -- not the table and not
-    # the engine. The previous round measured it with `int_vrf: default` and the device KEPT the
+    # int_loopback was first measured with `int_vrf: default`, and the device KEPT the
     # line. The installed body of that parent, line 648, emits the association by DISJUNCTION:
     #   configureOspf = (enableOspf == "true" or
     #                    (intfVrf == "default" and linkStateRouting == "ospf"))
     # The second branch does not look at the gate, so in the `default` VRF of a fabric that routes
-    # with OSPF the withdrawal is UNOBSERVABLE. Measured in V3-clear with `int_vrf: PR725VRF`: the
+    # with OSPF the withdrawal is UNOBSERVABLE. Measured with a non-default `int_vrf`: the
     # `ip router ospf <tag> area <x>` line disappeared while interface, VRF and IP survived.
     ("int_routed_host", "ospf", "enable_ospf", "false"),
     ("int_subif", "ospf", "enable_ospf", "false"),
     ("int_vlan", "ospf", "enable_ospf", "false"),
     ("int_loopback", "ospf", "enable_ospf", "false"),
-    # PR725-BFD-ALL-001, measured 2026-09-29. `bfdEcho` travelled through the PUBLIC module path
-    # (stage B4-echo-clear, with the interval gate ENABLED, which is what isolates its effect).
+    # `bfdEcho` travelled through the PUBLIC module path
+    # (with the interval gate ENABLED, which is what isolates its effect).
     # The interval gate and the six integers were measured through the preserving probe (rc 207,
     # per-field readback), because the public validator refuses "" on an integer before any
     # request is built. The interval group is COORDINATED: the parent body refuses to empty a
@@ -319,15 +258,10 @@ BASE74_RESETS = (
 BASE74_IDENTITIES = frozenset((p, nv) for p, nv, _r in BASE74_RESETS)
 CANDIDATE_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in CANDIDATE_ADDITIONS)
 
-# ===================================================== BETA's two lots, kept apart
-# PR725-EIGRP-ALL-001 and the MACsec lot arrive from a DIFFERENT campaign than the
-# 44 above, and each keeps its own group for the reason BETA stated when it wrote
-# them: folding a lot into a bigger tuple dissolves the check that each campaign
-# contributed exactly what it measured. The groups are listed by IDENTITY, never
-# derived from the parent template -- both campaigns register rows on
-# int_routed_host, int_subif, int_vlan and int_loopback, so a parent-based split
-# would file one campaign's measurements under the other while the totals still
-# added up.
+# ===================================================== EIGRP and MACsec, kept apart
+# Each lot keeps its own group: folding it into a bigger tuple would dissolve the check
+# that it contributes exactly what was measured. The groups are listed by IDENTITY, never
+# derived from the parent template, because lots share parents.
 #
 # The values below ARE THE MEASUREMENT, written by hand. They are not read back
 # from the table under test: an expectation derived from its own subject cannot
@@ -393,8 +327,7 @@ EIGRP_WITHHELD = frozenset(
 #   the other THREE were measured TOGETHER. Two live negative controls show the
 #      controller refusing, BY FIELD NAME, to empty keychain or policy while the
 #      gate is enabled. Independent withdrawal of the GATE ALONE was NOT RUN --
-#      not controller-refused; the source review corrects the campaign prose that
-#      said three were independently refused.
+#      not controller-refused.
 MACSEC_ADDITIONS = (
     ("int_routed_host", "macsecInterfacePolicy", "enable_macsec_interface_policy", "false"),
     ("int_routed_host", "macsecKeyChainName", "macsec_key_chain_name", ""),
@@ -409,9 +342,9 @@ MACSEC_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in MACSEC_ADDITIONS)
 # The DAMPENING lot -- EXPERIMENTAL / CONTROLLER-ONLY, its own named group.
 #
 # READ THIS BEFORE USING THE NUMBER. These seven are CANDIDATES registered in a LOCAL
-# EXPERIMENTAL generation so that the omission path can be executed and observed at the
+# EXPERIMENTAL registration so that the omission path can be executed and observed at the
 # controller. They are NOT accepted device resets, they are NOT part of the 157 integration,
-# and 134 is NOT a portfolio figure. Nothing was deployed in the campaign that produced them,
+# and 134 is NOT a portfolio figure. Nothing was deployed when they were observed,
 # so no device acceptance exists for any of the seven.
 #
 # Kept apart from the other lots for the same reason they are kept apart from each other:
@@ -432,7 +365,7 @@ DAMPENING_EXPERIMENTAL_ADDITIONS = (
 DAMPENING_EXPERIMENTAL_IDENTITIES = frozenset(
     (p, nv) for p, nv, _k, _r in DAMPENING_EXPERIMENTAL_ADDITIONS)
 
-# Two reviewed source campaigns added in this integration. The explicit tuples
+# Two reviewed lots added in this integration. The explicit tuples
 # are independent oracles: an addition cannot replace a missing older reset and
 # still pass the total or closure checks below.
 PIMACL_ADDITIONS = (
@@ -463,7 +396,7 @@ VPC13_ADDITIONS = tuple(
 ) + (("int_vpc_trunk_host", "GUARD_MODE", "guard_mode", "no"),)
 VPC13_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in VPC13_ADDITIONS)
 
-# PR725-HSRP5, IPv4 scope. The two IPv6 rows of that campaign (HSRP_VIPv6, HSRP_GROUPv6) are NOT
+# HSRP, IPv4 scope. The two IPv6 rows (HSRP_VIPv6, HSRP_GROUPv6) are NOT
 # here: the installed int_vlan body emitted no IPv6 line on the measured controller, so neither
 # has an observable positive. The two thresholds are one coordinated group, not two removals.
 HSRP3_ADDITIONS = (
@@ -473,7 +406,7 @@ HSRP3_ADDITIONS = (
 )
 HSRP3_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in HSRP3_ADDITIONS)
 
-# PR725-VPC-DOT1Q-001 c2: the vPC dot1q-tunnel parent's own six. Same public keys and reset forms
+# The vPC dot1q-tunnel parent's own six. Same public keys and reset forms
 # as the VPC13 lot, but separate identities measured on their own parent -- not transferred.
 VPC_DOT1Q6_ADDITIONS = tuple(
     ("int_vpc_dot1q_tunnel", nv, key, reset)
@@ -488,15 +421,15 @@ VPC_DOT1Q6_ADDITIONS = tuple(
 )
 VPC_DOT1Q6_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in VPC_DOT1Q6_ADDITIONS)
 
-# PR725-PVLAN2222 adds ONE int_vlan row. The explicit empty string clears
+# Adds ONE int_vlan row. The explicit empty string clears
 # `private-vlan mapping 3214,3216` while protected SVI state remains present.
 PVLAN1_ADDITIONS = (
     ("int_vlan", "privateVlanMapping", "private_vlan_mapping", ""),
 )
 PVLAN1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in PVLAN1_ADDITIONS)
 
-# PR725-PVLAN-COMPANIONS-001 (PLAN-2 C1): the A0-PVLAN-1 REGISTRY_BINDING rows of the three PVLAN parents. Same public keys and
-# reset forms as the sibling host parents; on these parents the resets are INFERRED (no PVLAN campaign measured them).
+# The REGISTRY_BINDING rows of the three PVLAN parents. Same public keys and
+# reset forms as the sibling host parents; on these parents the resets are INFERRED (not measured).
 PVLANC1_ADDITIONS = tuple(
     (parent, nv, key, reset)
     for parent, rows in (
@@ -514,7 +447,7 @@ PVLANC1_ADDITIONS = tuple(
 )
 PVLANC1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in PVLANC1_ADDITIONS)
 
-# IQ1: the vPC PVLAN qosStatsSuppressed row, the sibling vPC parents' key and reset form (INFERRED on the PVLAN parent).
+# The vPC PVLAN qosStatsSuppressed row, the sibling vPC parents' key and reset form (INFERRED on the PVLAN parent).
 IQ1_ADDITIONS = (("int_vpc_pvlan_host", "qosStatsSuppressed", "disable_qos_stats", "false"),)
 IQ1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in IQ1_ADDITIONS)
 
@@ -677,15 +610,15 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
         ("EIGRP", EIGRP_IDENTITIES, "MACsec", MACSEC_IDENTITIES),
     ):
         assert not (g1 & g2), "%s and %s lots overlap on %s" % (n1, n2, sorted(g1 & g2))
-    # 54 = base88's 14 + OSPF-ALL's 30 + BFD-ALL's 10, which ALPHA carried inside
+    # 54 = base88's 14 + OSPF's 30 + BFD's 10, carried inside
     # CANDIDATE_ADDITIONS; the other three lots keep their own tuples. 54 + 35 + 4 + 7 = 100,
     # and 74 + 100 = 174. Written as the sum so the arithmetic is visible rather than a bare
     # total somebody has to take on trust.
-    # + 3 PR725-HSRP5 int_vlan rows (HSRP3_ADDITIONS) = 126, and 74 + 126 = 200.
-    # + 6 PR725-VPC-DOT1Q-001 int_vpc_dot1q_tunnel rows (VPC_DOT1Q6_ADDITIONS) = 132, 74 + 132 = 206.
-    # + 1 PR725-PVLAN2222 int_vlan row (PVLAN1_ADDITIONS) = 133, and 74 + 133 = 207.
-    # + 11 PLAN-2 C1 PVLAN companion rows (PVLANC1_ADDITIONS, inferred resets) = 144, and 74 + 144 = 218.
-    # + 1 IQ1 vPC PVLAN qosStatsSuppressed row (IQ1_ADDITIONS, inferred reset) = 145, and 74 + 145 = 219.
+    # + 3 int_vlan rows (HSRP3_ADDITIONS) = 126, and 74 + 126 = 200.
+    # + 6 int_vpc_dot1q_tunnel rows (VPC_DOT1Q6_ADDITIONS) = 132, 74 + 132 = 206.
+    # + 1 int_vlan row (PVLAN1_ADDITIONS) = 133, and 74 + 133 = 207.
+    # + 11 PVLAN companion rows (PVLANC1_ADDITIONS, inferred resets) = 144, and 74 + 144 = 218.
+    # + 1 vPC PVLAN qosStatsSuppressed row (IQ1_ADDITIONS, inferred reset) = 145, and 74 + 145 = 219.
     assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 == len(ALL_ADDITIONS), (
         "the lots together declare %d additions over %d distinct identities; expected 145"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
@@ -718,13 +651,11 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     assert len(CANDIDATE_IDENTITIES) == len(CANDIDATE_ADDITIONS) == 54, (
         "the candidate declares %d additions over %d distinct identities; expected 54 and 54"
         % (len(CANDIDATE_ADDITIONS), len(CANDIDATE_IDENTITIES)))
-    # THE GROUPS ARE NAMED BY CAMPAIGN, NOT DERIVED FROM THE PARENT.
+    # THE GROUPS ARE NAMED BY LOT, NOT DERIVED FROM THE PARENT.
     #
-    # The earlier version split them by parent template: int_routed_host+int_subif = ALPHA,
-    # int_loopback+int_vlan = BETA. That held only while each author owned two parents. P1
-    # registers rows on int_subif, int_loopback AND int_vlan, so a parent-based split would
-    # silently file P1's six rows under B01 while the two counts still added up to 20 --
-    # attributing measurements to a campaign that never made them.
+    # Lots share parents (the options profile registers rows on int_subif, int_loopback AND
+    # int_vlan), so a parent-based split would file rows under the wrong lot while the
+    # counts still added up.
     #
     # Each group is therefore listed by identity. Adding rows next means declaring them here,
     # which is the property worth keeping: the total can never be reached by registering
@@ -745,8 +676,8 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
         ("int_loopback", "ospfNetworkType"), ("int_loopback", "ospfAdvertiseSubnet"),
         ("int_vlan", "ospfNetworkType"), ("int_vlan", "ospfPassiveMode"),
     }
-    # P2/P4 is a group NAMED apart from P1: it shares parents with both P1 and B01, so a
-    # parent-based partition would again file them under the wrong campaign.
+    # BFD and area are a group NAMED apart from the options: they share parents, so a
+    # parent-based partition would again file them under the wrong lot.
     OSPF_ALL_P2_P4 = {
         ("int_routed_host", "ospfBfdMode"), ("int_subif", "ospfBfdMode"),
         ("int_loopback", "ospfBfdMode"), ("int_vlan", "ospfBfdMode"),
@@ -763,15 +694,15 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     BFD_INTERVAL = {(p, nv) for p in ("int_subif", "int_vlan")
                     for nv in ("bfdInterval", "bfdTxInterval", "bfdMinRxInterval",
                                "bfdMultiplier")}
-    # The two lots from the other campaign join the SAME named-group discipline, so the
+    # The EIGRP and MACsec lots join the SAME named-group discipline, so the
     # closure assertion below covers all 83 additions rather than only the 44.
     groups = (("B01/ALPHA", B01_ALPHA, 8), ("B01/BETA", B01_BETA, 6),
               ("OSPF-ALL/P1", OSPF_ALL_P1, 6), ("OSPF-ALL/P2+P4", OSPF_ALL_P2_P4, 8),
               ("OSPF-ALL/P3a", OSPF_ALL_P3A, 8),
               ("OSPF-ALL/P3b", OSPF_ALL_P3B, 4),
               ("OSPF-ALL/P5", OSPF_ALL_P5, 4),
-              # BFD-ALL joins the same named-group discipline, split the way the campaign
-              # measured it: `bfdEcho` through the public module path on two parents, and the
+              # BFD joins the same named-group discipline, split the way it was
+              # measured: `bfdEcho` through the public module path on two parents, and the
               # interval gate plus its three numbers as ONE COORDINATED group on two parents.
               # The eight are not eight independent removals and are not presented as such.
               ("BFD-ALL/echo", BFD_ECHO, 2),
@@ -867,7 +798,7 @@ def test_the_published_seventy_four_are_present_unaltered_and_nothing_else_was_a
         # THE NEUTRAL VALUE PER DECLARED TYPE, and the rule now covers three types, not two.
         #
         # The earlier form was `"" if type == "string" else "false"`, written when every
-        # addition was a boolean or a string. P1 adds ENUM rows whose measured reset is
+        # addition was a boolean or a string. The OSPF options add ENUM rows whose measured reset is
         # `noChange`, so that form demanded "false" of them and failed -- correctly, against an
         # incomplete rule rather than against the measurement.
         #
@@ -897,14 +828,14 @@ def test_the_published_seventy_four_are_present_unaltered_and_nothing_else_was_a
         # THE DECLARED DEFAULT COMES IN PUBLIC VOCABULARY; THE RESET COMES IN WIRE VOCABULARY.
         # An enum's `default_template` is `no_change` while its `reset_wire` is `noChange`:
         # comparing them directly conflates the two vocabularies, which is exactly the distinction
-        # this campaign is built on -- and an earlier version of this guard conflated them inside
+        # these rows depend on -- and an earlier version of this guard conflated them inside
         # itself. For an enum the default is TRANSLATED through the row's `wire_values` before the
         # comparison.
         declared = row.get("default_template")
         vocab = row.get("wire_values") or {}
         if parent in ("int_vpc_access_host", "int_vpc_trunk_host") and row["type"] == "enum":
             # These vPC templates declare the neutral "no" in validValues but
-            # the generated row has no default_template. ALPHA measured "no"
+            # the generated row has no default_template. "no" was measured
             # on both parents, so use that independent source oracle here.
             expected, source_of_expectation = "no", "the measured vPC enum neutral"
         elif row["type"] == "enum" and isinstance(declared, str) and declared in vocab:
@@ -927,10 +858,10 @@ def test_the_published_seventy_four_are_present_unaltered_and_nothing_else_was_a
             % (parent, nvpair, row["reset_wire"], source_of_expectation, expected))
         # THE ENUM POST-CHECK IS GATED ON `wire_values`, AND THAT GATE IS THE MERGE.
         #
-        # The OSPF-ALL version asserted, for EVERY enum, that `wire_values["no_change"]`
+        # The OSPF version asserted, for EVERY enum, that `wire_values["no_change"]`
         # equals the reset and that the reset is NOT among the public `valid_values`. That
         # holds for the OSPF enums, whose public neutral `no_change` maps to the wire-only
-        # spelling `noChange`. It is FALSE for the enums the other campaign registered:
+        # spelling `noChange`. It is FALSE for the EIGRP enums:
         # `eigrp_ipv4_distribute_list_direction` declares `valid_values=('in','out')` with no
         # neutral at all, and its measured reset `out` IS its declared default and IS a public
         # choice. Run unconditionally, that assertion fails on all sixteen enums that have no
@@ -947,7 +878,7 @@ def test_the_published_seventy_four_are_present_unaltered_and_nothing_else_was_a
         #   without `wire_values` -> there is no vocabulary split; the reset IS the declared
         #                            default verbatim, and it legitimately IS a public choice.
         #
-        # Both campaigns' guarantees are kept, each applied to the family it governs. Neither
+        # Both guarantees are kept, each applied to the family it governs. Neither
         # is loosened: the branch below asserts something in BOTH cases.
         if row["type"] == "enum":
             vocab = row.get("wire_values") or {}
@@ -1026,7 +957,7 @@ def test_the_four_share_one_parent_and_did_not_spread_to_its_unmeasured_siblings
     }
     expected = {(p, key): "false" for p in lldp_parents
                 for key in ("disable_lldp_receive", "disable_lldp_transmit")}
-    # PLAN-2 C1: the three PVLAN parents carry the same LLDP reset, INFERRED from the measured siblings above and NOT measured
+    # The three PVLAN parents carry the same LLDP reset, INFERRED from the measured siblings above and NOT measured
     # on a PVLAN parent. Declared separately so the measured set above keeps its meaning and the closure still holds.
     expected.update({(p, key): "false" for p in ("int_pvlan_host", "int_port_channel_pvlan_host", "int_vpc_pvlan_host")
                      for key in ("disable_lldp_receive", "disable_lldp_transmit")})

@@ -1,5 +1,5 @@
 {
- "_comment": "MEASURED (Alpha2 NEXT-A2-SD G1, Po521 / Ethernet1/8, speed 1000 fixed, admin down, NDFC 12.6.0.267, N9K-C9300v 10.5(5)): duplex full apply (apply_preview) and its withdrawal (withdraw_preview) before the deploy, and the converged previews after each. The previews are the sanitized GATE/SNAP stanzas re-formatted as CLI lines (tools: build_duplex_fixtures.py). The nvPairs are DERIVED from the SP1 speed fixture (SPEED 1Gb) with only PORT_DUPLEX_MODE changed.",
+ "_comment": "MEASURED (a port-channel with one member, speed 1000 fixed, admin down, NDFC 12.6.0.267, N9K-C9300v 10.5(5)): duplex full apply (apply_preview) and its withdrawal (withdraw_preview) before the deploy, and the converged previews after each. The previews are sanitized stanzas re-formatted as CLI lines. The nvPairs are DERIVED from the speed fixture (SPEED 1Gb) with only PORT_DUPLEX_MODE changed.",
  "after_apply_preview": {
   "expectedConfig": [
    "interface ethernet1/8",

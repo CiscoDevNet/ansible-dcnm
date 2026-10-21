@@ -24,12 +24,12 @@ So driving both to ``"false"`` destroys the child and both lines disappear toget
 nothing about either field on its own. The live measurement therefore held the companion explicitly
 at ``"true"`` so the child stayed alive, and only the target's line went away. Evidence:
 
-    stage M1 both true          -> both lines present        (positive control)
-    stage M2 transmit -> false  -> only `no lldp transmit` gone, receive survived
-    stage M3 both true again    -> both lines present again  (positive control for the mirror)
-    stage M4 receive  -> false  -> only `no lldp receive` gone, transmit survived
+    both true          -> both lines present        (positive control)
+    transmit -> false  -> only `no lldp transmit` gone, receive survived
+    both true again    -> both lines present again  (positive control for the mirror)
+    receive  -> false  -> only `no lldp receive` gone, transmit survived
 
-on Ethernet1/64 of Leaf-103 in fabric SMU90, 2026-09-28. The polarity was read from the child's
+The polarity was read from the child's
 body, not inferred from the positive nvPair name: ``"true"`` means *disable*.
 
 WHAT THESE CASES CANNOT PROVE
@@ -209,12 +209,11 @@ def test_rerun_over_the_reset_converges(key, nvpair, companion, comp_nv):
 
 # --------------------------------------------------------------- scope of the registration
 
-# `ospf_area_id` LEAVES this list: the OSPF-ALL campaign (profile P4) measured and registered its
-# reset `0.0.0.0` on all four parents on 2026-09-28, so it is no longer a sister WITHOUT a reset,
+# `ospf_area_id` LEAVES this list: its reset `0.0.0.0` was measured and registered
+# on all four parents, so it is no longer a sister WITHOUT a reset,
 # and demanding that it refuse would assert the opposite of the evidence.
 #
-# `enable_ospf` LEAVES it too: the OSPF-ALL campaign (profile P5) measured and registered its
-# reset `'false'` on int_routed_host, int_subif and int_vlan on 2026-09-29, with every dependent
+# `enable_ospf` LEAVES it too: its reset `'false'` was measured and registered on int_routed_host, int_subif and int_vlan, with every dependent
 # field at its neutral. int_loopback IS ALSO REGISTERED, in a non-default VRF:
 #
 #   * In the `default` VRF of a fabric that routes with OSPF the withdrawal is UNOBSERVABLE on
@@ -222,11 +221,10 @@ def test_rerun_over_the_reset_converges(key, nvpair, companion, comp_nv):
 #     not consult the gate, so the line survives while the controller stores `ospf=false`. That
 #     boundary is real and stays documented here.
 #   * With `intfVrf != "default"` the second branch is false and the withdrawal IS visible, which
-#     is what the campaign measured and what the row was registered on.
+#     is what was measured and what the row was registered on.
 #
-# `disable_bfd_echo` LEAVES it in THIS generation: the BFD campaign measured and registered its
-# reset `'false'` on int_routed_host and int_vlan, so it stopped being an unregistered example.
-# BETA subsequently registered PIM/BFD, so the unsupported fixture now uses
+# `disable_bfd_echo` LEAVES it too: its reset `'false'` was measured and registered on
+# int_routed_host and int_vlan. PIM/BFD were registered later, so the unsupported fixture now uses
 # `eigrp_ipv4_passive`, a declared routed row with default false and no reset.
 #
 # The two that remain carry NO REGISTERED reset: `ospf_tag` and `eigrp_ipv4_passive`.
@@ -251,8 +249,7 @@ def test_a_sister_binding_on_the_same_parent_still_refuses(key):
 
     ``int_routed_host`` carries many registered fields with no measured reset. If this lot had
     widened the behaviour instead of registering two rows, these would have started returning a
-    reset for a value nobody measured -- which is the failure mode the whole campaign exists to
-    prevent.
+    reset for a value nobody measured -- the failure mode this registry exists to prevent.
     """
     binding = resolve_binding(ROUTED, key)
     assert binding is not None, "{0}::{1} is not registered".format(ROUTED, key)
@@ -265,7 +262,7 @@ def test_a_sister_binding_on_the_same_parent_still_refuses(key):
     assert wire is None
 
 
-# ALPHA measured both vPC parents on its paired fabric. These checks name the
+# Both vPC parents were measured on a paired fabric. These checks name the
 # per-parent result; the routed measurement alone is not their evidence.
 VPC_PARENTS = ["int_vpc_access_host", "int_vpc_trunk_host"]
 
@@ -273,7 +270,7 @@ VPC_PARENTS = ["int_vpc_access_host", "int_vpc_trunk_host"]
 @pytest.mark.parametrize("parent", VPC_PARENTS)
 @pytest.mark.parametrize("key", [TX, RX])
 def test_the_measured_vpc_parents_have_their_own_reset(parent, key):
-    """ALPHA measured both vPC parents; keep their exact independent registrations."""
+    """Both vPC parents were measured; keep their exact independent registrations."""
     binding = resolve_binding(parent, key)
     assert binding is not None, "{0}::{1} is not registered".format(parent, key)
     assert binding.get("reset_wire") == "false"
@@ -293,10 +290,10 @@ def test_the_measured_vpc_parents_have_their_own_reset(parent, key):
 #   * it was ``int_access_host::disable_lldp_receive``; the access batch measured its reset, so the
 #     C7 cases were rehomed to ``int_routed_host::disable_lldp_receive``;
 #   * a later lot measured that one, so they were rehomed again, to ``int_routed_host::disable_bfd_echo``;
-#   * PR725-BFD-ALL-001 measured `disable_bfd_echo` on routed and vlan; BETA later
-#     measured PIM/BFD, so this integration uses routed `eigrp_ipv4_passive`.
-#   * in doing so I over-replaced and put ``bfdEcho`` into two ACCESS cases where it is NOT
-#     registered at all, making them pass while exercising nothing. The peer review caught it.
+#   * `disable_bfd_echo` was then measured on routed and vlan, and PIM/BFD later, so this
+#     integration uses routed `eigrp_ipv4_passive`;
+#   * an over-replacement once put ``bfdEcho`` into two ACCESS cases where it is NOT
+#     registered at all, making them pass while exercising nothing.
 #
 # So the guard is no longer about one row. It is a table of every fixture those suites rely on, with
 # the property each one needs, checked by that property rather than by name. `reset` means the row
@@ -356,6 +353,4 @@ def test_the_fixtures_other_suites_rely_on_still_have_the_property_they_need(
 
 # The earlier guard, `test_the_rehomed_c7_row_is_genuinely_unsupported`, covered ONLY the ROUTED
 # row and is subsumed by FIXTURE_CONTRACTS above. It was REMOVED rather than left alongside: two
-# sources of the same truth drift apart, and this campaign already paid for that once (the
-# `resumen` of vo_ospf_process kept its own copy of the inverted default after the guard was
-# corrected).
+# sources of the same truth drift apart.

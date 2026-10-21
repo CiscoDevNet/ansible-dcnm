@@ -340,5 +340,5 @@
    }
   }
  },
- "_source": "PR725-ADMIN-UP-JOIN Phase 1 direct legacy measurements, ND90 NDFC 12.6.0.267 / NX-OS 10.5(5), 2026-10-14; member admin-up int_trunk_host joining a PVLAN host Po (M1 parent down, M2 parent up) and vPC (M3 parent down, both peers). Verbatim stanzas of the case's own interfaces only; serials are placeholders."
+ "_source": "Direct legacy measurements, NDFC 12.6.0.267 / NX-OS 10.5(5); member admin-up int_trunk_host joining a PVLAN host Po (M1 parent down, M2 parent up) and vPC (M3 parent down, both peers). Verbatim stanzas of the case's own interfaces only; serials are placeholders."
 }

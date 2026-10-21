@@ -1,12 +1,13 @@
-"""PR725 DF-2: the post-deploy verification of a PVLAN vPC DELETION reads ONE summary per peer serial and round (2 GETs per pair and round),
-whatever the number of vPCs or members, and judges every vPC of the pair on those answers.
+"""The post-deploy verification of a PVLAN vPC DELETION reads ONE summary per peer serial and round (2 GETs per pair and
+round), whatever the number of vPCs or members, and judges every vPC of the pair on those answers.
 
 The intent, the release contract and the policy residue are proven FRESH BEFORE the deploy (the release proof and phase C of
-dcnm_intf_pvlan_vpc_release_members); after the deploy the module reads only what the deploy changed: the listings and the In-Sync status
-of each peer. The checks G11 repeated after the deploy are exercised here at the phase that now owns them (injected when the controller
-releases the members), and the contract change -- what is no longer re-read after the deploy -- is asserted explicitly.
-Same controller double and entry point as test_dcnm_intf_pvlan_vpc_batch (MultiVpc, the REAL main()). Values are SYNTHETIC. NOT LIVE TESTED
-by this file."""
+dcnm_intf_pvlan_vpc_release_members); after the deploy the module reads only what the deploy changed: the listings and the In-Sync
+status of each peer. The checks that used to run after the deploy are exercised here at the phase that now owns them (injected when
+the controller releases the members), and the contract change -- what is no longer re-read after the deploy -- is asserted
+explicitly. Same controller double and entry point as test_dcnm_intf_pvlan_vpc_batch (MultiVpc, the REAL main()). Values are
+SYNTHETIC. NOT LIVE TESTED by this file.
+"""
 
 from __future__ import absolute_import, division, print_function
 
@@ -47,7 +48,7 @@ def test_deletion_reads_do_not_grow_with_the_number_of_vpcs(n, members):
     ctrl, config = deleted_setup(n, members=members)
     status, result = delete_all(ctrl, config)
     assert status == "exit" and result["changed"] is True, result.get("msg")
-    # one round: ONE summary per peer serial = 2, whatever N and members per peer (G11: 7, with the pair bulk, peer bulks and policy lists)
+    # one round: ONE summary per peer serial = 2, whatever N and members per peer (previously 7: pair bulk, peer bulks and policy lists)
     assert B.post_kinds(ctrl) == {"summary": 2}
     assert B.post_gets(ctrl) == 2 and ctrl.sleep_log == []
     assert sorted(result["pvlan_verification"]) == sorted(c["name"].replace("vpc", "vPC") for c in config)
@@ -106,7 +107,7 @@ def test_an_unreadable_peer_fails_every_vpc_of_the_pair_and_is_never_taken_for_a
 
 @pytest.mark.parametrize("kind", ["bulk", "policies"])
 def test_the_intent_and_policy_reads_are_not_repeated_after_the_deploy(kind):
-    """DF-2 contract change: G11 read them after the deploy (fail-closed re-confirmations); a failure there can no longer fail the deletion."""
+    """Contract change: these were read after the deploy (fail-closed re-confirmations); a failure there can no longer fail the deletion."""
     ctrl, config = deleted_setup(3)
     for serial in B.PAIRS[0]:
         ctrl.post_fail[(kind, serial)] = 10 ** 6
@@ -144,7 +145,7 @@ def test_a_partial_release_of_one_peer_fails_that_vpc_only(label, inject, needle
 
 
 def test_a_parent_back_in_the_intent_after_the_deploy_is_not_read_again():
-    """DF-2 contract change: the parent's intent is not read after the deploy (G11's pair bulk re-confirmed it). The deletion of the parent is
+    """Contract change: the parent's intent is not read after the deploy (the pair bulk used to re-confirm it). The deletion of the parent is
     proven by the confirmed mark-delete (or, for a saved deletion, the controller's marked-for-deletion listing); after the deploy the
     summaries prove it is no longer listed. A re-creation by another party after the deploy is outside the module's verification."""
     ctrl, config = deleted_setup(2)
@@ -224,8 +225,8 @@ def post_deploy_setup(n):
 
 
 def marked_parent(pair_serial, name):
-    """The MEASURED V-7a listing (NDFC 12.6.0.267) of a mark-deleted vPC parent in a peer's summary: markDeleted, Out-of-Sync, no underlay
-    policy, while its intent (bulk detail) is already gone. Adopted from review control C-A."""
+    """The MEASURED listing (NDFC 12.6.0.267) of a mark-deleted vPC parent in a peer's summary: markDeleted, Out-of-Sync, no underlay
+    policy, while its intent (bulk detail) is already gone."""
     return {"ifName": name, "serialNo": pair_serial, "fabricName": "test_fabric", "ifType": "INTERFACE_VPC", "isPhysical": "False",
             "deletable": "True", "editAllowed": "True", "markDeleted": "True", "alias": "", "deleteReason": None,
             "complianceStatus": "Out-of-Sync", "underlayPolicies": [], "interfaces": [{"nvPairs": {}}]}
@@ -245,8 +246,8 @@ def test_a_parent_still_listed_after_the_deploy_fails_on_the_summary():
 
 
 def test_a_child_still_claimed_on_one_peer_is_refused_before_the_deploy():
-    """F-3 (M4), moved: a child port-channel still live in one peer's intent carries its live policy; the fresh release proof refuses it
-    before any deploy (G11 found it after the deploy with the peer's bulk read)."""
+    """F-3, moved: a child port-channel still live in one peer's intent carries its live policy; the fresh release proof refuses it
+    before any deploy (it used to be found after the deploy with the peer's bulk read)."""
     ctrl, config = post_deploy_setup(3)
     ctrl.marked_policy["vPC11"] = (V.SN2, {"entityName": "port-channel11", "entityType": "INTERFACE", "templateName": V.VPC_PO, "source": "vPC11",
                                            "deleted": False, "policyId": "CHILD-LEFT", "serialNumber": V.SN2})
@@ -257,7 +258,7 @@ def test_a_child_still_claimed_on_one_peer_is_refused_before_the_deploy():
 
 
 def test_a_member_listed_with_another_policy_after_the_deploy_fails_that_vpc_only():
-    """F-3 (M8): the summary entry of the released member reports a readable policy that is not the released one."""
+    """F-3: the summary entry of the released member reports a readable policy that is not the released one."""
     ctrl, config = post_deploy_setup(3)
     ctrl.post_policy[(V.SN1, "Ethernet1/11")] = "int_access_host"
     status, result = delete_all(ctrl, config)
@@ -290,7 +291,7 @@ def test_a_member_entry_without_a_readable_policy_is_not_judged_on_its_policy(va
 
 
 def test_a_member_changed_after_the_deploy_is_not_re_read():
-    """DF-2 contract change: the member's intent (G11's peer bulk) is not read after the deploy; an administrative change made by another
+    """Contract change: the member's intent (the peer bulk) is not read after the deploy; an administrative change made by another
     party after the pre-deploy proof is outside the module's verification (the external harness checks it)."""
     ctrl, config = deleted_setup(3)
     ctrl.post_mutate[(V.SN2, "Ethernet2/11")] = {"ADMIN_STATE": "true"}
@@ -299,7 +300,7 @@ def test_a_member_changed_after_the_deploy_is_not_re_read():
 
 
 def test_a_vpc_verified_in_an_earlier_round_is_judged_again_until_its_pair_closes():
-    """F-3 (M9): vPC10 is clean in round 1 while vPC11 is still converging; in round 2 vPC10's member is Out-of-Sync again. The pair is
+    """F-3: vPC10 is clean in round 1 while vPC11 is still converging; in round 2 vPC10's member is Out-of-Sync again. The pair is
     closed only when EVERY vPC is clean in the same round, so vPC10 is judged again and fails (a stale `verified` is never kept)."""
     ctrl, config = post_deploy_setup(2)
     ctrl.ready_round[(V.SN1, "Ethernet1/11")] = 1

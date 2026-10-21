@@ -5,7 +5,7 @@ patch_version contract must neither be required for PVLAN nor change what PVLAN 
 scalars keep their own contract. Real main() through the PVLAN harness; assertions are made on the
 ordered request log of the fake controller (method, path, body), not on exit status alone.
 
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
+NOT LIVE TESTED. No controller or switch is contacted.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -52,8 +52,8 @@ def _request_log(c):
 
 
 def test_int_pvlan_host_registers_only_the_two_c1_lldp_companions():
-    """Precondition for everything below: the PVLAN core fields stay native. PLAN-2 C1 registers exactly the two LLDP companions
-    of int_pvlan_host (A0 REGISTRY_BINDING rows); every native PVLAN field below still owes nothing to the patch gate."""
+    """Precondition for everything below: the PVLAN core fields stay native. Only the two LLDP companions
+    of int_pvlan_host are registered (REGISTRY_BINDING rows); every native PVLAN field below still owes nothing to the patch gate."""
     assert registered_profile_keys(PVLAN) == {"disable_lldp_transmit", "disable_lldp_receive"}
 
 
@@ -67,7 +67,7 @@ def test_every_engine_contribution_call_receives_the_callers_patch_version():
         n for n in ast.walk(tree)
         if isinstance(n, ast.Call) and getattr(n.func, "id", None) == "gie_contribute_nvpairs"
     ]
-    # PLAN-2 C1: + the port-channel and vPC PVLAN builders (7 -> 9).
+    # + the port-channel and vPC PVLAN builders (7 -> 9).
     assert len(calls) == 9, len(calls)
     for call in calls:
         assert len(call.args) == 4, ast.get_source_segment(open(dcnm_interface.__file__).read(), call)
@@ -135,7 +135,7 @@ def test_trunk_to_pvlan_transition_never_carries_registered_trunk_values(patch_v
 
 @pytest.mark.parametrize("patch_version", [p for p in PATCH_VALUES if p.id in ("omitted", "unapproved")])
 def test_registered_key_on_a_pvlan_profile_needs_an_approved_patch(patch_version):
-    """PLAN-2 C1: disable_lldp_transmit is a registered int_pvlan_host companion now. Without an approved patch_version the
+    """Disable_lldp_transmit is a registered int_pvlan_host companion now. Without an approved patch_version the
     explicit field is refused with the engine's patch message before any write or preview (the native siblings of the same
     item included). The approved/ND 4.4.1 side is covered by test_dcnm_intf_pvlan_companions_c1.py."""
     c = ctrl()

@@ -31,7 +31,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     GIE_ENABLED_PATCH_VERSIONS,
 )
 
-# PR725-PATCH-VERSION-001: declared explicitly for every positive engine-level fixture below.
+# Declared explicitly for every positive engine-level fixture below.
 PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
 TRUNK = "int_trunk_host"
@@ -283,7 +283,7 @@ LOOPBACK_OSPF_ROWS = {
         ("ospfShutdown", "ospf_shutdown"),
         ("ospfNetworkType", "ospf_network_type"),
         ("ospfBfdMode", "ospf_bfd_mode"),
-        # The five the architect ruled in scope here while they stay retired on the fabric
+        # These five stay in scope here while they stay retired on the fabric
         # parent: the retirement was about ownership, and a user loopback is not underlay.
         ("ospfAuthentication", "enable_ospf_auth"),
         ("OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
@@ -293,7 +293,7 @@ LOOPBACK_OSPF_ROWS = {
     )
 }
 
-# BFD, committed 2026-09-19 from slices 0b_4 and 0b_5 with their mechanism corrected to
+# BFD, committed from slices 0b_4 and 0b_5 with their mechanism corrected to
 # passthrough, plus the one new row of 0b_24. int_routed_host declares DISABLE_BFD_ECHO and no
 # interval field; int_loopback has no interface BFD at all.
 BFD_ROWS = {
@@ -434,9 +434,9 @@ BATCH2_ROWS = {
 }
 
 
-# The vPC dot1q-tunnel parent (PR725-VPC-DOT1Q-001): the six keys int_vpc_access_host also
+# The vPC dot1q-tunnel parent: the six keys int_vpc_access_host also
 # registers, read from the installed int_vpc_dot1q_tunnel. Registered without a reset.
-# PLAN-2 C1 (PR725-PVLAN-COMPANIONS-001): the A0-PVLAN-1 REGISTRY_BINDING rows of the three PVLAN parents.
+# The REGISTRY_BINDING rows of the three PVLAN parents.
 PVLAN_C1_ROWS = {
     ("int_pvlan_host", "lldpTransmit", "disable_lldp_transmit"),
     ("int_pvlan_host", "lldpReceive", "disable_lldp_receive"),
@@ -556,7 +556,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 246   # 228 + six int_vpc_dot1q_tunnel rows + eleven PLAN-2 C1 PVLAN companion rows + one IQ1 row
+    assert len(rows) == 246   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -968,7 +968,7 @@ def test_all_registered_and_guarded_keys():
         # HSRP IPv6, slice 0b_27: two keys. HSRP_VIPv6 is the first template address field
         # in the table (ipV6Address -> string; NDFC validates the format).
         # IPv6/PREFIXv6 were removed: registering ipv6_addr made the guard reject it on
-        # int_subif, where the native spec already supports it. See the slice and phase37.
+        # int_subif, where the native spec already supports it. See the slice.
         "hsrp_vipv6",
         "hsrp_groupv6",
         # Split redirects + ND suppress-RA, slice 0b_28: three public keys on each of the
@@ -978,12 +978,11 @@ def test_all_registered_and_guarded_keys():
         "disable_ipv6_redirects",
         "ipv6_nd_suppress_ra",
         # Dampening, slice 0b_6, corrected from child_pti to passthrough: seven keys on
-        # int_routed_host only. Neither C9300v NX-OS image in the lab supports its CLI,
+        # int_routed_host only. Neither tested C9300v NX-OS image supports its CLI,
         # so these bindings have controller validation, not device validation.
-        # See phase39.
         "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
         "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
-        # ARP_TIMEOUT, slice 0b_3, registered on 2026-09-20: one public key on three
+        # ARP_TIMEOUT, slice 0b_3, registered: one public key on three
         # overlay parents; int_loopback does not declare it. One field, one child,
         # one CLI line, with no gate or dependencies. See phase41.
         "arp_timeout",
@@ -1057,7 +1056,7 @@ def test_all_registered_and_guarded_keys():
         # HSRP IPv6, slice 0b_27: two keys. HSRP_VIPv6 is the first template address field
         # in the table (ipV6Address -> string; NDFC validates the format).
         # IPv6/PREFIXv6 were removed: registering ipv6_addr made the guard reject it on
-        # int_subif, where the native spec already supports it. See the slice and phase37.
+        # int_subif, where the native spec already supports it. See the slice.
         "hsrp_vipv6",
         "hsrp_groupv6",
         # Split redirects + ND suppress-RA, slice 0b_28: three public keys on each of the
@@ -1067,12 +1066,11 @@ def test_all_registered_and_guarded_keys():
         "disable_ipv6_redirects",
         "ipv6_nd_suppress_ra",
         # Dampening, slice 0b_6, corrected from child_pti to passthrough: seven keys on
-        # int_routed_host only. Neither C9300v NX-OS image in the lab supports its CLI,
+        # int_routed_host only. Neither tested C9300v NX-OS image supports its CLI,
         # so these bindings have controller validation, not device validation.
-        # See phase39.
         "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
         "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
-        # ARP_TIMEOUT, slice 0b_3, registered on 2026-09-20: one public key on three
+        # ARP_TIMEOUT, slice 0b_3, registered: one public key on three
         # overlay parents; int_loopback does not declare it. One field, one child,
         # one CLI line, with no gate or dependencies. See phase41.
         "arp_timeout",
@@ -1176,7 +1174,7 @@ def test_module_parent_guard_preserves_unknown_legacy_discard_behavior():
 # then builds its own message. Each reason needs its own branch: without one the message falls
 # back to describing the native type, and says something both wrong and useless.
 #
-# Measured on a live fabric 2026-09-20. `arp_timeout: 30` against a 60..28800 binding answered:
+# Measured on a live fabric. `arp_timeout: 30` against a 60..28800 binding answered:
 #
 #     'arp_timeout' must be a native integer, given an integer
 #
@@ -1578,7 +1576,7 @@ def test_accepting_subclasses_does_not_make_bool_and_int_interchangeable():
 
 # ---- HAVE values: the input contract must not be applied to controller state ----
 #
-# These are the ACTUAL values NDFC returned for Leaf-101 Ethernet1/5 (int_trunk_host) and
+# These are the ACTUAL values NDFC returned for (int_trunk_host) and
 # Ethernet1/4 (int_access_host) on a freshly deployed fabric, captured from
 # GET /rest/interface. They are not invented: the whole point is that the registry's input
 # contract does not describe what the controller stores.

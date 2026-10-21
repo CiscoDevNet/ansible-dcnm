@@ -1,14 +1,13 @@
-"""Helper-level and static E3 checks (they do not replace the real-main cases in test_dcnm_intf_pvlan_e3.py).
+"""Helper-level and static checks (they do not replace the real-main cases in test_dcnm_intf_pvlan_e3.py).
 
-Helper: the owned vocabulary, the observed/owned/foreign split, and a sweep over EVERY measured
-discovery preview with device authority: each keeps its E2 decision under the transition's
-vocabulary; adding a SYNTHETIC negation of an unowned device command turns every one into a
-refusal; adding the unowned command untouched never changes the decision (no obligation).
-Static: the gate passes the transition vocabulary, and the check-mode branch of the PVLAN
-preflight is decided before the capability probe can be evaluated.
+Helper: the owned vocabulary, the observed/owned/foreign split, and a sweep over EVERY measured discovery preview with device
+authority: each keeps its earlier decision under the transition's vocabulary; adding a SYNTHETIC negation of an unowned device
+command turns every one into a refusal; adding the unowned command untouched never changes the decision (no obligation).
+Static: the gate passes the transition vocabulary, and the check-mode branch of the PVLAN preflight is decided before the
+capability probe can be evaluated.
 
-On the frozen E2 helper (no vocabulary API) assess() falls back to the E2 signature, so the
-sweep compares behavior rather than failing at import.
+On a helper without the vocabulary API assess() falls back to the older signature, so the sweep compares behavior rather than
+failing at import.
 """
 
 from __future__ import absolute_import, division, print_function

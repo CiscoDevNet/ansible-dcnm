@@ -1,12 +1,12 @@
-"""C1-R5 (T3 readiness, G1-G4): the regular-Po rules reused on the PVLAN vPC path, per leg and per peer.
+"""Readiness: the regular-Po rules reused on the PVLAN vPC path, per leg and per peer.
 
 NOT LIVE TESTED on a vPC. Every preview below is DERIVED: the host stanzas of the existing vPC harness (SYNTHETIC, from the templates)
-carrying the pending FORMS measured on a REGULAR host port-channel (NDFC 12.6.0.267 / NX-OS 10.5(5), Leaf-102 port-channel501):
+carrying the pending FORMS measured on a REGULAR host port-channel (NDFC 12.6.0.267 / NX-OS 10.5(5)
   * M2 / T2-R2 S1 (fixtures/pvlan_po_t2_measured.json): an update that renders member lines re-emits the member block WITH
-    `channel-group N force mode M` for the port-channel the member already belongs to (G1);
-  * M1 (fixtures/pvlan_po_m1_measured.json): MTU jumbo -> default = ONLY `interface port-channelN` / `no mtu 9216`, no member block (G2);
-  * MR (fixtures/pvlan_po_mr_measured.json): MTU default -> jumbo = ONLY the port-channel stanza re-emitted with `mtu 9216` (G2);
-  * T2 R1 (F-T2-2): the controller releases the member with the MTU of the port-channel intent, not always jumbo (G3).
+    `channel-group N force mode M` for the port-channel the member already belongs to;
+  * Fixtures/pvlan_po_m1_measured.json: MTU jumbo -> default = ONLY `interface port-channelN` / `no mtu 9216`, no member block;
+  * Fixtures/pvlan_po_mr_measured.json: MTU default -> jumbo = ONLY the port-channel stanza re-emitted with `mtu 9216`;
+  * T2 R1: the controller releases the member with the MTU of the port-channel intent, not always jumbo.
 Whether a vPC child/member behaves the same is what T3 measures; nothing here certifies the controller.
 G4 (two-phase release) is a module ordering property: proved here with the harness's per-serial knobs.
 """
@@ -131,7 +131,7 @@ def test_g1_a_foreign_force_on_one_peer_is_refused_and_nothing_is_deployed(forei
 
 def test_g1_control_the_persisted_form_is_a_line_of_the_intended_state_and_stays_ordinary_validation():
     """Not a force: `channel-group 10 mode active` is already in the intended member, which the unchanged validate_transition() accepts
-    as a restatement (pre-existing behaviour, not introduced by C1-R5)."""
+    as a restatement (pre-existing behaviour, not introduced by this change)."""
     ctrl = created_ctrl()
     persisted = "  channel-group 10 mode active"
     queue(ctrl, jumbo_state, lambda p: jumbo_state(p, ["no cdp enable"]), {SN1: cdp_pending, SN2: lambda p: cdp_pending(p, force=persisted)})
@@ -274,7 +274,7 @@ def test_g2_explicit_member_withdrawal_stays_ordinary_validation():
 
 # ================================================================== G3: the FRESH release of each member models the deletion
 class ReleaseMtu(VpcController):
-    """The controller releases each member with the MTU given per serial (T2 R1 F-T2-2: default from a port-channel intent), SYNTHETIC."""
+    """The controller releases each member with the MTU given per serial (default from a port-channel intent, as measured), SYNTHETIC."""
 
     def __init__(self, mtu, admin=None):
         super(ReleaseMtu, self).__init__()

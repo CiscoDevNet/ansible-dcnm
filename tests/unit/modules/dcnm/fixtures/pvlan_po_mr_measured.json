@@ -1,5 +1,5 @@
 {
- "_comment": "C1-R4: MR-G1 reverse MTU measurement (NDFC 12.6.0.267, NX-OS 10.5(5), FAB1 Leaf-102 port-channel501 host 2210/2212 + Ethernet1/8, both admin down, S1 companions, 2026-10-10): operator changed ONLY the port-channel MTU default->jumbo in the GUI and deployed it.",
+ "_comment": "MEASURED reverse MTU change (NDFC 12.6.0.267, NX-OS 10.5(5), a PVLAN host port-channel 2210/2212 with one member, both admin down, companions present): only the port-channel MTU was changed default->jumbo in the GUI and deployed.",
  "member": "Ethernet1/8",
  "operator_preview_pending": [
   "interface port-channel501",
@@ -298,12 +298,12 @@
   ]
  },
  "provenance": {
-  "expected_at_preview": "ALPHA capture, DERIVED use: expectedConfig of the MR-POST recompute preview (intent unchanged since the GUI save)",
-  "operator_preview": "OPERATOR (supplied in conversation after the deploy, not captured by Alpha)",
-  "post": "ALPHA MR-POST-port / MR-POST-preview",
-  "pre": "ALPHA MR-PRE-port / MR-PRE-preview",
-  "running_at_preview": "ALPHA: runningConfig of the MR-PRE recompute preview (In-Sync, before the GUI change)",
-  "s6": "ALPHA: T2-R2-G1 C-S6 natural log (redacted): pre-S6 intents, S6 modify body, module recompute preview (refused by C1-R3)"
+  "expected_at_preview": "Lab capture, DERIVED use: expectedConfig of the post-change recompute preview (intent unchanged since the GUI save)",
+  "operator_preview": "GUI preview (supplied after the deploy, not captured by the lab reads)",
+  "post": "Read-only capture: port and preview after the change",
+  "pre": "Read-only capture: port and preview before the change",
+  "running_at_preview": "runningConfig of the recompute preview before the GUI change (In-Sync)",
+  "s6": "Redacted module log: pre-S6 intents, S6 modify body, module recompute preview (refused by the earlier gate)"
  },
  "s6": {
   "config": [

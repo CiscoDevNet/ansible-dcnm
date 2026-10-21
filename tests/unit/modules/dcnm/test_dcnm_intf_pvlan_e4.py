@@ -1,9 +1,9 @@
-"""E4: current-policy interpretation of the MEASURED interface summary for native Ethernet PVLAN.
+"""Current-policy interpretation of the MEASURED interface summary for native Ethernet PVLAN.
 
-MEASURED (NDFC 12.6.0.267): interface/detail carries no top-level `policy`; the policy identity is the
-single nested `underlayPolicies` object. E3 read the top-level key, so on that shape it refused every
-valid PVLAN merge and silently skipped the PVLAN gate for a `deleted` reset. These tests drive the real
-main() (harness default = measured shape) and the real pre-state method against verbatim entries.
+MEASURED (NDFC 12.6.0.267): interface/detail carries no top-level `policy`; the policy identity is the single nested
+`underlayPolicies` object. Reading the top-level key refused every valid PVLAN merge on that shape and silently skipped the
+PVLAN gate for a `deleted` reset. These tests drive the real main() (harness default = measured shape) and the real
+pre-state method against verbatim entries.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -156,7 +156,7 @@ class PreStateDouble(object):
     """Only the state the real dcnm_intf_pvlan_pre_state reads; every read it makes is recorded."""
 
     _dcnm_intf_authority_key = module.DcnmIntf._dcnm_intf_authority_key
-    PVLAN_PHYSICAL_ETHERNET_NAME = getattr(module.DcnmIntf, "PVLAN_PHYSICAL_ETHERNET_NAME", None)  # E4 only; lets E3 replay import
+    PVLAN_PHYSICAL_ETHERNET_NAME = getattr(module.DcnmIntf, "PVLAN_PHYSICAL_ETHERNET_NAME", None)  # absent on older code; lets that replay import
 
     def __init__(self, entry, detail="absent", summary_ok=True):
         self.have = []
@@ -231,15 +231,15 @@ class TestPreStateResolution:
     def test_type_fields_exclude_pvlan_when_no_field_names_it(self, entry):
         entry["underlayPolicies"] = [{"source": ""}]  # unreadable identity, but never int_pvlan_host
         d = PreStateDouble(entry)
-        # E6 (E5-R1-01): the type exclusion is judged after the detail is resolved (one bulk read per
-        # switch), so that a known PVLAN detail can never be hidden; the E5 expectation was reads == [].
+        # the type exclusion is judged after the detail is resolved (one bulk read per
+        # switch), so that a known PVLAN detail can never be hidden; the earlier expectation was reads == [].
         assert d.pre(IF7) == ("known", None, None) and d.reads == ["detail"]
 
     def test_type_fields_do_not_hide_a_named_pvlan_policy(self):
         d = PreStateDouble(entry_for(IF7, isPhysical="false"), detail=(PVLAN, {"PVLAN_MODE": "host"}))
-        # E6 (E5-R1-01): a PVLAN detail against a non-physical summary is a type/policy contradiction,
-        # "unknown" (refused before any write). The E5 expectation was ("known", PVLAN), refused later by
-        # the ownership check; both send nothing, E6 refuses it at registration for every detail origin.
+        # a PVLAN detail against a non-physical summary is a type/policy contradiction,
+        # "unknown" (refused before any write). The earlier expectation was ("known", PVLAN), refused later by
+        # the ownership check; both send nothing, and it is now refused at registration for every detail origin.
         state, reason, _nv = d.pre(IF7)
         assert state == "unknown" and "not a physical Ethernet" in reason
 
@@ -289,8 +289,8 @@ class TestPreStateResolution:
         assert d.pre(IF7) == ("absent", None, None) and d.reads == []
 
     def test_unreadable_summary_is_unknown_and_not_absent(self):
-        # E5 (E4-R1-01): the detail is now always resolved, and an already failed summary is not
-        # re-read per interface. Both authorities unreadable stays "unknown" (the E4 verdict); an
+        # The detail is now always resolved, and an already failed summary is not
+        # re-read per interface. Both authorities unreadable stays "unknown"; an
         # authoritative detail absence with an unreadable summary is covered in test_dcnm_intf_pvlan_e5.
         d = PreStateDouble(None, summary_ok=False, detail="failed")
         assert d.pre(IF7)[0] == "unknown" and d.reads == []  # neither authority is re-read
@@ -464,8 +464,8 @@ class TestResetAndOtherPreStatePaths:
         c = ctrl()
         c.previews = [reset_preview()]
         status, res = run(c, [trunk_item(IF7)], state="replaced")
-        # E3 on this shape refused at ownership before any request; E4 lets the conversion reach the
-        # PVLAN pre-deploy gate, whose verdict on this preview is the existing E3 behavior.
+        # This shape used to be refused at ownership before any request; now the conversion reaches the
+        # PVLAN pre-deploy gate, whose verdict on this preview is the existing behavior.
         assert c.requests(mark=PREVIEW_MARK) or status == "fail", res
         assert "summary policy None" not in res.get("msg", "")
         assert each_deploy_follows_a_preview(c)

@@ -1,15 +1,16 @@
-"""MIXED-SAVED-RETRY: a saved mixed conventional/PVLAN aggregate deletion completed by a LATER dcnm_interface invocation with deployment.
+"""A saved mixed conventional/PVLAN aggregate deletion completed by a LATER dcnm_interface invocation with deployment.
 
-Invocation 1 (NaC T6 shape): `state: deleted`, conventional Po301 + PVLAN Po (and the vPC analogue), every item deploy false. Both
+Invocation 1: `state: deleted`, a conventional port-channel + a PVLAN Po (and the vPC analogue), every item deploy false. Both
 mark-deletes are confirmed, the members are released in intent, nothing is deployed; the module process ends.
-Invocation 2: a NEW module instance (fresh main()) requests the deletion of the same aggregates with the global AND per-item deploy true.
-Nothing of invocation 1 survives except the controller state the fake keeps: the conventional port-channel listed in the MEASURED
-"marked for deletion" form (markDeleted, one `interface_delete` policy whose source is itself -- for a vPC child, its parent vPC), its
-released members, and a device running configuration that still holds the aggregate with those members joined (fresh forced preview).
+Invocation 2: a NEW module instance (fresh main()) requests the deletion of the same aggregates with the global AND per-item deploy
+true. Nothing of invocation 1 survives except the controller state the fake keeps: the conventional port-channel listed in the
+MEASURED "marked for deletion" form (markDeleted, one `interface_delete` policy whose source is itself -- for a vPC child, its
+parent vPC), its released members, and a device running configuration that still holds the aggregate with those members joined
+(fresh forced preview).
 
 Rule under test: the conventional saved deletion is completed together with the PVLAN one only when THIS request names it with
-deployment and the controller state above proves it on every physical serial; ambiguous, unrelated or unverifiable state refuses with
-nothing deployed.
+deployment and the controller state above proves it on every physical serial; ambiguous, unrelated or unverifiable state refuses
+with nothing deployed.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -35,8 +36,8 @@ CONV_RUNNING = ["interface ethernet1/14", "  channel-group 301 mode active", "  
 
 
 class SavedConvController(G5.DeployedReleaseController):
-    """The measured HR deletion harness + the conventional Po's saved deletion as the controller keeps it (MEASURED live T6 2026-10-17,
-    Leaf-102 Port-channel301): after its mark-delete the Po stays listed, markDeleted, with ONE `interface_delete` policy whose source is
+    """The measured deletion harness + the conventional Po's saved deletion as the controller keeps it (MEASURED live,
+ Port-channel301): after its mark-delete the Po stays listed, markDeleted, with ONE `interface_delete` policy whose source is
     the Po itself, until a deploy that names it. The member is released (int_trunk_host)."""
 
     conv_marked = None
@@ -50,7 +51,7 @@ class SavedConvController(G5.DeployedReleaseController):
             entry["underlayPolicies"] = [dict(entry["underlayPolicies"][0], entityName="port-channel301", source="port-channel301")]
             self.conv_marked = entry
             nv = trunk_host_nv(C14)
-            nv["ADMIN_STATE"] = "true"  # MEASURED live T6: the released conventional member is int_trunk_host, administratively up
+            nv["ADMIN_STATE"] = "true"  # MEASURED live: the released conventional member is int_trunk_host, administratively up
             self.detail[C14] = {"policy": TRUNK, "nvPairs": nv}
         if method == "POST" and path.endswith("/rest/globalInterface/deploy") and "port-channel301" in lowered:
             self.conv_marked = None
@@ -74,7 +75,7 @@ def saved_po_ctrl():
 
 
 def saved_preview(extra_global=None, extra_blocks=None, running=None):
-    """The fresh forced preview of the saved state: pending = the PVLAN Po's + the conventional sibling's (T6 live shape); running = the
+    """The fresh forced preview of the saved state: pending = the PVLAN Po's + the conventional sibling's (live shape); running = the
     device still holding both port-channels with their members joined."""
     resp = po_preview(T6_GLOBAL if extra_global is None else extra_global,
                       released_block(C14, 301) if extra_blocks is None else extra_blocks)
@@ -84,7 +85,7 @@ def saved_preview(extra_global=None, extra_blocks=None, running=None):
 
 
 def stage(ctrl):
-    """Invocation 1: the NaC T6 call (both items deploy false). Returns its result."""
+    """Invocation 1: the measured call (both items deploy false). Returns its result."""
     ctrl.previews = [saved_preview()]
     status, result = run(ctrl, [{"name": "port-channel301", "switch": [SWITCH_IP], "deploy": False},
                                 {"name": "po502", "switch": [SWITCH_IP], "deploy": False}], state="deleted")
@@ -113,7 +114,7 @@ def deploy_bodies(ctrl, start):
     return [json.loads(c[2]) for c in ctrl.calls[start:] if c[0] == "POST" and c[1].endswith("/rest/globalInterface/deploy")]
 
 
-# ================================================================== regular port-channels (Leaf-102 T6 shape)
+# ================================================================== regular port-channels
 def test_fresh_deploy_true_invocation_completes_the_saved_mixed_po_deletion_from_controller_state():
     ctrl = saved_po_ctrl()
     stage(ctrl)
@@ -286,7 +287,7 @@ def test_a_deployed_conventional_deletion_that_does_not_read_back_fails_with_the
     assert later_writes(ctrl, start).count("globalInterface/deploy") == 1, "deployed once; nothing else sent"
 
 
-# ================================================================== vPC (Leaf-103/104 shape)
+# ================================================================== vPC
 class SavedConvVpc(R.MeasuredVpc):
     """The vPC deletion harness with each mark-delete's child `interface_delete` owned by THAT vPC (`vpc305` for the conventional one)."""
 

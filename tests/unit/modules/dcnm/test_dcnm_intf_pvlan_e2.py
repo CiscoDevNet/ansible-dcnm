@@ -1,9 +1,7 @@
-"""Native Ethernet PVLAN E2: the corrected behavior for architect review R1 findings F1-F5.
+"""Native Ethernet PVLAN: corrected behavior for the first review's findings.
 
-Every case drives the real main() through test_dcnm_intf_pvlan_harness; only external I/O is
-mocked. Case IDs R1-xx refer to the review R1 probe, which asserted the E1 DEFECTS; the
-cases here assert the corrected result. Response labels: MEASURED (G5/G6 discovery capture),
-DOCUMENTED (module source), SYNTHETIC (robustness counterexample, not a claim the controller
+Every case drives the real main() through test_dcnm_intf_pvlan_harness; only external I/O is mocked. Response labels:
+MEASURED (discovery capture), DOCUMENTED (module source), SYNTHETIC (robustness counterexample, not a claim the controller
 emits it), TEMPLATE-PREDICTED (rendered from the pinned installed template, not measured).
 """
 
@@ -82,9 +80,9 @@ def assert_no_writes(c):
 
 # ===================================================================================== F1
 FAILED_BODIES = {
-    "measured_500": {"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": FIXTURE["deploy_500"]["data"]},  # MEASURED (G5 PU3)
+    "measured_500": {"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": FIXTURE["deploy_500"]["data"]},  # MEASURED (PU3)
     "http500_dict": {"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": {"error": "synthetic"}},  # SYNTHETIC (R1-02/03)
-    "dict_error": ok({"reportItemType": "ERROR", "message": "synthetic failure"}),  # SYNTHETIC (R1-04)
+    "dict_error": ok({"reportItemType": "ERROR", "message": "synthetic failure"}),  # SYNTHETIC
     "list_error": ok([{"reportItemType": "ERROR", "message": "CLI command failed", "entity": SERIAL + "~" + IF7}]),  # SYNTHETIC
     "empty_dict": ok({}),  # SYNTHETIC
     "unknown_key": ok({"message": "Interface deployed successfully", "value": [{"serialNumber": SERIAL, "IfName": IF7}], "x": 1}),
@@ -377,8 +375,8 @@ class TestF3RemainingWorkAndConvergence:
         assert status == "fail" and "outside this deploy batch" in res["msg"] and deploys(c) == []
 
     def test_malformed_non_trunk_promiscuous_removal_is_refused_on_redeploy(self):
-        # Intent already holds the reduced promiscuous mapping (as left by G5 PU3); the device
-        # still holds both secondaries. MEASURED PU3 pending carries '22102210 remove 2211'.
+        # Intent already holds the reduced promiscuous mapping (as left by a partial removal); the device
+        # still holds both secondaries. The MEASURED pending carries '22102210 remove 2211'.
         c = ctrl(TRANSITIONS["PU3"]["post_nv"])
         c.summary_pre[IF7] = {"complianceStatus": "Out-of-Sync"}
         c.previews = [measured_preview("PU3")]

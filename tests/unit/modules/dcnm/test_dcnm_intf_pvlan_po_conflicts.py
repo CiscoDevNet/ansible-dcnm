@@ -1,6 +1,6 @@
-"""PO-HOST-E2-CONFLICTS: membership conflicts INSIDE one invocation (review PO-HOST-E1-R1, finding P1).
+"""Membership conflicts INSIDE one invocation.
 
-NOT LIVE TESTED. Real main(); only the external boundary is mocked, through the E1 test module (which reuses the
+NOT LIVE TESTED. Real main(); only the external boundary is mocked, through the port-channel test module (which reuses the
 existing Ethernet harness). Writes are those INTERCEPTED by the harness, not proof that NDFC accepts or rejects anything.
 
 Success of a rejection = zero configuration writes AND zero deploys. Two families, both config orders, merged and replaced:
@@ -186,7 +186,7 @@ class _Stub(object):
         self.want = wants
         self.pvlan_blocked = []
         self.dcnm_intf_pvlan_block = types.MethodType(module.DcnmIntf.dcnm_intf_pvlan_block, self)
-        # bound lazily: the method does not exist in the E1 product, and only THESE tests may fail there
+        # bound lazily: the method does not exist in the earlier code, and only THESE tests may fail there
         self.dcnm_intf_pvlan_requested_conflicts = types.MethodType(module.DcnmIntf.dcnm_intf_pvlan_requested_conflicts, self)
 
 

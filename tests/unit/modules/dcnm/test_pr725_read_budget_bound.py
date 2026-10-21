@@ -22,8 +22,8 @@ IMPLEMENTED CONTRACT, REVISION 2
 Revision 1 reset the budget on `dcnm_intf_invalidate_serial_authority`. That was
 wrong and is withdrawn: the bulk reader invalidates the serial before *every*
 read, including a repeated failed one, so the reset would have handed a real
-`overridden` run a second full budget. Architect decisions applied here: Design A
-(counter), B = 2, per queried physical serial, per module instance.
+`overridden` run a second full budget. Design applied here: a counter, B = 2, per queried
+physical serial, per module instance.
 
 Unit      one FAILED read invocation = one call to the bounded GET helper from an
           interface-policy reader whose outcome is "unavailable" (transport
@@ -64,7 +64,7 @@ Baseline for comparison, one switch, N interfaces (measured on the diagnostic ba
     persistent failure   3 + 3N requests, 3(N + 1) scheduled seconds
     malformed HTTP 200   1 + N requests, 0 seconds
 
-NOT LIVE TESTED IN THIS GENERATION. Synthetic identities only.
+NOT LIVE TESTED. Synthetic identities only.
 """
 from __future__ import absolute_import, division, print_function
 

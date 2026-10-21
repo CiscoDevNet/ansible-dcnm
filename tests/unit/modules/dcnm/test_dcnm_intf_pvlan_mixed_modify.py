@@ -1,14 +1,13 @@
-"""MIXED-MODIFY (DF-G13-1): conventional interfaces MODIFIED in the same dcnm_interface call as a saved PVLAN membership removal.
+"""Conventional interfaces MODIFIED in the same dcnm_interface call as a saved PVLAN membership removal.
 
-Live G13 (NaC eacaaab1, DCNM 5d28167e, T5 cumulative, 2026-10-18): ONE `replaced` call, every item deploy false, removed members of a PVLAN
-and of a conventional aggregate AND changed the description of the conventional Po301 / vPC305 and of loopback391 on the same switches.
-The bulk modify answered 207 with every item SUCCESS; the PVLAN `update_saved` gate then refused "pending exists for interfaces outside
-this deploy batch: loopback391, port-channel301" (Leaf-102) and "loopback391, port-channel305" (Leaf-103/104, per peer).
+A single `replaced` call, every item deploy false, can remove members of a PVLAN and of a conventional aggregate AND change
+other interfaces on the same switches. The PVLAN `update_saved` gate must not refuse those changes as "outside this deploy
+batch".
 
-Rule: a pending interface outside the PVLAN batch is accepted when THIS invocation's confirmed bulk update (the payload actually sent and
-a per-item SUCCESS naming it) modified it on THAT physical serial: the interface itself (Ethernet, loopback, port-channel, SVI ...) or,
-for a conventional vPC, each peer's child `port-channel<PEERn_PCID>` on that peer. Anything only desired, not sent, not confirmed, on
-another serial or another port-channel id, and every global line, stays refused.
+Rule: a pending interface outside the PVLAN batch is accepted when THIS invocation's confirmed bulk update (the payload actually
+sent and a per-item SUCCESS naming it) modified it on THAT physical serial: the interface itself (Ethernet, loopback,
+port-channel, SVI ...) or, for a conventional vPC, each peer's child `port-channel<PEERn_PCID>` on that peer. Anything only
+desired, not sent, not confirmed, on another serial or another port-channel id, and every global line, stays refused.
 
 Real main() through the existing mixed-batch Po and vPC harnesses; only the controller boundary is faked.
 """
@@ -42,7 +41,7 @@ def seed_lo(ctrl, description="INTEG-LO-V1"):
 
 
 def po_desc_ctrl():
-    """Po301 holds Eth1/14-15 with the OLD description: the call releases Eth1/15 AND changes the description (live T5 shape)."""
+    """Po301 holds Eth1/14-15 with the OLD description: the call releases Eth1/15 AND changes the description (live shape)."""
     ctrl = MB.po_ctrl()
     ctrl.detail[MB.CONV_PO]["nvPairs"]["DESC"] = "INTEG-PO-CONV-V1"
     return ctrl
@@ -52,7 +51,7 @@ def owned(result):
     return sorted(set((r["serial"], n) for r in result.get("pvlan_gate_invocation_releases") or [] for n in r["interfaces"]))
 
 
-# ================================================================== regular port-channel (Leaf-102 shape)
+# ================================================================== regular port-channel
 def test_conventional_po_modified_and_releasing_a_member_in_the_same_call_is_part_of_the_saved_update():
     """Fail-before on 5d28167e: refused as 'outside this deploy batch: port-channel301'."""
     ctrl = po_desc_ctrl()
@@ -76,7 +75,7 @@ def test_loopback_modified_beside_the_aggregates_is_part_of_the_saved_update():
 
 
 def test_member_release_alone_is_still_accepted():
-    """Positive control (G4/G5 shape)."""
+    """Positive control."""
     status, result = MB.t5_po_call(MB.po_ctrl(), MB.released_block(MB.C15))
     assert status == "exit" and owned(result) == [(MU.H.SERIAL, "ethernet1/15")], result.get("msg")
 
@@ -120,7 +119,7 @@ def test_unrelated_interface_and_global_pending_are_still_refused():
 
 
 def test_a_later_invocation_that_modifies_nothing_does_not_own_the_saved_block(monkeypatch):
-    """The saved T5 call succeeds; a LATER invocation repeats it (nothing is updated now) with deploy true to complete the saved removal:
+    """The saved call succeeds; a LATER invocation repeats it (nothing is updated now) with deploy true to complete the saved removal:
     Po301's pending block is not that invocation's write and still refuses the deploy."""
     ctrl = po_desc_ctrl()
     status, result = MB.t5_po_call(ctrl, MB.released_block(MB.C15) + PO_BLOCK)
@@ -133,7 +132,7 @@ def test_a_later_invocation_that_modifies_nothing_does_not_own_the_saved_block(m
     assert status == "fail" and "outside this deploy batch: port-channel301" in result["msg"] and ctrl.deploys() == [], result.get("msg")
 
 
-# ================================================================== vPC (Leaf-103/104 shape)
+# ================================================================== vPC
 def vpc_desc_ctrl(pcid1="305", pcid2="305"):
     ctrl = MB.vpc_ctrl()
     nv = ctrl.parents[MB.CONV_VPC]["nvPairs"]

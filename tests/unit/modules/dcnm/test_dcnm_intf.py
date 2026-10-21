@@ -3963,7 +3963,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             )
 
             if "have_get_failure" in self._testMethodName:
-                # G6A.4 finding 2: every interface GET fails (non-200) after the
+                # Every interface GET fails (non-200) after the
                 # initial fabric-mode probe, so the fabric-loopback HAVE cannot be
                 # read authoritatively.
                 fail_resp = {"RETURN_CODE": 500, "MESSAGE": "ERR", "DATA": {}}
@@ -6399,7 +6399,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         """
         Return {INTF_NAME: nvPairs} from the payloads actually sent to the
         controller (the outbound full parent payload), parsed from the
-        dcnm_send mock. Finding 1 preserves HAVE in the SENT payload, not in the
+        dcnm_send mock. The fix preserves HAVE in the SENT payload, not in the
         reported feature diff, so this reads the wire body, not result['diff'].
         """
         found = {}
@@ -6431,7 +6431,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         return found
 
     # ------------------------------------------------------------------
-    # G6A.1 finding 1: an omitted option must preserve the HAVE value in the
+    # An omitted option must preserve the HAVE value in the
     # OUTBOUND payload during an update driven by an unrelated field, in every
     # state, without a spurious feature diff and without a capability lookup.
     # ------------------------------------------------------------------
@@ -6504,7 +6504,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         reported = self._ospfmd_nvpairs(result, "replaced")
         self.assertNotIn(self.OSPF_MD_NVPAIR, reported.get("Loopback0", {}))
 
-    # ---- G6A.2 finding 6: the complete preservation matrix.
+    # ---- The complete preservation matrix.
     # states x HAVE {absent, string/native false, string/native true, unexpected
     # string, unexpected scalar}, asserting the raw value/type is preserved
     # exactly in the sent payload, absence stays absence, the key is absent from
@@ -6949,7 +6949,7 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.assertIn(expected_fragment, result["msg"])
         self.assert_no_mutating_dcnm_calls()
 
-    # ---- G6A.1 finding 6: reject a non-native-boolean value locally, before
+    # ---- Reject a non-native-boolean value locally, before
     # any template GET and before any mutation. ----
     def _ospfmd_expect_local_type_failure(self, bad_value):
         self._ospfmd_load_common(
@@ -7034,7 +7034,7 @@ class TestDcnmIntfModule(TestDcnmModule):
     def test_dcnm_intf_lo_ospfmd_valid_feature_before_bad_ipv4_zero_gets(self):
         self._ospfmd_expect_nonfeature_local_failure(bad_first=False)
 
-    # ---- G6A.4 finding 4: the feature is validated GLOBALLY; the field is
+    # ---- The feature is validated GLOBALLY; the field is
     # rejected on any non-fabric-loopback interface with zero template GETs. ----
     def _ospfmd_reject_nonloopback(self, config, fragment):
         self._ospfmd_load_common(

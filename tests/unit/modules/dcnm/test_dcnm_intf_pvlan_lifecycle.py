@@ -328,7 +328,7 @@ class TestE12CheckModeDeployFalseAndConvergence:
     def test_check_mode_sends_no_write_and_no_refreshing_preview(self):
         c = ctrl()
         status, res = run(c, [pvlan_item(**ADD_2212)], check_mode=True)
-        # E3 (architect R2-02): the bulk capability cannot be verified without its POST probe,
+        # The bulk capability cannot be verified without its POST probe,
         # so a planned PVLAN write in check mode ends in an explicit refusal, not a success.
         assert status == "fail" and "could not be verified in check mode" in res["msg"]
         assert c.mutating() == [] and c.requests(mark=PREVIEW_MARK) == []
@@ -358,7 +358,7 @@ class TestE12CheckModeDeployFalseAndConvergence:
 
 # ===================================================================================== E13
 def test_e13_registry_rows_and_resets_are_unchanged_except_the_c1_pvlan_companions():
-    """PLAN-2 C1 adds exactly the 11 PVLAN companion bindings (A0 REGISTRY_BINDING rows), each with a reset_wire inferred from
+    """The 11 PVLAN companion bindings (REGISTRY_BINDING rows) are added, each with a reset_wire inferred from
     its sibling parents; nothing else in the table changed (234 -> 245 rows, 207 -> 218 resets)."""
     path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "plugins", "module_utils", "gie_binding_table.py")
     tree = ast.parse(open(path).read())
@@ -371,7 +371,7 @@ def test_e13_registry_rows_and_resets_are_unchanged_except_the_c1_pvlan_companio
                 resets += "reset_wire" in keys
                 parent = keys.get("parent_template")
                 pvlan += isinstance(parent, ast.Constant) and "pvlan" in parent.value
-    # IQ1 adds the vPC PVLAN qosStatsSuppressed row (inferred reset): one more row, reset and PVLAN row.
+    # The vPC PVLAN qosStatsSuppressed row (inferred reset): one more row, reset and PVLAN row.
     assert (rows, resets, pvlan) == (234 + 11 + 1, 207 + 11 + 1, 11 + 1)
 
 

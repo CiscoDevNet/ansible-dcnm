@@ -58,7 +58,7 @@ REAL_FAIL_JSON = basic.AnsibleModule.fail_json
 SERIAL = "SAL1819SAN8"          # the fixture inventory's serial for SWITCH_IP
 SWITCH_IP = "10.0.0.1"
 # Synthetic peer identity; the VPC_SNO shape and reversed pair order come from
-# ALPHA's m4-m7 captured GET responses, not from a fabricated transport success.
+# captured GET responses, not from a fabricated transport success.
 PEER_SERIAL = "SAL1819SAN9"
 PEER_IP = "10.0.0.2"
 VPC_PAIR_SERIAL = PEER_SERIAL + "~" + SERIAL
@@ -69,8 +69,7 @@ IF_B = "Ethernet1/32"
 # ENCAPSULATION on this interface, which `vlan` carries; it is not a fabric VLAN object.
 IF_SUB = "Ethernet1/31.3001"
 SUB_VLAN = 3001
-# A SYNTHETIC loopback number and a documentation-range address. The live G41 batch used
-# loopback193 with 192.0.2.193/32; a fixture must not carry the lab object's identity.
+# A SYNTHETIC loopback number and a documentation-range address.
 IF_LO = "loopback931"
 IF_SVI = "Vlan931"
 
@@ -115,7 +114,7 @@ BELOW = "12.6.0.266"
 
 # The one approved caller patch for this candidate, read from the engine's own policy so the
 # fixture can never drift from it. Every pre-existing positive fixture in this harness declares
-# this explicitly through `run_configs`'s default below -- PR725-PATCH-VERSION-001 requires
+# this explicitly through `run_configs`'s default below -- requires
 # "test fixtures must declare enabled context" rather than relying on an implicit default.
 SUPPORTED_PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 # An unapproved-but-plausible SMU build, used by negative patch-gate fixtures.
@@ -126,8 +125,8 @@ UNSUPPORTED_PATCH = "4.3.1.0175006010"
 # (profile_key, applied, reset_wire, prerequisite_profile_fields).
 #
 # `applied` is a value independently evidenced as non-reset for that binding; `reset` is
-# the wire string the registry carries, measured live in G19/G22 (access/trunk) and in G31
-# C1-s2/C2-s2 (the routed redirects). The fourth element carries the prerequisites a gated
+# the wire string the registry carries, measured live (access/trunk and the routed
+# redirects). The fourth element carries the prerequisites a gated
 # row needs, because the template hides the field otherwise: the stats pair needs an
 # effective service-policy, and spanning-tree port type is only settable while
 # PORTTYPE_FAST_ENABLED is not true. Those fields stay explicit across the whole case, so
@@ -136,7 +135,7 @@ UNSUPPORTED_PATCH = "4.3.1.0175006010"
 # THE REDIRECT PAIR'S PREREQUISITE IS ITS OWN COMPANION, NOT A NATIVE FIELD.
 # Both split rows are declared `IsShow="DISABLE_IP_REDIRECTS!=true"`, and on
 # int_routed_host that gate field is NOT in the module's native profile spec -- it sits at
-# the template default `false`, which the live P0/FRESH captures confirm. So nothing has to
+# the template default `false`, which the live captures confirm. So nothing has to
 # be sent to keep the global override false here; what must stay explicit is the OTHER
 # direction, so a reset of one is never confused with the pair collapsing together. That
 # mirrors the live measurement exactly: companion explicitly true, global false.
@@ -224,7 +223,7 @@ MACSEC_FB_CTX = {"enable_macsec_interface_policy": True,
                  "macsec_key_chain_name": "PILOT-KC",
                  "macsec_policy_name": "PILOT-POL"}
 
-# The PIM/ACL campaign kept PIM enabled while clearing its dependent rows.
+# PIM stays enabled while its dependent rows are cleared.
 PIM_ON = {"enable_pim_sparse": True}
 # HSRP on the SVI parent. The installed body rejects every advanced HSRP field unless HSRP is
 # enabled with a primary IPv4 VIP, and the preempt delay additionally needs `preempt: true`; the
@@ -237,7 +236,7 @@ HSRP_CTX = {"ipv4_addr": "192.0.2.1", "ipv4_mask_len": 24, "enable_hsrp": True,
 
 
 # ---------------------------------------------------------------- DAMPENING
-# EXPERIMENTAL / CONTROLLER-ONLY generation. These seven resets are candidates,
+# EXPERIMENTAL / CONTROLLER-ONLY registration. These seven resets are candidates,
 # not accepted device resets, and are not part of the 157 integration.
 #
 # The parent declares FIVE conditional rules over this family, measured against
@@ -268,8 +267,8 @@ def an_unclassifiable_key(parent, wanted_type=None):
     """A profile key on `parent` that carries NEITHER a reset nor a declared default.
 
     Three tests need "a registered row about which nothing is known", and each named one
-    explicitly. Both times a campaign measured that row, the tests broke and had to be rehomed
-    by hand -- `access disable_lldp_receive` once, and the whole routed OSPF set in G37. Deriving
+    explicitly. Each time that row was later measured, the tests broke and had to be rehomed
+    by hand. Deriving
     the example from the live table ends that: registering more rows can never invalidate it, and
     if the table ever ran out of unclassifiable rows the assertion below would say so loudly
     instead of the tests quietly passing for the wrong reason.
@@ -341,7 +340,7 @@ def wire_for(parent, key, applied):
     whose public and wire spellings differ (`no_passive` -> `noPassive`,
     `point_to_point` -> `pointToPoint`, `no_change` -> `noChange`).
 
-    Measured: with the B3 resets registered, the preservation assertion compared the
+    Measured: with these resets registered, the preservation assertion compared the
     controller's `noPassive` against the fixture's public `no_passive` and failed. The
     fixture was right; the derivation was vocabulary-blind.
 
@@ -415,10 +414,8 @@ PILOT = {
     # The routed stats pair. Same prerequisites as on access/trunk -- the fields are
     # IsShow-gated on ENABLE_QOS==true and QUEUING_POLICY!='' respectively -- but the CLI
     # effect differs in kind: the withdrawal does not delete a line, it removes the
-    # ` no-stats` FRAGMENT and leaves the `service-policy` line standing. Measured live in
-    # G33 F1-s2/F2-s2 on Leaf-103 Ethernet1/22.
-    # B01/ALPHA, measured live 2026-09-28 on Leaf-103 Ethernet1/64 (SMU90, NDFC 12.6.0.267),
-    # stages R1 (positive control) and R2 (explicit group clear), task PR725-SMU-B01-ALPHA-001.
+    # ` no-stats` FRAGMENT and leaves the `service-policy` line standing. Measured live
+    # (NDFC 12.6.0.267), with a positive control and an explicit group clear.
     #
     # The two OSPF rows are IsShow-gated on ENABLE_OSPF==true, and ENABLE_OSPF / OSPF_TAG /
     # OSPF_AREA_ID are themselves registered WITHOUT a reset on this parent, so the context is held
@@ -439,8 +436,7 @@ PILOT = {
     (ROUTED, "ipv6LinkLocal"): ("ipv6_link_local", "fe80::164:1", "", {}),
     (ROUTED, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
     (ROUTED, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
-    # The routed LLDP pair, measured live 2026-09-28 on Leaf-103 Ethernet1/64 (fabric SMU90,
-    # NDFC 12.6.0.267), stages M1-M4 of PR725-SMU-LLDP-ROUTED-002.
+    # The routed LLDP pair, measured (NDFC 12.6.0.267).
     #
     # The companion is held explicit for a reason specific to this parent, read from the
     # template body on the controller rather than assumed: `int_routed_host` emits no LLDP
@@ -452,12 +448,11 @@ PILOT = {
     # disappears is attributable to the field that was withdrawn.
     (ROUTED, "lldpTransmit"): ("disable_lldp_transmit", True, "false", LLDP_RX_ON),
     (ROUTED, "lldpReceive"): ("disable_lldp_receive", True, "false", LLDP_TX_ON),
-    # The subinterface pair, measured on int_subif ITSELF in G35 M1-s2/M2-s2 -- the routed
+    # The subinterface pair, measured on int_subif ITSELF -- the routed
     # parent's result was not carried over. Same companion-held-explicit prerequisite: the
     # gate field DISABLE_IP_REDIRECTS is absent from `sub_prof_spec` too and sits at the
     # template default `false`, which the live capture confirms.
-    # B01/ALPHA group S, measured live 2026-09-28 on Leaf-103 Ethernet1/64.3001 (dot1q 3001),
-    # stages S2 (positive control) and S3 (explicit group clear). Its own measurement: the routed
+    # Measured (dot1q 3001) with a positive control and an explicit group clear. Its own measurement: the routed
     # result was NOT copied across, because this parent declares the fields differently.
     #
     # THE GATE IS NAMED DIFFERENTLY HERE. On int_routed_host the two OSPF rows are
@@ -475,12 +470,12 @@ PILOT = {
     (SUBIF, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", dict(IPV6_ON)),
     (SUBIF, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", dict(IPV4_ON)),
     # The first INTEGER row in this matrix. `applied` is a native int and `reset` is the empty
-    # string, measured live in G37 P1-arp-probe on Leaf-103 Ethernet1/22. It is ungated: the
+    # string, measured live. It is ungated: the
     # template declares ARP_TIMEOUT without IsShow, so nothing has to be opened to observe it,
     # and its emission gate is `if arpTimeout != ""` -- which is why "" is the withdrawal
     # representation rather than a guess.
     (ROUTED, "arpTimeout"): ("arp_timeout", 900, "", {}),
-    # The five routed OSPF integers, each measured live in G37 on Leaf-103 Ethernet1/20 with the
+    # The five routed OSPF integers, each measured live with the
     # reset observed as the EMPTY STRING and the OSPF association kept. All are gated, so each
     # holds the OSPF base group explicit; all are integers, so each also pins the guarantee that
     # the public empty string stays REFUSED.
@@ -489,7 +484,7 @@ PILOT = {
     (ROUTED, "ospfHelloInterval"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
     (ROUTED, "ospfPriority"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
     (ROUTED, "ospfTransmitDelay"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
-    # B3: the two routed ENUM identities. Their reset is the NEUTRAL WIRE SPELLING
+    # The two routed ENUM identities. Their reset is the NEUTRAL WIRE SPELLING
     # `noChange`, not "" -- for an enum the unset state is a named choice, so an empty
     # string would be the typo this suite rejects elsewhere for enums.
     #
@@ -502,13 +497,9 @@ PILOT = {
                                   dict(OSPF_CTX)),
     (ROUTED, "ospfNetworkType"): ("ospf_network_type", "point_to_point", "noChange",
                                   dict(OSPF_CTX)),
-    # ---------------------------------------------------------------------- P1, OSPF-ALL
-    # The six rows of the grouped OPTIONS profile, measured live on 2026-09-28 on Leaf-103
-    # (SMU90, NDFC 12.6.0.267), stage P1-g2-rM-clear, task PR725-OSPF-ALL-001. Each was
-    # measured on ITS OWN parent and mounted subject:
-    #     int_subif     Ethernet1/64.3001 (dot1q 3001)
-    #     int_loopback  Loopback20
-    #     int_vlan      Vlan3789 (the SVI; VLAN 3789 is a separate object, mounted separately)
+    # ---------------------------------------------------------------------- OSPF options
+    # The six rows of the grouped OPTIONS profile, measured live (NDFC 12.6.0.267), each on
+    # ITS OWN parent: a subinterface, a loopback and an SVI.
     #
     # `int_routed_host` contributes NO new row here: its network_type and passive_mode were
     # already registered, so in that profile it carried RETENTION CONTROLS. Measured: the
@@ -517,12 +508,12 @@ PILOT = {
     #
     # WHY ospf_network_type IS LISTED THREE TIMES AND NOT INFERRED ONCE. It is a distinct
     # binding per parent -- three rows in the table, three separate reset registrations. The
-    # routed one was accepted in an earlier campaign; these three were measured here.
+    # routed one was accepted earlier; these three were measured separately.
     #
     # SMU 4.3.1.0175006017 UNIFIED THE PASSIVE FIELD. `int_subif` used to declare the BOOLEAN
     # `ospfPassiveInterface` (reset 'false'); it now declares the ENUM `ospfPassiveMode`, as
     # `int_vlan` does (reset 'noChange'). The subinterface row below is the 017 row: it was NOT
-    # measured live, and the 2026-09-28 measurement of the boolean does not transfer to it.
+    # measured live, and the measurement of the boolean does not transfer to it.
     (SUBIF, "ospfNetworkType"): ("ospf_network_type", "point_to_point", "noChange",
                                  dict(OSPF_CTX)),
     (SUBIF, "ospfPassiveMode"): ("ospf_passive_mode", "passive", "noChange", dict(OSPF_CTX)),
@@ -532,22 +523,22 @@ PILOT = {
     (SVI, "ospfNetworkType"): ("ospf_network_type", "point_to_point", "noChange",
                                dict(OSPF_CTX)),
     (SVI, "ospfPassiveMode"): ("ospf_passive_mode", "passive", "noChange", dict(OSPF_CTX)),
-    # ------------------------------------------------------ P2-BFD and P4-AREA, OSPF-ALL
-    # Measured live on 2026-09-28 on Leaf-103, stages P2-a3-clear and P4-a3-clear.
+    # ------------------------------------------------------ OSPF BFD and area
+    # Measured live.
     #
     # BFD: `ospfBfdMode` (enum, reset 'noChange') on all four parents since SMU 4.3.1.0175006017.
     # int_subif and int_loopback used to declare the boolean `ospfBfd` (reset 'false'); those two
-    # rows below are the 017 rows and were NOT measured live. The 2026-09-28 measurement belongs to
+    # rows below are the 017 rows and were NOT measured live. The measurement belongs to
     # the retired boolean.
     #
-    # PREREQUISITE: `feature bfd` on Leaf-103, enabled through NDFC with the operator's explicit
+    # PREREQUISITE: `feature bfd`, enabled through NDFC with the operator's explicit
     # authorisation (policy POLICY-55670, priority 500) and verified in the device running-config.
     # Without it the device rejects `ip ospf bfd` with "CLI command is invalid".
     (ROUTED, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
     (SUBIF, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
     (LOOPBACK, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
     (SVI, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
-    # THE AREA IS THIS CAMPAIGN'S FIRST RESET THAT DOES NOT DELETE A LINE.
+    # THE AREA IS A RESET THAT DOES NOT DELETE A LINE.
     # `ip router ospf <tag> area 0.0.0.77` -> `ip router ospf <tag> area 0.0.0.0`: the line is STILL
     # there, carrying the declared default. Restoring a default is a valid withdrawal effect;
     # demanding that every row delete its line would have rejected these four for the wrong reason.
@@ -575,9 +566,8 @@ PILOT = {
     (SUBIF, "OSPF_AREA_ID"): ("ospf_area_id", "0.0.0.77", "0.0.0.0", dict(OSPF_CTX_NO_AREA)),
     (LOOPBACK, "OSPF_AREA_ID"): ("ospf_area_id", "0.0.0.77", "0.0.0.0", dict(OSPF_CTX_NO_AREA)),
     (SVI, "OSPF_AREA_ID"): ("ospf_area_id", "0.0.0.77", "0.0.0.0", dict(OSPF_CTX_NO_AREA)),
-    # ----------------------------------------- P3a message-digest: gate (4) and key-ID (4)
-    # Measured live on 2026-09-28 on all four subjects, stages P3a-a3-auth-off and
-    # P3a-a4-keyid-default, with the dedicated key obtained through the team's procedure.
+    # ----------------------------------------- OSPF message-digest: gate (4) and key-ID (4)
+    # Measured live on all four parents.
     #
     # THE GATE: `enable_ospf_auth` -> 'false' WITH the key and ID explicitly retained. The body's
     # V4 predicate only fires while authentication is true, so turning it off while keeping the
@@ -597,10 +587,10 @@ PILOT = {
     (SUBIF, "OSPF_AUTH_KEY_ID"): ("ospf_auth_key_id", 7, "1", dict(AUTH_MD_NO_ID)),
     (LOOPBACK, "OSPF_AUTH_KEY_ID"): ("ospf_auth_key_id", 7, "1", dict(AUTH_MD_NO_ID)),
     (SVI, "OSPF_AUTH_KEY_ID"): ("ospf_auth_key_id", 7, "1", dict(AUTH_MD_NO_ID)),
-    # -------------------------------- P3b SIMPLE authentication: the key, on all 4
+    # -------------------------------- OSPF SIMPLE authentication: the key, on all 4
     # A mechanism DISTINCT from message-digest: `ospfAuthenticationKey` is gated only by
-    # `ospf==true`, not by `ospfAuthentication`. Measured live on 2026-09-29: `P3b-b1-apply` left
-    # `ip ospf authentication-key 3` on all four and `P3b-b3-clear-key` withdrew it.
+    # `ospf==true`, not by `ospfAuthentication`. Measured live: applying it left
+    # `ip ospf authentication-key 3` on all four, and the clear withdrew it.
     #
     # The context carries the TYPE at its declared default `3`, consistent with 3DES material. The
     # value is a PLACEHOLDER: this harness is offline and the dedicated material lives in `secret/`.
@@ -612,7 +602,7 @@ PILOT = {
                                           dict(OSPF_CTX, ospf_authentication_key_type="3")),
     (SVI, "ospfAuthenticationKey"): ("ospf_authentication_key", "3DES-PLACEHOLDER", "",
                                      dict(OSPF_CTX, ospf_authentication_key_type="3")),
-    # ------------------------------------ P5: the GATE, on 3 of the 4 parents
+    # ------------------------------------ The OSPF GATE, on 3 of the 4 parents
     # `enable_ospf` -> 'false'. Its context carries EVERY dependent at its neutral, because the
     # body refuses to turn the gate off while any of them is non-neutral ("Enable OSPF ... before
     # configuring OSPF interface options"). The tag travels explicitly: it has no REGISTERED
@@ -621,7 +611,7 @@ PILOT = {
     (ROUTED, "ospf"): ("enable_ospf", True, "false", dict(OSPF_CTX, ospf_tag="PILOT-OSPF")),
     (SUBIF, "ospf"): ("enable_ospf", True, "false", dict(OSPF_CTX, ospf_tag="PILOT-OSPF")),
     (SVI, "ospf"): ("enable_ospf", True, "false", dict(OSPF_CTX, ospf_tag="PILOT-OSPF")),
-    # int_loopback JOINS on 2026-09-29, and its context carries a NON-DEFAULT `int_vrf` on purpose.
+    # int_loopback JOINS, and its context carries a NON-DEFAULT `int_vrf` on purpose.
     #
     # The previous round excluded it: measured with `int_vrf: default`, the device KEPT
     # `ip router ospf <tag> area <x>` even though the controller stored `ospf=false`. The cause is
@@ -643,7 +633,7 @@ PILOT = {
     # not in it.
     (LOOPBACK, "ospf"): ("enable_ospf", True, "false",
                          dict(OSPF_CTX, ospf_tag="PILOT-OSPF", int_vrf="PILOT-VRF")),
-    # B01: the two int_loopback OSPF booleans. Their reset is the wire STRING
+    # The two int_loopback OSPF booleans. Their reset is the wire STRING
     # "false" -- the public input is a native bool, and the generator rejects a
     # native bool in reset_wire, so the two vocabularies stay apart.
     #
@@ -654,7 +644,7 @@ PILOT = {
     # belongs to routed ethernet only.
     (LOOPBACK, "ospfMtuIgnore"): ("ospf_mtu_ignore", True, "false", dict(OSPF_CTX)),
     (LOOPBACK, "ospfShutdown"): ("ospf_shutdown", True, "false", dict(OSPF_CTX)),
-    # The seven int_subif integers, measured live in G39 on Leaf-103 Ethernet1/21.3001. The six
+    # The seven int_subif integers, measured live. The six
     # OSPF rows hold the subinterface's OWN OSPF base group; ARP_TIMEOUT is ungated and was
     # measured on a deliberately OSPF-free object, so it carries no prerequisite at all.
     # `OSPF_RETRANSMIT_INTERVAL` exists on int_subif, int_vlan and int_loopback but NOT on
@@ -667,7 +657,7 @@ PILOT = {
     (SUBIF, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
     (SUBIF, "arpTimeout"): ("arp_timeout", 900, "", {}),
     # int_loopback. Same six OSPF integers, same measured reset -- but measured on THIS parent
-    # in G41, not inherited from the subinterface: G39 showed even the envelope differs between
+    # too, not inherited from the subinterface: the envelope differs between
     # parents. The context is held explicit for the same reason it is on subif, and because on
     # this parent an omitted OSPF_TAG makes the template fall back to the FABRIC's process.
     (LOOPBACK, "ospfCost"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
@@ -678,10 +668,10 @@ PILOT = {
     (LOOPBACK, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
     # int_vlan. The six OSPF integers behave as on the other parents, but the two SPLIT REDIRECT
     # rows are BOOLEAN and their measured reset is the STRING 'false', not the empty string --
-    # measured live in G43, not inferred. Each holds the OTHER split knob true so the shared
+    # measured live, not inferred. Each holds the OTHER split knob true so the shared
     # child survives and only the target's own CLI line is withdrawn.
     (SVI, "ospfCost"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
-    # ------------------------------------ PR725-BFD-ALL-001: the ten BFD bindings
+    # ------------------------------------ : the ten BFD bindings
     #
     # `disable_bfd_echo` / nvPair `bfdEcho`: the public name is NEGATIVE, the nvPair looks
     # POSITIVE, and the sense is NOT inverted. The installed body evaluates
@@ -726,9 +716,7 @@ PILOT = {
                              {"disable_ipv6_redirects": True}),
     (SVI, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false",
                              {"disable_ipv4_redirects": True}),
-    # The four int_vlan rows BETA measured live in the B01 SVI group, on BETAENUM /
-    # Leaf-105 / Vlan991 (VLAN 991 and the SVI are distinct objects; both were
-    # created and recovered separately). Not inferred from int_loopback or
+    # The four int_vlan rows, measured live on an SVI. Not inferred from int_loopback or
     # int_routed_host: different parent, different template.
     #
     # THREE ARE BOOLEAN and their measured reset is the STRING 'false'. THE FOURTH
@@ -744,15 +732,14 @@ PILOT = {
     (SVI, "ipv6NdSuppressRa"): ("ipv6_nd_suppress_ra", True, "false", {}),
     (SVI, "ipv6LinkLocal"): ("ipv6_link_local", "fe80::991:1", "", {}),
 
-    # --- PR725-EIGRP-ALL-001: the EIGRP identities with a MEASURED reset -------
+    # --- : the EIGRP identities with a MEASURED reset -------
     #
     # THE TAG IS THE GATE. The parent wraps the WHOLE EIGRP block in
     # `if eigrpProcessTag != "":`, and it also REFUSES the request if any option is
     # active while the tag is empty. That is why every row carries it explicitly:
     # the omission under test has to be the only thing that moves.
     #
-    # SYNTHETIC NAMES, as in OSPF_CTX: the live campaign used an operator-authorised
-    # tag and prefix-lists, and a fixture must not carry a lab resource name.
+    # SYNTHETIC NAMES, as in OSPF_CTX.
     #
     # THE TWO `direction` ROWS ARE NEITHER BOOLEAN NOR EMPTIABLE. Their measured
     # reset is `"out"`, their declared default, because the public enum has no
@@ -816,7 +803,7 @@ PILOT = {
     (LOOPBACK, "eigrpProcessTag"): ("eigrp_process_tag", "PILOT-EIGRP", "", dict(EIGRP_TAG_CTX)),
 
     # The 4 MACSEC rows, ALL on int_routed_host: it is the only parent that
-    # declares them. Measured live on Ethernet1/64.
+    # declares them. Measured live.
     #
     # THE NAMES ARE SYNTHETIC on purpose -- `PILOT-KC`, `PILOT-POL`,
     # `PILOT-FBKC` -- exactly as for the EIGRP tag: a fixture must not carry the
@@ -853,8 +840,7 @@ PILOT = {
     (ROUTED, "dampeningRestartPenalty"): (
         "dampening_restart_penalty", 1000, "", dict(DAMP_WITH_RESTART)),
 
-    # Ten source-campaign registrations. The ACL name is synthetic in this fixture;
-    # the source campaign separately verified a real prerequisite ACL in the lab.
+    # Ten measured registrations. The ACL name is synthetic in this fixture.
     (LOOPBACK, "ENABLE_PIM_SPARSE"): ("enable_pim_sparse", True, "false", {}),
     (ROUTED, "ENABLE_PIM_SPARSE"): ("enable_pim_sparse", True, "false", {}),
     (SUBIF, "ENABLE_PIM_SPARSE"): ("enable_pim_sparse", True, "false", {}),
@@ -865,12 +851,12 @@ PILOT = {
     (ROUTED, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
     (SVI, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
     (ROUTED, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", dict(PIM_ON)),
-    # PR725-HSRP5, measured live on a source-campaign SVI (NDFC 12.6.0.267). An
+    # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became
     # `preempt`, with PREEMPT held true. The two forwarding thresholds are grouped-only below.
     (SVI, "hsrpPreemptDelayMinimum"): ("hsrp_preempt_delay_minimum", 45, "", dict(HSRP_CTX)),
-    # PR725-PVLAN2222, measured live on L1-F4 / Vlan2222 (NDFC 12.6.0.267). A STRING whose
+    # Measured live on an SVI (NDFC 12.6.0.267). A STRING whose
     # values are PREFIXES of one another -- `3214` is a prefix of `3214,3216` -- so the pilot
     # value carries the comma on purpose: a fixture using `3214` alone would pass against a
     # comparison that only matched a prefix. `min_length: 1` does not block the clear, because
@@ -899,8 +885,7 @@ PILOT_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT]
 PILOT_ITEMS = [(p, n, k, applied, reset, extra)
                for (p, n), (k, applied, reset, extra) in PILOT.items()]
 
-# The port-channel host family -- the 19 ORDINARY identities of BETA's C3 packet 01,
-# measured live in G25 batch B1 on Leaf-101 (Po301/302/303).
+# The port-channel host family -- the 19 ORDINARY identities, measured live.
 #
 # The twentieth identity, PC_TRUNK::ENABLE_VPC_PEER_LINK, is deliberately ABSENT. It is a
 # ROLE CHANGE, not an ordinary field: setting it true makes the port-channel a vPC
@@ -911,7 +896,7 @@ PILOT_ITEMS = [(p, n, k, applied, reset, extra)
 # The two LLDP rows are `line_gated_in_child`: the host FORWARDS the value and the CLI
 # line renders on the MEMBER interface, not on the port-channel. The contract under test
 # here is the nvPair on the parent request, which is the same either way; the member-side
-# rendering is what the live campaign verified on the device.
+# rendering was verified on the device.
 PILOT_PC = {
     (PC_ACCESS, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
     (PC_ACCESS, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
@@ -954,7 +939,7 @@ PILOT_VPC = {
     (VPC_TRUNK, "queuingStats"): ("disable_queuing_stats", True, "false", {}),
     (VPC_TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", {}),
     (VPC_TRUNK, "GUARD_MODE"): ("guard_mode", "root", "no", {}),
-    # PR725-VPC-DOT1Q-001 c2: the dot1q-tunnel parent's own six, registered only after its
+    # The dot1q-tunnel parent's own six, registered only after its
     # explicit neutrals were measured on both peers. Same public keys, its own identities.
     (VPC_DOT1Q, "aclFilter"): ("acl_filter", "PILOT-ACL", "", {}),
     (VPC_DOT1Q, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),
@@ -979,7 +964,7 @@ BASE_TRUNK = {"mode": "trunk", "description": "pilot", "fec": "auto"}
 
 # Port-channel bases. `fec` is NOT in the port-channel profile spec, so it is absent here
 # rather than copied from the ethernet bases. `members` stays a single explicit member for
-# the same reason the live campaign used one: it keeps the membership fixed so the only
+# the same reason as the live measurement: it keeps the membership fixed so the only
 # moving part is the field under test.
 BASE_PC_ACCESS = {"mode": "access", "description": "pilot", "members": [PC_MEMBER],
                   "pc_mode": "active", "enable_qos": True, "qos_policy": "pilot_qos"}
@@ -1009,15 +994,15 @@ _UNSET = object()
 # A THIRD state for `patch_version` alone: "the key is absent from module args entirely",
 # distinct from both `_UNSET` ("this harness call did not override the default") and an
 # explicit `None` ("the playbook wrote patch_version: null"). Ansible resolves both of the
-# latter to the same `module.params["patch_version"]`, but PV02 requires a dedicated
+# latter to the same `module.params["patch_version"]`, but the missing-key case requires a dedicated
 # missing-key fixture, not just a None value, so this sentinel drives `set_module_args`
 # to omit the key rather than set it.
 PATCH_KEY_OMITTED = object()
 
 # The subinterface base. Built from `sub_prof_spec`, NOT copied from an ethernet base: there
 # is no `fec` here (the subif spec does not declare it), no `enable_ospf`, and deliberately NO
-# IP -- an offline real-main probe confirmed the object is creatable with none, and the live
-# G35 create emitted IP='' / PREFIX=''. `vlan` is the only field the argspec requires.
+# IP -- an offline real-main probe confirmed the object is creatable with none, and a live
+# create emitted IP='' / PREFIX=''. `vlan` is the only field the argspec requires.
 #
 # `ipv4_addr`/`ipv4_mask_len` are `required=False` with NO argspec default, the same hazard
 # class as `fec` on the routed parent. They are left out entirely rather than pinned, because
@@ -1182,7 +1167,7 @@ def _transport(calls, have):
                      "fabricName": FABRIC,
                      # Shapes taken from REAL captures: a loopback comes back
                      # INTERFACE_LOOPBACK and an SVI INTERFACE_VLAN, both with `isPhysical` the
-                     # STRING 'false' (G41 and G43 live detail reads).
+                     # STRING 'false' (live detail reads).
                      "ifType": {LOOPBACK: "INTERFACE_LOOPBACK",
                                 VPC_ACCESS: "INTERFACE_VPC",
                                 VPC_TRUNK: "INTERFACE_VPC",
@@ -1211,7 +1196,7 @@ def run_configs(configs, state, have=None, deploy=True, check_mode=False,
 
     `patch_version` defaults to the one approved caller patch (`SUPPORTED_PATCH`): every
     pre-existing fixture that drives a registered binding through this harness therefore
-    declares enabled context automatically, per PR725-PATCH-VERSION-001's requirement that
+    declares enabled context automatically, as required:
     "test fixtures must declare enabled context" without having to edit each of them by
     hand. A caller exercising the patch gate itself overrides this explicitly -- with
     `None`, an unapproved string, or `PATCH_KEY_OMITTED` to drop the key from module args

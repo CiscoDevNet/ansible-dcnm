@@ -1,6 +1,6 @@
-"""PR725-PATCH-VERSION-001 / DELTA R2 finding 3 -- disabled-context PV07 closeout.
+"""Disabled-context PV07 closeout.
 
-R1 review found that `test_gie_patch_version_gate.py`'s PV07 claim leaned on pre-existing
+A review found that `test_gie_patch_version_gate.py`'s PV07 claim leaned on pre-existing
 native/legacy test files that pass unmodified -- but those files run through
 `gie_withdrawal_harness.run_configs`/`run`, which (since this task) defaults
 `patch_version` to the approved constant. Passing unmodified proves nothing about the
@@ -11,7 +11,7 @@ absent from module args, not defaulted by the harness -- and asserts the actual 
 payload/result, not merely the lack of a failure (a silently dropped field, or a silently
 empty response, would also pass a bare "not failed" check).
 
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
+NOT LIVE TESTED. No controller or switch is contacted.
 """
 from __future__ import absolute_import, division, print_function
 

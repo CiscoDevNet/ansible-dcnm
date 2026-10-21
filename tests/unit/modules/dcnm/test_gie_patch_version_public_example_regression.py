@@ -1,16 +1,16 @@
-"""PR725-PATCH-VERSION-001 / DELTA R2 finding 1 -- regression for the published EXAMPLES
+"""Regression for the published EXAMPLES
 entry itself, not a hand-written restatement of it.
 
 R1 review found that the module's own "Create a dot1q-tunnel vPC" EXAMPLES entry sets two
 registered generic-binding-registry fields (disable_lldp_transmit/disable_lldp_receive)
 without declaring patch_version, so the documented playbook -- replayed as written -- now
 fails before any write. This file parses `DcnmIntf`'s real EXAMPLES string with the stdlib
-AST/YAML parsers (the same approach the architect's review probe used), extracts that exact
+AST/YAML parsers, extracts that exact
 entry's config/profile, and drives it through the real module `main()` with transport
 mocked. It fails if the shipped example ever regresses again, in either direction: if the
 example stops requiring the approved patch, or if the approved patch stops making it work.
 
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus or Jenkins is contacted.
+NOT LIVE TESTED. No controller or switch is contacted.
 """
 from __future__ import absolute_import, division, print_function
 

@@ -1,8 +1,8 @@
-"""VPC-HOST-E4: controls ONLY of the behaviour that E4 changes (Po G6 reconciliation). NOT LIVE TESTED.
+"""Controls of the vPC port-channel reconciliation. NOT LIVE TESTED.
 
-Everything vPC-specific here is INFERRED from the MEASURED regular-Po behaviour (G3-G6) and stays pending L1: the fixtures are simulated.
-Controls: persisted channel-group form (no force outside the pending), the released member kept shut (no shutdown / no write when already
-shut), a repeated deletion, partial peer states, an unknown mark-delete answer, and the Po/vPC target separation.
+Everything vPC-specific here is INFERRED from the MEASURED regular-Po behaviour: the fixtures are simulated.
+Controls: persisted channel-group form (no force outside the pending), the released member kept shut (no shutdown / no write when
+already shut), a repeated deletion, partial peer states, an unknown mark-delete answer, and the Po/vPC target separation.
 """
 
 from __future__ import absolute_import, division, print_function

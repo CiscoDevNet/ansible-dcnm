@@ -140,7 +140,7 @@ COMMITTED_BINDINGS = {
     ("int_vpc_dot1q_tunnel", "lldpTransmit"): "disable_lldp_transmit",
     ("int_vpc_dot1q_tunnel", "lldpReceive"): "disable_lldp_receive",
 
-    # The three PVLAN parents (PR725-PVLAN-COMPANIONS-001, C1): the same public keys, types and
+    # The three PVLAN parents: the same public keys, types and
     # reset forms as the sibling host parents above, read from the INSTALLED PVLAN templates. The
     # PVLAN helper keeps the PVLAN core and the CLI model of the child/member these values reach;
     # the registry owns their explicit value (patch_version gate) and their withdrawal. The resets
@@ -157,7 +157,7 @@ COMMITTED_BINDINGS = {
     ("int_vpc_pvlan_host", "spanningTreePortType"): "spanning_tree_port_type",
     ("int_vpc_pvlan_host", "queuingStats"): "disable_queuing_stats",
     ("int_vpc_pvlan_host", "aclFilter"): "acl_filter",
-    # PR725 ingress QoS (IQ1): qosStatsSuppressed of the vPC PVLAN parent, the sibling vPC parents' public key and reset form
+    # PR725 ingress QoS: qosStatsSuppressed of the vPC PVLAN parent, the sibling vPC parents' public key and reset form
     # (inferred, NOT measured on a PVLAN parent). See registry_slice_iq1_vpc_pvlan_qos_stats.yaml.
     ("int_vpc_pvlan_host", "qosStatsSuppressed"): "disable_qos_stats",
 
@@ -184,7 +184,7 @@ COMMITTED_BINDINGS = {
     # live run. The generator enforces this: it rejects a row that claims a committed public
     # profile_key from an uncommitted parent rather than skipping it silently.
     ("int_routed_host", "ipv4AclIn"): "ipv4_acl_in",
-    # DISABLE_LLDP was retired: the 2026-09-14 release removes it from all eight parents
+    # DISABLE_LLDP was retired: the newer release removes it from all eight parents
     # and splits it into two independent fields. This is not a rename: the old field disabled
     # both directions together; these can disable either direction. See registry_slice_0b_17.
     #
@@ -381,9 +381,9 @@ COMMITTED_BINDINGS = {
     # module reports success, and the device gets nothing. Slice 0b_22's uniformity across the
     # three overlay parents is not evidence about this one.
     #
-    # Every one of the seven CLI commands these eight produce was measured as ACCEPTED on FAB4
+    # Every one of the seven CLI commands these eight produce was measured as ACCEPTED
     # (nxos64-cs.10.6.2.F.bin) through NDFC before this entry was added, including the two that
-    # needed `feature bfd` and the two `no ...` forms. See the phase34 FAB4 EIGRP evidence.
+    # needed `feature bfd` and the two `no ...` forms.
     ("int_loopback", "eigrpProcessTag"): "eigrp_process_tag",
     ("int_loopback", "eigrpRouting"): "enable_eigrp_routing",
     ("int_loopback", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
@@ -442,7 +442,7 @@ COMMITTED_BINDINGS = {
     #
     # test_gie_legacy_and_engine_never_collide did NOT catch this -- it checks whether the
     # REGISTERED parent's builder writes the nvPair by hand, and the SVI builder does not write
-    # IPv6. The blind spot is the other parents' builders. Recorded in phase37.
+    # IPv6. The blind spot is the other parents' builders.
     #
     # SVI IPv6 addressing belongs in svi_prof_spec, where it already lives for int_subif and
     # int_loopback -- with the caveat that int_vlan names its prefix PREFIXv6 while the others
@@ -485,9 +485,8 @@ COMMITTED_BINDINGS = {
     # the eight BFD rows.
     #
     # This family cannot be validated on the device: C9300v NX-OS lacks `dampening`.
-    # NDFC probes on FAB1 (lite 10.5.5) and FAB4 (full 10.6.2) both returned
-    # "CLI command is invalid". Phase33 attributed this to the lite image, but the full
-    # FAB4 image also rejects it despite supporting EIGRP. The limitation is not "lite".
+    # NDFC probes on NX-OS 10.5(5) lite and 10.6(2) full both returned "CLI command is
+    # invalid"; the full image rejects it despite supporting EIGRP, so the limitation is not "lite".
     #
     # Controller validation remains possible: POST evaluates the template before deployment,
     # exercising all four dependency rules and allowing read-back. Device validation is
@@ -514,7 +513,7 @@ COMMITTED_BINDINGS = {
     # here: exemption (3) in gie_validate_binding_value already accepts "" for an integer read
     # from HAVE, through the OSPF_COST path. This was checked in the code before registration.
     #
-    # The device supports it: the phase33 probe sent `ip arp timeout 300` and the line
+    # The device supports it: a probe sent `ip arp timeout 300` and the line
     # appeared, unlike dampening above, whose CLI is unavailable on this platform.
     #
     # OPEN: none of the three template bodies calls deleteChildTemplate for this child, and
@@ -574,7 +573,7 @@ COMMITTED_BINDINGS = {
     #
     # Do not register ipv6_addr or ipv6_mask_len: they are native SVI arg-spec fields
     # (24 and 13 uses). Registering them would break int_subif and int_routed_host through
-    # the global guard, as happened with ipv6_addr on 2026-09-20.
+    # the global guard, as happened with ipv6_addr.
     ("int_routed_host", "ipv6LinkLocal"): "ipv6_link_local",
     ("int_subif", "ipv6LinkLocal"): "ipv6_link_local",
     ("int_vlan", "ipv6LinkLocal"): "ipv6_link_local",
@@ -596,7 +595,7 @@ COMMITTED_BINDINGS = {
     # The macsec_fallback_interface child has two branches, with and without fallback.
     # A single live run exercises only one.
     #
-    # Measured live (FAB4, L1-F4, nxos64-cs.10.6.2.F): `feature macsec` was already enabled,
+    # Measured live (nxos64-cs.10.6.2.F): `feature macsec` was already enabled,
     # the CLI was supported and applied, and `system-default-macsec-policy` already existed.
     #
     # Validation is asymmetric: an unknown policy causes a 500 with "Failed to find policy",
@@ -955,7 +954,7 @@ SCHEMA_TYPES = frozenset({"boolean", "integer", "string", "enum"})
 # configuration inline (setGeneratedConfig, no child policy), so a policy change removes no child and the
 # cleanup of their lines is not established.
 POLICY_CHANGE_DROPS_CHILDREN = {
-    # SMU 4.3.1.0175006017 (the supported SMU): int_routed_host body sha256 b5345584... (saved capture of ND .80): 74 of 74
+    # SMU 4.3.1.0175006017 (the supported SMU): int_routed_host body sha256 b5345584...: 74 of 74
     # `createOrUpdate(` calls use entity = source = INTF_NAME, and def delete() is byte-identical to the earlier body. The new
     # children (directional LLDP, dampening variants, CDP, DCI tracking, OSPF retransmit interval) follow the same rule. That
     # makes this declaration hold on 017 by SOURCE ANALYSIS; the reset itself was not measured on 017 (the live run on 017
@@ -981,8 +980,7 @@ POLICY_CHANGE_CLEARS_INLINE = {
     # Same mechanism by template parity. int_access_host bodies: SMU 011 fa5861c6..., SMU 017 103fc249...; def delete() is
     # identical and the only change is the inline `logging event port link-status` line behind loggingEventPortLinkStatus
     # (default false, not registered), so the inline rendering of aclFilter, spanningTreePortType and flowcontrol is unchanged.
-    # The access-to-routed case is reported as measured on SMU 011 by Alpha2 (generation 4, source 598ec6a8; that evidence was
-    # not re-read here). It was not measured on 017.
+    # Access to routed was measured on SMU 011, not on 017.
     "int_access_host": ("int_routed_host",),
 }
 

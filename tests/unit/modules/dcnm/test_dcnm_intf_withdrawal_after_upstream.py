@@ -11,7 +11,7 @@ integration of upstream #727/#728.
 
   * OMITTED `fec` TOGETHER WITH AN OMITTED BINDING -- only assertable after the
     integration. Before #728 an omitted `fec` serialized as a public FEC-null against the
-    controller's stored "auto", so a `replaced` rerun never converged. The live campaign
+    controller's stored "auto", so a `replaced` rerun never converged. The live measurement
     worked around it by holding `fec: auto` explicit, which is why both ethernet bases in
     the harness still do. These two cases FAIL on the pre-rebase candidate (measured:
     `FEC` None instead of "auto", and a rerun that configures again) and pass here.
@@ -20,7 +20,7 @@ Both cases drive the real `main()` through the existing harness and assert on th
 REQUEST at the transport boundary and on the PUBLIC DIFF, never on `changed`. Update,
 deploy and read calls are counted separately at the stub.
 
-NOT LIVE TESTED. No controller, Nexus or Jenkins is contacted. These are offline
+NOT LIVE TESTED. No controller or switch is contacted. These are offline
 integration assertions; they do not revalidate any of the 70 accepted bindings live.
 """
 

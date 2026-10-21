@@ -6,11 +6,8 @@ thirteen are withdrawable. Six live on both parents; ``guard_mode`` is declared 
 parent, which is why the lot is thirteen and not fourteen.
 
 WHERE THE VALUES COME FROM
-Measured on 2026-09-30 in the source campaign's paired fabric (NDFC 12.6.0.267,
-NX-OS 10.5(5)). Peer serials remain in the internal ALPHA evidence. Both subjects
-were mounted together --
-``vpc11``/``Po11`` access with member ``Ethernet1/6``, ``vpc12``/``Po12`` trunk with member
-``Ethernet1/7`` -- and observed on BOTH peers::
+Measured on a vPC pair (NDFC 12.6.0.267, NX-OS 10.5(5)), one access and one trunk vPC with one
+member each, observed on BOTH peers::
 
     stage m1  all thirteen non-neutral   -> every expected line present on both peers
     stage m2  all thirteen at neutral    -> the target lines gone, prerequisites intact
@@ -27,8 +24,8 @@ peer: ``int_vpc_*_po_11_1`` on the port-channel and ``int_vpc_*_po_member_11_1``
 member. So::
 
     acl_filter, disable_qos_stats, disable_queuing_stats,
-    spanning_tree_port_type, guard_mode          -> observed on Po11 / Po12
-    disable_lldp_receive, disable_lldp_transmit   -> observed on Ethernet1/6 / Ethernet1/7
+    spanning_tree_port_type, guard_mode          -> observed on the port-channel
+    disable_lldp_receive, disable_lldp_transmit   -> observed on the member
 
 Looking for the LLDP lines on the port-channel would report a false negative for a field that is
 working correctly, and vice versa.
@@ -79,7 +76,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
 VPC_ACCESS = "int_vpc_access_host"
 VPC_TRUNK = "int_vpc_trunk_host"
 SUPPORTED = "12.6.0.267"
-# PR725-PATCH-VERSION-001: declared explicitly so these pre-existing reset fixtures keep
+# Declared explicitly so these pre-existing reset fixtures keep
 # exercising the NDFC-version boundary alone, not the (new, additional) patch boundary.
 PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
@@ -114,7 +111,7 @@ def test_the_lot_is_thirteen_and_the_fixture_matches_the_table():
 
     Two failure modes this closes. First, a fixture that drifts from the table: every case below
     reads its expectations from ``VPC_ROWS``, so a row silently dropped from the registry would simply
-    stop being tested rather than fail. Second, a lot that grew or shrank: the campaign's claim is
+    stop being tested rather than fail. Second, a lot that grew or shrank: the claim is
     thirteen identities on these two parents, and if the table ever carries a fourteenth this case
     fails instead of the count quietly changing underneath the documented claim.
     """
@@ -132,7 +129,7 @@ def test_guard_mode_is_declared_by_the_trunk_parent_only():
 
     ``GUARD_MODE`` is declared by ``int_vpc_trunk_host`` and NOT by ``int_vpc_access_host`` -- read
     from the installed bodies, and the reason 6 + 7 = 13. Asserting it here keeps the asymmetry
-    honest: a later change that registered it on access too would make the campaign's own arithmetic
+    honest: a later change that registered it on access too would make the arithmetic
     wrong, and nothing else in this file would notice.
     """
     assert resolve_binding(VPC_TRUNK, "guard_mode") is not None
@@ -225,7 +222,7 @@ def test_the_two_parents_are_independent_identities():
 
 
 def test_the_previous_lot_is_untouched():
-    """The campaign's arithmetic: 128 + 13 = 141, and nothing else moved.
+    """The arithmetic: 128 + 13 = 141, and nothing else moved.
 
     A merge script that inserted a reset into the wrong row would still leave the count at 141, so
     counting alone is not enough -- the thirteen are named. ``disable_lldp`` is named too and
@@ -234,13 +231,13 @@ def test_the_previous_lot_is_untouched():
     would have hit instead. It is not part of this lot and must stay unregistered.
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
-    # 234 = 228 + six int_vpc_dot1q_tunnel rows (PR725-VPC-DOT1Q-001); 245 = 234 + eleven PLAN-2 C1 PVLAN companion rows; 246 = + IQ1.
+    # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
     assert len(BINDING_TABLE) == 246, "the table has {0} identities".format(len(BINDING_TABLE))
-    # 197 integrated + 3 PR725-HSRP5 int_vlan rows (test_gie_hsrp3_resets.py) = 200, + the six
-    # int_vpc_dot1q_tunnel resets of PR725-VPC-DOT1Q-001 c2 = 206, + the existing
+    # 197 integrated + 3 int_vlan rows (test_gie_hsrp3_resets.py) = 200, + the six
+    # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
     # access/trunk set below is unchanged.
-    # + the eleven PLAN-2 C1 PVLAN companion resets (inferred, other parents) = 218, + the IQ1 vPC PVLAN qosStatsSuppressed reset = 219.
+    # + the eleven PVLAN companion resets (inferred, other parents) = 218, + the vPC PVLAN qosStatsSuppressed reset = 219.
     assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1, (
         "the integrated table carries {0} resets, expected 219".format(len(with_reset)))
     lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset

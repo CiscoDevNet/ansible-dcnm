@@ -45,7 +45,7 @@ PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
 
 SUPPORTED = "12.6.0.267"
 BELOW = "12.6.0.266"
-PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]  # PR725-PATCH-VERSION-001
+PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 UNSUPPORTED_VERSIONS = (BELOW, "12.5.9.999", None, "", "not.a.version", "12.x.0.267")
 
 GUARD_VALUES = ("root", "none", "loop", "no")
@@ -105,7 +105,7 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 246   # 228 + six int_vpc_dot1q_tunnel rows + eleven PLAN-2 C1 PVLAN companion rows + one IQ1 row
+    assert len(BINDING_TABLE) == 246   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
     assert len(set(keys)) == 246, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
     assert len(set(pk_keys)) == 246, "duplicate (parent, profile_key) row"
@@ -605,7 +605,7 @@ def test_have_accepts_the_two_encodings_ndfc_actually_returns():
     """Two entries moved out of the malformed list below, because the controller
     contradicted them.
 
-    Captured from GET /rest/interface on a freshly deployed FAB1 -- Leaf-101 Ethernet1/4
+    Captured from GET /rest/interface on a freshly deployed --
     (int_access_host) and Ethernet1/5 (int_trunk_host):
 
         ACL_FILTER   == ""        no ACL configured: the normal state of a host interface
@@ -760,7 +760,7 @@ def test_all_registered_keys():
         # HSRP IPv6, slice 0b_27: two keys. HSRP_VIPv6 is the first template address field
         # in the table (ipV6Address -> string; NDFC validates the format).
         # IPv6/PREFIXv6 were removed: registering ipv6_addr made the guard reject it on
-        # int_subif, where the native spec already supports it. See the slice and phase37.
+        # int_subif, where the native spec already supports it. See the slice.
         "hsrp_vipv6",
         "hsrp_groupv6",
         # Split redirects + ND suppress-RA, slice 0b_28: three public keys on each of the
@@ -770,12 +770,11 @@ def test_all_registered_keys():
         "disable_ipv6_redirects",
         "ipv6_nd_suppress_ra",
         # Dampening, slice 0b_6, corrected from child_pti to passthrough: seven keys on
-        # int_routed_host only. Neither C9300v NX-OS image in the lab supports its CLI,
+        # int_routed_host only. Neither tested C9300v NX-OS image supports its CLI,
         # so these bindings have controller validation, not device validation.
-        # See phase39.
         "enable_dampening", "dampening_half_life", "dampening_reuse", "dampening_suppress",
         "dampening_max_suppress", "dampening_restart", "dampening_restart_penalty",
-        # ARP_TIMEOUT, slice 0b_3, registered on 2026-09-20: one public key on three
+        # ARP_TIMEOUT, slice 0b_3, registered: one public key on three
         # overlay parents; int_loopback does not declare it. One field, one child,
         # one CLI line, with no gate or dependencies. See phase41.
         "arp_timeout",

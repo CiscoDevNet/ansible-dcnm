@@ -1,4 +1,4 @@
-"""VPC-HOST-E1-OFFLINE: focused tests of the vPC PVLAN host lifecycle (create, repeat, symmetric update, delete) over a PAIR of switches.
+"""Focused tests of the vPC PVLAN host lifecycle (create, repeat, symmetric update, delete) over a PAIR of switches.
 
 NOT LIVE TESTED. Real main(); only the external boundary is mocked (see test_dcnm_intf_pvlan_vpc_harness for the labelling of every fixture:
 source contract / SYNTHETIC fixture / future live measurement). Every `run_vpc` builds a NEW module instance, so repetition, update and
@@ -136,7 +136,7 @@ def test_a_vpc_trunk_item_still_takes_the_unchanged_generic_path():
 @pytest.mark.parametrize(
     "profile, needle",
     [
-        # VPC-MODES-E1: a promiscuous creation needs its mapping; trunk secondary from the harness trunk member is the known incident.
+        # A promiscuous creation needs its mapping; trunk secondary from the harness trunk member is the known incident.
         ({"pvlan_mode": "promiscuous", "pvlan_association": None}, "pvlan_mapping is required"),
         ({"pvlan_mode": "trunk secondary"}, "Known incident pending engineering"),
         ({"peer2_members": [M2, "e1/8"]}, "duplicate physical"),
@@ -164,7 +164,7 @@ def test_out_of_scope_requests_are_refused_before_any_write(profile, needle):
 @pytest.mark.parametrize(
     "kw, needle",
     [
-        # LIFECYCLE-A: `overridden` is implemented (test_dcnm_intf_pvlan_lifecycle.py)
+        # `overridden` is implemented (test_dcnm_intf_pvlan_lifecycle.py)
         ({"check_mode": True}, "refused in check mode"),
         ({"version": (11, "11.5.4")}, "not a supported vPC mode"),
     ],
@@ -472,7 +472,7 @@ def test_post_deploy_a_peer_that_is_not_in_sync_fails_the_vpc():
 
 def test_post_deploy_children_that_do_not_exist_are_not_assumed():
     ctrl = baseline_ctrl()
-    ctrl.children_on_save = False  # [UNK] V3: the first live case measures when the children appear
+    ctrl.children_on_save = False  # [UNK]: the first live case measures when the children appear
     create_previews(ctrl)
     status, result = run_vpc(ctrl, [vpc_item()])
     assert status == "fail" and len(ctrl.deploys()) == 1, "after the deploy: a parent without its children is not success"
@@ -713,7 +713,7 @@ def test_deletion_in_a_new_instance_marks_deletes_releases_both_members_down_dep
     assert status == "exit" and result["changed"] is True, result.get("msg")
     assert len(ctrl.markdeletes()) == 1 and json.loads(ctrl.markdeletes()[0][2]) == [{"ifName": VPC, "serialNumber": PAIR}]
     assert len(ctrl.deploys()) == 1 and [d["ifName"] for d in json.loads(ctrl.deploys()[0][2])] == [VPC]
-    # E4 (G4 decision B, MEASURED for a regular Po, INFERRED for a vPC): the controller releases each member ADMIN_STATE "true"; the module sets ONLY
+    # Measured for a regular Po, inferred for a vPC: the controller releases each member ADMIN_STATE "true"; the module sets ONLY
     # ADMIN_STATE false on each, one legacy modify per peer, BEFORE the deploy
     release_only(ctrl)
     assert ctrl.creates() == [] and ctrl.order().count("DEPLOY") == 1
@@ -727,7 +727,7 @@ def test_deletion_in_a_new_instance_marks_deletes_releases_both_members_down_dep
     assert verification["state"] == "verified" and verification["parent"] == "not listed"
     assert verification["peers"] == {SN1: "verified", SN2: "verified"}
     assert sorted(ctrl.previews_asked()) == [SN1, SN2] and [g["targets"][VPC] for g in result["pvlan_gate"]] == ["deploy", "deploy"]
-    # DF-2: after the deploy the module reads ONE summary per peer, and nothing else
+    # After the deploy the module reads ONE summary per peer, and nothing else
     assert reads_after_deploy(ctrl) == ["summary %s" % SN1, "summary %s" % SN2]
 
 
@@ -773,7 +773,7 @@ def _conf_on_peer2(c):
 
 
 def _mode_not_host(c):
-    c.parents[VPC]["nvPairs"]["PVLAN_MODE"] = "bogus"  # VPC-MODES-E1: the four submodes are deletable; an unknown one is not
+    c.parents[VPC]["nvPairs"]["PVLAN_MODE"] = "bogus"  # the four submodes are deletable; an unknown one is not
 
 
 def _pcid_points_to_a_child_that_is_not_there(c):
@@ -790,7 +790,7 @@ def _two_members_on_peer1(c):
 
 
 def _member2_admin_unknown(c):
-    # RELEASE-ADMIN: an up member is released to the fabric default; an unknown administrative state stays refused
+    # An up member is released to the fabric default; an unknown administrative state stays refused
     c.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] = "maybe"
 
 
@@ -837,9 +837,9 @@ def test_deletion_preconditions_judge_the_current_state_of_both_peers_and_refuse
 @pytest.mark.parametrize(
     "kw, item_kw, needle",
     [
-        # LIFECYCLE-B: deploy false now SAVES the deletion (test_dcnm_intf_pvlan_po_vpc_reconcile.py)
+        # Deploy false now SAVES the deletion (test_dcnm_intf_pvlan_po_vpc_reconcile.py)
         ({"check_mode": True}, {}, "refused in check mode"),
-        # RELEASE-ADMIN: true is a supported default now (released members stay up); an unreadable one refuses
+        # True is a supported default now (released members stay up); an unreadable one refuses
         ({"fabric_admin": "maybe"}, {}, "HOST_INTF_ADMIN_STATE"),
     ],
 )
@@ -896,7 +896,7 @@ def test_residue_only_on_the_second_peer_stops_the_release_before_the_deploy_and
     status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
     assert status == "fail" and "member release failed while proving the released member before any member write (peer 2)" in result["msg"], result.get("msg")
     assert "live policies still reference the vPC or its child port-channel" in result["msg"]
-    # C1-R5 G4: BOTH members are proved before the first member modify, so peer 2's residue stops the run with NO member write on either
+    # BOTH members are proved before the first member modify, so peer 2's residue stops the run with NO member write on either
     # peer (the mark-delete stays confirmed: never "zero writes" globally), every member write pending, nothing deployed
     assert "on peer 1 ADMIN_STATE false" not in result["msg"] and "Member writes per serial: %s=pending, %s=pending" % (SN1, SN2) in result["msg"]
     assert ctrl.modifies() == [] and ctrl.deploys() == [] and len(ctrl.markdeletes()) == 1
@@ -928,7 +928,7 @@ class LateResidue(VpcController):
 
 
 def test_a_residue_policy_on_the_second_peer_only_is_refused_before_the_deploy():
-    """DF-2: the residue that the post-deploy policy read used to catch is judged on the FRESH release proof, before any deploy."""
+    """The residue that the post-deploy policy read used to catch is judged on the FRESH release proof, before any deploy."""
     ctrl = LateResidue(before=True).seed_baseline().seed_vpc()
     ctrl.next_invocation()
     delete_previews(ctrl)
@@ -985,7 +985,7 @@ def test_a_child_policy_still_claiming_a_member_stops_the_release_before_any_wri
 def test_unreadable_state_after_the_deletion_is_never_a_verified_deletion(flaky):
     ctrl = created_ctrl()
     delete_previews(ctrl)
-    ctrl.summary_failures = flaky  # DF-2: the summaries are the only post-deploy reads
+    ctrl.summary_failures = flaky  # The summaries are the only post-deploy reads
     status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
     assert status == "fail" and "release could not be verified" in result["msg"]
     assert "the interface summary of" in result["msg"] and "could not be read authoritatively" in result["msg"]
@@ -997,7 +997,7 @@ def test_unreadable_state_after_the_deletion_is_never_a_verified_deletion(flaky)
 def test_the_policy_list_is_not_read_after_the_deploy():
     ctrl = created_ctrl()
     delete_previews(ctrl)
-    ctrl.policy_failures = {SN1: [True] * 40, SN2: [True] * 40}  # would fail every post-deploy policy read (G11 read them)
+    ctrl.policy_failures = {SN1: [True] * 40, SN2: [True] * 40}  # would fail every post-deploy policy read (no longer read)
     status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")
     assert status == "exit" and result["pvlan_verification"][VPC]["state"] == "verified", result.get("msg")
     assert not any(r.startswith("policies") or r.startswith("bulk") for r in reads_after_deploy(ctrl))

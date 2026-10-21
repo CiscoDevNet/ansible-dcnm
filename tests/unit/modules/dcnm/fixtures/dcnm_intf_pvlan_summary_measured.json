@@ -1,7 +1,7 @@
 {
  "_measured_facts": "72 entries, none with a top-level policy; 68 with a one-object underlayPolicies list; 4 VLAN SVIs with null",
  "_sanitized": "verbatim entries; only identifiers substituted: serial number, management IP address, switch name and fabric name were each replaced with the synthetic test values used by this test suite. The raw recorder had already replaced one key value with '<redacted>' (groupAssocSupported, matched by its secret-key filter).",
- "_source": "MEASURED: GET /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail?serialNumber=<serial>, NDFC 12.6.0.267, LQA1-OBSERVE 2026-10-06 (PR725 task evidence/LQA-LAB-1/live/runs/observe-20261006T043900Z/requests/007), raw sha256 fb518fa86cbbaa318f799e5677ea840be72b615508d5e2eca741bf319fe1f7e2",
+ "_source": "MEASURED: GET /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/detail?serialNumber=<serial>, NDFC 12.6.0.267, raw sha256 fb518fa86cbbaa318f799e5677ea840be72b615508d5e2eca741bf319fe1f7e2",
  "entries": {
   "Ethernet1/3": {
    "aafexPort": false,

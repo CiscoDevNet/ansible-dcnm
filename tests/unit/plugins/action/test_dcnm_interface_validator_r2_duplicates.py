@@ -1,4 +1,4 @@
-"""PR725-R2 integration review: several readback entries for ONE interface identity must not make the verdict order dependent.
+"""Integration review: several readback entries for ONE interface identity must not make the verdict order dependent.
 
 The R2 checker compares per identity (sorted serial tuple + ifName). Its first version kept only the first readback entry of an
 identity, so two contradictory entries passed or failed depending on their order. Every entry must now hold the requested values.

@@ -1,7 +1,6 @@
-# NOT RUN. PLACEHOLDERS ONLY. No real resource is selected or reserved by this file; the operator
-# assigns dedicated resources and records them (with a backup) BEFORE any live use. Candidates for
-# the VLANs (2210 primary / 2212 isolated) are ALPHA's proposal for the Ethernet case and are NOT
-# validated by this delivery; they are literal in the models so argument types do not depend on templating.
+# NOT RUN. PLACEHOLDERS ONLY. No real resource is selected or reserved by this file; dedicated
+# resources must be assigned and recorded (with a backup) BEFORE any live use. The VLANs
+# (2210 primary / 2212 isolated) are the Ethernet case's candidates and are NOT validated here; they are literal in the models so argument types do not depend on templating.
 po_fabric: "<FABRIC>"
 po_switch: "<SWITCH_MANAGEMENT_IP>"
 po_name: "<PORT_CHANNEL_NAME, for example po10, a number that is free on the switch>"

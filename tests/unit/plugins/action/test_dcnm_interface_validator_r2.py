@@ -1,4 +1,4 @@
-"""PR725-R2-VALIDATOR: the dcnm_interface integration checker must detect a requested nvPair that is wrong or missing.
+""": the dcnm_interface integration checker must detect a requested nvPair that is wrong or missing.
 
 Review 6132068174: the checker parsed both the expected data (built from the test YAML) and the readback through a
 pydantic model that silently dropped every undeclared nvPair, and its YAML -> nvPair map did not cover the registry. A

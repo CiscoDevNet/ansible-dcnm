@@ -23,7 +23,7 @@ wrong mapping in the registry cannot make these tests agree with it.
   int_trunk_host.template:160    enum GUARD_MODE              <- deliberately NOT renamed
   int_routed_host.template       integer ospfCost
 
-STILL PENDING (S2), deliberately absent here: the 72 special renames such as
+STILL PENDING, deliberately absent here: the 72 special renames such as
 DISABLE_LLDP_TRANSMIT -> lldpTransmit and DISABLE_QOS_STATS -> qosStatsSuppressed, the 8
 enum-value/metadata changes such as no_change -> noChange, and the one unresolved
 counterpart int_port_channel_trunk_host::ENABLE_VPC_PEER_LINK. S1 is partial and not

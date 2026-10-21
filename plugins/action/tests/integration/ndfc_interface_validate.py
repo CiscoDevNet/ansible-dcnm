@@ -64,7 +64,7 @@ class ActionModule(ActionBase):
                 expected_config_data, test_fabric, switch_ip_sn_mapping, diagnostics=diagnostics)
             expected_data_parsed = DcnmInterfaceQuerySchema.model_validate(expected_data).model_dump(exclude_none=True)
 
-        # Parse NDFC data through schema to normalize it (case conversion, tuple handling, etc.). R2: the schema keeps
+        # Parse NDFC data through schema to normalize it (case conversion, tuple handling, etc.). The schema keeps
         # every nvPair (extra="allow"), so a requested nvPair can no longer vanish from either side before the comparison.
         ndfc_data_parsed = DcnmInterfaceQuerySchema.model_validate(native_ndfc_data).model_dump(exclude_none=True)
 
@@ -99,7 +99,7 @@ class ActionModule(ActionBase):
         return (tuple(interface.get("serialNumber") or ()), str(interface.get("ifName", "")).lower())
 
     def compare_interfaces(self, expected_data, ndfc_data, ignore_fields):
-        """R2: compare per interface IDENTITY (serial number tuple + ifName), never across interfaces.
+        """Compare per interface IDENTITY (serial number tuple + ifName), never across interfaces.
 
         For each expected interface: absent from the readback -> difference; each expected nvPair absent from the
         readback -> 'missing'; a different normalized value -> 'different'. nvPairs the test did not request, and other

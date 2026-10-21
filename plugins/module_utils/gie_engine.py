@@ -340,7 +340,7 @@ def gie_validate_binding_value(
         # (1) NDFC returns booleans as strings, and "" for one that was never set.
         #
         # The "true"/"false" half is the original exemption. The "" half was measured on
-        # NDFC 12.6.0.267, Leaf-104, on 2026-09-20: a GET of the endpoint that feeds HAVE
+        # NDFC 12.6.0.267: a GET of the endpoint that feeds HAVE
         # returns DISABLE_IPV4_REDIRECTS == "" on an int_routed_host interface, while
         # IPV6_ND_SUPPRESS_RA on the SAME interface comes back "false". The difference is in
         # the template: the first declares no defaultValue, the second declares
@@ -363,7 +363,7 @@ def gie_validate_binding_value(
             return value
         # (3) NDFC returns integers as strings too, and "" for an unset one.
         #
-        # Measured on NDFC 12.6.0.267, Leaf-103: a GET of the endpoint that feeds HAVE
+        # Measured on NDFC 12.6.0.267: a GET of the endpoint that feeds HAVE
         # (/lan-fabric/rest/interface?serialNumber=) returns EVERY nvPair as a str. On an
         # int_routed_host interface that had OSPF touched through the GUI, OSPF_COST comes
         # back as "". On the 62 interfaces never touched the key is absent entirely, which
@@ -607,7 +607,7 @@ def gie_binding_applicable(parent_template, profile_key, ndfc_version, patch_ver
     The SAME applicability contract explicit contribution enforces at
     ``gie_contribute_nvpairs``: a binding below ``min_ndfc_version`` is not transportable,
     an unknown or malformed version fails closed (``gie_version_supported`` returns False),
-    and -- since PR725-PATCH-VERSION-001 -- an unapproved ``patch_version`` fails closed the
+    and an unapproved ``patch_version`` fails closed the
     same way (``gie_patch_supported`` returns False; the default ``None`` is "no caller
     context", not an enabling value). Callers use this to SELECT before classifying, so an
     inapplicable row is skipped outright -- neither reset nor rejected.
@@ -655,7 +655,7 @@ def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version
     an explicit clear was refused below ``min_ndfc_version`` while omitting the same field
     sent the clear anyway.
 
-    ``patch_version`` joins the SAME boundary, additively (PR725-PATCH-VERSION-001): an
+    ``patch_version`` joins the SAME boundary, additively: an
     unapproved or absent patch (the ``None`` default) makes the binding INAPPLICABLE exactly
     as an unsupported NDFC version does, never a refusal. This is deliberate and is what
     PRESERVES an authoritative HAVE value while the capability is disabled: the caller falls
@@ -1029,7 +1029,7 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
     unsupported, unknown or malformed version fails closed, unless the binding is listed in
     GIE_VERSION_WITHHOLD_BINDINGS -- which is empty.
 
-    ``patch_version`` (PR725-PATCH-VERSION-001) is a SECOND, independent requirement: an
+    ``patch_version`` is a SECOND, independent requirement: an
     explicit registered key also needs the caller's declared patch to be approved
     (``gie_patch_supported``), regardless of the NDFC version. It is checked AFTER type/value
     validation and BEFORE the NDFC-version check, so a value that fails validation is still

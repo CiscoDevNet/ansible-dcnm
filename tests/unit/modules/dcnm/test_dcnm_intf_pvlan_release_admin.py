@@ -1,19 +1,19 @@
-"""RELEASE-ADMIN: the release of a PVLAN port-channel / vPC member follows the fabric's host-interface default.
+"""The release of a PVLAN port-channel / vPC member follows the fabric's host-interface default.
 
-Contract (the generic one, dcnm_intf_get_default_eth_payload): a host interface returned to its default takes ADMIN_STATE from the fabric
-nvPair HOST_INTF_ADMIN_STATE. The PVLAN release (deletion -- named or by an overridden sweep -- and a member removed by an update) now
-targets that value instead of always "false":
-  * HOST_INTF_ADMIN_STATE "true" (the NDFC default; ND .90 FAB1 as redeployed): the controller's release (MEASURED: int_trunk_host
-    ADMIN_STATE "true") already is the target, so no member write; a release that came back down is set up by the same single modify;
+Contract (the generic one, dcnm_intf_get_default_eth_payload): a host interface returned to its default takes ADMIN_STATE from the
+fabric nvPair HOST_INTF_ADMIN_STATE. The PVLAN release (deletion -- named or by an overridden sweep -- and a member removed by an
+update) now targets that value instead of always "false":
+  * HOST_INTF_ADMIN_STATE "true" (the NDFC default): the controller's release (MEASURED: int_trunk_host ADMIN_STATE "true")
+    already is the target, so no member write; a release that came back down is set up by the same single modify;
   * "false": unchanged -- the measured up release is corrected to "false" before the deploy;
   * unreadable / not a boolean: refused before any write (never defaulted);
-  * the member's OWN administrative state before the release no longer matters (up or down), exactly like the generic reset; an unknown
-    member state stays refused.
+  * the member's OWN administrative state before the release no longer matters (up or down), exactly like the generic reset; an
+    unknown member state stays refused.
 Administrative state only: the operational link state is never read or asserted here.
 
-Harnesses: the measured G4 Po release (H1/HR fixture: HR-post preview = released member expected `no shutdown`), the membership Po/vPC
-harnesses and the vPC harness. The fabric default is the harness knob (`fabric_admin`). Real main(); only the controller boundary is
-intercepted.
+Harnesses: the measured Po release (its post-release preview: released member expected `no shutdown`), the membership Po/vPC
+harnesses and the vPC harness. The fabric default is the harness knob (`fabric_admin`). Real main(); only the controller boundary
+is intercepted.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -124,7 +124,7 @@ def test_po_dropped_by_overridden_under_a_true_default_is_released_up_without_a_
 
 def test_the_extra_generic_path_refusal_was_secondary_to_the_failed_registration():
     """PO-3-chk listed, after the release refusals, `... holds int_port_channel_pvlan_host; a reset ... outside the port-channel request is
-    not implemented`: the E2 guard fires for a PVLAN object the preflight did NOT register. With the registration accepted (true default)
+    not implemented`: the guard fires for a PVLAN object the preflight did NOT register. With the registration accepted (true default)
     the same drop exits without it; with a registration refusal (unreadable default) both appear."""
     ok = RC.measured_po(po_ctrl("true", "true", previews=[G4.entry("HR-post")]))
     status, result = run(ok, [RC.lo(SWITCH_IP)], state="overridden")
@@ -290,11 +290,11 @@ def test_vpc_saved_member_removal_repeated_with_deploy_false_writes_nothing_and_
     assert [s for s in result["pvlan_saved"] if s.get("kind") == "vpc" and s["state"].startswith("saved, awaiting deployment")], result.get("pvlan_saved")
 
 
-# ================================================================== V-7b live shape: the marked parent vPC stays listed
+# ================================================================== live shape: the marked parent vPC stays listed
 def saved_vpc_with_listed_parent():
     ctrl = RC.vpc_ctrl()
     ctrl.children_marked_deleted = True
-    ctrl.parent_marked_listed = True  # MEASURED live V-7a: the parent stays listed, markDeleted True, no policy
+    ctrl.parent_marked_listed = True  # MEASURED live: the parent stays listed, markDeleted True, no policy
     RC.vpc_queue(ctrl, 1)
     status, result = V.run_vpc(ctrl, [V.vpc_del_item(deploy=False)], state="deleted")
     assert status == "exit" and result["changed"] is True, result.get("msg")

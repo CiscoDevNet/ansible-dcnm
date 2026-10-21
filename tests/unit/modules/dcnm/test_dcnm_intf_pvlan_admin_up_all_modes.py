@@ -1,12 +1,12 @@
-"""ADMIN-UP-ALL-MODES: an administratively up member joins a PVLAN regular port-channel or vPC in promiscuous, trunk promiscuous and
-trunk secondary (on the access/routed bases prepared for it) and keeps its own state, member by member and peer by peer.
+"""An administratively up member joins a PVLAN regular port-channel or vPC in promiscuous, trunk promiscuous and trunk
+secondary (on the access/routed bases prepared for it) and keeps its own state, member by member and peer by peer.
 
-OFFLINE ONLY (user decision): no lab measurement of these modes with an up member. The previews are the existing harnesses' down-member
-previews of each mode (measured EXP-1 A/R for trunk secondary; measured P1/TP1 creation form for promiscuous/trunk promiscuous) with the
-member's admin line switched by the rule MEASURED for host in PR725-ADMIN-UP-JOIN (fixtures/pvlan_admin_up_join_measured.json): the
-member pending and expected carry `no shutdown`; the running of an up switchport member has no `shutdown` line and an up routed port
-shows `no shutdown`; an up routed port carries the measured Q56 own child `no_shut_interface` instead of `shut_interface`. That switch
-is SYNTHETIC for these modes. Real main(); only the controller boundary is intercepted.
+OFFLINE ONLY: no lab measurement of these modes with an up member. The previews are the existing harnesses' down-member previews
+of each mode (measured for trunk secondary and for the promiscuous/trunk promiscuous creation form) with the member's admin line
+switched by the rule MEASURED for host (fixtures/pvlan_admin_up_join_measured.json): the member pending and expected carry
+`no shutdown`; the running of an up switchport member has no `shutdown` line and an up routed port shows `no shutdown`; an up
+routed port carries the measured own child `no_shut_interface` instead of `shut_interface`. That switch is SYNTHETIC for these
+modes. Real main(); only the controller boundary is intercepted.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -345,7 +345,7 @@ def test_vpc_repetition_with_up_members_writes_nothing(mode):
 
 @pytest.mark.parametrize("mode", [P_, TP, TS])
 def test_vpc_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markdelete(mode):
-    # RELEASE-ADMIN (supersedes the admin-down-only release): the up member is released to the fabric default in every mode.
+    # Supersedes the admin-down-only release: the up member is released to the fabric default in every mode.
     ctrl = E1.seeded_ctrl(mode)
     ctrl.nodes[SN1][M1]["nvPairs"]["ADMIN_STATE"] = "true"
     status, result = E1.run_vpc(ctrl, [E1.vpc_del_item()], state="deleted")

@@ -19,7 +19,7 @@ reason, so each case also pins whether the module succeeded or refused, and why.
 
 Every marker is synthetic. No lab secret, no captured controller payload.
 
-NOT LIVE TESTED IN THIS GENERATION.
+NOT LIVE TESTED.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -124,12 +124,12 @@ def test_input_material_is_redacted_on_the_c8_refusal_which_must_fail_for_its_ow
 
     An unclassifiable row is present in HAVE and omitted from the request, so the withdrawal
     preflight refuses the run -- while still holding the material it was handed. The row is
-    DERIVED: this named `ospf_cost` until G37 measured its reset.
+    DERIVED: this named `ospf_cost` until its reset was measured.
     """
     unclassifiable = an_unclassifiable_key(ROUTED)
     # The VALUE is derived from the row's declared type, not hardcoded. It used to be the
     # literal `100`, which silently assumed the derived row was an integer; once a local
-    # EXPERIMENTAL generation registered the last unclassifiable integers on this parent the
+    # EXPERIMENTAL registration added the last unclassifiable integers on this parent the
     # helper began returning a STRING row and `build_have` refused the int before any payload
     # existed -- the case then failed deep in the harness instead of stating the real problem.
     _b = _resolve_binding(ROUTED, unclassifiable)

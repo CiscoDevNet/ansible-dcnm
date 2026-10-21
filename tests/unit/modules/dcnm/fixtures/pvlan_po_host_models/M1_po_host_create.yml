@@ -1,4 +1,4 @@
-# M1 -- NOT RUN. NOT LIVE TESTED. Created by PO-HOST-E1-OFFLINE (generation immutable).
+# M1 -- NOT RUN. NOT LIVE TESTED.
 # Offline status: the argspec, payload and pre-deploy gate exist and pass the focused offline tests; the
 # first live run is what measures the controller's behaviour for a port-channel.
 #

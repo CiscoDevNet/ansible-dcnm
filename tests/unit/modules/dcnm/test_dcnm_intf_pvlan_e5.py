@@ -1,9 +1,9 @@
-"""E5 (E4-R1-01): one current-policy resolution for self.have, the detail cache and a new read.
+"""One current-policy resolution for self.have, the detail cache and a new read.
 
-E4 returned a non-PVLAN detail found in self.have or in the detail cache BEFORE looking at the
-interface summary, so a summary whose valid nested underlay names int_pvlan_host was never contrasted
-and a merged change on that port was modified and deployed with no PVLAN gate. SYNTHETIC disagreement
-built on the MEASURED response shape (no `policy` is added to any raw answer).
+A non-PVLAN detail found in self.have or in the detail cache used to be returned BEFORE looking at the interface summary, so a
+summary whose valid nested underlay names int_pvlan_host was never contrasted and a merged change on that port was modified
+and deployed with no PVLAN gate. SYNTHETIC disagreement built on the MEASURED response shape (no `policy` is added to any raw
+answer).
 """
 
 from __future__ import absolute_import, division, print_function

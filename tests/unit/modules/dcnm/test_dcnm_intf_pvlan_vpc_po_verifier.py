@@ -1,11 +1,12 @@
-"""VPC-HOST-E3: the Po G2 deletion verifier (verified=False, failure after the reads run out, members not empty) is adopted into this copy with
-a `kind == "po"` filter. These tests show the two halves of that integration with the real main():
+"""The Po deletion verifier (verified=False, failure after the reads run out, members not empty) is adopted with a
+`kind == "po"` filter. These tests show the two halves of that integration with the real main():
 
-  * a deleted vPC is verified by the vPC verifier and the Po verifier does not touch it (it issues no request for a vPC target); a vPC target has
-    no `members`, which the G2 Po verifier REJECTS ("names no member"), so without the filter a valid vPC deletion would fail (the fail-before is
-    the mutant that removes the filter);
+  * a deleted vPC is verified by the vPC verifier and the Po verifier does not touch it (it issues no request for a vPC target);
+    a vPC target has no `members`, which the Po verifier REJECTS ("names no member"), so without the filter a valid vPC deletion
+    would fail (the fail-before is the mutant that removes the filter);
   * a vPC whose release cannot be verified still fails (the vPC verifier, not the Po one).
-NOT LIVE TESTED; same synthetic harness as the other vPC tests."""
+NOT LIVE TESTED; same synthetic harness as the other vPC tests.
+"""
 
 from __future__ import absolute_import, division, print_function
 
@@ -53,7 +54,7 @@ def test_a_deleted_vpc_is_verified_by_the_vpc_verifier_and_the_po_verifier_sends
 
 def test_a_vpc_whose_release_cannot_be_verified_still_fails_through_the_vpc_verifier():
     ctrl = created_ctrl()
-    ctrl.summary_failures = {SN1: [True] * 40, SN2: [True] * 40}  # DF-2: the peers' summaries are the vPC verifier's only post-deploy reads
+    ctrl.summary_failures = {SN1: [True] * 40, SN2: [True] * 40}  # The peers' summaries are the vPC verifier's only post-deploy reads
     delete_previews(ctrl)
     with SpyPoVerifier(ctrl) as spy:
         status, result = run_vpc(ctrl, [vpc_del_item()], state="deleted")

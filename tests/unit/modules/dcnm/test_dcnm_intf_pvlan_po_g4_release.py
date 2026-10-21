@@ -1,18 +1,16 @@
-"""PO G4: deletion of an owned PVLAN host port-channel without enabling its member.
+"""Deletion of an owned PVLAN host port-channel without enabling its member.
 
-Review decision B (PO G3-R1): after the accepted mark-delete and BEFORE any deploy, the released standalone
-member's ADMIN_STATE is set to "false" with its complete writable nvPairs (legacy interface/modify), then the normal
-gate, deploy and G2 verification run.
+After the accepted mark-delete and BEFORE any deploy, the released standalone member's ADMIN_STATE is set to "false" with its
+complete writable nvPairs (legacy interface/modify), then the normal gate, deploy and deletion verification run.
 
-MEASURED inputs (fixtures/pvlan_po_h1_measured.json, the live G2/R2 run): the parent/member intents before the
-deletion (H1-post), the member AS RELEASED by the controller after the mark-delete (HR-post: int_trunk_host, 55 nvPairs,
-ADMIN_STATE "true", pending `no shutdown`), and the state after the operator's correction (H1-verify: ADMIN_STATE "false",
-In-Sync, 0 pending, member expected/running trunk + shutdown).
+MEASURED inputs (fixtures/pvlan_po_h1_measured.json): the parent/member intents before the deletion, the member AS RELEASED by the
+controller after the mark-delete (int_trunk_host, 55 nvPairs, ADMIN_STATE "true", pending `no shutdown`), and the state after a
+manual correction (ADMIN_STATE "false", In-Sync, 0 pending, member expected/running trunk + shutdown).
 
-SIMULATED, NOT LIVE-MEASURED: the controller's answer to the legacy interface/modify of the released member (the harness
-answers 207 with one SUCCESS item and stores the sent nvPairs; the measured fix was a GUI save, not this API), and the
-preview after that modify (the measured H1-verify preview is used: same member state, Po never deployed, as in the HR
-incident). Real main(); only the controller boundary is intercepted (existing harness). The serial is the harness one.
+SIMULATED, NOT LIVE-MEASURED: the controller's answer to the legacy interface/modify of the released member (the harness answers
+207 with one SUCCESS item and stores the sent nvPairs; the measured fix was a GUI save, not this API), and the preview after that
+modify (the measured corrected preview is used: same member state, Po never deployed). Real main(); only the controller boundary is
+intercepted (existing harness). The serial is the harness one.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -273,7 +271,7 @@ def test_an_unprovable_release_stops_after_the_markdelete_with_no_member_modify_
     status, result = delete(ctrl)
     assert status == "fail" and needle in result["msg"], result.get("msg")
     assert "member release failed while proving the released member before any member write" in result["msg"]
-    # G4-R1: the report separates CONFIRMED writes from writes with an UNVERIFIED outcome.
+    # The report separates CONFIRMED writes from writes with an UNVERIFIED outcome.
     assert "Confirmed writes: mark-delete of Port-channel502 (confirmed by its measured outcome)" in result["msg"]
     assert "Writes with an UNVERIFIED outcome: none" in result["msg"]
     assert ctrl.write_kinds() == ["markdelete"]
@@ -378,7 +376,7 @@ def test_no_bulk_update_api_is_refused_before_the_markdelete():
 
 
 def test_a_member_whose_admin_state_is_unknown_before_the_deletion_is_refused_before_the_markdelete():
-    # RELEASE-ADMIN: an up member is released to the fabric default (test_dcnm_intf_pvlan_release_admin.py); unknown stays refused
+    # An up member is released to the fabric default (test_dcnm_intf_pvlan_release_admin.py); unknown stays refused
     ctrl = owned_ctrl()
     ctrl.detail[MEM]["nvPairs"]["ADMIN_STATE"] = "maybe"
     status, result = delete(ctrl)

@@ -20,7 +20,7 @@ Counts are of real requests issued by real readers. Only the transport
 cache and authority helper is the production one. Sleep figures are the seconds
 the module *scheduled*, never elapsed wall time.
 
-NOT LIVE TESTED IN THIS GENERATION. No controller, Nexus device or Jenkins job is
+NOT LIVE TESTED. No controller, Nexus device or Jenkins job is
 contacted. Synthetic identities only: SN1, SN2, PEER, SN1~PEER.
 """
 from __future__ import absolute_import, division, print_function
@@ -1588,7 +1588,7 @@ def test_the_pathological_first_probe_tradeoff_is_real():
     Bulk fails; the first interface probed also fails; a later interface that
     WOULD have answered is never read. With the same transport and a WANT whose
     first interface answers, all of them are served. The difference is the
-    tradeoff the architect accepted, stated as an executable fact rather than an
+    accepted tradeoff, stated as an executable fact rather than an
     assurance that nothing changed.
     """
     def responder(kind, path, counts):

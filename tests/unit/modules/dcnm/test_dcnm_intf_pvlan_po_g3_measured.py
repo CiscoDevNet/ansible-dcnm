@@ -1,14 +1,15 @@
-"""PO G3: the member comparison against the MEASURED H1 capture.
+"""The member comparison against a MEASURED capture.
 
-MEASURED inputs (fixtures/pvlan_po_h1_measured.json, from the live G2/R2 run on NDFC 12.6.0.267): the forced-preview
-pending (complete) and the expected/running stanzas of port-channel502 and Ethernet1/10, their intents and policies. The
-member pending held `channel-group 502 force mode active`; the controller's expected member held
-`channel-group 502 mode active` plus the inherited PVLAN mode and host-association; G2 refused that expected line.
-Every variation below CHANGES one measured line and says so; nothing is derived from the pending to fill the expected.
+MEASURED inputs (fixtures/pvlan_po_h1_measured.json, NDFC 12.6.0.267): the forced-preview pending (complete) and the
+expected/running stanzas of the port-channel and its member, their intents and policies. The member pending held
+`channel-group <N> force mode active`; the controller's expected member held `channel-group <N> mode active` plus the inherited
+PVLAN mode and host-association, which the earlier gate refused. Every variation below CHANGES one measured line and says so;
+nothing is derived from the pending to fill the expected.
 
-Gate tests call the real assess_target(); main() tests run the real module through the existing harness (only the
-switch serial is the harness one). The G2 module fails the H1 replay (fail-before); the update/repetition/deletion forms
-other than those measured stay limits (named in each test)."""
+Gate tests call the real assess_target(); main() tests run the real module through the existing harness (only the switch serial
+is the harness one). The earlier module fails this replay (fail-before); the update/repetition/deletion forms other than those
+measured stay limits (named in each test).
+"""
 
 from __future__ import absolute_import, division, print_function
 
@@ -79,7 +80,7 @@ def replace_line(lines, old, new):
     return [new if line == old else line for line in lines]
 
 
-# ------------------------------------------------------------------ the measured H1 data itself
+# ------------------------------------------------------------------ the measured data itself
 def test_fixture_is_the_gate_input_and_states_the_measured_member_forms():
     assert FIXTURE["h1_gate_pending_equals_h1_post"] is True, "the H1-post pending is the one the gate saw"
     pf = stage("H1-post")["preview_forced"]
@@ -104,7 +105,7 @@ def test_measured_h1_parent_is_accepted_unchanged():
 
 def test_without_the_force_transition_the_measured_member_is_still_refused():
     """The force line alone carries mode, list and the trunk withdrawal: without the measured transition the pending
-    lacks them (this is the second half of the G2 gap, after the expected line)."""
+    lacks them (this is the second half of the earlier gap, after the expected line)."""
     decision, problems = assess_member(entry("H1-post"), member_force=None)
     assert decision == "refuse" and any("absent from the pending" in p for p in problems)
 
@@ -163,7 +164,7 @@ def test_the_force_command_twice_is_refused():
 
 
 def test_the_force_transition_is_not_applied_to_another_mode_or_outside_the_pvlan_modes():
-    # G5: the other PVLAN modes are modeled (inferred), so the measured host member under a promiscuous force is refused by
+    # The other PVLAN modes are modeled (inferred), so the measured host member under a promiscuous force is refused by
     # the mode check; a mode outside the four is refused as such.
     decision, problems = assess_member(entry("H1-post"), member_force=dict(FORCE, mode="promiscuous"))
     assert decision == "refuse" and any("is not the port-channel's 'promiscuous'" in p for p in problems), problems
@@ -223,7 +224,7 @@ def test_main_identical_repetition_after_the_creation_writes_nothing():
     ],
 )
 def test_main_creation_in_another_mode_against_the_measured_host_preview_is_refused_before_deploy(mode, profile):
-    # G5: these modes are no longer refused before the write (inferred force form); the MEASURED H1 preview belongs to a
+    # These modes are no longer refused before the write (inferred force form); the MEASURED preview belongs to a
     # host port-channel, so the gate refuses it for any other mode and nothing is deployed.
     ctrl = baseline()
     it = item(mode, **profile)
@@ -231,7 +232,7 @@ def test_main_creation_in_another_mode_against_the_measured_host_preview_is_refu
     ctrl.previews = [{"RETURN_CODE": 200, "DATA": [entry("H1-post")]}]
     status, result = run(ctrl, [it], state="replaced")
     if mode == "trunk secondary":
-        # G6: the measured trunk member (int_trunk_host) cannot join a trunk secondary port-channel (TS1/EXP-1 known incident):
+        # The measured trunk member (int_trunk_host) cannot join a trunk secondary port-channel (TS1/EXP-1 known incident):
         # refused before any write.
         assert status == "fail" and "Known incident pending engineering" in result["msg"], result.get("msg")
         assert ctrl.writes() == []
@@ -252,10 +253,10 @@ def test_main_g2_style_expected_with_force_is_now_refused():
 
 def test_main_measured_hr_release_with_the_measured_admin_up_preview_is_refused_before_deploy():
     """HR-post as MEASURED: after the mark-delete the member is int_trunk_host ADMIN_STATE true and the preview carries
-    `no shutdown`. G4 corrects the member's ADMIN_STATE first (test_dcnm_intf_pvlan_po_g4_release.py covers that path);
+    `no shutdown`. the release step corrects the member's ADMIN_STATE first (test_dcnm_intf_pvlan_po_g4_release.py covers that path);
     with that same admin-up preview still served, the gate refuses and nothing is deployed.
 
-    G4 correction of THIS test: its G3 version answered the mark-delete with {"RETURN_CODE": 200, "DATA": {}} (no
+    Correction of THIS test: its earlier version answered the mark-delete with {"RETURN_CODE": 200, "DATA": {}} (no
     MESSAGE "OK"), which the module treats as a failed delete and retried 20 times; it passed without ever reaching the
     release. The mark-delete now answers like the controller (200, MESSAGE OK)."""
     ctrl = PoLifecycleController()

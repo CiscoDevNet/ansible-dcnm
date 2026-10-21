@@ -14,7 +14,7 @@ without any cross-parent carry, driven through the real comparator
 Helpers are imported from the sibling suite rather than duplicated, so the two files cannot
 drift apart.
 
-NOT LIVE TESTED IN THIS GENERATION.
+NOT LIVE TESTED.
 """
 from __future__ import absolute_import, division, print_function
 

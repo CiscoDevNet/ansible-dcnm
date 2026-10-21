@@ -6,7 +6,7 @@ live controller: a parent template that refuses a value answers
 
     207 Multi-Status
       {"reportItemType": "ERROR",
-       "message": "Switch [Leaf-101/9648E3J5P6M]: 'Spanning-tree port type' cannot be set
+       "message": "Switch [E3J5P6M]: 'Spanning-tree port type' cannot be set
                    to 'network' when 'Enable port type fast' is enabled",
        "entity": "9648E3J5P6M:Ethernet1/5"}
 

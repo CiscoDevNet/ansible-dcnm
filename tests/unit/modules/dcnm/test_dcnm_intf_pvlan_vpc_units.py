@@ -1,6 +1,6 @@
-"""VPC-HOST-E1-OFFLINE: pure tests of the vPC PVLAN host helpers (no controller, no transport).
+"""Pure tests of the vPC PVLAN host helpers (no controller, no transport).
 
-NOT LIVE TESTED. Contract labels: [SRC] installed templates captured 2026-10-07 (HOST n / POVPC n = their bodies), [SYN] a synthetic
+NOT LIVE TESTED. Contract labels: [SRC] installed templates (HOST n / POVPC n = their bodies), [SYN] a synthetic
 fixture written by hand, [UNK] only the first live case (L1) can tell. These tests verify OUR code against those, never the controller.
 """
 
@@ -42,7 +42,7 @@ def legs_of(r=None, order=(SN1, SN2)):
 @pytest.mark.parametrize(
     "mutation, needle",
     [
-        # VPC-MODES-E1: the other submodes are implemented; each refuses the list (and fields) its template does not show.
+        # The other submodes are implemented; each refuses the list (and fields) its template does not show.
         (lambda r: r.update(pvlan_mode="promiscuous"), "pvlan_association is not valid for pvlan_mode 'promiscuous'"),
         (lambda r: r.update(pvlan_mode="trunk promiscuous"), "pvlan_association is not valid for pvlan_mode 'trunk promiscuous'"),
         (lambda r: r.update(pvlan_mode="trunk secondary", pvlan_mapping=[{"primary_vlan": 1, "secondary_vlans": "2"}]),
@@ -275,7 +275,7 @@ def test_the_child_po_model_is_the_regular_po_body_plus_the_vpc_line():
 @pytest.mark.parametrize(
     "over",
     [
-        # PLAN-2 C1: QoS (DEF-PVLAN-05) and a speed other than Auto stay outside the model; so does a spanning-tree port type
+        # QoS (DEF-PVLAN-05) and a speed other than Auto stay outside the model; so does a spanning-tree port type
         # the template itself rejects while port type fast is true. PFC, the port ACL, vPC convergence, queuing and duplex are
         # modeled now: see test_c1_companions_reach_the_child_model_with_the_template_lines.
         {"ENABLE_QOS": "true"},
@@ -303,7 +303,7 @@ def test_values_outside_the_model_make_the_child_unmodeled(over):
     ],
 )
 def test_c1_companions_reach_the_child_model_with_the_template_lines(over, lines):
-    """PLAN-2 C1: the parent value reaches BOTH children (vpc_leg_po_nv) and the child renders the installed POVPC line."""
+    """The parent value reaches BOTH children (vpc_leg_po_nv) and the child renders the installed POVPC line."""
     base = P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(have_of(), 0, VPC))
     for index in (0, 1):
         got = P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(have_of(**over), index, VPC))
@@ -385,7 +385,7 @@ def test_response_classes_never_pass_an_error_or_an_unknown_shape(resp, cls):
 
 
 # ---------------------------------------------------------------- residue after a deletion
-# DF-2: the residue rules of the former vpc_leg_residue (a policy of the vPC or its child, a second own policy, a member left on another
+# The residue rules of the former vpc_leg_residue (a policy of the vPC or its child, a second own policy, a member left on another
 # template, freeform CONF) are enforced by the release proof BEFORE the deploy; each case is exercised through main() in
 # test_dcnm_intf_pvlan_vpc_readback.py::test_a_residue_left_by_the_vpc_is_refused_by_the_release_proof_before_any_member_write.
 

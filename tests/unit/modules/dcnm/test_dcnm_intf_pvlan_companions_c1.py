@@ -1,18 +1,14 @@
-"""PLAN-2 C1 (PR725-PVLAN-COMPANIONS-001): companion controls of the three PVLAN parents.
+"""Companion controls of the three PVLAN parents.
 
-NOT LIVE TESTED. Input: A0-PVLAN-1 (MANIFEST.sha256 052bdd5d...), the 27 READY_FOR_IMPLEMENTATION identities and the 7
-declarative LACP identities admitted by the architect (review A0_A1_R1). Real main() through the EXISTING harnesses:
-  * Ethernet int_pvlan_host:          test_dcnm_intf_pvlan_harness (measured G6 readbacks/previews);
-  * port-channel int_port_channel_pvlan_host + member: test_dcnm_intf_pvlan_po_g1 / _po_g5_next_modes;
-  * vPC int_vpc_pvlan_host -> int_vpc_pvlan_po x2 -> member x2: test_dcnm_intf_pvlan_vpc_harness / _vpc_modes_e1.
+NOT LIVE TESTED. Real main() through the existing Ethernet, port-channel and vPC PVLAN harnesses.
 Labels:
-  [SRC]       the installed templates (content sha256 in A0 SOURCES.json; Po HOST 476-560, MEMBER 171-195, vPC HOST 630-860,
-              POVPC 277-321, Ethernet 379-386);
-  SYNTHETIC   every preview carrying a companion line: a measured or harness preview plus the template line, written by hand.
-              No PVLAN interface with a non-default companion was ever observed on a controller or a switch;
+  [SRC]       the installed templates (Po HOST 476-560, MEMBER 171-195, vPC HOST 630-860, POVPC 277-321,
+              Ethernet 379-386);
+  SYNTHETIC   every preview carrying a companion line: a measured or harness preview plus the template line.
+              No PVLAN interface with a non-default companion was observed on a controller or a switch;
   INFERRED    the registry resets of the PVLAN parents (siblings' reset_wire), and the NX-OS positive form that withdraws a
               negative-form line (`lldp transmit` for `no lldp transmit`).
-The assertions read the module's REAL results: the sent nvPairs, the reported diff, the request order and, for the vPC, the gate
+The assertions read the module's real results: the sent nvPairs, the reported diff, the request order and, for the vPC, the gate
 records per site.
 """
 
@@ -58,7 +54,7 @@ def test_each_parent_registers_exactly_its_a0_registry_rows_with_the_sibling_con
             "spanning_tree_port_type": ("spanningTreePortType", "enum", "no"),
             "disable_queuing_stats": ("queuingStats", "boolean", "false"),
             "acl_filter": ("aclFilter", "string", ""),
-            # IQ1: the sibling vPC parents' disable_qos_stats (reset inferred on the PVLAN parent)
+            # The sibling vPC parents' disable_qos_stats (reset inferred on the PVLAN parent)
             "disable_qos_stats": ("qosStatsSuppressed", "boolean", "false"),
         },
     }
@@ -70,7 +66,7 @@ def test_each_parent_registers_exactly_its_a0_registry_rows_with_the_sibling_con
             b = resolve_binding(policy, key)
             assert (b["parent_nvpair"], b["type"], b["reset_wire"], b["min_ndfc_version"]) == (nvp, typ, reset, "12.6.0.267")
             assert b["mechanism"] == "passthrough" and b["no_log"] is False
-    # IQ1: ingress QoS of the vPC is public now (native enable_qos/qos_policy + the registry disable_qos_stats); the port-channel
+    # Ingress QoS of the vPC is public now (native enable_qos/qos_policy + the registry disable_qos_stats); the port-channel
     # PVLAN parent still has none (its template declares no ingress QoS).
     assert "disable_qos_stats" in registered_profile_keys(P.VPC_HOST_POLICY)
     assert set(("enable_qos", "qos_policy")) <= P.VPC_PROFILE_KEYS
@@ -109,14 +105,14 @@ def test_allowlists_carry_the_native_and_registry_companions_and_nothing_deferre
         "lacp_port_priority",
         "lacp_rate",
         "speed",  # RC1
-        "enable_qos",  # IQ1
-        "qos_policy",  # IQ1
+        "enable_qos",  # ingress QoS
+        "qos_policy",  # ingress QoS
     }
     assert po_native | P.PO_REGISTRY_KEYS <= P.PO_PROFILE_KEYS and vpc_native | P.VPC_REGISTRY_KEYS <= P.VPC_PROFILE_KEYS
     # RC1: speed (both parents), cmds (port-channel) and peer1_cmds/peer2_cmds (vPC) are modeled now; QoS of the parents stays deferred.
     assert "cmds" in P.PO_PROFILE_KEYS and "cmds" not in P.VPC_PROFILE_KEYS
     assert set(("peer1_cmds", "peer2_cmds")) <= P.VPC_PROFILE_KEYS and not set(("peer1_cmds", "peer2_cmds")) & P.PO_PROFILE_KEYS
-    # IQ1: ingress QoS is public on the vPC only.
+    # Ingress QoS is public on the vPC only.
     for key in ("enable_qos", "qos_policy", "disable_qos_stats"):
         assert key not in P.PO_PROFILE_KEYS and key in P.VPC_PROFILE_KEYS, key
     # one owner per nvPair: no nvPair is both native and registry on the same parent
@@ -365,7 +361,7 @@ PO_C1_PROFILE = dict(
     spanning_tree_port_type="network",
     orphan_port=True,
     duplex="full",
-    speed="1Gb",  # F-A: a duplex other than auto needs a fixed speed (the device rejects it with speed Auto)
+    speed="1Gb",  # A duplex other than auto needs a fixed speed (the device rejects it with speed Auto)
     disable_lacp_suspend_individual=True,
     queuing_policy="C1-Q",
     disable_queuing_stats=True,
@@ -654,7 +650,7 @@ def vpc_member(port, mode, pairs, native, allowed, extra=()):
 
 
 def vpc_update_previews(ctrl, mode, po_extra=(), po_drop=(), member_extra=(), pend_po=(), pend_member=()):
-    """Per serial: the prior converged preview, then the SYNTHETIC update preview (the parent-only pending shape of E1 + lines)."""
+    """Per serial: the prior converged preview, then the SYNTHETIC update preview (the parent-only pending shape + lines)."""
     pairs = PAIRS[mode]
     for i, (serial, port) in enumerate(PEERS):
         native, allowed = per_peer(mode, i)
@@ -889,7 +885,7 @@ def test_vpc_a_child_that_does_not_follow_its_parent_on_a_companion_is_refused_b
 
 
 def test_vpc_qos_is_in_the_public_contract_and_the_port_channel_still_refuses_it():
-    # IQ1: accepted by the raw vPC validation; the port-channel PVLAN parent has no ingress QoS.
+    # Accepted by the raw vPC validation; the port-channel PVLAN parent has no ingress QoS.
     assert P.vpc_not_implemented(
         {"mode": "pvlan", "pvlan_mode": "host", "peer1_pcid": 10, "peer2_pcid": 10, "enable_qos": True, "qos_policy": "Q", "disable_qos_stats": True}, "vpc10"
     ) == []
@@ -912,7 +908,7 @@ PVLAN_ROUTE_RESET_ROWS = (
     (P.VPC_HOST_POLICY, "spanningTreePortType", "spanning_tree_port_type", "normal", "no"),
     (P.VPC_HOST_POLICY, "queuingStats", "disable_queuing_stats", "true", "false"),
     (P.VPC_HOST_POLICY, "aclFilter", "acl_filter", "OLD-ACL", ""),
-    (P.VPC_HOST_POLICY, "qosStatsSuppressed", "disable_qos_stats", "true", "false"),  # IQ1
+    (P.VPC_HOST_POLICY, "qosStatsSuppressed", "disable_qos_stats", "true", "false"),  # ingress QoS
 )
 PVLAN_ROUTE_RESET_IDENTITIES = frozenset((p, n) for p, n, _k, _h, _r in PVLAN_ROUTE_RESET_ROWS)
 _IDS = ["%s::%s" % (p.replace("int_", ""), n) for p, n, _k, _h, _r in PVLAN_ROUTE_RESET_ROWS]
@@ -962,14 +958,14 @@ def test_po_and_vpc_check_mode_with_companions_write_nothing():
     assert ctrl.writes() == [], res
 
 
-# ================================================================== C1-R1: exact object names in the vPC child readback
+# ================================================================== exact object names in the vPC child readback
 _R1_BASE = dict(PVLAN_MODE="host", ADMIN_STATE="false", DESC="", BPDUGUARD_ENABLED="true", PORTTYPE_FAST_ENABLED="true", MTU="jumbo")
 
 
 @pytest.mark.parametrize("key", ["aclFilter", "QUEUING_POLICY"])
 @pytest.mark.parametrize("child_value,differs", [("POLICY_A", False), ("policy_a", True), ("Policy_A", True), ("POLICY_B", True)])
 def test_r1_child_object_names_are_compared_exactly(key, child_value, differs):
-    """Review probe C1-R1: an expected POLICY_A against a child policy_a was reported equal. Object names keep case."""
+    """An expected POLICY_A against a child policy_a used to be reported equal. Object names keep case."""
     expected = dict(_R1_BASE, **{key: "POLICY_A"})
     child = dict(expected, **{key: child_value})
     assert (key in P.vpc_child_differences(child, expected)) is differs

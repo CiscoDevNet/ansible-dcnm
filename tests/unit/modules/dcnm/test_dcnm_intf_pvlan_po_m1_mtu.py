@@ -1,13 +1,11 @@
-"""C1-R3: the member MTU withdrawal inherited from the port-channel, as MEASURED in M-G1 M1.
+"""The member MTU withdrawal inherited from the port-channel (jumbo -> default), as MEASURED.
 
-MEASURED inputs (fixtures/pvlan_po_m1_measured.json, provenance per field inside it):
-  * OPERATOR: the GUI preview pending `interface port-channel501` / `no mtu 9216` (supplied by the operator, not captured by the lab reads);
-  * ALPHA (the lab's read-only captures): the intents before/after, the controller's runningConfig before M1 (M2 U1R recompute preview)
-    and its expectedConfig after M1 (post-M1 recompute preview, intent unchanged since the GUI save), the device running stanzas and the
-    operational MTU (9216 -> 1500 on BOTH port-channel and member).
-The module request that reproduces the GUI change is `merged` with `mtu: default` on the existing port-channel (the GUI payload itself is
-not known and not invented). Real main() on the existing harness; only the controller boundary is simulated (207 SUCCESS modifies).
-DERIVED inputs are marked in each test; they are predictions, never live evidence. vPC is not touched by C1-R3.
+MEASURED inputs (fixtures/pvlan_po_m1_measured.json, provenance per field inside it): the GUI preview pending
+`interface port-channel<N>` / `no mtu 9216`, the intents before/after, the controller's runningConfig before and expectedConfig
+after the change, the device running stanzas and the operational MTU (9216 -> 1500 on BOTH port-channel and member).
+The module request that reproduces the GUI change is `merged` with `mtu: default` on the existing port-channel (the GUI payload
+itself is not known and not invented). Real main() on the existing harness; only the controller boundary is simulated (207
+SUCCESS modifies). DERIVED inputs are marked in each test; they are predictions, never live evidence. vPC is not covered here.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -157,8 +155,8 @@ def test_an_explicit_member_withdrawal_keeps_the_ordinary_validation():
 
 
 def test_the_reverse_default_to_jumbo_without_a_member_command_follows_the_c1r4_mr_rule():
-    """DERIVED from the M1 captures (reverse direction): `mtu 9216` only on the parent. Refused by C1-R3 (not measured then); C1-R4 models
-    it because MR-G1 MEASURED this direction (fixtures/pvlan_po_mr_measured.json, test_dcnm_intf_pvlan_po_mr_mtu.py)."""
+    """DERIVED from the jumbo -> default captures (reverse direction): `mtu 9216` only on the parent. Modeled because this
+    direction was MEASURED too (fixtures/pvlan_po_mr_measured.json, test_dcnm_intf_pvlan_po_mr_mtu.py)."""
     pend = ["interface port-channel501", "  mtu 9216", "configure terminal"]
     ctrl, status, result = m1(pending=pend, running=list(FX["post"]["preview_running_stanzas"]), expected=EXP_PRE, side="post", mtu="jumbo")
     assert status == "exit", result.get("msg")

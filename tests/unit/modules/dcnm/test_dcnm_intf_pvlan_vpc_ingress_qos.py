@@ -1,4 +1,4 @@
-"""IQ1: ingress QoS (ENABLE_QOS, QOS_POLICY, qosStatsSuppressed) of the vPC PVLAN parent int_vpc_pvlan_host.
+"""Ingress QoS (ENABLE_QOS, QOS_POLICY, qosStatsSuppressed) of the vPC PVLAN parent int_vpc_pvlan_host.
 
 NOT LIVE TESTED. Real main() through the EXISTING vPC harness; previews are SYNTHETIC, written by hand from the CORRECTED templates
 (the parent's QoS block with qosPolicy/queuingPolicy locals as in the reference int_vpc_trunk_host and every Engineering set; the

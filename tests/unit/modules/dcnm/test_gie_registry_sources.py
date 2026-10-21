@@ -14,7 +14,7 @@ Two groups:
 The SOURCES group never skips silently. If ``tools/`` is absent the tests FAIL with the reason, unless the environment sets
 ``GIE_REGISTRY_SOURCES_OPTIONAL=1`` (an explicit, visible opt-out for a tree that deliberately omits development tooling).
 
-NOT LIVE TESTED IN THIS GENERATION. Nothing here contacts a controller or a device.
+NOT LIVE TESTED. Nothing here contacts a controller or a device.
 """
 
 from __future__ import absolute_import, division, print_function

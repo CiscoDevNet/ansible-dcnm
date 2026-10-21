@@ -1,15 +1,15 @@
-"""MM-B: membership of an EXISTING PVLAN port-channel / vPC: add and remove members under the regular rule.
+"""Membership of an EXISTING PVLAN port-channel / vPC: add and remove members under the regular rule.
 
-Regular port-channel rule (dcnm_intf_compare_elements / dcnm_intf_merge_want_and_have): `merged` is the union of HAVE and the requested
-members (an omitted `members` keeps HAVE); `replaced` states the exact membership. PVLAN keeps one deliberate difference, documented: an
-omitted or empty list in `replaced` (which the regular module sends as an empty MEMBER_INTERFACES) is refused, because an empty member
-list is not implemented.
+Regular port-channel rule (dcnm_intf_compare_elements / dcnm_intf_merge_want_and_have): `merged` is the union of HAVE and the
+requested members (an omitted `members` keeps HAVE); `replaced` states the exact membership. PVLAN keeps one deliberate difference,
+documented: an omitted or empty list in `replaced` (which the regular module sends as an empty MEMBER_INTERFACES) is refused,
+because an empty member list is not implemented.
 
 SIMULATED, NOT MEASURED: the controller effect of a membership modify (an added port becomes int_port_channel_pvlan_member of the
-port-channel; a removed port is released as int_trunk_host -- or int_routed_host, the Q56 MEASURED form -- with ADMIN_STATE "true", like a
-deleted port-channel's member) and the per-member preview fragments (added: the H1 MEASURED creation form `channel-group N force`; removed:
-the deletion form `no channel-group N force` with the release; existing: converged). Real main(); only the controller boundary is
-intercepted (existing Po/vPC harnesses, subclassed here).
+port-channel; a removed port is released as int_trunk_host -- or int_routed_host, the MEASURED form -- with ADMIN_STATE "true", like
+a deleted port-channel's member) and the per-member preview fragments (added: the MEASURED creation form `channel-group N force`;
+removed: the deletion form `no channel-group N force` with the release; existing: converged). Real main(); only the controller
+boundary is intercepted (existing Po/vPC harnesses, subclassed here).
 """
 
 from __future__ import absolute_import, division, print_function
@@ -249,7 +249,7 @@ def test_replaced_without_an_explicit_member_list_is_refused_before_any_write(me
 
 
 @pytest.mark.parametrize("change, needle", [
-    # RELEASE-ADMIN: an up member is released to the fabric default; an unknown administrative state stays refused
+    # An up member is released to the fabric default; an unknown administrative state stays refused
     (lambda c: c.detail[E9]["nvPairs"].update(ADMIN_STATE="maybe"), "unknown administrative state"),
     (lambda c: setattr(c, "policies_extra", [{"entityName": E9, "entityType": "INTERFACE", "templateName": "Config_Profile", "source": "OVERLAY",
                                               "deleted": False, "policyId": "POLICY-990100", "priority": 500, "serialNumber": "x"}]),
@@ -263,7 +263,7 @@ def test_an_unsafe_member_to_remove_is_refused_before_any_write(change, needle):
 
 
 def test_removal_without_deploy_is_saved_released_and_never_deployed():
-    # LIFECYCLE-B (was: refused): deploy false SAVES the removal -- the parent's modify, the removed member released administratively
+    # Deploy false SAVES the removal -- the parent's modify, the removed member released administratively
     # down, the pending validated by the pre-deploy gate -- and sends no deployment request.
     ctrl = seeded()
     ctrl.previews = [fragments(kept=(E7,), removed_trunk=(E9,))]
@@ -489,13 +489,13 @@ def test_vpc_replaced_without_a_peer_member_list_is_refused_before_any_write():
 
 def test_a_unilateral_change_that_is_not_membership_stays_refused():
     ctrl = vpc_seeded({V.SN1: [V.M1], V.SN2: [V.M2]})
-    # A1: a one-peer description is supported now; the freeform of one peer is the still-refused example
+    # A one-peer description is supported now; the freeform of one peer is the still-refused example
     status, result = V.run_vpc(ctrl, [V.vpc_item(peer1_cmds=["logging event port link-status"])])
     assert status == "fail" and "changes only peer 1" in result["msg"] and ctrl.writes() == [], result.get("msg")
 
 
 def test_vpc_removing_a_member_whose_admin_state_is_unknown_is_refused_before_any_write():
-    # RELEASE-ADMIN: an up member is released to the fabric default (test_dcnm_intf_pvlan_release_admin.py); unknown stays refused
+    # An up member is released to the fabric default (test_dcnm_intf_pvlan_release_admin.py); unknown stays refused
     ctrl = vpc_seeded({V.SN1: [V.M1, E9P], V.SN2: [V.M2]})
     ctrl.nodes[V.SN1][E9P]["nvPairs"]["ADMIN_STATE"] = "maybe"
     status, result = V.run_vpc(ctrl, [V.vpc_item(peer1_members=[V.M1], peer2_members=[V.M2])], state="replaced")

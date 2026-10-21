@@ -27,7 +27,7 @@ module's existing ``patch_version`` capability (approved SMU ``4.3.1.0175006011`
 an approved patch selects the SMU-schema body, a missing or unapproved one keeps the legacy names. 4.4.1 is OFFLINE-ONLY: no capture of an
 ND >= 4.4.1 exists, so its names are the existing selector's assumption, not an observation.
 
-Real main() through the EXISTING dcnm_interface unit harness (controller doubles). NOT LIVE TESTED IN THIS GENERATION.
+Real main() through the EXISTING dcnm_interface unit harness (controller doubles). NOT LIVE TESTED.
 """
 
 from __future__ import absolute_import, division, print_function

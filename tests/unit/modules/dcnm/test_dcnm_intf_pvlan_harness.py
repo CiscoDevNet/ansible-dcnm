@@ -46,7 +46,7 @@ NDFC = "12.6.0.267"
 
 FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "dcnm_intf_pvlan_measured.json")))
 TRANSITIONS = dict((t["case"], t) for t in FIXTURE["transitions"])
-# E2: measured device/controller authority (runningConfig / expectedConfig stanzas) per case.
+# Measured device/controller authority (runningConfig / expectedConfig stanzas) per case.
 DEVICE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "dcnm_intf_pvlan_device_measured.json")))["cases"]
 
 PREVIEW_MARK = "/control/fabrics/{0}/config-preview/".format(FABRIC)
@@ -83,7 +83,7 @@ def pending(case, ifname=IF7):
 
 def preview(lines, serial=SERIAL, status=None, running=None, expected=None):
     """A legacy config-preview answer. `running`/`expected` are interface stanzas (header plus
-    indented lines); without them the answer carries no device authority, as in E1."""
+    indented lines); without them the answer carries no device authority."""
     if status is None:
         status = "Out-of-Sync" if lines else "In-Sync"
     entry = {"switchId": serial, "status": status, "pendingConfig": lines}
@@ -133,7 +133,7 @@ class FakeController(object):
         self.policies_extra = []  # additional live policies (for example an OVERLAY profile)
         self.policies_override = None  # replaces the whole policy-list answer when not None
         self.deployed = False
-        # E4: the default summary entry has the MEASURED shape (no top-level `policy`, one nested
+        # The default summary entry has the MEASURED shape (no top-level `policy`, one nested
         # underlay object with the measured identity keys). True restores the earlier harness
         # shape's top-level `policy` (consistent with the underlay) for explicit controls.
         self.summary_top_policy = False
@@ -358,7 +358,7 @@ def run(ctrl, config, state="merged", check_mode=False, check_deploy=False, bulk
         patch.object(module, "dcnm_version_supported", return_value=version),
         patch.object(module, "dcnm_send", side_effect=ctrl),
         patch.object(module, "dcnm_get_bulk_api_support", return_value=bulk),
-        # RELEASE-ADMIN: the fabric host default the release targets; a controller may carry `fabric_admin` (default "false").
+        # The fabric host default the release targets; a controller may carry `fabric_admin` (default "false").
         patch.object(module, "get_fabric_details", return_value={"nvPairs": {"HOST_INTF_ADMIN_STATE": getattr(ctrl, "fabric_admin", "false")}}),
         patch.object(module.time, "sleep", return_value=None),
     ]
@@ -393,7 +393,7 @@ def test_harness_records_before_answering_and_never_computes_pending():
     assert ctrl.calls[0][0] == "GET" and ctrl.order() == ["PREVIEW"]
 
 
-# ---------------------------------------------------------------- E2: module reset (TEMPLATE-PREDICTED)
+# ---------------------------------------------------------------- module reset (TEMPLATE-PREDICTED)
 # NOT MEASURED. The module's Ethernet default reset (dcnm_intf_get_default_eth_payload) sends
 # BPDUGUARD_ENABLED=false; the installed int_trunk_host add() (sha256 99dc8f0a...) renders
 # 'spanning-tree bpduguard disable' for that value. The measured G6-MR read is an EXACT

@@ -92,7 +92,7 @@ SAMPLE_VALUE = {
 }
 
 NDFC_VERSION = "12.6.0.267"
-# PR725-PATCH-VERSION-001: declared explicitly, read from the engine's own policy, for every
+# Declared explicitly, read from the engine's own policy, for every
 # positive fixture in this file.
 PATCH_VERSION = sorted(gie_engine.GIE_ENABLED_PATCH_VERSIONS)[0]
 
@@ -448,7 +448,7 @@ def _config_obj(config):
     # The builder passes this straight to gie_contribute_nvpairs; leaving it unset makes the
     # engine fail closed on an unknown version, which would look like a binding problem.
     obj.ndfc_version = NDFC_VERSION
-    # Same reasoning, PR725-PATCH-VERSION-001: leaving this unset makes the engine fail closed
+    # Same reasoning, : leaving this unset makes the engine fail closed
     # on a missing patch, which would look like a binding problem rather than a fixture gap.
     obj.patch_version = PATCH_VERSION
     obj.module = mock.Mock()

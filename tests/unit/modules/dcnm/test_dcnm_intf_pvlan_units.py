@@ -2,7 +2,7 @@
 
 The measured-transition test replays every G5/G6 discovery pending through the pre-deploy
 validator with its real before/after readbacks: the 46 transitions the controller and device
-accepted must pass, and the two non-trunk partial removals (PU3 deploy 500, PX1) must not.
+accepted must pass, and the two non-trunk partial removals (the measured deploy 500, and its sibling) must not.
 """
 
 from __future__ import absolute_import, division, print_function

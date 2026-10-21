@@ -259,7 +259,7 @@
 - name: ASSERT - the captured feature key is present and a recognizable boolean
   ansible.builtin.assert:
     that:
-      # G6A.1 finding 4: reject an ABSENT feature key before mutating.
+      # Reject an ABSENT feature key before mutating.
       #
       # The observed lab baseline omits ENABLE_OSPF_AUTH_MESSAGE_DIGEST on
       # both loopbacks. Restoring an absent key would require emitting an explicit

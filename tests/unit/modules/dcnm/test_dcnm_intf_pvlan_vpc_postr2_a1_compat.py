@@ -5,7 +5,7 @@ multi-member vPC support, the bpdu_guard/speed input parity, and the registry wo
 one peer still reaches exactly that peer while the shared values already stored (speed, duplex, bpdu_guard, every member) are carried unchanged, and a
 real shared change next to it is judged by the rule that owns it. They reuse the A1, vPC and multi-member harnesses; nothing here is a new framework.
 
-Synthetic fixtures, controller mocked at its boundary. NOT LIVE TESTED IN THIS GENERATION.
+Synthetic fixtures, controller mocked at its boundary. NOT LIVE TESTED.
 """
 
 from __future__ import absolute_import, division, print_function

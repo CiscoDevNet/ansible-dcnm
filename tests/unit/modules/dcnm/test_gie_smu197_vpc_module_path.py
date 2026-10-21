@@ -1,7 +1,6 @@
 """Paired vPC withdrawal through the real dcnm_interface.main() path.
 
-The VPC_SNO response shape and reversed pair order mirror ALPHA's m4-m7 GET
-captures. All addresses, serials, members and policy names here are synthetic.
+The VPC_SNO response shape and reversed pair order mirror captured GET responses. All addresses, serials, members and policy names here are synthetic.
 Controller and device behavior remains outside this offline test.
 """
 from __future__ import absolute_import, division, print_function

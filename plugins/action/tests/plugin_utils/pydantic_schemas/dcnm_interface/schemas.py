@@ -79,8 +79,8 @@ def expand_interface_name(name):
     return name
 
 
-# ------------------------------------------------------------------------------------------------ registered nvPairs (R2)
-# PR725-R2-VALIDATOR (review 6132068174). The checker used to parse BOTH the expected data and the readback through
+# ------------------------------------------------------------------------------------------------ registered nvPairs
+# The checker used to parse BOTH the expected data and the readback through
 # NvPairs, which silently dropped every undeclared nvPair, and its YAML map did not cover the registry: a requested
 # flowcontrol_send read back OFF, or not at all, still passed. The checker now keeps every nvPair (extra="allow"), builds
 # the expected value of every REGISTERED profile key on the parent the YAML selects, and normalizes both sides by the
@@ -90,8 +90,8 @@ def expand_interface_name(name):
 # parents on which a value can be requested). It was written out from the registry at 233ef0a2 and is deliberately NOT
 # imported from plugins/module_utils at run time, so the checker never shares the production renderer's wire conversion;
 # test_dcnm_interface_validator_r2.py compares it with the registry (names, parents, kinds) so a drift fails a unit test.
-# Kinds: bool / int / enum (case-insensitive tokens), str_exact (secrets and case-sensitive names: compared as written,
-# PR725 F1), str_fold (IPv6 text, numeric or dotted text, and the process tags whose case semantics are unverified: compared
+# Kinds: bool / int / enum (case-insensitive tokens), str_exact (secrets and case-sensitive names: compared as written),
+# str_fold (IPv6 text, numeric or dotted text, and the process tags whose case semantics are unverified: compared
 # case-insensitively, as the module does).
 R2_REGISTERED_BINDINGS = {
     "acl_filter": ("aclFilter", "str_exact", (
@@ -518,7 +518,7 @@ def r2_redact(data):
 
 class DcnmInterfaceQuerySchema(BaseModel):
     class NvPairs(BaseModel):
-        # R2: keep every nvPair on both sides (an undeclared requested nvPair used to vanish before the comparison).
+        # Keep every nvPair on both sides (an undeclared requested nvPair used to vanish before the comparison).
         model_config = ConfigDict(extra="allow")
 
         @model_validator(mode="before")
@@ -746,7 +746,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
         """
         Convert YAML interface configuration to DCNM API response format for validation.
 
-        R2 (registered fields): every REGISTERED profile key present in the profile (R2_REGISTERED_BINDINGS) becomes an
+        Registered fields: every REGISTERED profile key present in the profile (R2_REGISTERED_BINDINGS) becomes an
         expected nvPair on the parent template the YAML type/mode selects (R2_PARENT_BY_TYPE_MODE), with its wire value
         (r2_wire: booleans true/false, integers as text, the parent's enum wire spelling). false, 0 and "" are values,
         never dropped; only an explicit null (= omitted for the module) is skipped. In mode pvlan, pvlan_mode,
@@ -935,7 +935,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
                 if key in profile:
                     val = profile[key]
 
-                    # R2: in mode pvlan these two are the PVLAN trunk native / allowed VLANs (mapped below)
+                    # In mode pvlan these two are the PVLAN trunk native / allowed VLANs (mapped below)
                     if mode == "pvlan" and key in ("native_vlan", "allowed_vlans"):
                         continue
 
@@ -993,7 +993,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
                     if key in profile:
                         val = profile[key]
                         if mode == "pvlan" and key in ("peer1_allowed_vlans", "peer2_allowed_vlans"):
-                            continue  # R2: the per-peer PVLAN allowed VLANs (mapped below)
+                            continue  # the per-peer PVLAN allowed VLANs (mapped below)
                         if isinstance(val, bool):
                             val = str(val).lower()
                         elif isinstance(val, (int)):
@@ -1035,7 +1035,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
                 else:
                     intf_dict["nvPairs"]["CONF"] = ""
 
-            # R2: registered profile keys, per parent
+            # Registered profile keys, per parent
             parent = r2_expected_parent(interface)
             reg_profile, alias_problems = r2_apply_ospf_aliases(parent, profile)
             problems.extend("%s: %s" % (expanded_name, m) for m in alias_problems)
@@ -1052,7 +1052,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
                     continue
                 intf_dict["nvPairs"][nvpair] = r2_wire(parent, nvpair, kind, val)
 
-            # R2: native PVLAN fields of the PVLAN parents
+            # Native PVLAN fields of the PVLAN parents
             if mode == "pvlan":
                 if profile.get("pvlan_mode") is not None:
                     intf_dict["nvPairs"]["PVLAN_MODE"] = str(profile["pvlan_mode"])

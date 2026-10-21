@@ -170,9 +170,9 @@ def test_a_configured_enum_without_a_measured_reset_still_fails_closed_when_omit
     unregistered neutral enums, the guard below says so loudly instead of the case passing
     for the wrong reason.
     """
-    # MEASURED 2026-09-28: the table no longer holds a SINGLE enum that lacks a reset while
-    # carrying `no_change` in its vocabulary -- zero rows. Profiles P1 and P2 of the OSPF-ALL
-    # campaign measured and registered the last of them (`ospf_network_type` on three parents,
+    # MEASURED: the table no longer holds a SINGLE enum that lacks a reset while
+    # carrying `no_change` in its vocabulary -- zero rows. The OSPF options and BFD
+    # measurements registered the last of them (`ospf_network_type` on three parents,
     # `ospf_passive_mode` on int_vlan, `ospf_bfd_mode` on routed and vlan). This case ran out of
     # an example, and its own message asked for it to be rehomed deliberately, not deleted.
     #

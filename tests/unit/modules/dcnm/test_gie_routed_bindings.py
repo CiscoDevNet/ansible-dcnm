@@ -20,7 +20,7 @@ child_pti" is the obvious wrong turn here.
 ARP_TIMEOUT used to be excluded here on purpose, because int_subif and int_vlan declare it as
 well and all three are reachable (pol_types "sub_int_subint", "svi_vlan", "eth_routed"), so
 committing it on the routed parent alone would have made the module answer "not supported" for
-the other two. It went in on 2026-09-20 as one lot across the three, which is the condition the
+the other two. It went in as one lot across the three, which is the condition the
 exclusion was protecting. The generator is what enforced it, not a review -- it rejects a row
 claiming a committed public profile_key from an uncommitted parent, and it is also what caught
 that slice 0b_3 already held these three rows unregistered.
@@ -49,7 +49,7 @@ PARENT = "int_routed_host"
 
 # profile_key -> (nvPair, registry type)
 #
-# The first six are passthrough, measured on Leaf-103/104 Ethernet1/5 in the r1..r4 cycle.
+# The first six are passthrough, measured live.
 #
 # The four OSPF entries are the vertical slice: the first time child_pti is registered on a
 # ROUTED parent rather than on the fabric loopback. Every OSPF field here is gated

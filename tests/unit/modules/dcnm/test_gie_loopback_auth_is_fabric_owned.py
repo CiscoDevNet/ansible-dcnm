@@ -97,7 +97,7 @@ def test_the_exclusion_set_no_longer_shields_them():
 
 @pytest.mark.parametrize("nvpair", FABRIC_OWNED)
 def test_a_description_change_preserves_the_fabric_owned_value(nvpair):
-    """The behaviour the architect's condition 3 requires, asserted per field.
+    """The required behaviour, asserted per field.
 
     An operator renaming a loopback must not switch off underlay authentication.
     """
@@ -484,7 +484,7 @@ def test_a_keychain_spelling_is_refused_not_silently_dropped(key):
 
 
 # =====================================================================================
-# THE TWO HALVES OF THE ARCHITECT'S Q1 RULING (2026-09-19)
+# THE TWO HALVES OF THE RULE
 #
 # The retirement was a decision about OWNERSHIP, not about the word "loopback". On
 # int_fabric_loopback_11_1 the authentication is underlay authentication that fabricSettings

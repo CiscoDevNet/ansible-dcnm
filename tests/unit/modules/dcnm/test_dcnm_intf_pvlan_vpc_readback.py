@@ -1,9 +1,11 @@
-"""VPC-HOST-E2-READBACK: regressions for the two readback gaps of VPC-HOST-E1 (architect review R1-01 and R1-02), with the real main().
+"""Regressions for two readback gaps of the vPC PVLAN host path, with the real main().
 
-NOT LIVE TESTED. R1-01: after the deploy, the MEMBER of a peer is compared with the member model EXPECTED for that peer (values inherited from
-the frozen PRE-state), not only checked for policy/PO_ID/In-Sync. R1-02: after a deletion, the COMPLETE released member is compared with the
-explicit release contract recorded in the leg (PO_RELEASED_MEMBER_NV), not only for policy/ADMIN_STATE/CONF. Same synthetic harness as the rest
-of the vPC tests; the only addition is a controller that changes ONE member AFTER the deploy answer (as the architect's probes do)."""
+NOT LIVE TESTED. First: after the deploy, the MEMBER of a peer is compared with the member model EXPECTED for that peer (values
+inherited from the frozen PRE-state), not only checked for policy/PO_ID/In-Sync. Second: after a deletion, the COMPLETE released
+member is compared with the explicit release contract recorded in the leg (PO_RELEASED_MEMBER_NV), not only for
+policy/ADMIN_STATE/CONF. Same synthetic harness as the rest of the vPC tests; the only addition is a controller that changes ONE
+member AFTER the deploy answer.
+"""
 
 from __future__ import absolute_import, division, print_function
 
@@ -40,7 +42,7 @@ PEERS = [(SN1, M1, 1), (SN2, M2, 2)]
 
 
 class AfterDeploy(VpcController):
-    """Changes one member of one peer right AFTER the deploy answer (the architect's probe shape): `drift(nv)` edits the nvPairs in place and
+    """Changes one member of one peer right AFTER the deploy answer (a review probe shape): `drift(nv)` edits the nvPairs in place and
     returns None, or returns the replacement value of `nvPairs` itself (for example None or a list)."""
 
     def __init__(self, serial=None, port=None, drift=None):
@@ -237,14 +239,14 @@ def test_a_member_that_already_contradicts_its_model_is_refused_before_any_write
 
 
 # ================================================================== R1-02: the released member of a deletion
-# DF-2 (minimal post-deploy reads): the complete judgement of the released member -- the explicit release contract, residual PVLAN /
+# Minimal post-deploy reads: the complete judgement of the released member -- the explicit release contract, residual PVLAN /
 # channel-group fields, a modelable member and the policy residue -- is made on the FRESH release, BEFORE the deploy (phase C of
 # dcnm_intf_pvlan_vpc_release_members), in the same invocation and also when a new process completes a saved deletion. After the deploy only
 # the peers' summaries are read. So a divergence the controller RELEASES is refused before any deploy; a change made after the deploy is not
 # re-read by the module (the external test harness checks the member's intent and running configuration).
 class Released(VpcController):
     """`when` = "release": `drift` is applied when the controller releases the member (at the mark-delete); "deploy": right after the deploy
-    answer (G11's probe shape)."""
+    answer (the earlier probe shape)."""
 
     def __init__(self, serial=None, port=None, drift=None, when="release"):
         super(Released, self).__init__()
@@ -289,7 +291,7 @@ def reads_after_deploy(ctrl):
         (setter("NATIVE_VLAN", "5"), "NATIVE_VLAN is '5', not ''"),
         (remover("ALLOWED_VLANS"), "ALLOWED_VLANS is absent from the released member"),
         (setter("ALLOWED_VLANS", ["none"]), "ALLOWED_VLANS is ['none'], not 'none'"),
-        # refused by the release contract check, moved before the deploy (G11 judged it after the deploy)
+        # refused by the release contract check, moved before the deploy (it used to be judged after the deploy)
         (setter("PO_ID", "port-channel10"), "residual PVLAN/channel-group field PO_ID='port-channel10'"),
         (setter("PVLAN_MODE", "host"), "residual PVLAN/channel-group field PVLAN_MODE='host'"),
         (setter("PC_MODE", "active"), "residual PVLAN/channel-group field PC_MODE='active'"),
@@ -341,7 +343,7 @@ class Residue(VpcController):
 @pytest.mark.parametrize(
     "kw, needle",
     [
-        # the cases of the former unit test of vpc_leg_residue (G11 re-read them after the deploy), now through main() and the release proof
+        # the cases of the former unit test of vpc_leg_residue (once re-read after the deploy), now through main() and the release proof
         (dict(extra=[residue_policy(M1, "int_eth", source=VPC)]), "live policies still reference the vPC or its child port-channel"),
         (dict(extra=[residue_policy("port-channel10", "int_vpc_pvlan_po", source=VPC)]), "live policies still reference the vPC or its child"),
         (dict(extra=[residue_policy("port-channel10", "int_port_channel_trunk_host")]), "live policies still reference the vPC or its child"),
@@ -368,13 +370,13 @@ def test_a_deleted_policy_entry_is_not_residue():
 
 
 # MTU, BPDUGUARD_ENABLED, PORTTYPE_FAST_ENABLED and DESC released with another value are the release's own values (the contract is built from
-# the fresh release, in G11 as here) and are reported in `restoration_delta`; G11 failed on them only when they CHANGED after the deploy.
+# the fresh release) and are reported in `restoration_delta`; the earlier check failed on them only when they CHANGED after the deploy.
 
 
 @pytest.mark.parametrize("serial, port, peer", PEERS)
 @pytest.mark.parametrize("drift", [setter("ALLOWED_VLANS", "2301"), setter("PO_ID", "port-channel10"), lambda nv: {"value": None}])
 def test_a_member_changed_after_the_deploy_is_not_re_read_by_the_module(serial, port, peer, drift):
-    """DF-2 contract change (G11 detected these after the deploy): no intent is read after the deploy, only the two summaries."""
+    """Contract change (these used to be detected after the deploy): no intent is read after the deploy, only the two summaries."""
     ctrl, status, result = deleted_run(serial, port, drift, when="deploy")
     assert status == "exit" and result["pvlan_verification"][VPC]["state"] == "verified", result.get("msg")
     assert reads_after_deploy(ctrl) == ["interface/detail"]

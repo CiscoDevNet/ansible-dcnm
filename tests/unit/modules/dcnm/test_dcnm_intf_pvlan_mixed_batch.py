@@ -1,16 +1,15 @@
-"""MIXED-BATCH: conventional and PVLAN member removals in ONE dcnm_interface call (NaC T5, live 2026-10-17, DCNM 4d9493fb).
+"""Conventional and PVLAN member removals in ONE dcnm_interface call.
 
-NaC sends every interface in one `state: replaced` call, each item deploy false. The bulk modify of that call releases a member of a
-CONVENTIONAL port-channel / vPC and a member of a PVLAN one on the same switch. The PVLAN saved-update gate (`update_saved`) then read a
-fresh pending that also held the conventional released member and refused it as "outside this deploy batch" (T5: Leaf-102 Eth1/15,
-Leaf-103/104 Eth1/6).
+A single `state: replaced` call, each item deploy false, can release a member of a CONVENTIONAL port-channel / vPC and a member
+of a PVLAN one on the same switch. The PVLAN saved-update gate (`update_saved`) must not refuse the conventional released member
+as "outside this deploy batch".
 
-Fixed rule: a pending interface outside the PVLAN batch is accepted ONLY when this invocation's CONFIRMED update (per-item SUCCESS) of a
-conventional aggregate released it on THAT physical serial (pre-state member list read by this run minus the member list sent) AND its
-pending block withdraws that aggregate's channel-group. Everything else stays refused.
+Rule: a pending interface outside the PVLAN batch is accepted ONLY when this invocation's CONFIRMED update (per-item SUCCESS) of a
+conventional aggregate released it on THAT physical serial (pre-state member list read by this run minus the member list sent) AND
+its pending block withdraws that aggregate's channel-group. Everything else stays refused.
 
-Shapes: the T5 module arguments (sanitized: harness serials/IPs) and the T5 forced-preview pending lines for the released members
-(T5 live diagnosis). Real main() through the existing Po and vPC harnesses; only the controller boundary is faked.
+Shapes: measured module arguments and forced-preview pending lines, sanitized. Real main() through the existing Po and vPC
+harnesses; only the controller boundary is faked.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -32,9 +31,9 @@ CONV_PO_POLICY, CONV_MEMBER_POLICY = "int_port_channel_trunk_host", "int_port_ch
 CONV_VPC, CONV_VPC_ITEM = "vPC305", "vpc305"
 V5, V6 = "Ethernet1/5", "Ethernet1/6"
 CONV_VPC_POLICY = "int_vpc_trunk_host"
-PATCH = "4.3.1.0175006017"  # the T5 invocation's patch_version (required by its disable_lldp_* fields)
+PATCH = "4.3.1.0175006017"  # the measured invocation's patch_version (required by its disable_lldp_* fields)
 
-# T5 module arguments of the conventional items (profile verbatim from INT_T5-member-out_01.txt, members as in T5).
+# Measured module arguments of the conventional items (profile and members as measured).
 CONV_PO_PROFILE = {
     "admin_state": True, "allowed_vlans": "none", "bpdu_guard": True, "cmds": "", "copy_description": False, "description": "INTEG-PO-CONV-V2",
     "disable_lacp_suspend_individual": False, "disable_lldp_receive": False, "disable_lldp_transmit": False, "duplex": "auto", "enable_cdp": True,
@@ -53,7 +52,7 @@ CONV_VPC_PROFILE = {
 
 
 def released_block(member, pcid=301, withdrawal=True):
-    """The T5 forced-preview pending of a conventional member released by its port-channel (T5 live diagnosis)."""
+    """The measured forced-preview pending of a conventional member released by its port-channel (live diagnosis)."""
     lines = ["interface %s" % member.lower()]
     if withdrawal:
         lines.append("  no channel-group %d force mode active" % pcid)
@@ -68,9 +67,9 @@ def with_pending(resp, extra):
     return resp
 
 
-# ================================================================== regular port-channels (Leaf-102 shape)
+# ================================================================== regular port-channels
 def po_ctrl(conv_members=(C14, C15)):
-    """The PVLAN Po of the membership harness (E7, E9) plus a conventional trunk Po301 with its own members on the same switch."""
+    """The PVLAN Po of the membership harness plus a conventional trunk Po301 with its own members on the same switch."""
     ctrl = MU.seeded()
     nv = {"MEMBER_INTERFACES": ",".join(conv_members), "PO_ID": CONV_PO, "PC_MODE": "active", "DESC": "INTEG-PO-CONV-V2", "ADMIN_STATE": "true",
           "ALLOWED_VLANS": "none", "MTU": "jumbo", "SPEED": "Auto", "BPDUGUARD_ENABLED": "true", "PORTTYPE_FAST_ENABLED": "true",
@@ -89,7 +88,7 @@ def conv_po_item(members=(C14,), deploy=False, **profile):
 
 
 def t5_po_call(ctrl, extra_pending, conv=None, pvlan_deploy=False):
-    """The T5 shape on one switch: conventional Po301 releases Eth1/15, PVLAN Po releases E9, both items deploy false, one call."""
+    """The measured shape on one switch: conventional Po301 releases Eth1/15, PVLAN Po releases E9, both items deploy false, one call."""
     ctrl.previews = [with_pending(MU.fragments(kept=(MU.E7,), removed_trunk=(MU.E9,)), extra_pending)]
     return run(ctrl, [conv or conv_po_item(), MU.item([MU.E7], deploy=pvlan_deploy)], "replaced", patch_version=PATCH)
 
@@ -147,7 +146,7 @@ def test_an_unconfirmed_conventional_update_grants_no_ownership():
 
 
 def test_saved_retry_does_not_take_ownership_from_desired_membership_alone(monkeypatch):
-    """The T5 call saves both removals (fixed). A LATER invocation repeats the same items -- Po301 already holds one member, so nothing is
+    """The measured call saves both removals (fixed). A LATER invocation repeats the same items -- Po301 already holds one member, so nothing is
     updated now -- with deploy true to complete the saved PVLAN removal: the conventional released pending is NOT an operation of this
     invocation (its update ended in the previous process) and still refuses the deploy; desired membership alone grants nothing."""
     ctrl = po_ctrl()
@@ -176,7 +175,7 @@ def test_conventional_only_member_removal_makes_no_pvlan_reads():
     assert ctrl.previews == [] and not [c for c in ctrl.calls if "config-preview" in c[1]] and "pvlan_gate" not in result
 
 
-# ================================================================== vPC (Leaf-103/104 shape)
+# ================================================================== vPC
 def vpc_ctrl():
     """The PVLAN vPC10 membership harness (peer1 M1 + E9P removed, peer2 M2) plus a conventional trunk vPC305 with Eth1/5-6 on BOTH peers."""
     ctrl = MU.vpc_seeded({V.SN1: [V.M1, MU.E9P], V.SN2: [V.M2]})

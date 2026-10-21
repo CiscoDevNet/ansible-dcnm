@@ -1,15 +1,13 @@
-"""Native Ethernet PVLAN E3: the corrected behavior for architect review R2 findings R2-01/R2-02.
+"""Native Ethernet PVLAN: corrected behavior for the second review's findings.
 
-Every case drives the real main() through test_dcnm_intf_pvlan_harness; only external I/O is
-mocked. Case IDs E3-0x follow the E3 plan; R2 cases follow the review R2 probe, which
-asserted the E2 DEFECTS. Response labels: MEASURED (G5/G6 discovery capture), SYNTHETIC
-(robustness counterexample built on a measured capture, NOT a claim that NDFC emits it),
-TEMPLATE-PREDICTED (rendered from the pinned installed template, not measured).
+Every case drives the real main() through test_dcnm_intf_pvlan_harness; only external I/O is mocked. Response labels:
+MEASURED (discovery capture), SYNTHETIC (robustness counterexample built on a measured capture, NOT a claim that NDFC emits
+it), TEMPLATE-PREDICTED (rendered from the pinned installed template, not measured).
 
-R2-02 cases use transport_run(): the harness boundary WITHOUT its boolean capability mock and
-without the module-level dcnm_send mock. Every request of the module and of the shared helpers
-(dcnm_send, dcnm_get_bulk_api_support) reaches the fake controller through a patched
-ansible.module_utils.connection.Connection, the lowest transport the collection calls.
+The transport cases use transport_run(): the harness boundary WITHOUT its boolean capability mock and without the
+module-level dcnm_send mock. Every request of the module and of the shared helpers (dcnm_send, dcnm_get_bulk_api_support)
+reaches the fake controller through a patched ansible.module_utils.connection.Connection, the lowest transport the
+collection calls.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -84,7 +82,7 @@ TSEC_2212 = [
 ]
 BULK_PROBE = "/top-down/v2/bulk-update/networks"
 WRITE_METHODS = ("POST", "PUT", "PATCH", "DELETE")
-ACL = "ip access-group KEEP-IN in"  # SYNTHETIC: the architect's R2 probe command
+ACL = "ip access-group KEEP-IN in"  # SYNTHETIC: a review probe command
 # SYNTHETIC unowned commands for a PVLAN -> PVLAN transition. The second is a command only the
 # int_trunk_host template renders (aclFilter), so it is foreign unless that policy is involved.
 OTHER_UNOWNED = ("ip dhcp snooping trust", "ip port access-group FOO-IN in", "storm-control broadcast level 5.00")
@@ -108,7 +106,7 @@ def writes(c):
 
 def with_device_line(resp, line, negate=True, ifname=IF7):
     """SYNTHETIC: add `line` to the target's runningConfig stanza and, when `negate`, its
-    negation to the target's pendingConfig block (the R2 probe construction)."""
+    negation to the target's pendingConfig block (the review probe construction)."""
     resp = copy.deepcopy(resp)
     entry = resp["DATA"][0]
 
@@ -194,7 +192,7 @@ def transport_run(ctrl_, config, state="merged", check_mode=False, check_deploy=
 
 # ===================================================================================== E3-01
 class TestE301ProbeAclRemovalIsRefused:
-    """R2 probe UNOWNED-device-acl-removal-accepted: ADD_2212 on MEASURED G6-M0b with the
+    """Probe UNOWNED-device-acl-removal-accepted: ADD_2212 on a MEASURED preview with the
     SYNTHETIC ACL in runningConfig and its negation in pendingConfig only."""
 
     @pytest.mark.parametrize("check_deploy", [False, True])

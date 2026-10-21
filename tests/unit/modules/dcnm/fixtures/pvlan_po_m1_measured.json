@@ -1,5 +1,5 @@
 {
- "_comment": "C1-R3: M-G1 measurement M1 (NDFC 12.6.0.267, NX-OS 10.5(5), FAB1 Leaf-102 port-channel501 host 2210/2212 + Ethernet1/8, both admin down, 2026-10-10). Operator changed ONLY the port-channel MTU jumbo->default in the GUI and deployed it.",
+ "_comment": "MEASURED (NDFC 12.6.0.267, NX-OS 10.5(5), a PVLAN host port-channel 2210/2212 with one member, both admin down). Only the port-channel MTU was changed jumbo->default in the GUI and deployed.",
  "member": "Ethernet1/8",
  "operator_preview_pending": [
   "interface port-channel501",
@@ -260,11 +260,11 @@
   ]
  },
  "provenance": {
-  "expected_at_preview": "ALPHA capture, DERIVED use: expectedConfig of the post-M1 recompute preview (intent unchanged since the GUI save)",
-  "operator_preview": "OPERATOR (supplied in conversation, not captured by Alpha)",
-  "post": "ALPHA read-only capture M1-POST-port + M1-POST-preview",
-  "pre": "ALPHA read-only capture POST-U1R-port (after M2 U1R)",
-  "running_at_preview": "ALPHA: runningConfig of the M2 U1R recompute preview (In-Sync, before M1)"
+  "expected_at_preview": "Lab capture, DERIVED use: expectedConfig of the post-change recompute preview (intent unchanged since the GUI save)",
+  "operator_preview": "GUI preview (supplied, not captured by the lab reads)",
+  "post": "Read-only capture: port and preview after the change",
+  "pre": "Read-only capture: port before the change",
+  "running_at_preview": "runningConfig of the recompute preview before the change (In-Sync)"
  },
  "serial": "SAL0000PO01"
 }

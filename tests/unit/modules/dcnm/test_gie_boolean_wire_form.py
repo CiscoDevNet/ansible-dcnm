@@ -1,6 +1,6 @@
 """nvPairs is a STRING-valued map. A boolean binding must be transported as its wire form.
 
-Measured on a live controller (NDFC 12.6.0.267, Leaf-101, DISABLE_LLDP on both host eth
+Measured on a live controller (NDFC 12.6.0.267, DISABLE_LLDP on both host eth
 parents). Stage p1 set the field and NDFC stored it. Stage p2 re-sent the IDENTICAL intent and
 the module reported changed=True with 2 API calls again -- the field never converges:
 
@@ -58,7 +58,7 @@ TRUNK = "int_trunk_host"
 ACCESS = "int_access_host"
 LOOPBACK = "int_fabric_loopback_11_1"
 VERSION = "12.6.0.267"
-# PR725-PATCH-VERSION-001: every positive fixture below declares the approved caller patch
+# Every positive fixture below declares the approved caller patch
 # explicitly, read from the engine's own policy so this file cannot drift from it.
 PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 
@@ -89,7 +89,7 @@ BOOL_UNSUPPORTED = [t for t in BOOL_PASSTHROUGH if (t[0], t[1]) in _UNSUPPORTED]
 BOOL_UNSUPPORTED_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_UNSUPPORTED]
 assert BOOL_SUPPORTED and BOOL_UNSUPPORTED, "the partition must cover both sides"
 
-# PLAN-2 C1: the three PVLAN parents register booleans too, but they never reach the generic comparator these sweeps drive
+# The three PVLAN parents register booleans too, but they never reach the generic comparator these sweeps drive
 # (dcnm_intf_compare_want_and_have on a bare payload): their builders and dcnm_intf_pvlan_*_compare reconcile the FULL PVLAN set
 # (lists, members, peers) and call the same engine functions for the companions. Driving them here would test a route the module
 # never takes. The same wire-form / idempotency / merged-preservation / withdrawal contract is asserted for them through the real
@@ -185,7 +185,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 105 = 104 + enable_vpc_peer_link, the only boolean in batch 2.
     # 109 = 105 + the four int_vpc_dot1q_tunnel booleans (disable_lldp_transmit,
     # disable_lldp_receive, disable_qos_stats, disable_queuing_stats).
-    # 117 = 109 + the eight PLAN-2 C1 PVLAN companion booleans: int_pvlan_host 2 (lldp x2),
+    # 117 = 109 + the eight PVLAN companion booleans: int_pvlan_host 2 (lldp x2),
     # int_port_channel_pvlan_host 3 and int_vpc_pvlan_host 3 (lldp x2 + queuingStats each). spanning_tree_port_type (enum)
     # and acl_filter (string) are the other three C1 rows. IQ1 registers the vPC PVLAN qosStatsSuppressed (disable_qos_stats,
     # boolean): 117 + 1.
@@ -435,7 +435,7 @@ def test_omitted_boolean_is_preserved_under_merged(parent, profile_key, nvpair):
 
 # ---- HAVE encoding: "" for a boolean the template never defaulted --------------------
 #
-# Measured on NDFC 12.6.0.267 / Leaf-104 on 2026-09-20, GET of the endpoint that feeds HAVE
+# Measured on NDFC 12.6.0.267 /, GET of the endpoint that feeds HAVE
 # on an int_routed_host interface:
 #
 #     DISABLE_IPV4_REDIRECTS  ""        template declares no defaultValue

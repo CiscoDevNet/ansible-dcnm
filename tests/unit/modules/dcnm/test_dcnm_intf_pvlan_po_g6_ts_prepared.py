@@ -1,13 +1,12 @@
-"""PO G6: trunk secondary from a member PREPARED as access/routed, and equivalent member names.
+"""Trunk secondary from a member PREPARED as access/routed, and equivalent member names.
 
-MEASURED inputs (fixtures/pvlan_po_ts_exp1_measured.json, live EXP-1 on placeholder-sw-2 Ethernet1/8 / port-channel504, NX-OS 10.5(5),
-NDFC 12.6.0.267), extracted read-only:
+MEASURED inputs (fixtures/pvlan_po_ts_exp1_measured.json, NX-OS 10.5(5), NDFC 12.6.0.267), extracted read-only:
   * per branch T (trunk), R (routed), A (access): the member state before the creation (intent, policies, running), the creation
     preview (full pending, running/expected stanzas), the deploy answer (T 500 device ERROR; R/A 200) and the post stanzas;
-  * branch T clean0: a port-channel created through Manage (INTF_NAME/PO_ID `port-channel504`, MEMBER_INTERFACES `e1/8`) and the
-    G5 TSR refusal on it.
-SIMULATED: the harness serial; the EXP-1 previews followed a Manage create, here the module's legacy create (same device stanzas);
-the release answers of the harness. Real main(); only the controller boundary is intercepted.
+  * branch T clean0: a port-channel created through Manage (INTF_NAME/PO_ID `port-channel<N>`, MEMBER_INTERFACES `e1/8`) and the
+    refusal on it.
+SIMULATED: the harness serial; the measured previews followed a Manage create, here the module's legacy create (same device
+stanzas); the release answers of the harness. Real main(); only the controller boundary is intercepted.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -85,7 +84,7 @@ def create(ctrl, pv=None, **profile):
     return run(ctrl, [{"name": "po504", "type": "pc", "switch": [SWITCH_IP], "deploy": True, "profile": prof}], state="replaced")
 
 
-# ------------------------------------------------------------------ the measured EXP-1 data itself
+# ------------------------------------------------------------------ the measured data itself
 def test_fixture_states_the_measured_branches():
     assert member_policy("T") == TRUNK and member_policy("R") == P.PO_ROUTED_BASELINE_POLICY and member_policy("A") == P.PO_ACCESS_BASELINE_POLICY
     assert branch("T")["deploy_answer"]["http"] == 500 and "PVLAN TRUNK SEC config present" in json.dumps(branch("T")["deploy_answer"])
@@ -222,7 +221,7 @@ def test_routed_force_state_takes_the_admin_line_from_the_pending_and_drops_no_s
 
 # ------------------------------------------------------------------ release contract after a prepared creation
 def test_deleting_a_trunk_secondary_po_created_from_an_access_member_releases_to_the_trunk_host_not_back_to_access():
-    """The release contract (measured in EXP-1 cleanups): the controller releases the member as int_trunk_host; G5 corrects its
+    """The release contract (measured in clean-ups): the controller releases the member as int_trunk_host; the release step corrects its
     admin state. The module does not restore the prepared access/routed policy: that is a separate, explicit step."""
     ctrl = ctrl_for("A")
     assert create(ctrl, measured_preview("A"))[0] == "exit"
@@ -286,7 +285,7 @@ def test_deleting_a_trunk_secondary_po_created_from_an_access_member_releases_to
 # ------------------------------------------------------------------ equivalent names (Manage-created port-channel)
 class ManageReleaseController(PoLifecycleController):
     """The g1 lifecycle harness, but the mark-delete releases the member the way the controller did for the Manage-created
-    port-channel (EXP-1 T recovery, MEASURED: the member read after the mark-delete was Ethernet1/8 int_trunk_host,
+    port-channel (recovery, MEASURED: the member read after the mark-delete was Ethernet1/8 int_trunk_host,
     ADMIN_STATE "true"). The g1 fake would release the literal MEMBER_INTERFACES token `e1/8` instead."""
 
     def __init__(self):
@@ -301,7 +300,7 @@ class ManageReleaseController(PoLifecycleController):
 
 
 def manage_ctrl():
-    """The MEASURED Manage-created port-channel of EXP-1 T clean0: Po intent `port-channel504` with MEMBER_INTERFACES `e1/8`, the
+    """The MEASURED Manage-created port-channel of the trunk-branch clean-up: Po intent `port-channel504` with MEMBER_INTERFACES `e1/8`, the
     member `int_port_channel_pvlan_member` of PO_ID `port-channel504` (POLICY_ID dropped for the harness numbering)."""
     st = FX["manage_created_po_T_clean0"]
     ctrl = ManageReleaseController()

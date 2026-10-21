@@ -1,12 +1,14 @@
-"""DUPLEX: the member's `duplex full` of a PVLAN port-channel / vPC leg carried by the port-channel's own pending (MEASURED inheritance), plus F-A.
+"""The member's `duplex full` of a PVLAN port-channel / vPC leg carried by the port-channel's own pending (MEASURED
+inheritance), plus the refusal of `duplex full` with speed Auto.
 
-Sources (sanitized, read-only extracts of the live duplex diagnostics; raw captures stay outside the product):
-  fixtures/pvlan_po_duplex_measured.json  -- G1: Po521 / Ethernet1/8, speed 1000 fixed, `duplex full` apply and withdrawal, previews before the
-                                             deploy and the converged previews after each;
-  fixtures/pvlan_vpc_duplex_measured.json -- G2: vPC522, Ethernet1/9, the same cases on BOTH peers, each on its own serial.
-Measured: NDFC 12.6.0.267, N9K-C9300v 10.5(5), host mode, ONE member per port-channel / leg, admin down, border switches. NOT measured, refused here:
-`duplex half`, a speed + duplex change in one transition, another speed, an MTU change with it, an up port. These tests are offline controller
-DOUBLES fed with real captured previews; they are not the module's live acceptance. Several members are covered by the per-member validation only.
+Sources (sanitized, read-only extracts of live duplex diagnostics):
+  fixtures/pvlan_po_duplex_measured.json  -- a port-channel with one member, speed 1000 fixed, `duplex full` apply and
+                                             withdrawal, previews before the deploy and the converged previews after each;
+  fixtures/pvlan_vpc_duplex_measured.json -- a vPC with one member per leg, the same cases on BOTH peers, each on its own serial.
+Measured: NDFC 12.6.0.267, N9K-C9300v 10.5(5), host mode, ONE member per port-channel / leg, admin down, border switches. NOT
+measured, refused here: `duplex half`, a speed + duplex change in one transition, another speed, an MTU change with it, an up
+port. These tests are offline controller DOUBLES fed with real captured previews; they are not the module's live acceptance.
+Several members are covered by the per-member validation only.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -574,7 +576,7 @@ def test_f_a_helper_contract(nv, blocked):
     assert bool(problems) is blocked, (nv, problems)
 
 
-# ====================================================================================== R1 / F2: the combined speed + duplex change is refused BEFORE the write
+# ====================================================================================== the combined speed + duplex change is refused BEFORE the write
 COMBINED = "speed and duplex cannot change in the same request"
 PO_CHILD = "port-channel10"
 
@@ -686,7 +688,7 @@ def test_f2_vpc_restating_an_equal_value_and_the_duplex_alone_are_not_blocked():
     assert status == "exit" and res["changed"] is True and COMBINED not in str(res.get("msg", "")), res.get("msg")
 
 
-# ====================================================================================== R1 / F3: the stored duplex is read back
+# ====================================================================================== the stored duplex is read back
 def _force_duplex_after_modify(ctrl, apply):
     base_call = type(ctrl).__call__
 

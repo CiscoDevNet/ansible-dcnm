@@ -18,12 +18,12 @@ restart -- because the parent refuses a partial group, and `disable_bfd_echo` ne
 prerequisite of its own. So this is a configuration that stands on its own rather than a pile of
 fields assembled to inflate a payload.
 
-Deploy travels FALSE, which is what the dampening campaign used in every stage. The harness
-default is `deploy=True`; leaving it would assert against a model that campaign never sent.
+Deploy travels FALSE, as in every live dampening step. The harness default is `deploy=True`;
+leaving it would assert against a model that was never sent.
 
 EVIDENCE STATUS, KEPT APART DELIBERATELY
 
-The BFD reset retains its source-campaign live acceptance. The seven dampening resets are
+The BFD reset retains its live acceptance. The seven dampening resets are
 CONTROLLER_OMISSION_VERIFIED / DEVICE_NOT_VALIDATED: their omission was observed at the
 controller with deploy false, NX-OS withdrawal was never validated, and the lab platform does not
 support that CLI. Putting them in one offline request proves they coexist in the module's
@@ -293,7 +293,7 @@ def test_the_dampening_evidence_status_is_not_upgraded_by_this_coexistence():
     This case asserts the only part of that a table can carry: the rows are registered, and the
     BFD row they travel beside is registered too. It deliberately asserts NOTHING about device
     behaviour, and its presence must not be read as device validation of dampening. The
-    evidence split lives in the campaign reviews and in the task's support-limitation note.
+    evidence split is documented with the review of these rows.
     """
     for key in ("enable_dampening", "dampening_restart", "dampening_half_life",
                 "dampening_reuse", "dampening_suppress", "dampening_max_suppress",

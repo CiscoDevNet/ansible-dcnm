@@ -1,16 +1,14 @@
-"""F2: resetting a physical port to its role default also withdraws registered drift.
+"""Resetting a physical port to its role default also withdraws registered drift.
 
-Review finding F2: named `deleted` and `overridden` compare the role default
-payload with the controller's policy on legacy nvPairs only, and the default payload carries no
-registered nvPair. A port whose only drift was a registered field (an ACL, flow control) read as
-already default; a reset that was sent for another reason left the field in place.
+Named `deleted` and `overridden` used to compare the role default payload with the controller's policy on legacy nvPairs
+only, and the default payload carries no registered nvPair. A port whose only drift was a registered field (an ACL, flow
+control) read as already default; a reset that was sent for another reason left the field in place.
 
-Real main() through gie_withdrawal_harness. The roles are the ones NDFC returns, lower-case
-("leaf" -> int_trunk_host, "border" -> int_routed_host); the binding fixture's "Leaf" is not
-representative and is not used. The transport only adds the physical-port flags a real 12.6.0.267
-interface-detail read carries (deletable "false", editAllowed "true", mgmtIpAddress), so the named
-`deleted` path is in scope. The "already default" HAVE is the module's own emitted reset payload.
-Values are synthetic.
+Real main() through gie_withdrawal_harness. The roles are the ones NDFC returns, lower-case ("leaf" -> int_trunk_host,
+"border" -> int_routed_host); the binding fixture's "Leaf" is not representative and is not used. The transport only adds
+the physical-port flags a real 12.6.0.267 interface-detail read carries (deletable "false", editAllowed "true",
+mgmtIpAddress), so the named `deleted` path is in scope. The "already default" HAVE is the module's own emitted reset
+payload. Values are synthetic.
 """
 
 from __future__ import absolute_import, division, print_function

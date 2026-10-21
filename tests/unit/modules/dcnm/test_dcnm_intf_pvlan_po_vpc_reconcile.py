@@ -1,14 +1,13 @@
-"""RECONCILE: PVLAN regular port-channel / vPC under `overridden` (A) and the NaC deployment contract (B).
+"""PVLAN regular port-channel / vPC under `overridden` (A) and the NaC deployment contract (B).
 
-A -- `overridden` reuses the existing paths: a PVLAN aggregate the request keeps goes through its own PVLAN compare (replace semantics),
-and every PVLAN aggregate of the sweep's scope that the request no longer wants is registered by the SAME deletion preflight as a named
-`deleted` (ownership, admin-down members, fabric host default, bulk API), released by G4/E5 and verified. The generic default reset the
-sweep queues for the member of a deleted aggregate is withdrawn (the PVLAN release corrects that member itself).
+A -- `overridden` reuses the existing paths: a PVLAN aggregate the request keeps goes through its own PVLAN compare (replace
+semantics), and every PVLAN aggregate of the sweep's scope that the request no longer wants is registered by the SAME deletion
+preflight as a named `deleted` (ownership, admin-down members, fabric host default, bulk API), released and verified. The generic
+default reset the sweep queues for the member of a deleted aggregate is withdrawn (the PVLAN release corrects that member itself).
 
-MEASURED inputs: the existing fixtures of the harnesses (H1/G4R1 for the regular Po, L1/E4 for the vPC) and, for the vPC summary,
-`deletable` False on the child port-channel and on the physical members, True on the parent (alpha2-vpc-combined-live C0, NDFC
-12.6.0.267, sum104.json) -- the vPC harness reports True everywhere, so MeasuredVpc restores the measured value. Real main(); only the
-controller boundary is intercepted.
+MEASURED inputs: the existing fixtures of the harnesses and, for the vPC summary, `deletable` False on the child port-channel and
+on the physical members, True on the parent (NDFC 12.6.0.267) -- the vPC harness reports True everywhere, so MeasuredVpc restores
+the measured value. Real main(); only the controller boundary is intercepted.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -69,8 +68,8 @@ class MeasuredVpc(V.VpcController):
 
 def measured_po(ctrl):
     """The Po harnesses report `deletable` True and no policy source on physical ports; the controller reports `deletable` False on a
-    PVLAN member and on a standalone int_trunk_host, and the member's policy source is its port-channel in lower case (MEASURED: G4R1
-    HR-pre summary `port-channel502`, C0 sum104, Leaf-103/104 Ethernet1/15 of PR725-ADMIN-UP-JOIN). The sweep then defers those ports to
+    PVLAN member and on a standalone int_trunk_host, and the member's policy source is its port-channel in lower case (MEASURED in the
+    summaries). The sweep then defers those ports to
     their source instead of resetting them directly, which is the path the controller really takes."""
     original = ctrl._summary_list
 
@@ -131,7 +130,7 @@ def test_override_intf_types_that_exclude_port_channels_leave_the_pvlan_port_cha
 
 
 def test_a_dropped_port_channel_whose_member_is_up_is_released_to_the_fabric_default():
-    # RELEASE-ADMIN: the up member is released like a down one; the fabric default here is "false", so it is corrected before the deploy
+    # The up member is released like a down one; the fabric default here is "false", so it is corrected before the deploy
     ctrl = measured_po(G4.owned_ctrl())
     ctrl.detail[G4.MEM]["nvPairs"]["ADMIN_STATE"] = "true"
     status, result = run(ctrl, [lo(SWITCH_IP)], state="overridden")
@@ -204,7 +203,7 @@ def test_vpc_whose_pair_the_controller_does_not_confirm_is_refused_before_any_wr
 
 
 def test_vpc_dropped_with_an_up_member_on_one_peer_is_released_to_the_fabric_default():
-    # RELEASE-ADMIN: an up member no longer blocks the drop; both released members reach the fabric default ("false") before the deploy
+    # An up member no longer blocks the drop; both released members reach the fabric default ("false") before the deploy
     ctrl = vpc_ctrl()
     ctrl.nodes[V.SN2][V.M2]["nvPairs"]["ADMIN_STATE"] = "true"
     V.delete_previews(ctrl)
@@ -322,7 +321,7 @@ def vpc_queue(ctrl, n):
 
 def vpc_saved_ctrl():
     ctrl = vpc_ctrl()
-    ctrl.children_marked_deleted = True  # MEASURED (L1-E4 live F): the children stay listed, marked, until the deploy
+    ctrl.children_marked_deleted = True  # MEASURED: the children stay listed, marked, until the deploy
     vpc_queue(ctrl, 1)
     status, result = V.run_vpc(ctrl, [V.vpc_del_item(deploy=False)], state="deleted")
     assert status == "exit" and result["changed"] is True, result.get("msg")

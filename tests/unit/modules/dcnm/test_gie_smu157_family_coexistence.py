@@ -9,11 +9,10 @@ closure asserted. That is necessary and it is not the same question as this one.
 Every pilot fixture in `gie_withdrawal_harness.py` carries only its OWN family's prerequisite
 context -- `OSPF_CTX` for the OSPF rows, `EIGRP_CTX`/`EIGRP_DL4` for the EIGRP rows,
 `MACSEC_FB_CTX` and friends for MACsec -- so each row is exercised through the real `main()`
-alone, never beside a row from another campaign. Checked before writing this file: no fixture
-in the harness mixes families, and no existing test drives two families through one module
-invocation. So nothing established that a single `replaced` request can carry a withdrawal
-from ALPHA's campaign and a withdrawal from BETA's at the same time, with the fields neither
-targets while the other family's prerequisites survive.
+alone, never beside a row from another family. No fixture in the harness mixes families,
+and no other test drives two families through one module invocation. So nothing else
+establishes that a single `replaced` request can carry a withdrawal from each family at the
+same time while the other family's prerequisites survive.
 
 WHAT IS AND IS NOT COMBINED, DELIBERATELY
 
@@ -26,7 +25,7 @@ would be green in a mock while impossible on a controller.
 
 The MACsec target is always the FALLBACK name, because that is the only one of the four whose
 EXPLICIT clear was measured ON ITS OWN, with the gate enabled and keychain and policy intact.
-What the source campaign measured about the other three, stated exactly:
+What was measured about the other three, stated exactly:
 
   * `macsecKeyChainName` and `macsecPolicyName` -- the two primary names -- were REFUSED by
     the controller, by field name, while the gate was enabled. A fixture that omitted either
@@ -46,15 +45,9 @@ Offline. Real `main()`, real argument spec, real validation, real serialisation;
 inventory/transport. Assertions are made against the CAPTURED REQUEST and the PUBLIC DIFF,
 never against `changed`.
 
-NOT LIVE TESTED IN THIS GENERATION, and the integrated tuple is not live tested at all. Each
-reset carries the live acceptance of its own source campaign and no other.
-
-Registration is not acceptance in general -- but for this candidate the two campaign gates are
-closed: ALPHA's three `enable_ospf` omissions (int_routed_host, int_subif, int_vlan) were
-ACCEPTED as grouped source-campaign results, so the earlier "still pending" note is stale and
-has been removed rather than left to mislead. All 157 are registered AND source-campaign
-accepted, with each campaign's coordinated and platform limits unchanged. That is still not an
-integrated live-tested tuple.
+NOT LIVE TESTED as an integrated tuple. Each reset carries its own live acceptance, with its
+coordinated and platform limits; the three grouped `enable_ospf` omissions (int_routed_host,
+int_subif, int_vlan) were accepted as grouped results.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -146,7 +139,7 @@ def test_both_families_are_registered_before_anything_below_is_meaningful():
             % (parent, key, type(b["reset_wire"]).__name__))
 
 
-# ==================================================== one request, two campaigns' resets
+# ==================================================== one request, two families' resets
 @pytest.mark.parametrize("key,nvpair,applied,reset,route_ctx,retained", CASES)
 def test_one_replaced_request_carries_a_withdrawal_from_each_family(
     key, nvpair, applied, reset, route_ctx, retained

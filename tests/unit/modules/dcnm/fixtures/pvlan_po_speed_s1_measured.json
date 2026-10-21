@@ -1,5 +1,5 @@
 {
- "_comment": "MEASURED (Alpha2 RC2 live run RC2-20261012T050257Z, step RC2-PO-SF S1: merged speed 1Gb on an existing PVLAN host port-channel with one member; NDFC 12.6.0.267, N9K-C9300v 10.5(5)). Extracted read-only and sanitized: serials, policy ids and switch names removed; only the port-channel and member stanzas of the switch that changed are kept. The deploy was refused by RC2 (nothing deployed); the intent was then restored operationally to SPEED Auto.",
+ "_comment": "MEASURED (merged speed 1Gb on an existing PVLAN host port-channel with one member; NDFC 12.6.0.267, N9K-C9300v 10.5(5)). Extracted read-only and sanitized: serials, policy ids and switch names removed; only the port-channel and member stanzas of the switch that changed are kept. The deploy was refused (nothing deployed); the intent was then restored to SPEED Auto.",
  "member_before_nv": {
   "ADMIN_STATE": "false",
   "CDP_ENABLE": "true",

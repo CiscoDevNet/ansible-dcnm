@@ -1,18 +1,16 @@
-"""MIXED-CREATE (F-1): a conventional and a PVLAN aggregate CREATED in ONE dcnm_interface call with deploy true (live 2026-10-17,
-cisco.dcnm f3b5ef3b).
+"""A conventional and a PVLAN aggregate CREATED in ONE dcnm_interface call with deploy true.
 
-The module created Port-channel301 (conventional, member Eth1/14) and Port-channel310 (PVLAN host, member Eth1/16) on Leaf-102, both
-answered 200, and sent one deploy batch [Port-channel301, Port-channel310]. The PVLAN pre-deploy gate (`deploy`) read the fresh pending,
-found the conventional member's JOIN (`channel-group 301 force mode active`) and refused: "pending exists for interfaces outside this
-deploy batch: ethernet1/14". Nothing was deployed; the intent stayed changed.
+The conventional member's JOIN (`channel-group <id> force mode active`) appears in the pending that the PVLAN pre-deploy gate
+(`deploy`) reads, and must not be refused as "outside this deploy batch".
 
-Fixed rule (same family as the T5 release and T6 deletion rules): a pending interface outside the PVLAN batch is accepted ONLY when THIS
-invocation's confirmed write of a CONVENTIONAL aggregate joined it on THAT physical serial (members sent minus the pre-state members read
-by this run; all of them for a creation) AND its pending block joins that aggregate's channel-group (`channel-group <id>[ force][ mode M]`).
-For a conventional vPC this invocation created, the child `port-channel<id>` of each peer is that creation's own pending too.
+Rule (same family as the release and deletion rules): a pending interface outside the PVLAN batch is accepted ONLY when THIS
+invocation's confirmed write of a CONVENTIONAL aggregate joined it on THAT physical serial (members sent minus the pre-state
+members read by this run; all of them for a creation) AND its pending block joins that aggregate's channel-group
+(`channel-group <id>[ force][ mode M]`). For a conventional vPC this invocation created, the child `port-channel<id>` of each
+peer is that creation's own pending too.
 
-Shapes: Po from the measured F-1 pending (summary_post-1 of po-setup-a1); the vPC equivalent is SIMULATED with the same measured member
-form (no live vPC reproduction exists). Real main() through the existing harnesses; only the controller boundary is faked.
+Shapes: the Po case uses a measured pending; the vPC case is SIMULATED with the same member form. Real main() through the
+existing harnesses; only the controller boundary is faked.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -33,7 +31,7 @@ PATCH = MB.PATCH
 
 
 def join_block(member, pcid=301, join=True):
-    """The MEASURED F-1 pending of a conventional member joined by its new port-channel (po-setup-a1, Leaf-102 Eth1/14)."""
+    """The MEASURED pending of a conventional member joined by its new port-channel."""
     lines = ["interface %s" % member.lower(), "  no spanning-tree bpduguard disable", "  no spanning-tree port type edge trunk"]
     if join:
         lines.append("  channel-group %d force mode active" % pcid)
@@ -45,7 +43,7 @@ def conv_po_stanza(pcid=301):
             "  spanning-tree bpduguard enable", "  spanning-tree port type edge trunk", "  description INTEG-PO-CONV-V2", "  no shutdown"]
 
 
-# ================================================================== regular port-channels (Leaf-102 F-1 shape)
+# ================================================================== regular port-channels
 def po_ctrl(conv_members=(IF8,)):
     ctrl = PH.baseline_ctrl()
     for port in conv_members:
@@ -150,7 +148,7 @@ def test_conventional_member_added_by_an_update_in_the_same_call_is_owned():
     assert result["pvlan_gate_invocation_releases"] == [{"site": "update_saved", "serial": MB.HH.SERIAL, "interfaces": ["ethernet1/15"]}]
 
 
-# ================================================================== vPC (Leaf-103/104 shape, SIMULATED)
+# ================================================================== vPC (simulated)
 CONV_VPC, CONV_VPC_ITEM = "vPC305", "vpc305"
 V5 = "Ethernet1/5"
 

@@ -1,8 +1,8 @@
-"""Helper-level E2 supplements (they do not replace the real-main cases in test_dcnm_intf_pvlan_e2.py).
+"""Helper-level supplements (they do not replace the real-main cases in test_dcnm_intf_pvlan_e2.py).
 
-assess_target is replayed on every MEASURED discovery preview that carries device authority:
-before the deploy each accepted transition must be deployable and PU3/PX1 refused; after the
-deploy every converged read must be recognised as converged; every repeat read is converged.
+assess_target is replayed on every MEASURED discovery preview that carries device authority: before the deploy each accepted
+transition must be deployable and the partial promiscuous removals refused; after the deploy every converged read must be
+recognised as converged; every repeat read is converged.
 """
 
 from __future__ import absolute_import, division, print_function
