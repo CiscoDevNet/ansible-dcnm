@@ -5,6 +5,8 @@ import ast
 import json
 import re
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_OSPF_BOOLEAN_ALIASES, gie_normalize_ospf_aliases
+
 try:
     from pydantic import BaseModel, ConfigDict, field_validator, model_validator
     HAS_PYDANTIC = True
@@ -445,6 +447,37 @@ def r2_wire(parent, nvpair, kind, value):
     if kind == "enum":
         return R2_WIRE_VALUES.get((parent, nvpair), {}).get(value, value)
     return value
+
+
+def r2_apply_ospf_aliases(parent, profile):
+    """Translate the documented OSPF boolean aliases of a YAML profile to the registered mode keys.
+
+    The module still accepts ``ospf_bfd`` and ``ospf_passive_interface`` (true -> enable / passive, false -> no_change,
+    never the explicit disable / no_passive), but they are not registry identities since SMU 4.3.1.0175006017, so the
+    expected-nvPair loop would skip them without a diagnosis. The module's own normalization (``gie_normalize_ospf_aliases``)
+    is reused so the checker and the module cannot drift. Returns (profile, problems): a translated COPY, or the unchanged
+    profile and one message per reason the module would refuse. Messages name keys and types, never values.
+    """
+    aliases = sorted(set(key for (_parent, key) in GIE_OSPF_BOOLEAN_ALIASES))
+    present = [key for key in aliases if key in profile]
+    if not present:
+        return profile, []
+    translated = dict(profile)
+    if parent is None:
+        return profile, ["'%s' cannot be validated - the expected parent is unknown, so the alias cannot be mapped to its mode key" % k
+                         for k in present]
+    _result, reason = gie_normalize_ospf_aliases(parent, translated)
+    if reason is None:
+        return translated, []
+    kind, _sep, rest = reason.partition(":")
+    if kind == "not_applicable":
+        where = sorted(p for (p, k) in GIE_OSPF_BOOLEAN_ALIASES if k == rest)
+        return profile, ["'%s' cannot be validated - it is an alias only on %s, not on the expected parent %s" % (rest, ", ".join(where), parent)]
+    if kind == "not_boolean":
+        key, _sep, given = rest.partition(":")
+        return profile, ["'%s' cannot be validated - it must be a boolean (received %s)" % (key, given)]
+    alias, _sep, mode_key = rest.partition(":")
+    return profile, ["'%s' and '%s' cannot be validated - they request different settings for the same OSPF field" % (alias, mode_key)]
 
 
 def r2_expected_parent(interface):
@@ -1004,8 +1037,10 @@ class DcnmInterfaceQuerySchema(BaseModel):
 
             # R2: registered profile keys, per parent
             parent = r2_expected_parent(interface)
-            for key in sorted(set(profile) & set(R2_REGISTERED_BINDINGS)):
-                val = profile[key]
+            reg_profile, alias_problems = r2_apply_ospf_aliases(parent, profile)
+            problems.extend("%s: %s" % (expanded_name, m) for m in alias_problems)
+            for key in sorted(set(reg_profile) & set(R2_REGISTERED_BINDINGS)):
+                val = reg_profile[key]
                 if val is None:
                     continue  # null is an omission for the module: nothing is requested
                 nvpair, kind, parents = R2_REGISTERED_BINDINGS[key]

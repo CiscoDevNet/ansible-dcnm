@@ -149,8 +149,8 @@ def test_normalization_is_a_noop_for_a_profile_without_a_legacy_key():
 # ------------------------------------------------------------------ gate
 @pytest.mark.parametrize("parent,mode_key,nvpair,alias,positive,wire", CASES, ids=IDS)
 @pytest.mark.parametrize("patch", ["4.3.1.0175006011", None, "4.3.1.0175006016"])
-def test_an_explicit_mode_is_refused_before_any_write_without_the_017_declaration(parent, mode_key, nvpair, alias,
-                                                                                    positive, wire, patch):
+def test_an_explicit_mode_is_refused_before_any_write_without_the_017_declaration(
+        parent, mode_key, nvpair, alias, positive, wire, patch):
     result, calls = h.run_configs(
         [h.cfg_for(parent, h.base_for(parent, **dict(CTX, **{mode_key: positive})))], "merged", patch_version=patch)
     assert result.get("failed") and h.writes(calls) == []

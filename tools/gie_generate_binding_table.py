@@ -955,10 +955,14 @@ SCHEMA_TYPES = frozenset({"boolean", "integer", "string", "enum"})
 # configuration inline (setGeneratedConfig, no child policy), so a policy change removes no child and the
 # cleanup of their lines is not established.
 POLICY_CHANGE_DROPS_CHILDREN = {
-    # Installed int_routed_host body (sha256 6d37ea6a...): 59 of 59 createOrUpdate calls use
-    # entity = source = INTF_NAME, and delete() removes them all. Measured on 12.6.0.267: after a reset
-    # from int_routed_host to int_trunk_host the intent kept no routed key and the switch's policy ids
-    # returned to their baseline set.
+    # SMU 4.3.1.0175006017 (the supported SMU): int_routed_host body sha256 b5345584... (saved capture of ND .80): 74 of 74
+    # `createOrUpdate(` calls use entity = source = INTF_NAME, and def delete() is byte-identical to the earlier body. The new
+    # children (directional LLDP, dampening variants, CDP, DCI tracking, OSPF retransmit interval) follow the same rule. That
+    # makes this declaration hold on 017 by SOURCE ANALYSIS; the reset itself was not measured on 017 (the live run on 017
+    # applied an explicit merged change to routed, not a reset). The deletion behaviour is therefore an inference there.
+    # Distinct evidence on SMU 011 (int_routed_host body sha256 6d37ea6a..., 63 of 63 by the same count): measured on
+    # 12.6.0.267 that after a reset from int_routed_host to int_trunk_host the intent kept no routed key and the switch's
+    # policy ids returned to their baseline set.
     "int_routed_host",
 }
 
@@ -970,11 +974,15 @@ POLICY_CHANGE_CLEARS_INLINE = {
     # Measured on 12.6.0.267, NX-OS 10.5(5), one border trunk port (the module's ordinary border-default routed payload,
     # then a port deploy): NDFC generated `no ip port access-group <acl> in`, `no spanning-tree port type network`,
     # `no spanning-tree guard root`, `no flowcontrol receive on` and `no flowcontrol send on`; the running became the
-    # routed default and the ACL definition stayed. Installed int_trunk_host body sha256 99dc8f0a...
+    # routed default and the ACL definition stayed. That measurement is on SMU 011. The int_trunk_host body is byte-identical
+    # on SMU 4.3.1.0175006017 (sha256 99dc8f0a... on both), so the declaration holds on 017 by source analysis; it was not
+    # measured on 017.
     "int_trunk_host": ("int_routed_host",),
-    # NOT measured live. Same mechanism by template parity: the installed int_access_host body (sha256 fa5861c6...)
-    # renders the same inline lines for aclFilter, spanningTreePortType and flowcontrol, and the destination and its
-    # compliance are the same. Needs its own border access-to-routed live case before acceptance.
+    # Same mechanism by template parity. int_access_host bodies: SMU 011 fa5861c6..., SMU 017 103fc249...; def delete() is
+    # identical and the only change is the inline `logging event port link-status` line behind loggingEventPortLinkStatus
+    # (default false, not registered), so the inline rendering of aclFilter, spanningTreePortType and flowcontrol is unchanged.
+    # The access-to-routed case is reported as measured on SMU 011 by Alpha2 (generation 4, source 598ec6a8; that evidence was
+    # not re-read here). It was not measured on 017.
     "int_access_host": ("int_routed_host",),
 }
 
