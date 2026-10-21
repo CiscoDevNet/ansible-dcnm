@@ -18,6 +18,8 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
+import json
+import re
 from unittest.mock import Mock, patch
 
 # from units.compat.mock import patch
@@ -3992,6 +3994,8 @@ class TestDcnmIntfModule(TestDcnmModule):
             self.run_dcnm_version_supported.side_effect = [
                 (12, "12.4.1.245")
             ]
+        elif "_breakout_ovr_" in self._testMethodName:
+            self.run_dcnm_version_supported.side_effect = [(12, "12.2.2")]
         else:
             self.run_dcnm_version_supported.side_effect = [11]
 
@@ -4040,6 +4044,444 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.load_missing_members_fixtures()
         self.load_query_state_fixtures()
         self.load_intf_misc_fixtures()
+
+        if "_breakout_ovr_" in self._testMethodName:
+            self.load_breakout_ovr_fixtures()
+
+    # -------------------------- BREAKOUT-OVERRIDDEN --------------------------
+
+    BREAKOUT_OVR_SW = "192.168.1.108"
+    BREAKOUT_OVR_SNO = "SAL1819SAN8"
+    BREAKOUT_OVR_CHILDREN = ["Ethernet1/1/1", "Ethernet1/1/2", "Ethernet1/1/3", "Ethernet1/1/4"]
+
+    def prepare_breakout_ovr_test(self):
+        """
+        Controller state: Ethernet1/1 on SAL1819SAN8 is broken out (10g-4x) into
+        Ethernet1/1/1-4, each carrying non-default trunk config, plus Ethernet1/2.
+        """
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        for switch in self.mock_fab_inv.values():
+            switch["switchRole"] = "leaf"
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        breakout_data = loadPlaybookData("dcnm_intf_breakout_policies")
+        self.breakout_ovr_policies = breakout_data.get("breakout_e1_1_policies")
+        self.breakout_ovr_empty_policies = breakout_data.get(
+            "empty_breakout_policies"
+        )
+
+    def breakout_ovr_have_all_entry(self, name):
+        return {
+            "ifName": name,
+            "mode": "trunk",
+            "serialNo": self.BREAKOUT_OVR_SNO,
+            "fabricName": "test_fabric",
+            "ifType": "INTERFACE_ETHERNET",
+            "isPhysical": "True",
+            "deletable": "False",
+            "editAllowed": "True",
+            "markDeleted": "False",
+            "alias": "",
+            "deleteReason": None,
+            "complianceStatus": "In-Sync",
+            "mgmtIpAddress": self.BREAKOUT_OVR_SW,
+            "underlayPolicies": [{"source": ""}],
+            "interfaces": [{"nvPairs": {}}],
+        }
+
+    def breakout_ovr_intf_detail(self, name):
+        return {
+            "policy": "int_trunk_host",
+            "interfaces": [
+                {
+                    "interfaceType": "INTERFACE_ETHERNET",
+                    "ifName": name,
+                    "serialNumber": self.BREAKOUT_OVR_SNO,
+                    "fabricName": "test_fabric",
+                    "nvPairs": {
+                        "INTF_NAME": name,
+                        "MTU": "default",
+                        "SPEED": "Auto",
+                        "ALLOWED_VLANS": "10-20",
+                        "NATIVE_VLAN": "",
+                        "BPDUGUARD_ENABLED": "no",
+                        "PORTTYPE_FAST_ENABLED": "true",
+                        "ADMIN_STATE": "true",
+                        "DESC": "server " + name,
+                        "CONF": "",
+                    },
+                }
+            ],
+        }
+
+    def load_breakout_ovr_fixtures(self):
+
+        sno = self.BREAKOUT_OVR_SNO
+        names = self.BREAKOUT_OVR_CHILDREN + ["Ethernet1/2"]
+        have_all = {
+            "RETURN_CODE": 200,
+            "MESSAGE": "OK",
+            "DATA": [self.breakout_ovr_have_all_entry(n) for n in names],
+        }
+        details = {
+            "RETURN_CODE": 200,
+            "MESSAGE": "OK",
+            "DATA": [self.breakout_ovr_intf_detail(n) for n in names],
+        }
+        empty = {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": []}
+
+        def dcnm_send_side_effect(module, method, path, *args, **kwargs):
+            if path.endswith("/accessmode"):
+                return self.mock_monitor_false_resp
+            if "/control/policies/switches/" in path:
+                if path.endswith(sno):
+                    return self.breakout_ovr_policies
+                return self.breakout_ovr_empty_policies
+            if "interface/detail?serialNumber=" in path:
+                return have_all if sno in path else empty
+            if method == "GET" and "interface?serialNumber=" in path:
+                if sno not in path:
+                    return empty
+                if "ifName=" in path:
+                    if_name = path.split("ifName=")[1].lower()
+                    return {
+                        "RETURN_CODE": 200,
+                        "MESSAGE": "OK",
+                        "DATA": [
+                            d for d in details["DATA"]
+                            if d["interfaces"][0]["ifName"].lower() == if_name
+                        ],
+                    }
+                return details
+            return self.playbook_mock_succ_resp
+
+        self.run_dcnm_send.side_effect = dcnm_send_side_effect
+
+    def breakout_ovr_mutating_calls(self):
+        return [
+            (call.args[1], call.args[2], call.args[3] if len(call.args) > 3 else None)
+            for call in self.run_dcnm_send.call_args_list
+            if len(call.args) > 2 and call.args[1] in ("POST", "PUT", "DELETE")
+        ]
+
+    def breakout_ovr_unbreakout_calls(self):
+        # Un-breakout requests are identified by their payload (breakout child
+        # ports), independent of the endpoint they were sent to.
+        return [
+            (method, path, data)
+            for (method, path, data) in self.breakout_ovr_mutating_calls()
+            if method == "DELETE"
+            and data
+            and any(
+                re.search(r"\d+/\d+/\d+$", item.get("ifName", ""))
+                for item in json.loads(data)
+            )
+        ]
+
+    def breakout_ovr_delete_calls(self):
+        return [
+            (method, path, data)
+            for (method, path, data) in self.breakout_ovr_mutating_calls()
+            if method == "DELETE"
+        ]
+
+    def assert_breakout_ovr_unbreakout_request(self):
+        # NDFC un-breaks ports via "Delete/Unbreakout Interfaces" (DELETE /interface).
+        # /interface/breakout only supports POST and returns 405 for DELETE.
+        unbreakout_calls = self.breakout_ovr_unbreakout_calls()
+        self.assertEqual(len(unbreakout_calls), 1, self.breakout_ovr_mutating_calls())
+        method, path, data = unbreakout_calls[0]
+        self.assertTrue(path.endswith("/rest/interface"), path)
+        self.assertEqual(
+            json.loads(data),
+            [{"serialNumber": self.BREAKOUT_OVR_SNO, "ifName": "Ethernet1/1/1"}],
+        )
+        for method, path, data in self.breakout_ovr_mutating_calls():
+            if method == "DELETE":
+                self.assertFalse(path.endswith("/interface/breakout"), path)
+                self.assertFalse(path.endswith("/interface/modify"), path)
+
+    def assert_breakout_ovr_unbroken(self, result):
+        self.assert_breakout_ovr_unbreakout_request()
+
+        # Child ports of the removed breakout must not be reset or deployed.
+        for key in ("replaced", "deploy"):
+            for item in result["diff"][0][key]:
+                if_name = (
+                    item["interfaces"][0]["ifName"]
+                    if "interfaces" in item
+                    else item["ifName"]
+                )
+                self.assertNotIn(if_name, self.BREAKOUT_OVR_CHILDREN, key)
+
+        deleted = [
+            d for d in result["diff"][0]["deleted"]
+            if d.get("interfaceType") == "breakout_interface"
+        ]
+        self.assertEqual(
+            deleted,
+            [
+                {
+                    "serialNumber": self.BREAKOUT_OVR_SNO,
+                    "ifName": "Ethernet1/1",
+                    "interfaceType": "breakout_interface",
+                }
+            ],
+        )
+
+    def breakout_ovr_eth_1_2_cfg(self):
+        return {
+            "name": "Ethernet1/2",
+            "type": "eth",
+            "switch": [self.BREAKOUT_OVR_SW],
+            "deploy": False,
+            "profile": {
+                "mode": "trunk",
+                "allowed_vlans": "none",
+                "description": "kept",
+            },
+        }
+
+    def run_breakout_ovr(self, changed=True, bulk=False, **module_args):
+        args = dict(fabric="test_fabric", deploy=False)
+        args.update(module_args)
+        set_module_args(args)
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.get_fabric_details",
+            return_value={"nvPairs": {"HOST_INTF_ADMIN_STATE": "true"}},
+        ), patch(
+            "ansible_collections.cisco.dcnm.plugins.modules."
+            "dcnm_interface.dcnm_get_bulk_api_support",
+            return_value=bulk,
+        ):
+            return self.execute_module(changed=changed, failed=False)
+
+    def test_dcnm_intf_breakout_ovr_get_breakout_parent_name(self):
+
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_get_breakout_parent_name("Ethernet1/1/2"), "ethernet1/1"
+        )
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_get_breakout_parent_name("e1/49/4"), "ethernet1/49"
+        )
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_get_breakout_parent_name("eth1/1/1.10"), "ethernet1/1"
+        )
+        self.assertIsNone(dcnm_intf.dcnm_intf_get_breakout_parent_name("Ethernet1/1"))
+        self.assertIsNone(dcnm_intf.dcnm_intf_get_breakout_parent_name("Ethernet1/1.10"))
+        self.assertIsNone(dcnm_intf.dcnm_intf_get_breakout_parent_name("po300"))
+        self.assertIsNone(dcnm_intf.dcnm_intf_get_breakout_parent_name(None))
+
+    def test_dcnm_intf_breakout_ovr_absent_unbreaks(self):
+
+        self.prepare_breakout_ovr_test()
+        result = self.run_breakout_ovr(
+            state="overridden", config=[self.breakout_ovr_eth_1_2_cfg()]
+        )
+
+        self.assert_breakout_ovr_unbroken(result)
+        # Ethernet1/2 is still updated, i.e. the replace path was exercised
+        # before the breakout DELETE (the scenario that used to hijack 'path').
+        overridden = [r["interfaces"][0]["ifName"] for r in result["diff"][0]["overridden"]]
+        self.assertIn("Ethernet1/2", overridden)
+        self.assertTrue(
+            any(
+                method == "PUT" and path.endswith("/rest/interface")
+                for (method, path, data) in self.breakout_ovr_mutating_calls()
+            )
+        )
+
+    def test_dcnm_intf_breakout_ovr_absent_unbreaks_bulk_api(self):
+
+        self.prepare_breakout_ovr_test()
+        result = self.run_breakout_ovr(
+            state="overridden",
+            bulk=True,
+            config=[self.breakout_ovr_eth_1_2_cfg()],
+        )
+
+        self.assert_breakout_ovr_unbroken(result)
+        self.assertTrue(
+            any(
+                method == "POST" and path.endswith("/interface/modify")
+                for (method, path, data) in self.breakout_ovr_mutating_calls()
+            )
+        )
+
+    def test_dcnm_intf_breakout_ovr_present_in_config_kept(self):
+
+        self.prepare_breakout_ovr_test()
+        breakout_cfg = {
+            "name": "ethernet1/1",
+            "type": "breakout",
+            "switch": [self.BREAKOUT_OVR_SW],
+            "deploy": False,
+            "profile": {"map": "10g-4x"},
+        }
+        result = self.run_breakout_ovr(
+            state="overridden",
+            config=[breakout_cfg, self.breakout_ovr_eth_1_2_cfg()],
+        )
+
+        self.assertEqual(self.breakout_ovr_delete_calls(), [])
+        # Breakout already exists, so it must not be created again either.
+        self.assertFalse(
+            any(
+                path.endswith("/interface/breakout")
+                for (method, path, data) in self.breakout_ovr_mutating_calls()
+            )
+        )
+        self.assertFalse(
+            any(
+                d.get("interfaceType") == "breakout_interface"
+                for d in result["diff"][0]["deleted"]
+            )
+        )
+
+    def test_dcnm_intf_breakout_ovr_child_referenced_kept(self):
+
+        self.prepare_breakout_ovr_test()
+        child_cfg = {
+            "name": "eth1/1/3",
+            "type": "eth",
+            "switch": [self.BREAKOUT_OVR_SW],
+            "deploy": False,
+            "profile": {
+                "mode": "trunk",
+                "allowed_vlans": "none",
+                "description": "child port",
+            },
+        }
+        result = self.run_breakout_ovr(state="overridden", config=[child_cfg])
+
+        self.assertEqual(self.breakout_ovr_delete_calls(), [])
+        overridden = [r["interfaces"][0]["ifName"] for r in result["diff"][0]["overridden"]]
+        replaced = [r["interfaces"][0]["ifName"] for r in result["diff"][0]["replaced"]]
+        # The referenced child is configured, siblings are reset as before.
+        self.assertIn("Ethernet1/1/3", overridden)
+        self.assertNotIn("Ethernet1/1/3", replaced)
+        self.assertIn("Ethernet1/1/1", replaced)
+
+    def test_dcnm_intf_breakout_ovr_child_pc_member_kept(self):
+
+        self.prepare_breakout_ovr_test()
+        pc_cfg = {
+            "name": "po300",
+            "type": "pc",
+            "switch": [self.BREAKOUT_OVR_SW],
+            "deploy": False,
+            "profile": {
+                "mode": "trunk",
+                "members": ["e1/1/2"],
+                "pc_mode": "active",
+                "allowed_vlans": "none",
+                "description": "pc on breakout child",
+            },
+        }
+        self.run_breakout_ovr(state="overridden", config=[pc_cfg])
+
+        self.assertEqual(self.breakout_ovr_delete_calls(), [])
+
+    def test_dcnm_intf_breakout_ovr_override_types_without_breakout(self):
+
+        self.prepare_breakout_ovr_test()
+        result = self.run_breakout_ovr(
+            state="overridden",
+            override_intf_types=["eth"],
+            config=[self.breakout_ovr_eth_1_2_cfg()],
+        )
+
+        self.assertEqual(self.breakout_ovr_delete_calls(), [])
+        self.assertFalse(
+            any(
+                d.get("interfaceType") == "breakout_interface"
+                for d in result["diff"][0]["deleted"]
+            )
+        )
+
+    def test_dcnm_intf_breakout_ovr_override_types_with_breakout(self):
+
+        self.prepare_breakout_ovr_test()
+        result = self.run_breakout_ovr(
+            state="overridden",
+            override_intf_types=["breakout"],
+            config=[self.breakout_ovr_eth_1_2_cfg()],
+        )
+
+        self.assert_breakout_ovr_unbroken(result)
+
+    def test_dcnm_intf_breakout_ovr_check_mode(self):
+
+        self.prepare_breakout_ovr_test()
+        result = self.run_breakout_ovr(
+            state="overridden",
+            config=[self.breakout_ovr_eth_1_2_cfg()],
+            _ansible_check_mode=True,
+        )
+
+        self.assert_no_mutating_dcnm_calls()
+        self.assertIn(
+            {
+                "serialNumber": self.BREAKOUT_OVR_SNO,
+                "ifName": "Ethernet1/1",
+                "interfaceType": "breakout_interface",
+            },
+            result["diff"][0]["deleted"],
+        )
+
+    def test_dcnm_intf_breakout_ovr_deleted_all(self):
+
+        self.prepare_breakout_ovr_test()
+        result = self.run_breakout_ovr(state="deleted", config=[])
+
+        self.assert_breakout_ovr_unbroken(result)
+
+    def test_dcnm_intf_breakout_ovr_deleted_named_with_replace(self):
+
+        self.prepare_breakout_ovr_test()
+        result = self.run_breakout_ovr(
+            state="deleted",
+            config=[
+                {
+                    "name": "Ethernet1/1",
+                    "type": "breakout",
+                    "switch": [self.BREAKOUT_OVR_SW],
+                },
+                {
+                    "name": "Ethernet1/2",
+                    "switch": [self.BREAKOUT_OVR_SW],
+                },
+            ],
+        )
+
+        # Ethernet1/2 is reset (replace path) and the un-breakout DELETE must
+        # still go to the Delete/Unbreakout Interfaces endpoint.
+        self.assertTrue(result["diff"][0]["replaced"])
+        self.assert_breakout_ovr_unbreakout_request()
+
+    def test_dcnm_intf_breakout_ovr_deleted_named_without_replace(self):
+
+        self.prepare_breakout_ovr_test()
+        self.run_breakout_ovr(
+            state="deleted",
+            config=[
+                {
+                    "name": "Ethernet1/1",
+                    "type": "breakout",
+                    "switch": [self.BREAKOUT_OVR_SW],
+                },
+            ],
+        )
+
+        # Nothing else changes, so 'path' is not touched by the replace block;
+        # this used to send DELETE /interface/breakout (405 on NDFC 12.2.3).
+        self.assert_breakout_ovr_unbreakout_request()
 
     # -------------------------- GEN-INTF --------------------------
 

@@ -67,6 +67,10 @@ options:
     - A list of interface types which will be deleted/defaulted in overridden/deleted state. If this list is empty, then during
       overridden/deleted state, all interface types will be defaulted/deleted. If this list includes specific interface types,
       then only those interface types that are included in the list will be deleted/defaulted.
+    - Breakout ports present on the controller but not included in the playbook are un-broken out (restored to the
+      original parent port, e.g. Ethernet1/1/1-4 back to Ethernet1/1) only if this list is empty or includes 'breakout'.
+      A breakout is retained if any of its child ports (e.g. Ethernet1/1/1, Ethernet1/1/1.10 or a port-channel/vPC
+      member Ethernet1/1/2) is referenced in the playbook.
     type: list
     required: false
     elements: str
@@ -1015,6 +1019,8 @@ EXAMPLES = """
 #   the interfaces under the fabric mentioned. Additions and deletions will be done to bring
 #   the DCNM interfaces to the state listed in the playbook. All interfaces other than the
 #   ones mentioned in the playbook will either be deleted or reset to default state.
+#   Breakout ports that are not in the playbook are un-broken out (restored to the original
+#   parent port) unless one of their child ports is referenced in the playbook.
 #   Note: Override will work on the all the interfaces present in the DCNM Fabric.
 #
 # Deleted:
@@ -1982,6 +1988,8 @@ class DcnmIntf:
         self.have_breakout = []
         self.diff_create_breakout = []
         self.diff_delete_breakout = []
+        # (serialNumber, parent_ifname_lower) -> parent ifName, for breakouts to remove
+        self.breakouts_to_remove = {}
         self.diff_deploy = []
         self.diff_query = []
         self.fd = None
@@ -2295,6 +2303,87 @@ class DcnmIntf:
             ):
                 return True, interface.get("type", None)
         return False, None
+
+    def dcnm_intf_get_breakout_parent_name(self, if_name):
+        """
+        Return the lower-cased parent breakout port ("ethernet1/x") for a breakout
+        child name such as "Ethernet1/x/y", "eth1/x/y" or "Ethernet1/x/y.10".
+        Return None if the name is not a breakout child.
+        """
+        if not isinstance(if_name, str):
+            return None
+        match = re.match(
+            r"^\s*(?:ethernet|eth|e)?\s*(\d+/\d+)/\d+(?:\.\d+)?\s*$",
+            if_name,
+            re.IGNORECASE,
+        )
+        if not match:
+            return None
+        return "ethernet" + match.group(1)
+
+    def dcnm_intf_get_referenced_breakout_parents(self):
+        """
+        Return a set of (serialNumber, "ethernet1/x") for every breakout parent whose
+        child ports are referenced anywhere in the playbook config, either directly
+        (eth / sub-interface name) or as port-channel / vPC member interfaces.
+        Such breakouts are treated as implicitly wanted and are never removed.
+        """
+        referenced = set()
+        for cfg in self.config:
+            switches = cfg.get("switch") or []
+            snos = set()
+            for sw in switches:
+                for sno in (self.vpc_ip_sn.get(sw), self.ip_sn.get(sw)):
+                    if sno:
+                        snos.update(sno.split("~"))
+            if not snos:
+                continue
+
+            names = [cfg.get("name")]
+            profile = cfg.get("profile") or {}
+            if isinstance(profile, dict):
+                for key in ("members", "peer1_members", "peer2_members"):
+                    names.extend(profile.get(key) or [])
+
+            for name in names:
+                parent = self.dcnm_intf_get_breakout_parent_name(name)
+                if parent is None:
+                    continue
+                for sno in snos:
+                    referenced.add((sno, parent))
+        return referenced
+
+    def dcnm_intf_compute_breakouts_to_remove(self):
+        """
+        Populate self.breakouts_to_remove with breakouts present on the controller
+        (self.have_breakout) that must be removed in overridden state (and deleted
+        state without config, which reuses the overridden workflow).
+
+        A breakout is kept if:
+            - it is part of the playbook as a 'breakout' interface, or
+            - any of its child ports are referenced in the playbook, or
+            - override_intf_types is non-empty and does not include 'breakout'.
+        """
+        self.breakouts_to_remove = {}
+
+        override_types = self.module.params.get("override_intf_types") or []
+        if override_types and self.int_types["breakout"] not in override_types:
+            return
+
+        wanted = set()
+        for want_breakout in self.want_breakout:
+            intf = want_breakout["interfaces"][0]
+            wanted.add((str(intf["serialNumber"]), intf["ifName"].lower()))
+
+        referenced = self.dcnm_intf_get_referenced_breakout_parents()
+
+        for have_breakout in self.have_breakout:
+            sno = list(have_breakout.keys())[0]
+            for parent in list(have_breakout.values())[0]:
+                key = (sno, parent.lower())
+                if key in wanted or key in referenced:
+                    continue
+                self.breakouts_to_remove[key] = parent
 
     def dcnm_intf_dump_have_all(self):
 
@@ -4983,20 +5072,23 @@ class DcnmIntf:
                     self.diff_create_breakout.append(want_breakout["interfaces"])
 
         if state == "deleted" or state == "overridden":
-            for have_breakout in self.have_breakout:
-                for interface in list(have_breakout.values())[0]:
-                    match_delete_interface = True
-                    for want_breakout in self.want_breakout:
-                        if list(have_breakout.keys())[0] == want_breakout["interfaces"][0]["serialNumber"]:
-                            if want_breakout["interfaces"][0]["ifName"] == interface:
-                                match_delete_interface = False
-                                break
-                    if match_delete_interface:
-                        payload = {
-                            "serialNumber": list(have_breakout.keys())[0],
-                            "ifName": interface + "/1"
+            # self.breakouts_to_remove is computed in dcnm_intf_get_diff_overridden(),
+            # which is also used by state 'deleted' without config.
+            for (sno, parent_lower), parent in self.breakouts_to_remove.items():
+                # NDFC removes the whole breakout given its first child port.
+                payload = {
+                    "serialNumber": sno,
+                    "ifName": parent + "/1"
+                }
+                if payload not in self.diff_delete_breakout:
+                    self.diff_delete_breakout.append(payload)
+                    self.changed_dict[0]["deleted"].append(
+                        {
+                            "serialNumber": sno,
+                            "ifName": parent,
+                            "interfaceType": "breakout_interface",
                         }
-                        self.diff_delete_breakout.append(payload)
+                    )
 
         for want in self.want:
 
@@ -6072,6 +6164,8 @@ class DcnmIntf:
         del_list = []
         defer_list = []
 
+        self.dcnm_intf_compute_breakouts_to_remove()
+
         # Bulk pre-populate the interface detail cache for every switch
         # present in have_all.  This replaces N per-interface HTTP GETs
         # (inside dcnm_intf_get_intf_info) with at most S bulk GETs
@@ -6130,6 +6224,12 @@ class DcnmIntf:
                 (str(have["isPhysical"]).lower() != "none")
                 and (str(have["isPhysical"]).lower() == "true")
             ):
+
+                # Child ports of a breakout that is going to be removed will
+                # disappear with the un-breakout, so do not reset them.
+                parent = self.dcnm_intf_get_breakout_parent_name(name)
+                if parent is not None and (str(sno), parent) in self.breakouts_to_remove:
+                    continue
 
                 if have["alias"] != "" and have["deleteReason"] is not None:
                     self.changed_dict[0]["skipped"].append(
@@ -6233,19 +6333,6 @@ class DcnmIntf:
                     self.dcnm_compare_default_payload(uelem, intf)
                     == "DCNM_INTF_MATCH"
                 ):
-                    # In case of breakout, check if parent interface is in cfg
-                    # If a match for Ethernet1/x/y is found, verify if the parent interface Ethernet1/x exists in cfg.
-                    # If the parent doesn't exist or isn't of type "breakout", remove the breakout interface.
-                    if re.search(r"\d+\/\d+\/\d+", name):
-                        found, parent_type = self.dcnm_intf_get_parent(name, have['mgmtIpAddress'])
-                        if not (found and parent_type == "breakout"):
-                            payload = {
-                                "serialNumber": have["serialNo"],
-                                "ifName": have["ifName"]
-                            }
-                            breakout_index = self.int_index[self.int_types["breakout"]]
-                            self.diff_delete[breakout_index].append(payload)
-                            self.changed_dict[0]["deleted"].append(copy.deepcopy(payload))
                     continue
 
                 if uelem is not None:
@@ -7053,14 +7140,12 @@ class DcnmIntf:
         delete_index = 0
         for delem in self.diff_delete:
 
-            if delem == []:
+            # Index 8 (breakout) is not sent here; breakouts are removed via
+            # self.diff_delete_breakout further below.
+            if delem == [] or delete_index == self.int_index["BREAKOUT"]:
                 delete_index = delete_index + 1
                 continue
 
-            # index 8 is used for breakout interface
-            if delete_index == 8:
-                path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface"
-                break
             json_payload = json.dumps(delem)
 
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
@@ -7200,6 +7285,11 @@ class DcnmIntf:
 
         # Delete Breakout interface
         if len(self.diff_delete_breakout) > 0:
+            # NDFC un-breaks a port through the "Delete/Unbreakout Interfaces"
+            # API (DELETE /interface with the first child port, e.g. Ethernet1/1/1).
+            # /interface/breakout only supports POST (create breakout). 'path' may
+            # have been changed by the replace block above, so set it explicitly.
+            path = self.paths["INTERFACE"]
             json_payload = json.dumps(self.diff_delete_breakout)
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
             self.result["response"].append(resp)
@@ -7210,7 +7300,7 @@ class DcnmIntf:
                 resp["CHANGED"] = self.changed_dict
                 self.module.fail_json(msg=resp)
             else:
-                delete = changed
+                delete = True
 
         resp = None
         path = self.paths["GLOBAL_IF"]
