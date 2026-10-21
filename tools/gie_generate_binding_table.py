@@ -820,7 +820,7 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
           "applicable_mode", "type", "valid_values", "default_template", "reset_wire",
           "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
           "max_value", "no_log", "wire_values", "smu_unsupported", "string_compare",
-          "inert_when", "dropped_on_policy_change"]
+          "inert_when", "dropped_on_policy_change", "cleared_on_change_to"]
 
 # `smu_unsupported` -- this identity has NO counterpart in the installed SMU build. The
 # row is KEPT so its history and provenance survive; the engine refuses explicit input for
@@ -873,6 +873,16 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 # never a reset: on the same parent the row's reset_wire still applies, a field the destination also
 # registers still uses the destination's verified reset, and the value is never written into the
 # destination template. A row that writes a different value is refused, so it cannot drift from its parent.
+
+# `cleared_on_change_to` -- a tuple of destination parents, or absent, COMPUTED per parent from
+# POLICY_CHANGE_CLEARS_INLINE, never written in a slice. A different mechanism from
+# dropped_on_policy_change: the source parent renders its configuration inline (setGeneratedConfig, no child
+# policy), and when a reset replaces it with one of these destination parents NDFC computes the new expected
+# stanza from the destination and negates every running line the destination does not expect. Only for
+# those destinations, never for any other, and only for a field the destination does not declare: the cleanup
+# comes from the destination's compliance, not from the source, and a field the destination declares is the
+# destination's to classify (its verified reset, or the refusal). It is never a reset, and the value is never
+# written into the destination.
 
 # `string_compare` -- how the module compares a WANT and a HAVE value of a `type: string`
 # binding, for the exact (parent_template, parent_nvpair) it is declared on. Required on every
@@ -950,6 +960,22 @@ POLICY_CHANGE_DROPS_CHILDREN = {
     # from int_routed_host to int_trunk_host the intent kept no routed key and the switch's policy ids
     # returned to their baseline set.
     "int_routed_host",
+}
+
+# Inline-rendered parents (setGeneratedConfig, no interface child policy) whose stored lines NDFC negates when a reset
+# replaces them with the listed destination: it renders the destination's stanza and removes every running line that
+# stanza does not expect. Each entry names its evidence; a parent or destination not listed keeps the policy-change
+# refusal.
+POLICY_CHANGE_CLEARS_INLINE = {
+    # Measured on 12.6.0.267, NX-OS 10.5(5), one border trunk port (the module's ordinary border-default routed payload,
+    # then a port deploy): NDFC generated `no ip port access-group <acl> in`, `no spanning-tree port type network`,
+    # `no spanning-tree guard root`, `no flowcontrol receive on` and `no flowcontrol send on`; the running became the
+    # routed default and the ACL definition stayed. Installed int_trunk_host body sha256 99dc8f0a...
+    "int_trunk_host": ("int_routed_host",),
+    # NOT measured live. Same mechanism by template parity: the installed int_access_host body (sha256 fa5861c6...)
+    # renders the same inline lines for aclFilter, spanningTreePortType and flowcontrol, and the destination and its
+    # compliance are the same. Needs its own border access-to-routed live case before acceptance.
+    "int_access_host": ("int_routed_host",),
 }
 
 
@@ -1050,6 +1076,13 @@ def _check_registry_schema(r, key):
             "(POLICY_CHANGE_DROPS_CHILDREN) and a row may only repeat the computed value".format(
                 key, r["dropped_on_policy_change"])
         )
+    if "cleared_on_change_to" in r and (
+            tuple(r["cleared_on_change_to"]) != POLICY_CHANGE_CLEARS_INLINE.get(r["parent_template"])):
+        raise ValueError(
+            "binding {0!r} declares cleared_on_change_to {1!r}; it is computed from the parent "
+            "(POLICY_CHANGE_CLEARS_INLINE) and a row may only repeat the computed value".format(
+                key, r["cleared_on_change_to"])
+        )
     if "inert_when" in r:
         iw = r["inert_when"]
         if (not isinstance(iw, dict) or not {"nvpair", "value"} <= set(iw)
@@ -1139,6 +1172,8 @@ def compile_rows(slice_rows):
                 row[f] = v
         if r["parent_template"] in POLICY_CHANGE_DROPS_CHILDREN:
             row["dropped_on_policy_change"] = True
+        if r["parent_template"] in POLICY_CHANGE_CLEARS_INLINE:
+            row["cleared_on_change_to"] = POLICY_CHANGE_CLEARS_INLINE[r["parent_template"]]
         out.append(row)
     if seen != set(COMMITTED_BINDINGS):
         missing = sorted(set(COMMITTED_BINDINGS) - seen)

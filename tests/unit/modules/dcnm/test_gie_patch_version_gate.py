@@ -337,8 +337,10 @@ class TestPV09InventoryInvariants:
         # RT-1: regenerated from the same 34 slices with `dropped_on_policy_change` on five int_routed_host rows
         # (was acc3629a...). Retirement scope: the marker is computed for every int_routed_host row from the
         # generator's parent declaration; the slices are back to their earlier content (was f36ad753...).
+        # P2: `cleared_on_change_to` computed for every int_trunk_host and int_access_host row from the generator's
+        # inline-compliance declaration (was 8ea855ab...).
         assert PROVENANCE_SHA256 == (
-            "8ea855abc99dc326a178f49d2d897259d783acf77f5a952f3a44a69da4464241"
+            "15061dfcd914ef5920bf2b6e3ace8db1b9e0a1e494ee4bfdeb340f3eec18f0c0"
         )
 
 

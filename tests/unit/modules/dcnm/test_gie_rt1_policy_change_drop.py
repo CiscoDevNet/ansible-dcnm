@@ -122,12 +122,14 @@ def test_capability_disabled_keeps_the_published_behaviour(state):
 
 
 @pytest.mark.parametrize("state", STATES)
-def test_border_policy_change_from_trunk_is_unchanged(state):
-    """int_trunk_host is not a declared parent: its source-only aclFilter still refuses (F2 contract)."""
+def test_border_policy_change_from_trunk_uses_the_inline_declaration_not_the_child_marker(state):
+    """int_trunk_host is not a child-policy parent (no dropped_on_policy_change); its aclFilter leaves through the
+    destination's compliance (cleared_on_change_to, P2), so the reset is the ordinary routed default."""
+    assert not table.resolve_by_nvpair(h.TRUNK, "aclFilter").get("dropped_on_policy_change")
     have = copy.deepcopy(h.build_have(h.TRUNK, acl_filter="SYNTHETIC-ACL"))
     result, calls = run(state, have, "border")
-    assert result.get("failed") and h.writes(calls) == [], result.get("msg")
-    assert "acl_filter (aclFilter) on %s [%s], int_trunk_host -> int_routed_host" % (h.IF_A, h.SERIAL) in result["msg"]
+    assert not result.get("failed"), result.get("msg")
+    assert reset_policies(calls)[0]["policy"] == h.ROUTED and "aclFilter" not in nvpairs_of_reset(calls)
 
 
 # ------------------------------------------------------------------ registry: exactly these rows, and the generator gate

@@ -12928,7 +12928,9 @@ class DcnmIntf:
           * policy change (HAVE parent != default parent): the source value is NOT assumed to
             disappear with the policy change (not measured), except for the bindings of a parent
             declared in the generator as dropping all its interface-scoped child policies on a
-            policy change (dropped_on_policy_change; int_routed_host). Only when the destination parent
+            policy change (dropped_on_policy_change; int_routed_host), and for the bindings of an
+            inline-rendered parent whose lines the controller negates for that destination
+            (cleared_on_change_to; int_trunk_host and int_access_host -> int_routed_host). Only when the destination parent
             registers the same nvPair and either has a verified reset for the value (its own wire
             is used) or classifies it as already withdrawn (GIE_WITHDRAW_NONE -- the only proof of
             neutrality; INAPPLICABLE is not one) does the reset proceed; otherwise blocked as a
@@ -12998,7 +13000,8 @@ class DcnmIntf:
                     blocked.append(dict(entry, reason=action))
                 continue
             dst_binding = gie_resolve_by_nvpair(dst, nvpair)
-            if dst_binding is not None and not gie_binding_is_owned_elsewhere(dst, nvpair):
+            dst_registers = dst_binding is not None and not gie_binding_is_owned_elsewhere(dst, nvpair)
+            if dst_registers:
                 d_action, d_wire = gie_withdrawal_action(dst, dst_binding["profile_key"], value, ndfc_version, patch_version)
                 if d_action == GIE_WITHDRAW_RESET:
                     resets[nvpair] = d_wire
@@ -13012,6 +13015,13 @@ class DcnmIntf:
                 # removes when the policy is replaced (declared per parent, see POLICY_CHANGE_DROPS_CHILDREN in the
                 # generator). The stored value leaves with the source parent; nothing is withdrawn on, or written
                 # into, the destination.
+                continue
+            if not dst_registers and dst in (binding.get("cleared_on_change_to") or ()):
+                # A different mechanism: the source parent renders this field inline, and the controller negates every
+                # running line the destination's stanza does not expect when the policy is replaced with this destination
+                # (declared per parent and destination, see POLICY_CHANGE_CLEARS_INLINE in the generator). Only for a
+                # field the destination does not declare: one it declares is the destination's to classify (above).
+                # Nothing is withdrawn on, or written into, the destination.
                 continue
             blocked.append(dict(entry, reason="transition", source_reset=action == GIE_WITHDRAW_RESET))
         if gated:

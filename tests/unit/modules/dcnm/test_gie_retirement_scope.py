@@ -105,10 +105,13 @@ def test_border_same_parent_refusals_are_unchanged(state, group, text):
     (h.ACCESS, {"aclFilter": "SYN-ACL"}, "acl_filter (aclFilter)"),
     (h.ACCESS, {"spanningTreePortType": "network"}, "spanning_tree_port_type (spanningTreePortType)"),
 ])
-def test_border_transition_from_an_inline_parent_still_refuses(state, parent, nv, field):
+def test_border_transition_from_an_inline_parent_sends_the_routed_default(state, parent, nv, field):
+    """P2: the controller negates the inline lines for this transition (cleared_on_change_to); the reset is the ordinary
+    routed default and carries none of the source-only keys. test_gie_border_l2_retirement.py has the full matrix."""
     result, calls = run(state, eth_have(parent, nv), "border")
-    assert result.get("failed") and h.writes(calls) == [], result.get("msg")
-    assert "%s on %s [%s], %s -> int_routed_host" % (field, h.IF_A, h.SERIAL, parent) in result["msg"]
+    assert not result.get("failed"), result.get("msg")
+    assert reset_policies(calls)[0]["policy"] == h.ROUTED
+    assert not any(k in nvpairs_of_reset(calls) for k in nv), field
 
 
 @pytest.mark.parametrize("state", STATES)

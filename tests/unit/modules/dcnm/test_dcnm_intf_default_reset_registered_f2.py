@@ -195,10 +195,12 @@ def test_registered_drift_without_a_reset_is_refused_before_any_write(state, nvp
 # ------------------------------------------------------------------ policy change (source != role default)
 @pytest.mark.parametrize("state", STATES)
 def test_policy_change_with_a_source_only_field_is_refused_and_never_injected(state):
-    """border: default int_routed_host; HAVE is int_trunk_host with an ACL. int_routed_host does not
-    register aclFilter, and whether the controller drops it with the policy change is not measured."""
+    """border: default int_routed_host; HAVE is int_trunk_host with an ACL. int_routed_host does not register aclFilter.
+    The controller's negation of inline lines for this transition is declared (cleared_on_change_to, P2); the refusal
+    branch and its R-F2-1 remedy are exercised with that declaration removed from this one row for the test."""
     seed = h.build_have(h.TRUNK, acl_filter=ACL)
-    result, calls = run(state, seed, "border")
+    with patch.dict(table.resolve_by_nvpair(h.TRUNK, "aclFilter"), {"cleared_on_change_to": ()}):
+        result, calls = run(state, seed, "border")
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")
     assert "acl_filter (aclFilter) on %s [%s], int_trunk_host -> int_routed_host" % (h.IF_A, h.SERIAL) in result["msg"]
     # R-F2-1: the source parent (int_trunk_host) HAS a verified reset for aclFilter -> the remedy is offered
