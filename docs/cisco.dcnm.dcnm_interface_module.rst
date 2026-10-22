@@ -911,7 +911,7 @@ Parameters
                 </td>
                 <td>
                         <div>IPV6 address mask length. This object is applicable only if the &#x27;mode&#x27; is &#x27;routed&#x27; or &#x27;epl_routed&#x27;</div>
-                        <div>Minimum Value (64), Maximum Value (127)</div>
+                        <div>Minimum Value (1), Maximum Value (127) with <code>mode=routed</code>; Minimum Value (64), Maximum Value (127) with <code>mode=epl_routed</code></div>
                         <div>With <code>mode=routed</code>, it is sent only together with <em>ipv6_addr</em>.</div>
                 </td>
             </tr>
@@ -4914,7 +4914,7 @@ Examples
               ipv4_addr: 192.0.2.1
               ipv4_mask_len: 30
               ipv6_addr: 2001:db8:117::1
-              ipv6_mask_len: 64                 # choose from [min:64, max:127]
+              ipv6_mask_len: 64                 # choose from [min:1, max:127]
 
     - name: Remove the IPv6 address and keep IPv4 (replaced withdraws omitted fields)
       cisco.dcnm.dcnm_interface:

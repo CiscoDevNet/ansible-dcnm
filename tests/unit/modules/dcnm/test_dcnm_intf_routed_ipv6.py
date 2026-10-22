@@ -340,7 +340,7 @@ def test_query_returns_the_stored_pair_without_writes():
 @pytest.mark.parametrize("profile", [
     dict(BASE, ipv6_addr="2001:db8::zz"),
     dict(BASE, ipv6_addr="192.0.2.9"),
-    dict(BASE, ipv6_addr=V6, ipv6_mask_len=63),
+    dict(BASE, ipv6_addr=V6, ipv6_mask_len=0),
     dict(BASE, ipv6_addr=V6, ipv6_mask_len=128),
 ])
 def test_invalid_ipv6_input_is_refused_before_any_request(profile):
@@ -349,7 +349,8 @@ def test_invalid_ipv6_input_is_refused_before_any_request(profile):
     assert h.writes(calls) == []
 
 
-@pytest.mark.parametrize("mask", [64, 127])
+# int_routed_host declares IPv6_PREFIX with min 1 and max 127.
+@pytest.mark.parametrize("mask", [1, 48, 63, 64, 127])
 def test_prefix_boundaries_are_accepted(mask):
     result, calls = run([cfg(dict(BASE, ipv6_addr=V6, ipv6_mask_len=mask))], "merged")
     assert not result.get("failed"), result.get("msg")
@@ -372,3 +373,16 @@ def test_epl_routed_still_sends_its_ipv6_pair():
     assert not result.get("failed"), result.get("msg")
     assert out[h.IF_A][0] == "epl_routed_intf"
     assert pair(out[h.IF_A][1]) == (V6, "127")
+
+
+@pytest.mark.parametrize("profile, iftype, ifname", [
+    ({"mode": "epl_routed", "ipv4_addr": V4, "ipv4_mask_len": 24, "ipv6_addr": V6, "ipv6_mask_len": 63},
+     "eth", h.IF_A),
+    ({"mode": "subint", "vlan": h.SUB_VLAN, "ipv4_addr": V4, "ipv4_mask_len": 24, "ipv6_addr": V6,
+      "ipv6_mask_len": 63}, "sub_int", h.IF_SUB),
+])
+def test_other_families_keep_their_prefix_range(profile, iftype, ifname):
+    result, calls = run([h.cfg(ifname, profile, iftype=iftype)], "merged")
+    assert result.get("failed")
+    assert "ipv6_mask_len" in result.get("msg", "")
+    assert h.writes(calls) == []

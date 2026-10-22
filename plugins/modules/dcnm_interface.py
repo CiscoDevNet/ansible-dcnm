@@ -1210,7 +1210,8 @@ options:
             description:
             - IPV6 address mask length. This object is applicable only if the 'mode' is 'routed' or
               'epl_routed'
-            - Minimum Value (64), Maximum Value (127)
+            - Minimum Value (1), Maximum Value (127) with C(mode=routed); Minimum Value (64), Maximum Value (127)
+              with C(mode=epl_routed)
             - With C(mode=routed), it is sent only together with I(ipv6_addr).
             type: int
             default: 64
@@ -2650,7 +2651,7 @@ EXAMPLES = """
           ipv4_addr: 192.0.2.1
           ipv4_mask_len: 30
           ipv6_addr: 2001:db8:117::1
-          ipv6_mask_len: 64                 # choose from [min:64, max:127]
+          ipv6_mask_len: 64                 # choose from [min:1, max:127]
 
 - name: Remove the IPv6 address and keep IPv4 (replaced withdraws omitted fields)
   cisco.dcnm.dcnm_interface:
@@ -5973,8 +5974,9 @@ class DcnmIntf:
             ipv4_addr=dict(type="ipv4", default=""),
             ipv4_mask_len=dict(type="int", default=8),
             ipv6_addr=dict(type="ipv6", default=""),
+            # int_routed_host declares IPv6_PREFIX with min 1 and max 127.
             ipv6_mask_len=dict(
-                type="int", range_min=64, range_max=127, default=64
+                type="int", range_min=1, range_max=127, default=64
             ),
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=9216, range_min=576, range_max=9216),
