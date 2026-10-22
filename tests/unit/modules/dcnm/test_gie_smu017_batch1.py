@@ -100,8 +100,9 @@ def test_merged_preserves_an_omitted_value(parent, key, nvpair, applied, wire, d
     assert have[0]["interfaces"][0]["nvPairs"][nvpair] == wire
     result, calls = _run(parent, dict(base, description="changed"), "merged", have=have)
     assert not result.get("failed"), result.get("msg")
-    assert _sent(calls, nvpair) in ([wire], []), "an omitted field must keep the controller value"
-    assert default not in _sent(calls, nvpair) or default == wire
+    # The description change sends a full replacement of the interface, so the stored value must travel in it.
+    assert h.writes(calls), "the description change must produce a modify"
+    assert _sent(calls, nvpair) == [wire], "an omitted field must keep the controller value in the modify"
 
 
 @pytest.mark.parametrize("parent,key,nvpair,applied,wire,default,base", ROWS, ids=IDS)
