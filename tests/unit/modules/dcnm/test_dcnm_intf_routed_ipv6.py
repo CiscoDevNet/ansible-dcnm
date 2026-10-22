@@ -185,6 +185,26 @@ def test_merged_prefix_without_any_address_is_not_stored():
     assert pair(sent(calls)[h.IF_A][1]) == ("", "")
 
 
+def test_merged_without_ipv6_input_ignores_a_have_without_the_ipv6_keys():
+    """An intent without IPv6 keys (synthetic: the measured read carries them) is compared only on requested keys."""
+    have = routed_have()
+    for k in ("IPv6", "IPv6_PREFIX"):
+        have[0]["interfaces"][0]["nvPairs"].pop(k)
+    result, calls = run([cfg({"mode": "routed", "description": "only-description"})], "merged", have)
+    assert not result.get("failed"), result.get("msg")
+    nv = sent(calls)[h.IF_A][1]
+    assert nv["DESC"] == "only-description" and (nv["IP"], nv["PREFIX"]) == (V4, "24")
+
+
+def test_merged_ipv6_input_is_sent_when_the_have_lacks_the_ipv6_keys():
+    have = routed_have()
+    for k in ("IPv6", "IPv6_PREFIX"):
+        have[0]["interfaces"][0]["nvPairs"].pop(k)
+    result, calls = run([cfg({"mode": "routed", "ipv6_addr": V6, "ipv6_mask_len": 127})], "merged", have)
+    assert not result.get("failed"), result.get("msg")
+    assert pair(sent(calls)[h.IF_A][1]) == (V6, "127")
+
+
 def test_merged_repeat_on_the_measured_controller_shape_is_a_no_op():
     result, calls = run([cfg({"mode": "routed", "ipv6_addr": V6, "ipv6_mask_len": 64})], "merged",
                         measured_have(V6, "64"))

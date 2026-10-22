@@ -7240,7 +7240,7 @@ class DcnmIntf:
             # int_routed_host renders `ipv6 address` only when both IPv6 and IPv6_PREFIX are set,
             # and the controller stores both as "" when unset. Send the pair together, empty
             # without an address, so a default prefix never travels on its own.
-            if delem[profile]["ipv6_addr"] != "":
+            if delem[profile].get("ipv6_addr"):
                 intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
                     delem[profile]["ipv6_addr"]
                 )
@@ -13335,6 +13335,8 @@ class DcnmIntf:
                                         "QOS_POLICY",
                                         "QUEUING_POLICY",
                                         "COPY_DESC",
+                                        "IPv6",
+                                        "IPv6_PREFIX",
                                         "ENABLE_STORM_CONTROL",
                                         "STORM_CONTROL_ACTION",
                                         "STORM_CONTROL_BCAST_LEVEL_PERCENT",
