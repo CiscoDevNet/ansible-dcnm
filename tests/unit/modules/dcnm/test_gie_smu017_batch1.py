@@ -82,7 +82,7 @@ def test_dependencies_follow_the_bodies():
     # retirement markers computed by the generator from the parent declarations
     for nvpair in ("CDP_ENABLE", "evpnMultisiteDciTracking", "ospfRetransmitInterval"):
         assert resolve_by_nvpair(h.ROUTED, nvpair).get("dropped_on_policy_change") is True
-    assert resolve_by_nvpair(h.ACCESS, "loggingEventPortLinkStatus").get("cleared_on_change_to") == (h.ROUTED,)
+    assert resolve_by_nvpair(h.ACCESS, "loggingEventPortLinkStatus").get("cleared_on_change_to") == (h.ROUTED, h.TRUNK)
     assert not resolve_by_nvpair(h.SUBIF, "pimBfdInstance").get("dropped_on_policy_change")
 
 
@@ -238,12 +238,14 @@ def test_border_reset_of_an_access_port_leaves_logging_to_the_routed_stanza(stat
 
 
 @pytest.mark.parametrize("state", ["deleted", "overridden"])
-def test_leaf_reset_of_an_access_port_with_logging_on_is_refused(state):
-    """int_trunk_host does not declare the field and access -> trunk cleanup is not measured: refused, named, no write."""
+def test_leaf_reset_of_an_access_port_with_logging_on_goes_to_trunk(state):
+    """6.3-F1: the controller removes the line with the access -> trunk policy change (measured); one reset, no access key.
+    The identity, request and control-interface cases are in test_gie_access_logging_reset.py."""
     have = h.build_have(h.ACCESS, **dict(h.BASE_ACCESS, logging_event_port_link_status=True))
     result, calls = f2_run(state, have, "leaf")
-    assert result.get("failed") and "loggingEventPortLinkStatus" in result["msg"], result.get("msg")
-    assert h.writes(calls) == []
+    assert not result.get("failed"), result.get("msg")
+    assert reset_policies(calls)[0]["policy"] == h.TRUNK
+    assert "loggingEventPortLinkStatus" not in nvpairs_of_reset(calls)
 
 
 def test_leaf_reset_of_an_access_port_with_logging_off_proceeds():

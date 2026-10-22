@@ -123,8 +123,9 @@ bindings:
   #     if loggingEventPortLinkStatus == "true":
   #         config_builder.add_config('logging event port link-status', ...)        (L576)
   # Inline (setGeneratedConfig), no child policy: with false the line is not part of the expected stanza and NDFC
-  # compliance negates it, as for the other inline access fields. int_trunk_host does not declare this nvPair, so a leaf
-  # reset of an access port holding true is refused as a transition (no measured cleanup for access -> trunk).
+  # compliance negates it, as for the other inline access fields. int_trunk_host does not declare this nvPair. A leaf
+  # reset of an access port holding true to int_trunk_host was measured to remove the line in one policy change (ND .80,
+  # 2026-10-22), so the generator declares that transition for this field (POLICY_CHANGE_CLEARS_INLINE_FIELDS).
   - parent_template: int_access_host
     parent_nvpair: loggingEventPortLinkStatus
     profile_key: logging_event_port_link_status

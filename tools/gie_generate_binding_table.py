@@ -880,7 +880,8 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 # destination template. A row that writes a different value is refused, so it cannot drift from its parent.
 
 # `cleared_on_change_to` -- a tuple of destination parents, or absent, COMPUTED per parent from
-# POLICY_CHANGE_CLEARS_INLINE, never written in a slice. A different mechanism from
+# POLICY_CHANGE_CLEARS_INLINE plus, for a field measured on its own, POLICY_CHANGE_CLEARS_INLINE_FIELDS; never written in
+# a slice. A different mechanism from
 # dropped_on_policy_change: the source parent renders its configuration inline (setGeneratedConfig, no child
 # policy), and when a reset replaces it with one of these destination parents NDFC computes the new expected
 # stanza from the destination and negates every running line the destination does not expect. Only for
@@ -988,8 +989,30 @@ POLICY_CHANGE_CLEARS_INLINE = {
     # (default false), so the inline rendering of aclFilter, spanningTreePortType and flowcontrol is unchanged. Access to
     # routed was measured on SMU 011, not on 017. loggingEventPortLinkStatus (registered in slice 0b_37) inherits this
     # declaration: its line is rendered by the same config builder, but its negation on access -> routed is not measured.
+    # Its access -> trunk negation is measured and declared separately in POLICY_CHANGE_CLEARS_INLINE_FIELDS.
     "int_access_host": ("int_routed_host",),
 }
+
+# Per-field additions to POLICY_CHANGE_CLEARS_INLINE, for a transition measured for one field only. The destination
+# is appended to the parent's tuple on that row and on no other. As for the parent declaration, the module uses it only
+# when the destination does not declare the field; every other field and destination keeps its refusal.
+POLICY_CHANGE_CLEARS_INLINE_FIELDS = {
+    # Measured on ND .80, NDFC 12.6.0.267, SMU 4.3.1.0175006017, NX-OS 10.5(5), one leaf access port (2026-10-22): a legacy
+    # interface/modify from int_access_host with loggingEventPortLinkStatus "true" to the role default int_trunk_host
+    # (which does not declare the nvPair) left the pending `logging event port link-status default`; after one port
+    # deploy the running, intent and children equalled the baseline. int_access_host body sha256 103fc249...,
+    # int_trunk_host 99dc8f0a....
+    ("int_access_host", "loggingEventPortLinkStatus"): ("int_trunk_host",),
+}
+
+
+def computed_cleared_on_change_to(parent_template, parent_nvpair):
+    """The parent's inline-clearing destinations followed by the field's own, without repetition; None when empty."""
+    out = list(POLICY_CHANGE_CLEARS_INLINE.get(parent_template, ()))
+    for dst in POLICY_CHANGE_CLEARS_INLINE_FIELDS.get((parent_template, parent_nvpair), ()):
+        if dst not in out:
+            out.append(dst)
+    return tuple(out) or None
 
 
 def _check_registry_schema(r, key):
@@ -1090,11 +1113,12 @@ def _check_registry_schema(r, key):
                 key, r["dropped_on_policy_change"])
         )
     if "cleared_on_change_to" in r and (
-            tuple(r["cleared_on_change_to"]) != POLICY_CHANGE_CLEARS_INLINE.get(r["parent_template"])):
+            tuple(r["cleared_on_change_to"])
+            != computed_cleared_on_change_to(r["parent_template"], r["parent_nvpair"])):
         raise ValueError(
-            "binding {0!r} declares cleared_on_change_to {1!r}; it is computed from the parent "
-            "(POLICY_CHANGE_CLEARS_INLINE) and a row may only repeat the computed value".format(
-                key, r["cleared_on_change_to"])
+            "binding {0!r} declares cleared_on_change_to {1!r}; it is computed from the parent and field "
+            "declarations (POLICY_CHANGE_CLEARS_INLINE, POLICY_CHANGE_CLEARS_INLINE_FIELDS) and a row may only "
+            "repeat the computed value".format(key, r["cleared_on_change_to"])
         )
     if "inert_when" in r:
         iw = r["inert_when"]
@@ -1185,8 +1209,9 @@ def compile_rows(slice_rows):
                 row[f] = v
         if r["parent_template"] in POLICY_CHANGE_DROPS_CHILDREN:
             row["dropped_on_policy_change"] = True
-        if r["parent_template"] in POLICY_CHANGE_CLEARS_INLINE:
-            row["cleared_on_change_to"] = POLICY_CHANGE_CLEARS_INLINE[r["parent_template"]]
+        cleared = computed_cleared_on_change_to(r["parent_template"], r["parent_nvpair"])
+        if cleared:
+            row["cleared_on_change_to"] = cleared
         out.append(row)
     if seen != set(COMMITTED_BINDINGS):
         missing = sorted(set(COMMITTED_BINDINGS) - seen)

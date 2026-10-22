@@ -140,6 +140,7 @@ def test_capability_disabled_keeps_the_published_behaviour(state):
 
 def test_only_the_declared_parents_carry_the_inline_marker():
     marked = {(r["parent_template"], tuple(r["cleared_on_change_to"])) for r in table.BINDING_TABLE if r.get("cleared_on_change_to")}
-    assert marked == {(h.TRUNK, (h.ROUTED,)), (h.ACCESS, (h.ROUTED,))}
+    # access loggingEventPortLinkStatus also declares int_trunk_host (measured for that field only, 6.3-F1)
+    assert marked == {(h.TRUNK, (h.ROUTED,)), (h.ACCESS, (h.ROUTED,)), (h.ACCESS, (h.ROUTED, h.TRUNK))}
     assert sum(1 for r in table.BINDING_TABLE if r.get("cleared_on_change_to")) == 18   # + access loggingEventPortLinkStatus (0b_37)
     assert not any(r.get("cleared_on_change_to") and r.get("dropped_on_policy_change") for r in table.BINDING_TABLE)

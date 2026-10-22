@@ -116,10 +116,10 @@ options:
       On a subinterface - C(enable_pim_bfd_instance) (bool; renders C(ip pim bfd-instance), independent of
       C(enable_pim_sparse)). Under C(replaced) and C(overridden) an omitted value is reset to the template default
       (C(enable_cdp) true, the other booleans false, the interval cleared); under C(merged) it is preserved. A leaf
-      reset of an access Ethernet that has C(logging_event_port_link_status) true is refused, because C(int_trunk_host)
-      does not declare the field and the cleanup of the inline line on that transition is not established; set it to
-      false first. C(enable_cdp) keeps its native behaviour on the access, trunk, dot1q-tunnel, PVLAN, port-channel
-      and vPC profiles.
+      reset of an access Ethernet with C(logging_event_port_link_status) true goes to C(int_trunk_host) in the usual
+      single request; C(int_trunk_host) does not declare the field, and the controller removes the line with the
+      policy change (measured on NDFC 12.6.0.267 with the C(4.3.1.0175006017) templates). C(enable_cdp) keeps its
+      native behaviour on the access, trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -13067,7 +13067,8 @@ class DcnmIntf:
             declared in the generator as dropping all its interface-scoped child policies on a
             policy change (dropped_on_policy_change; int_routed_host), and for the bindings of an
             inline-rendered parent whose lines the controller negates for that destination
-            (cleared_on_change_to; int_trunk_host and int_access_host -> int_routed_host). Only when the destination parent
+            (cleared_on_change_to; int_trunk_host and int_access_host -> int_routed_host, and for one measured field
+            int_access_host loggingEventPortLinkStatus -> int_trunk_host). Only when the destination parent
             registers the same nvPair and either has a verified reset for the value (its own wire
             is used) or classifies it as already withdrawn (GIE_WITHDRAW_NONE -- the only proof of
             neutrality; INAPPLICABLE is not one) does the reset proceed; otherwise blocked as a
