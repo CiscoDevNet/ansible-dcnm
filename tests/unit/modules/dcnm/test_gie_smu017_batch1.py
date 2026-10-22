@@ -16,8 +16,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
-
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine
@@ -30,7 +28,7 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.test_dcnm_intf_defau
 ROUTED_OFF = dict(h.BASE_ROUTED, enable_ospf=False)
 # No other registered key: a refusal or a transport can only come from the field under test.
 ROUTED_PLAIN = {k: v for k, v in h.BASE_ROUTED.items() if k not in ("enable_ospf", "ospf_area_id")}
-OSPF_ON = dict(h.BASE_ROUTED, **h.OSPF_CTX)
+OSPF_ON = {**h.BASE_ROUTED, **h.OSPF_CTX}
 
 # (parent, public key, nvPair, applied public value, applied wire value, template default wire value, base profile)
 ROWS = [
@@ -41,6 +39,8 @@ ROWS = [
     (h.SUBIF, "enable_pim_bfd_instance", "pimBfdInstance", True, "true", "false", h.BASE_SUBIF),
 ]
 IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, *_rest in ROWS]
+BOOL_ROWS = [r for r in ROWS if isinstance(r[3], bool)]
+BOOL_IDS = [i for i, r in zip(IDS, ROWS) if isinstance(r[3], bool)]
 
 
 def _parent_arg(parent):
@@ -127,9 +127,7 @@ def test_repeating_the_same_request_writes_nothing(parent, key, nvpair, applied,
         assert h.writes(calls) == [], (state, h.writes(calls))
 
 
-@pytest.mark.parametrize("parent,key,nvpair,applied,wire,default,base",
-                         [r for r in ROWS if isinstance(r[3], bool)], ids=[i for i, r in zip(IDS, ROWS)
-                                                                            if isinstance(r[3], bool)])
+@pytest.mark.parametrize("parent,key,nvpair,applied,wire,default,base", BOOL_ROWS, ids=BOOL_IDS)
 def test_false_and_absent_are_different_requests(parent, key, nvpair, applied, wire, default, base):
     """Absent sends nothing for the field on a create; an explicit value is always transmitted."""
     _r, absent_calls = _run(parent, dict(base), "merged")
@@ -155,9 +153,7 @@ def test_retransmit_interval_with_ospf_disabled_is_refused():
     assert h.writes(calls) == []
 
 
-@pytest.mark.parametrize("parent,key,nvpair,applied,wire,default,base",
-                         [r for r in ROWS if isinstance(r[3], bool)], ids=[i for i, r in zip(IDS, ROWS)
-                                                                            if isinstance(r[3], bool)])
+@pytest.mark.parametrize("parent,key,nvpair,applied,wire,default,base", BOOL_ROWS, ids=BOOL_IDS)
 def test_a_string_for_a_boolean_is_refused(parent, key, nvpair, applied, wire, default, base):
     result, calls = _run(parent, dict(base, **{key: "yes"}), "merged")
     assert result.get("failed") and "'%s' must be a native boolean" % key in result["msg"], result.get("msg")
@@ -202,7 +198,7 @@ def test_routed_cdp_without_the_supported_patch_is_refused_not_silently_dropped(
 
 
 # ------------------------------------------------------------------ retirement: role default reset (P1/P2/P3 paths)
-LEAF_ROUTED = dict(OSPF_ON, enable_cdp=False, enable_evpn_multisite_dci_tracking=True, ospf_retransmit_interval=9)
+LEAF_ROUTED = {**OSPF_ON, "enable_cdp": False, "enable_evpn_multisite_dci_tracking": True, "ospf_retransmit_interval": 9}
 
 
 @pytest.mark.parametrize("state", ["deleted", "overridden"])

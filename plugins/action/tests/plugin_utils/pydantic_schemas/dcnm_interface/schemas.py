@@ -189,8 +189,13 @@ R2_REGISTERED_BINDINGS = {
     "enable_macsec_interface_policy": ("macsecInterfacePolicy", "bool", ("int_routed_host",)),
     "enable_ospf": ("ospf", "bool", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_ospf_auth": ("ospfAuthentication", "bool", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
-    "enable_pim_bfd_instance": ("pimBfdInstance", "bool", ("int_routed_host",)),
+    "enable_pim_bfd_instance": ("pimBfdInstance", "bool", ("int_routed_host", "int_subif")),
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "bool", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
+    # SMU 017 first increment (registry slice 0b_37). enable_cdp is checked here on the routed parent only; on the
+    # other profiles it stays a native field.
+    "enable_cdp": ("CDP_ENABLE", "bool", ("int_routed_host",)),
+    "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "bool", ("int_routed_host",)),
+    "logging_event_port_link_status": ("loggingEventPortLinkStatus", "bool", ("int_access_host",)),
     "enable_vpc_peer_link": ("ENABLE_VPC_PEER_LINK", "bool", ()),
     "flowcontrol_receive": ("flowcontrolReceive", "enum", ("int_access_host", "int_trunk_host")),
     "flowcontrol_send": ("flowcontrolSend", "enum", ("int_access_host", "int_trunk_host")),
@@ -220,7 +225,7 @@ R2_REGISTERED_BINDINGS = {
     "ospf_network_type": ("ospfNetworkType", "enum", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "ospf_passive_mode": ("ospfPassiveMode", "enum", ("int_routed_host", "int_subif", "int_vlan")),
     "ospf_priority": ("ospfPriority", "int", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
-    "ospf_retransmit_interval": ("ospfRetransmitInterval", "int", ("int_loopback", "int_subif", "int_vlan")),
+    "ospf_retransmit_interval": ("ospfRetransmitInterval", "int", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "ospf_shutdown": ("ospfShutdown", "bool", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "ospf_tag": ("ospfTag", "str_fold", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "ospf_transmit_delay": ("ospfTransmitDelay", "int", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
