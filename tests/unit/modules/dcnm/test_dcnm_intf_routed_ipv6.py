@@ -87,8 +87,9 @@ def measured_have(ipv6="", prefix=""):
     m = json.load(open(os.path.join(FIXTURES, "dcnm_intf_routed_ospf_have.json")))
     nv = copy.deepcopy(m["nvPairs"])
     nv.update({"ospf": "false", "IPv6": ipv6, "IPv6_PREFIX": prefix, "INTF_NAME": h.IF_A})
-    return [{"policy": m["policy"], "interfaces": [{"ifName": h.IF_A, "serialNumber": h.SERIAL, "fabricName": h.FABRIC,
-                                                     "interfaceType": "INTERFACE_ETHERNET", "nvPairs": nv}]}]
+    intf = {"ifName": h.IF_A, "serialNumber": h.SERIAL, "fabricName": h.FABRIC,
+            "interfaceType": "INTERFACE_ETHERNET", "nvPairs": nv}
+    return [{"policy": m["policy"], "interfaces": [intf]}]
 
 
 def sent(calls):
