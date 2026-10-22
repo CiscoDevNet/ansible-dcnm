@@ -110,6 +110,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     assert BOOL_PASSTHROUGH, "no boolean passthrough bindings -- the tests below run on nothing"
     assert {k for parent, k, nvpair in BOOL_PASSTHROUGH} == {
         "disable_lldp_transmit", "disable_lldp_receive", "disable_qos_stats", "disable_queuing_stats", "disable_bfd_echo",
+        # SMU 017 first increment, slice 0b_37. enable_cdp is the first boolean whose reset is "true".
+        "enable_cdp", "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
         # The boolean OSPF names, once. enable_ospf reaches this set from both lots; listing it
         # twice made the literal look like it pinned more than it does.
         "enable_ospf", "ospf_mtu_ignore", "ospf_shutdown",
@@ -191,7 +193,9 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # boolean): 117 + 1.
     # 115 = 118 - the three OSPF booleans (ospf_bfd on int_loopback and int_subif, ospf_passive_interface on int_subif)
     # that SMU 017 turned into the enums ospfBfdMode and ospfPassiveMode.
-    assert len(BOOL_PASSTHROUGH) == 115
+    # 119 = 115 + four SMU 017 booleans (slice 0b_37): enable_cdp and enable_evpn_multisite_dci_tracking on
+    # int_routed_host, logging_event_port_link_status on int_access_host, enable_pim_bfd_instance on int_subif.
+    assert len(BOOL_PASSTHROUGH) == 119
 
 
 # ------------------------------------------------------- what the engine emits --
@@ -390,8 +394,11 @@ def test_omitted_boolean_under_replaced_follows_the_withdrawal_contract(
     """
     binding = resolve_binding(parent, profile_key)
     reset = binding.get("reset_wire")
+    # The controller holds the value OPPOSITE to the reset, so the withdrawal is a change. For every
+    # row before slice 0b_37 that is "true"; CDP_ENABLE resets to "true", so it holds "false".
+    held = "false" if reset == "true" else "true"
     obj = _compare_obj(
-        state, parent, profile_key, nvpair, _OMITTED, "true",
+        state, parent, profile_key, nvpair, _OMITTED, held,
         want_description="new", have_description="old",
     )
     obj.dcnm_intf_compare_want_and_have(state)
@@ -401,7 +408,7 @@ def test_omitted_boolean_under_replaced_follows_the_withdrawal_contract(
         # No verified reset for this binding and parent. Transport preservation still
         # applies at this layer; the invocation-wide refusal lives in main() and is
         # covered by the W2 acceptance suite, not here.
-        assert sent[nvpair] == "true"
+        assert sent[nvpair] == held
         assert reported == {"DESC": "new"}
     else:
         assert sent[nvpair] == reset, (

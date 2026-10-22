@@ -98,7 +98,7 @@ def _scanning_all_registered_keys():
 
 def _scanning_guarded_keys():
     return {b["profile_key"] for b in gie_engine.BINDING_TABLE
-            if b.get("mechanism") == PASSTHROUGH}
+            if b.get("mechanism") == PASSTHROUGH} - gie_engine.GIE_NATIVE_ELSEWHERE_KEYS
 
 
 def _scanning_generic_keys(parent_template):

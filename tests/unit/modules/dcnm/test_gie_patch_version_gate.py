@@ -314,8 +314,8 @@ class TestPV09InventoryInvariants:
 
     def test_234_identities_and_207_reset_values_unchanged(self):
         # The eleven PVLAN companion rows, each with an inferred reset: 234 + 11, 207 + 11; plus one vPC PVLAN row.
-        assert len(BINDING_TABLE) == 234 + 11 + 1
-        assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == 207 + 11 + 1
+        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5  # + 5: SMU 017 first increment, slice 0b_37 (each row with a reset)
+        assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == 207 + 11 + 1 + 5   # + slice 0b_37
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -344,8 +344,10 @@ class TestPV09InventoryInvariants:
         # inline-compliance declaration (was 8ea855ab...).
         # SMU 017: regenerated from the same 34 slices with the loopback and subinterface OSPF BFD rows and the
         # subinterface passive row rebound to the enum nvPairs ospfBfdMode and ospfPassiveMode (was 15061dfc...).
+        # SMU 017 first increment: regenerated from 35 slices, adding registry_slice_0b_37_smu017_batch1.yaml (five rows)
+        # (was bcf144bc...).
         assert PROVENANCE_SHA256 == (
-            "bcf144bc4176666c0e019f3ca2cd1348aa6e5a362478de6185812b2ba6f0b2b7"
+            "c93238531dd75cc110323ec9b8206bb2502c5d10d1c3e2a273a1799f797c9783"
         )
 
 

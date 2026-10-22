@@ -163,8 +163,9 @@ def test_the_parents_differ_where_the_templates_differ():
         assert resolve_binding(parent, "ospf_bfd_mode")["type"] == "enum"
         assert resolve_binding(parent, "ospf_bfd") is None
 
-    # retransmit interval: absent on the routed parent, present on the other two
-    assert resolve_binding("int_routed_host", "ospf_retransmit_interval") is None
+    # retransmit interval: on all three since SMU 017 (int_routed_host declares it from 017, slice 0b_37)
+    assert resolve_binding("int_routed_host", "ospf_retransmit_interval")["type"] == "integer"
+    assert resolve_binding("int_routed_host", "ospf_retransmit_interval")["inert_when"]["nvpair"] == "ospf"
     assert resolve_binding(SUBIF, "ospf_retransmit_interval")["type"] == "integer"
     assert resolve_binding(VLAN, "ospf_retransmit_interval")["type"] == "integer"
 

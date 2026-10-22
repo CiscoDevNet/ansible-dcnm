@@ -94,6 +94,10 @@ EXPECTED = {
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "boolean"),
     "pim_dr_priority": ("PIM_DR_PRIORITY", "integer"),
     "enable_pim_bfd_instance": ("pimBfdInstance", "boolean"),
+    # SMU 017 first increment, slice 0b_37. Read from the 017 body; not measured live.
+    "enable_cdp": ("CDP_ENABLE", "boolean"),
+    "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "boolean"),
+    "ospf_retransmit_interval": ("ospfRetransmitInterval", "integer"),
     # Dampening, slice 0b_6. Only this parent declares it; C9300v does not support its CLI.
     "enable_dampening": ("dampening", "boolean"),
     "dampening_half_life": ("dampeningHalfLife", "integer"),
@@ -153,7 +157,11 @@ def test_every_routed_key_is_covered_by_the_generic_parent_guard():
         gie_guarded_keys,
     )
 
-    assert set(EXPECTED).issubset(gie_guarded_keys())
+    from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_NATIVE_ELSEWHERE_KEYS
+
+    # enable_cdp is registered here and native on other parents; the generic guard leaves it to the native spec.
+    assert set(EXPECTED) - GIE_NATIVE_ELSEWHERE_KEYS <= gie_guarded_keys()
+    assert not (GIE_NATIVE_ELSEWHERE_KEYS & gie_guarded_keys())
 
 
 def test_arp_timeout_landed_on_all_three_parents_as_one_lot():

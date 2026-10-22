@@ -453,6 +453,15 @@ PVLAN_C1_ROWS = {
 # IQ1 (PR725 ingress QoS) adds int_vpc_pvlan_host::qosStatsSuppressed (disable_qos_stats, inferred reset).
 IQ1_ROWS = {("int_vpc_pvlan_host", "qosStatsSuppressed", "disable_qos_stats")}
 
+# SMU 017 first increment, slice 0b_37.
+BATCH017_ROWS = {
+    ("int_routed_host", "CDP_ENABLE", "enable_cdp"),
+    ("int_routed_host", "evpnMultisiteDciTracking", "enable_evpn_multisite_dci_tracking"),
+    ("int_routed_host", "ospfRetransmitInterval", "ospf_retransmit_interval"),
+    ("int_access_host", "loggingEventPortLinkStatus", "logging_event_port_link_status"),
+    ("int_subif", "pimBfdInstance", "enable_pim_bfd_instance"),
+}
+
 VPC_DOT1Q_ROWS = {
     ("int_vpc_dot1q_tunnel", nvpair, key)
     for nvpair, key in (
@@ -474,14 +483,14 @@ def test_package_provenance_and_size():
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
-        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS
+        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
-    assert len(BINDING_TABLE) == len(actual_keys) == 246
+    assert len(BINDING_TABLE) == len(actual_keys) == 251
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -556,7 +565,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 246   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(rows) == 251   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -660,7 +669,8 @@ def test_registered_keys_per_parent():
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
-        "disable_qos_stats", "disable_queuing_stats"
+        "disable_qos_stats", "disable_queuing_stats",
+        "logging_event_port_link_status",   # SMU 017, slice 0b_37
     }
     assert registered_profile_keys(PC_TRUNK) == {
         "guard_mode", "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -731,6 +741,7 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("aclFilter", "acl_filter"),
         ("qosStatsSuppressed", "disable_qos_stats"),
         ("queuingStats", "disable_queuing_stats"),
+        ("loggingEventPortLinkStatus", "logging_event_port_link_status"),   # SMU 017, slice 0b_37
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -1008,6 +1019,9 @@ def test_all_registered_and_guarded_keys():
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
         # already here, from int_routed_host.
         "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
+        # SMU 017 first increment, slice 0b_37: three new public keys. enable_cdp is registered on
+        # int_routed_host and native elsewhere (GIE_NATIVE_ELSEWHERE_KEYS).
+        "enable_cdp", "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -1096,6 +1110,8 @@ def test_all_registered_and_guarded_keys():
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
         # already here, from int_routed_host.
         "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
+        # SMU 017 slice 0b_37. enable_cdp is registered but NOT guarded: the native spec serves it on other parents.
+        "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
     }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different

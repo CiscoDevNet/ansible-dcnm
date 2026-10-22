@@ -136,7 +136,7 @@ def test_border_policy_change_from_trunk_uses_the_inline_declaration_not_the_chi
 def test_every_int_routed_host_row_and_no_other_carries_the_marker():
     marked = sorted((r["parent_template"], r["parent_nvpair"]) for r in table.BINDING_TABLE if r.get("dropped_on_policy_change"))
     routed = sorted((r["parent_template"], r["parent_nvpair"]) for r in table.BINDING_TABLE if r["parent_template"] == h.ROUTED)
-    assert marked == routed and len(routed) == 56
+    assert marked == routed and len(routed) == 59   # + 3 SMU 017 routed rows (slice 0b_37)
     assert set(("int_routed_host", n) for n in DROPPED) <= set(marked)
     assert all(r["dropped_on_policy_change"] is True for r in table.BINDING_TABLE if r.get("dropped_on_policy_change"))
 

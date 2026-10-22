@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = bcf144bc4176666c0e019f3ca2cd1348aa6e5a362478de6185812b2ba6f0b2b7
+# provenance_sha256 = c93238531dd75cc110323ec9b8206bb2502c5d10d1c3e2a273a1799f797c9783
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "bcf144bc4176666c0e019f3ca2cd1348aa6e5a362478de6185812b2ba6f0b2b7"
+PROVENANCE_SHA256 = "c93238531dd75cc110323ec9b8206bb2502c5d10d1c3e2a273a1799f797c9783"
 
 BINDING_TABLE = (
     {
@@ -73,6 +73,20 @@ BINDING_TABLE = (
         'parent_template': 'int_access_host',
         'parent_nvpair': 'lldpTransmit',
         'profile_key': 'disable_lldp_transmit',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'access',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'cleared_on_change_to': ('int_routed_host',),
+    },
+    {
+        'parent_template': 'int_access_host',
+        'parent_nvpair': 'loggingEventPortLinkStatus',
+        'profile_key': 'logging_event_port_link_status',
         'applicable_interface_type': 'eth',
         'applicable_mode': 'access',
         'type': 'boolean',
@@ -845,6 +859,20 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'CDP_ENABLE',
+        'profile_key': 'enable_cdp',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': True,
+        'reset_wire': 'true',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'dropped_on_policy_change': True,
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'ENABLE_PIM_SPARSE',
         'profile_key': 'enable_pim_sparse',
         'applicable_interface_type': 'eth',
@@ -1239,6 +1267,20 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'evpnMultisiteDciTracking',
+        'profile_key': 'enable_evpn_multisite_dci_tracking',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'dropped_on_policy_change': True,
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'ipv4AclIn',
         'profile_key': 'ipv4_acl_in',
         'applicable_interface_type': 'eth',
@@ -1583,6 +1625,22 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 0,
         'max_value': 255,
+        'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True},
+        'dropped_on_policy_change': True,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'ospfRetransmitInterval',
+        'profile_key': 'ospf_retransmit_interval',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 65535,
         'no_log': False,
         'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True},
         'dropped_on_policy_change': True,
@@ -2275,6 +2333,19 @@ BINDING_TABLE = (
         'max_value': 450,
         'no_log': False,
         'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True},
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'pimBfdInstance',
+        'profile_key': 'enable_pim_bfd_instance',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_trunk_host',

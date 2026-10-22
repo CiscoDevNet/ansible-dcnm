@@ -107,6 +107,19 @@ options:
       means C(no_change), never the explicit C(disable) or C(no_passive). Give the mode key to request an explicit
       negative setting. Giving both spellings is accepted only when they mean the same, and the alias is refused on a
       parent that does not register it.
+    - Fields that only the C(4.3.1.0175006017) templates declare (NOT LIVE TESTED; read from the installed template
+      bodies). On a routed Ethernet - C(enable_cdp) (bool; CDP stays on unless false, which renders C(no cdp enable)),
+      C(enable_evpn_multisite_dci_tracking) (bool; renders C(evpn multisite dci-tracking); the template does not check
+      the switch role, so whether NX-OS accepts it outside a multisite border gateway is not established) and
+      C(ospf_retransmit_interval) (1-65535; requires C(enable_ospf); C(5) is the NX-OS default and renders nothing).
+      On an access Ethernet - C(logging_event_port_link_status) (bool; renders C(logging event port link-status)).
+      On a subinterface - C(enable_pim_bfd_instance) (bool; renders C(ip pim bfd-instance), independent of
+      C(enable_pim_sparse)). Under C(replaced) and C(overridden) an omitted value is reset to the template default
+      (C(enable_cdp) true, the other booleans false, the interval cleared); under C(merged) it is preserved. A leaf
+      reset of an access Ethernet that has C(logging_event_port_link_status) true is refused, because C(int_trunk_host)
+      does not declare the field and the cleanup of the inline line on that transition is not established; set it to
+      false first. C(enable_cdp) keeps its native behaviour on the access, trunk, dot1q-tunnel, PVLAN, port-channel
+      and vPC profiles.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -2826,6 +2839,44 @@ EXAMPLES = """
           ospf_area_id: 0.0.0.0
           ospf_bfd_mode: disable      # explicit "ip ospf bfd disable"; there is no boolean for it
           ospf_passive_mode: no_passive
+
+# Fields added by SMU 4.3.1.0175006017 (NOT LIVE TESTED). Omitting them under merged keeps the controller value;
+# under replaced or overridden an omitted value returns to the template default.
+- name: Routed, access and subinterface fields of SMU 4.3.1.0175006017
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ fabric }}"
+    state: merged
+    patch_version: "4.3.1.0175006017"
+    config:
+      - name: eth1/21
+        type: eth
+        switch: ["{{ switch_ip }}"]
+        profile:
+          mode: routed
+          ipv4_addr: 192.0.2.5
+          ipv4_mask_len: 30
+          enable_cdp: false                           # "no cdp enable"
+          enable_evpn_multisite_dci_tracking: true    # "evpn multisite dci-tracking"
+          enable_ospf: true
+          ospf_tag: UNDERLAY
+          ospf_area_id: 0.0.0.0
+          ospf_retransmit_interval: 10                # requires enable_ospf; 5 renders nothing
+      - name: eth1/22
+        type: eth
+        switch: ["{{ switch_ip }}"]
+        profile:
+          mode: access
+          access_vlan: 100
+          logging_event_port_link_status: true        # "logging event port link-status"
+      - name: eth1/20.101
+        type: sub_int
+        switch: ["{{ switch_ip }}"]
+        profile:
+          mode: subint
+          vlan: 101
+          ipv4_addr: 192.0.2.9
+          ipv4_mask_len: 30
+          enable_pim_bfd_instance: true               # "ip pim bfd-instance"
 """
 
 import collections

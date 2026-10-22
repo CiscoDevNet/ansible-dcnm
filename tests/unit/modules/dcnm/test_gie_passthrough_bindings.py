@@ -105,10 +105,10 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 246   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
-    assert len(set(keys)) == 246, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 251   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(set(keys)) == 251, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 246, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 251, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -186,7 +186,7 @@ def _as_slice_rows(rows):
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 246
+    assert len(gen.compile_rows(rows)) == 251   # 246 + slice 0b_37
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -218,7 +218,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 246
+    assert len(gen.compile_rows(rows)) == 251   # 246 + slice 0b_37
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -314,7 +314,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 246
+    assert len(gen.compile_rows(rows)) == 251   # 246 + slice 0b_37
 
 
 # ------------------------------------------------------------------ positive transport
@@ -568,6 +568,7 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("aclFilter", "acl_filter"),
         ("qosStatsSuppressed", "disable_qos_stats"),
         ("queuingStats", "disable_queuing_stats"),
+        ("loggingEventPortLinkStatus", "logging_event_port_link_status"),   # SMU 017, slice 0b_37
     }
     # The port-channel parents carry every field registered for them.
     assert {
@@ -715,7 +716,10 @@ def test_keymap_carries_every_new_nvpair():
     assert km["privateVlanMapping"] == "private_vlan_mapping"
     assert km["ENABLE_VPC_PEER_LINK"] == "enable_vpc_peer_link"
     # 74 = 76 - ospfBfd and ospfPassiveInterface, which SMU 017 replaced by the already-mapped ospfBfdMode and ospfPassiveMode.
-    assert len(km) == 74
+    # 77 = 74 + CDP_ENABLE, evpnMultisiteDciTracking and loggingEventPortLinkStatus (slice 0b_37); ospfRetransmitInterval
+    # and pimBfdInstance were already mapped on other parents.
+    assert km["CDP_ENABLE"] == "enable_cdp"
+    assert len(km) == 77
 
 
 def test_all_registered_keys():
@@ -800,6 +804,9 @@ def test_all_registered_keys():
         # corrected from child_pti to passthrough. Four public keys; disable_bfd_echo was
         # already here, from int_routed_host.
         "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
+        # SMU 017 first increment, slice 0b_37: three new public keys. enable_cdp is registered on
+        # int_routed_host and native elsewhere (GIE_NATIVE_ELSEWHERE_KEYS).
+        "enable_cdp", "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
     }
 
 

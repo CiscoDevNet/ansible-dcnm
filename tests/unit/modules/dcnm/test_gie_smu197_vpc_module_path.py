@@ -160,7 +160,7 @@ def test_combined_case_fails_when_one_source_family_is_removed_in_memory(monkeyp
                                           "ipv4_acl_in", "enable_pim_bfd_instance")
                 and row["parent_template"] in
                 ("int_loopback", ROUTED, "int_subif", "int_vlan")]
-        assert len(rows) == 10
+        assert len(rows) == 11   # + int_subif pimBfdInstance (slice 0b_37)
     else:
         rows = [row for row in BINDING_TABLE
                 if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK)]

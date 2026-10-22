@@ -380,8 +380,9 @@ def public_clear_for(parent, key, reset):
             if wire == reset:
                 return public
         return None
-    # No SMU vocabulary: the wire value IS the public spelling, as before.
-    return False if reset == "false" else reset
+    # No SMU vocabulary: the wire value IS the public spelling, as before. A boolean reset is the
+    # native bool; "true" first appears with int_routed_host CDP_ENABLE (slice 0b_37).
+    return {"false": False, "true": True}.get(reset, reset)
 
 
 def is_integer_binding(applied):
@@ -851,6 +852,13 @@ PILOT = {
     (ROUTED, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
     (SVI, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
     (ROUTED, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", dict(PIM_ON)),
+    # SMU 017 first increment (slice 0b_37). Read from the 017 bodies, not measured live. CDP_ENABLE is
+    # the first boolean whose reset is "true": CDP is on unless the field is false.
+    (ROUTED, "CDP_ENABLE"): ("enable_cdp", False, "true", {}),
+    (ROUTED, "evpnMultisiteDciTracking"): ("enable_evpn_multisite_dci_tracking", True, "false", {}),
+    (ROUTED, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
+    (ACCESS, "loggingEventPortLinkStatus"): ("logging_event_port_link_status", True, "false", {}),
+    (SUBIF, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", dict(PIM_ON)),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became

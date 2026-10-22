@@ -246,6 +246,9 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_routed_host", "ospfDeadInterval"),
         ("int_routed_host", "ospfHelloInterval"),
         ("int_routed_host", "ospfPriority"),
+        # SMU 017 (slice 0b_37): the same OSPF integer shape as its int_subif/int_vlan/int_loopback siblings,
+        # which NDFC returns as a string ("" when unset); it takes the same exemption.
+        ("int_routed_host", "ospfRetransmitInterval"),
         ("int_routed_host", "ospfTransmitDelay"),
         ("int_routed_host", "PIM_DR_PRIORITY"),
         # The six BFD intervals, committed. Reviewed individually, not generated

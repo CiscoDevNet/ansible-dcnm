@@ -663,6 +663,12 @@ COMMITTED_BINDINGS = {
     #   Successful `vpc peer-link` deployment was not measured: the lab has one pair and its
     #   domain already has a peer-link. This is a topology limit, not missing binding coverage.
     ("int_port_channel_trunk_host", "ENABLE_VPC_PEER_LINK"): "enable_vpc_peer_link",
+    # SMU 4.3.1.0175006017 new fields, first increment (slice 0b_37). Read from the 017 bodies; not measured live.
+    ("int_routed_host", "CDP_ENABLE"): "enable_cdp",
+    ("int_routed_host", "evpnMultisiteDciTracking"): "enable_evpn_multisite_dci_tracking",
+    ("int_routed_host", "ospfRetransmitInterval"): "ospf_retransmit_interval",
+    ("int_access_host", "loggingEventPortLinkStatus"): "logging_event_port_link_status",
+    ("int_subif", "pimBfdInstance"): "enable_pim_bfd_instance",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the
@@ -979,8 +985,9 @@ POLICY_CHANGE_CLEARS_INLINE = {
     "int_trunk_host": ("int_routed_host",),
     # Same mechanism by template parity. int_access_host bodies: SMU 011 fa5861c6..., SMU 017 103fc249...; def delete() is
     # identical and the only change is the inline `logging event port link-status` line behind loggingEventPortLinkStatus
-    # (default false, not registered), so the inline rendering of aclFilter, spanningTreePortType and flowcontrol is unchanged.
-    # Access to routed was measured on SMU 011, not on 017.
+    # (default false), so the inline rendering of aclFilter, spanningTreePortType and flowcontrol is unchanged. Access to
+    # routed was measured on SMU 011, not on 017. loggingEventPortLinkStatus (registered in slice 0b_37) inherits this
+    # declaration: its line is rendered by the same config builder, but its negation on access -> routed is not measured.
     "int_access_host": ("int_routed_host",),
 }
 

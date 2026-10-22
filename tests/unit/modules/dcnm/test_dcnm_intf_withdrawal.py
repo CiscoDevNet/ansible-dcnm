@@ -367,7 +367,8 @@ def test_an_explicit_clear_retains_precedence_and_is_still_validated(
             "%s::%s wire spelling %r leaked into the public valid_values: registering a reset "
             "widened the public schema" % (parent, nvpair, reset))
     else:
-        expected = False if reset == "false" else reset
+        # A boolean reset is the native bool ("true" first appears with int_routed_host CDP_ENABLE, slice 0b_37).
+        expected = {"false": False, "true": True}.get(reset, reset)
         assert clear_input == expected, (
             "%s::%s declares no SMU vocabulary, so its public clear must still be the wire "
             "value itself (a native False for a boolean): expected %r, got %r"

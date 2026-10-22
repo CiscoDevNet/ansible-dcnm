@@ -868,6 +868,16 @@ def gie_nvpair_keymap():
     return out
 
 
+# Registered public keys that the native argument spec ALSO serves on other parents. Each one is
+# listed by name, never derived, so that sharing a key between the registry and the native spec stays
+# an explicit decision. The generic invalid-parent guard skips these keys: a parent that registers the
+# key uses its binding, a native parent keeps its native path, and a parent that does neither keeps the
+# legacy discard it had before the key was registered.
+#   enable_cdp: registered on int_routed_host (SMU 017 CDP_ENABLE, slice 0b_37); native on the access,
+#               trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles.
+GIE_NATIVE_ELSEWHERE_KEYS = frozenset({"enable_cdp"})
+
+
 def gie_guarded_keys():
     """Registry-known keys whose invalid-parent guard is owned by the GENERIC engine
     (mechanism 'passthrough'). Keys with a dedicated compat validate (child_pti, e.g.
@@ -875,8 +885,9 @@ def gie_guarded_keys():
 
     A FRESH set on every call, from an index built once. Still NOT parent-qualified --
     that is the property the callers depend on, and the reason a public key the native arg
-    spec already serves on another parent must never be registered here."""
-    return profile_keys_by_mechanism(GIE_MECH_PASSTHROUGH)
+    spec already serves on another parent is guarded only when it is not listed in
+    GIE_NATIVE_ELSEWHERE_KEYS."""
+    return profile_keys_by_mechanism(GIE_MECH_PASSTHROUGH) - GIE_NATIVE_ELSEWHERE_KEYS
 
 
 def gie_invalid_parent_key(parent_template, profile_keys):

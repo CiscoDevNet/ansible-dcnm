@@ -232,14 +232,15 @@ def test_the_previous_lot_is_untouched():
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
-    assert len(BINDING_TABLE) == 246, "the table has {0} identities".format(len(BINDING_TABLE))
+    assert len(BINDING_TABLE) == 251, "the table has {0} identities".format(len(BINDING_TABLE))
     # 197 integrated + 3 int_vlan rows (test_gie_hsrp3_resets.py) = 200, + the six
     # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
     # access/trunk set below is unchanged.
     # + the eleven PVLAN companion resets (inferred, other parents) = 218, + the vPC PVLAN qosStatsSuppressed reset = 219.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1, (
-        "the integrated table carries {0} resets, expected 219".format(len(with_reset)))
+    # + 5 SMU 017 resets read from the bodies (slice 0b_37) = 224.
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5, (
+        "the integrated table carries {0} resets, expected 224".format(len(with_reset)))
     lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset
                 if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
     assert lot_rows == {(f[0], f[1]) for f in VPC_ROWS}

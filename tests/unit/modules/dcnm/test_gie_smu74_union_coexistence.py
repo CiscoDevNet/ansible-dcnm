@@ -54,7 +54,8 @@ UNION_RESET_TOTAL = 74
 # int_vlan::privateVlanMapping: 206 + 1 = 207.
 # Eleven PVLAN companion rows (PVLANC1_ADDITIONS), resets inferred, not measured: 207 + 11 = 218.
 # int_vpc_pvlan_host::qosStatsSuppressed (IQ1_ADDITIONS), reset inferred: 218 + 1 = 219.
-CANDIDATE_RESET_TOTAL = 219
+# SMU 017 first increment (BATCH017_ADDITIONS), resets read from the 017 bodies, not measured: 219 + 5 = 224.
+CANDIDATE_RESET_TOTAL = 224
 
 # The additions this candidate is allowed to carry, and nothing else: four
 # `int_routed_host` and four `int_subif` rows, plus two `int_loopback` and four
@@ -451,17 +452,27 @@ PVLANC1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in PVLANC1_ADDITIONS)
 IQ1_ADDITIONS = (("int_vpc_pvlan_host", "qosStatsSuppressed", "disable_qos_stats", "false"),)
 IQ1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in IQ1_ADDITIONS)
 
+# SMU 017 first increment, slice 0b_37. Resets read from the 017 bodies, NOT measured live.
+BATCH017_ADDITIONS = (
+    ("int_routed_host", "CDP_ENABLE", "enable_cdp", "true"),
+    ("int_routed_host", "evpnMultisiteDciTracking", "enable_evpn_multisite_dci_tracking", "false"),
+    ("int_routed_host", "ospfRetransmitInterval", "ospf_retransmit_interval", ""),
+    ("int_access_host", "loggingEventPortLinkStatus", "logging_event_port_link_status", "false"),
+    ("int_subif", "pimBfdInstance", "enable_pim_bfd_instance", "false"),
+)
+BATCH017_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in BATCH017_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
 ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + DAMPENING_EXPERIMENTAL_ADDITIONS + PIMACL_ADDITIONS
                  + VPC13_ADDITIONS + HSRP3_ADDITIONS + VPC_DOT1Q6_ADDITIONS
-                 + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS)
+                 + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS + BATCH017_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
                         | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
-                        | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES)
+                        | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES | BATCH017_IDENTITIES)
 
 
 def _rows():
@@ -619,8 +630,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # + 1 int_vlan row (PVLAN1_ADDITIONS) = 133, and 74 + 133 = 207.
     # + 11 PVLAN companion rows (PVLANC1_ADDITIONS, inferred resets) = 144, and 74 + 144 = 218.
     # + 1 vPC PVLAN qosStatsSuppressed row (IQ1_ADDITIONS, inferred reset) = 145, and 74 + 145 = 219.
-    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 145"
+    # + 5 SMU 017 rows (BATCH017_ADDITIONS, resets read from the bodies) = 150, and 74 + 150 = 224.
+    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 150"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -720,7 +732,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               ("PVLAN mapping", set(PVLAN1_IDENTITIES), 1),
               # registered with INFERRED resets (not measured on a PVLAN parent): named so it is never read as accepted
               ("PVLAN companions C1/inferred", set(PVLANC1_IDENTITIES), 11),
-              ("vPC PVLAN ingress QoS IQ1/inferred", set(IQ1_IDENTITIES), 1))
+              ("vPC PVLAN ingress QoS IQ1/inferred", set(IQ1_IDENTITIES), 1),
+              # SMU 017 first increment: resets read from the 017 bodies, NOT measured live
+              ("SMU017 batch 1/from template", set(BATCH017_IDENTITIES), 5))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -731,17 +745,18 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
              | OSPF_ALL_P3B | OSPF_ALL_P5 | BFD_ECHO | BFD_INTERVAL
              | EIGRP_IDENTITIES | MACSEC_IDENTITIES | DAMPENING_EXPERIMENTAL_IDENTITIES
              | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES
-             | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES)
+             | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES
+             | BATCH017_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 145, (
+    assert len(union) == 150, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
         "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN + 11 PVLAN companions + 1 IQ1 "
-        "= 145, and 74 + 145 = 219"
+        "+ 5 SMU017 batch 1 = 150, and 74 + 150 = 224"
         % len(union))
 
 
@@ -846,6 +861,9 @@ def test_the_published_seventy_four_are_present_unaltered_and_nothing_else_was_a
             source_of_expectation = "the default the template declares"
         elif declared is False:
             expected, source_of_expectation = "false", "the declared boolean default"
+        elif declared is True:
+            # int_routed_host CDP_ENABLE (slice 0b_37): defaultValue=true, and true deletes the `no cdp enable` child.
+            expected, source_of_expectation = "true", "the declared boolean default"
         elif row["type"] == "integer" and isinstance(declared, int):
             expected, source_of_expectation = str(declared), (
                 "the declared integer default, in string form")

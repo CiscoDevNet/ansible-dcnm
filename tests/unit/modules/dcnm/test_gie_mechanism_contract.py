@@ -277,6 +277,12 @@ def _a_parent_that_does_not_register(profile_key):
 )
 def test_a_generic_binding_is_rejected_on_a_parent_that_does_not_support_it(key):
     binding = next(b for b in BINDING_TABLE if _key(b) == key)
+    if binding["profile_key"] in gie_engine.GIE_NATIVE_ELSEWHERE_KEYS:
+        # Served natively on other parents by name (gie_engine.GIE_NATIVE_ELSEWHERE_KEYS): the generic guard
+        # leaves it to the native spec. Its own behaviour is pinned in test_gie_smu017_batch1.py.
+        assert gie_invalid_parent_key(_a_parent_that_does_not_register(binding["profile_key"]),
+                                      ["mode", binding["profile_key"]]) is None
+        return
     wrong_parent = _a_parent_that_does_not_register(binding["profile_key"])
     if wrong_parent is None:
         pytest.skip("{0} is registered on every parent in the table".format(binding["profile_key"]))
