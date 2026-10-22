@@ -2317,6 +2317,27 @@ class DcnmIntf:
         )
         return "ethernet" + match.group(1) if match else None
 
+    def dcnm_intf_get_vpc_peer_serials(self, switches):
+        """
+        Return (peer1_sno, peer2_sno): the serial numbers owning a vPC's playbook peer1_* and
+        peer2_* parameters, based on the ND vPC pair (SERIAL1~SERIAL2) of switches[0].
+
+        peer1_* belongs to switches[0] and peer2_* to switches[1]. With a single switch, the
+        other vPC peer owns peer2_*. Return None if switches[0] is not part of a known vPC
+        pair, or if the two playbook switches do not match that pair.
+        """
+        switches = list(switches or [])
+        pair = str(self.vpc_ip_sn.get(switches[0], "") if switches else "").split("~")
+        if len(pair) < 2:
+            return None
+        sno0 = self.ip_sn.get(switches[0], "")
+        if len(switches) < 2:
+            return (pair[1], pair[0]) if sno0 == pair[1] else (pair[0], pair[1])
+        sno1 = self.ip_sn.get(switches[1], "")
+        if {sno0, sno1} == {pair[0], pair[1]}:
+            return sno0, sno1
+        return None
+
     def dcnm_intf_get_referenced_breakout_parents(self):
         """
         Return a set of (serialNumber, "ethernet1/x") for every breakout parent whose
@@ -2327,20 +2348,25 @@ class DcnmIntf:
         referenced = set()
         for cfg in self.config:
             profile = cfg.get("profile") if isinstance(cfg.get("profile"), dict) else {}
-            # Names and port-channel members belong to each listed switch; vPC peer
-            # members may be on either vPC peer, so map them to both serials.
-            groups = (
-                ([cfg.get("name")] + list(profile.get("members") or []), lambda sw: self.ip_sn.get(sw)),
-                (
-                    list(profile.get("peer1_members") or []) + list(profile.get("peer2_members") or []),
-                    lambda sw: self.vpc_ip_sn.get(sw) or self.ip_sn.get(sw),
-                ),
-            )
-            for names, get_sno in groups:
-                parents = {self.dcnm_intf_get_breakout_parent_name(n) for n in names} - {None}
-                for sw in cfg.get("switch") or []:
-                    snos = set(str(get_sno(sw) or "").split("~")) - {""}
-                    referenced.update((sno, parent) for sno in snos for parent in parents)
+            switches = cfg.get("switch") or []
+            names = [cfg.get("name")] + list(profile.get("members") or [])
+            refs = [(self.ip_sn.get(sw), names) for sw in switches]
+
+            peer1 = list(profile.get("peer1_members") or [])
+            peer2 = list(profile.get("peer2_members") or [])
+            if peer1 or peer2:
+                peer_snos = self.dcnm_intf_get_vpc_peer_serials(switches)
+                if peer_snos is not None:
+                    refs += [(peer_snos[0], peer1), (peer_snos[1], peer2)]
+                else:
+                    # Peer ownership is unknown: keep the breakouts on every candidate switch.
+                    candidates = "~".join(str(self.vpc_ip_sn.get(sw) or self.ip_sn.get(sw) or "") for sw in switches)
+                    refs += [(sno, peer1 + peer2) for sno in candidates.split("~")]
+
+            for sno, members in refs:
+                if sno:
+                    parents = {self.dcnm_intf_get_breakout_parent_name(m) for m in members} - {None}
+                    referenced.update((str(sno), parent) for parent in parents)
         return referenced
 
     def dcnm_intf_get_breakouts_in_use(self):
@@ -3680,42 +3706,27 @@ class DcnmIntf:
 
         if "~" in vpc_pair_sn:
             vpc_sn_parts = vpc_pair_sn.split("~")
-            switch_0_sn = self.ip_sn.get(delem["switch"][0], "")
+            peer_snos = self.dcnm_intf_get_vpc_peer_serials(delem["switch"])
 
-            if len(delem["switch"]) < 2:
-                # Single switch in playbook - swap if it maps to ND's PEER2
-                if switch_0_sn == vpc_sn_parts[1]:
-                    peer1_members, peer2_members = peer2_members, peer1_members
-                    peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
-                    peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
-                    peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
-                    peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
-                    peer1_description, peer2_description = peer2_description, peer1_description
-                    peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
-            else:
+            if peer_snos is None:
+                # Serial numbers don't match vPC pair - this is an error condition
+                switch_0_sn = self.ip_sn.get(delem["switch"][0], "")
                 switch_1_sn = self.ip_sn.get(delem["switch"][1], "")
-
-                # Check if playbook switch order matches ND vPC pair order
-                if switch_0_sn == vpc_sn_parts[0] and switch_1_sn == vpc_sn_parts[1]:
-                    # Playbook order matches ND order - no swap needed
-                    pass
-                elif switch_0_sn == vpc_sn_parts[1] and switch_1_sn == vpc_sn_parts[0]:
-                    # Playbook order is reversed from ND order - swap all peer parameters
-                    peer1_members, peer2_members = peer2_members, peer1_members
-                    peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
-                    peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
-                    peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
-                    peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
-                    peer1_description, peer2_description = peer2_description, peer1_description
-                    peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
-                else:
-                    # Serial numbers don't match vPC pair - this is an error condition
-                    self.module.fail_json(
-                        msg=f"vPC {ifname} configuration error: Switch serial numbers "
-                            f"[{switch_0_sn}, {switch_1_sn}] do not match ND vPC pair "
-                            f"[{vpc_sn_parts[0]}, {vpc_sn_parts[1]}]. Verify that the "
-                            f"switches specified in the playbook are part of the same vPC pair."
-                    )
+                self.module.fail_json(
+                    msg=f"vPC {ifname} configuration error: Switch serial numbers "
+                        f"[{switch_0_sn}, {switch_1_sn}] do not match ND vPC pair "
+                        f"[{vpc_sn_parts[0]}, {vpc_sn_parts[1]}]. Verify that the "
+                        f"switches specified in the playbook are part of the same vPC pair."
+                )
+            elif peer_snos[0] != vpc_sn_parts[0]:
+                # Playbook peer1 is ND's PEER2 - swap all peer parameters
+                peer1_members, peer2_members = peer2_members, peer1_members
+                peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
+                peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
+                peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
+                peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
+                peer1_description, peer2_description = peer2_description, peer1_description
+                peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
 
         if delem[profile]["mode"] == "trunk":
 
@@ -4686,6 +4697,8 @@ class DcnmIntf:
     def dcnm_intf_get_have_all_breakout_interfaces(self, sno):
         # This function will get policies for a given serial number and
         # populate the breakout interfaces in self.have_breakout
+        if any(sno in have_breakout for have_breakout in self.have_breakout):
+            return
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}".format(sno)
         resp = dcnm_send(self.module, "GET", path)
 
@@ -5097,9 +5110,9 @@ class DcnmIntf:
         if state == "deleted" or state == "overridden":
             # self.breakouts_to_remove is computed in dcnm_intf_get_diff_overridden(),
             # which is also used by state 'deleted' without config.
-            for (sno, _), parent in self.breakouts_to_remove.items():
+            for key, parent in self.breakouts_to_remove.items():
                 # NDFC removes the whole breakout given its first child port.
-                payload = {"serialNumber": sno, "ifName": parent + "/1"}
+                payload = {"serialNumber": key[0], "ifName": parent + "/1"}
                 self.diff_delete_breakout.append(payload)
                 self.changed_dict[0]["deleted"].append(dict(payload, ifName=parent, interfaceType="breakout_interface"))
 
@@ -6136,6 +6149,10 @@ class DcnmIntf:
                     for d in self.have_all
                 ):
                     self.dcnm_intf_get_have_all(sw)
+                else:
+                    # Interfaces of a vPC peer arrive with the other peer's details,
+                    # but breakouts are per switch.
+                    self.dcnm_intf_get_have_all_breakout_interfaces(sno)
 
     def dcnm_intf_get_diff_overridden(self, cfg):
 
@@ -6161,6 +6178,8 @@ class DcnmIntf:
                     for d in self.have_all
                 ):
                     self.dcnm_intf_get_have_all(address)
+                else:
+                    self.dcnm_intf_get_have_all_breakout_interfaces(self.ip_sn[address])
         else:
             # compute have_all for every switch included in 'cfg'.
             # 'deploy' flag will be picked from 'cfg' in case of state 'deleted' and from

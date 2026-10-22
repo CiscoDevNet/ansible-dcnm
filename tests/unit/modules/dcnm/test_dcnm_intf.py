@@ -1259,9 +1259,12 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            # The extra response is the breakout policy GET for the second switch,
+            # whose interfaces arrive with the first switch's details.
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 playbook_have_all_data,
+                self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -4234,23 +4237,141 @@ class TestDcnmIntfModule(TestDcnmModule):
             with self.subTest(if_name=if_name):
                 self.assertEqual(dcnm_intf.dcnm_intf_get_breakout_parent_name(if_name), expected)
 
+    def breakout_ovr_vpc_intf(self, vpc_pair="SNA~SNB"):
+        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
+        dcnm_intf.ip_sn = {"10.0.0.1": "SNA", "10.0.0.2": "SNB", "10.0.0.3": "SNC"}
+        dcnm_intf.vpc_ip_sn = {"10.0.0.1": vpc_pair, "10.0.0.2": vpc_pair} if vpc_pair else {}
+        return dcnm_intf
+
+    @staticmethod
+    def breakout_ovr_vpc_cfg(switches, peer1, peer2):
+        return {"name": "vpc10", "type": "vpc", "switch": switches,
+                "profile": {"peer1_members": peer1, "peer2_members": peer2}}
+
     def test_dcnm_intf_breakout_ovr_referenced_parents_vpc_scope(self):
 
-        # Only vPC peer members map to both vPC peers; a plain child port reference
-        # on one peer must not keep the same-named breakout on the other peer.
-        dcnm_intf = object.__new__(dcnm_interface.DcnmIntf)
-        dcnm_intf.ip_sn = {"10.0.0.1": "SNA", "10.0.0.2": "SNB"}
-        dcnm_intf.vpc_ip_sn = {"10.0.0.1": "SNA~SNB", "10.0.0.2": "SNA~SNB"}
+        # Names and port-channel members belong only to their listed switch, and each
+        # vPC peer's members belong only to that peer.
+        dcnm_intf = self.breakout_ovr_vpc_intf()
         dcnm_intf.config = [
             {"name": "Ethernet1/49/1", "type": "eth", "switch": ["10.0.0.1"]},
             {"name": "po10", "type": "pc", "switch": ["10.0.0.2"], "profile": {"members": ["e1/51/1"]}},
-            {"name": "vpc10", "type": "vpc", "switch": ["10.0.0.1", "10.0.0.2"],
-             "profile": {"peer1_members": ["e1/50/1"], "peer2_members": []}},
+            self.breakout_ovr_vpc_cfg(["10.0.0.1", "10.0.0.2"], ["e1/50/1"], []),
         ]
         self.assertEqual(
             dcnm_intf.dcnm_intf_get_referenced_breakout_parents(),
-            {("SNA", "ethernet1/49"), ("SNB", "ethernet1/51"), ("SNA", "ethernet1/50"), ("SNB", "ethernet1/50")},
+            {("SNA", "ethernet1/49"), ("SNB", "ethernet1/51"), ("SNA", "ethernet1/50")},
         )
+
+    def test_dcnm_intf_breakout_ovr_referenced_parents_vpc_peer_ownership(self):
+
+        # Using port 49 on one peer must not protect port 49 on the other peer, whatever
+        # the playbook switch order or number of listed switches.
+        cases = {
+            "nd_order": (["10.0.0.1", "10.0.0.2"], {("SNA", "ethernet1/49"), ("SNB", "ethernet1/50")}),
+            "reversed_order": (["10.0.0.2", "10.0.0.1"], {("SNB", "ethernet1/49"), ("SNA", "ethernet1/50")}),
+            "single_nd_peer1": (["10.0.0.1"], {("SNA", "ethernet1/49"), ("SNB", "ethernet1/50")}),
+            "single_nd_peer2": (["10.0.0.2"], {("SNB", "ethernet1/49"), ("SNA", "ethernet1/50")}),
+        }
+        for case, (switches, expected) in cases.items():
+            with self.subTest(case=case):
+                dcnm_intf = self.breakout_ovr_vpc_intf()
+                dcnm_intf.config = [self.breakout_ovr_vpc_cfg(switches, ["Ethernet1/49/1"], ["Ethernet1/50/1"])]
+                self.assertEqual(dcnm_intf.dcnm_intf_get_referenced_breakout_parents(), expected)
+
+    def test_dcnm_intf_breakout_ovr_referenced_parents_vpc_unresolved(self):
+
+        # When peer ownership cannot be determined, vPC members conservatively keep the
+        # breakouts on every candidate switch.
+        both = {(sno, parent) for sno in ("SNA", "SNB") for parent in ("ethernet1/49", "ethernet1/50")}
+        cases = {
+            "no_vpc_pair": (None, ["10.0.0.1", "10.0.0.2"], both),
+            "pair_mismatch": ("SNA~SNB", ["10.0.0.1", "10.0.0.3"],
+                              both | {("SNC", "ethernet1/49"), ("SNC", "ethernet1/50")}),
+        }
+        for case, (vpc_pair, switches, expected) in cases.items():
+            with self.subTest(case=case):
+                dcnm_intf = self.breakout_ovr_vpc_intf(vpc_pair)
+                dcnm_intf.config = [self.breakout_ovr_vpc_cfg(switches, ["e1/49/1"], ["e1/50/1"])]
+                self.assertEqual(dcnm_intf.dcnm_intf_get_referenced_breakout_parents(), expected)
+
+    def test_dcnm_intf_breakout_ovr_vpc_payload_matches_protected_peers(self):
+
+        # The vPC payload and the breakout protection must agree on which switch owns
+        # each peer's members: ND PEER1 is the first serial of the vPC pair.
+        for switches in (["10.0.0.1", "10.0.0.2"], ["10.0.0.2", "10.0.0.1"], ["10.0.0.1"], ["10.0.0.2"]):
+            with self.subTest(switches=switches):
+                dcnm_intf = self.breakout_ovr_vpc_intf()
+                delem = self._build_vpc_delem(mode="trunk", enable_cdp=False)
+                delem["switch"] = switches
+                delem["profile"].update(peer1_members=["Ethernet1/49/1"], peer2_members=["Ethernet1/50/1"])
+                intf = self._build_intf_skeleton("INTERFACE_VPC")
+                dcnm_intf.dcnm_intf_get_vpc_payload(delem, intf, "profile")
+                nv_pairs = intf["interfaces"][0]["nvPairs"]
+
+                dcnm_intf.config = [delem]
+                protected = dcnm_intf.dcnm_intf_get_referenced_breakout_parents()
+                self.assertEqual(
+                    protected,
+                    {
+                        ("SNA", dcnm_intf.dcnm_intf_get_breakout_parent_name(nv_pairs["PEER1_MEMBER_INTERFACES"])),
+                        ("SNB", dcnm_intf.dcnm_intf_get_breakout_parent_name(nv_pairs["PEER2_MEMBER_INTERFACES"])),
+                    },
+                )
+
+    def test_dcnm_intf_breakout_ovr_vpc_unused_peer_breakouts_removed(self):
+
+        # Both peers have 1/49 and 1/50 broken out. The vPC uses 1/49 on peer A and 1/50 on
+        # peer B, so only A's 1/50 and B's 1/49 are unused and removed.
+        dcnm_intf = self.breakout_ovr_vpc_intf()
+        dcnm_intf.module = Mock(params={"override_intf_types": []})
+        dcnm_intf.int_types = {"breakout": "breakout"}
+        dcnm_intf.changed_dict = [{"skipped": []}]
+        dcnm_intf.want_breakout = []
+        dcnm_intf.have_all = []
+        dcnm_intf.have_breakout = [{"SNA": ["Ethernet1/49", "Ethernet1/50"]}, {"SNB": ["Ethernet1/49", "Ethernet1/50"]}]
+        dcnm_intf.config = [self.breakout_ovr_vpc_cfg(["10.0.0.1", "10.0.0.2"], ["Ethernet1/49/1"], ["Ethernet1/50/1"])]
+        self.assertEqual(
+            dcnm_intf.dcnm_intf_compute_breakouts_to_remove(),
+            {("SNA", "ethernet1/50"): "Ethernet1/50", ("SNB", "ethernet1/49"): "Ethernet1/49"},
+        )
+
+    def test_dcnm_intf_breakout_ovr_vpc_peer_breakouts_fetched(self):
+
+        # Interface details for one vPC peer include the other peer's interfaces, but
+        # breakout policies are per switch, so they must still be fetched for both peers,
+        # once each.
+        dcnm_intf = self.breakout_ovr_vpc_intf()
+        dcnm_intf.module = Mock()
+        dcnm_intf.paths = {"IF_DETAIL_WITH_SNO": "/interface/detail?serialNumber={0}"}
+        dcnm_intf.manageable = {"10.0.0.1": "SNA", "10.0.0.2": "SNB"}
+        dcnm_intf.have_all, dcnm_intf.have_all_list, dcnm_intf.have_breakout = [], [], []
+
+        def send(module, method, path):
+            if "interface/detail" in path:
+                return {"DATA": [{"serialNo": "SNA", "ifName": "Ethernet1/1"}, {"serialNo": "SNB", "ifName": "Ethernet1/1"}]}
+            sno = path.rsplit("/", 1)[1]
+            port = {"SNA": "Ethernet1/49", "SNB": "Ethernet1/50"}[sno]
+            return {"DATA": [{"templateName": "breakout_interface", "serialNumber": sno, "entityName": port}]}
+
+        with patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface.dcnm_send", side_effect=send
+        ) as mock_send:
+            dcnm_intf.dcnm_intf_process_config({"switch": ["10.0.0.1", "10.0.0.2"]})
+            dcnm_intf.dcnm_intf_get_have_all("10.0.0.2")
+        self.assertEqual(dcnm_intf.have_breakout, [{"SNA": ["Ethernet1/49"]}, {"SNB": ["Ethernet1/50"]}])
+        self.assertEqual(sum("policies/switches" in c.args[2] for c in mock_send.call_args_list), 2)
+
+    def test_dcnm_intf_vpc_payload_pair_mismatch_fails(self):
+
+        dcnm_intf = self.breakout_ovr_vpc_intf()
+        dcnm_intf.module = Mock()
+        dcnm_intf.module.fail_json.side_effect = RuntimeError("fail_json")
+        delem = self._build_vpc_delem(mode="trunk", enable_cdp=False)
+        delem["switch"] = ["10.0.0.1", "10.0.0.3"]
+        with self.assertRaisesRegex(RuntimeError, "fail_json"):
+            dcnm_intf.dcnm_intf_get_vpc_payload(delem, self._build_intf_skeleton("INTERFACE_VPC"), "profile")
+        self.assertIn("do not match ND vPC pair [SNA, SNB]", dcnm_intf.module.fail_json.call_args.kwargs["msg"])
 
     def test_dcnm_intf_breakout_ovr_absent_unbreaks(self):
 
