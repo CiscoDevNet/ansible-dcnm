@@ -1201,15 +1201,19 @@ options:
             default: 8
           ipv6_addr:
             description:
-            - IPV6 address of the interface. This object is applicable only if the 'mode' is 'epl_routed'
+            - IPV6 address of the interface. This object is applicable only if the 'mode' is
+              'routed' or 'epl_routed'
+            - With C(mode=routed), an empty value removes the IPv6 address and its prefix length.
             type: str
             default: ""
           ipv6_mask_len:
             description:
-            - IPV6 address mask length. This object is applicable only if the 'mode' is 'epl_routed'
-            - Minimum Value (1), Maximum Value (31)
+            - IPV6 address mask length. This object is applicable only if the 'mode' is 'routed' or
+              'epl_routed'
+            - Minimum Value (64), Maximum Value (127)
+            - With C(mode=routed), it is sent only together with I(ipv6_addr).
             type: int
-            default: 8
+            default: 64
           route_tag:
             description:
             - Route tag associated with the interface IP. This object is applicable only if the 'mode' is
@@ -2627,6 +2631,42 @@ EXAMPLES = """
         mode: dot1q
         access_vlan: 41
         description: "ETH 1/12 Dot1q Tunnel"
+
+# Routed Ethernet with IPv4 and IPv6 addresses (int_routed_host)
+
+- name: Configure a routed interface with IPv4 and IPv6 addresses
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    config:
+      - name: eth1/17
+        type: eth
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          mode: routed
+          admin_state: false
+          ipv4_addr: 192.0.2.1
+          ipv4_mask_len: 30
+          ipv6_addr: 2001:db8:117::1
+          ipv6_mask_len: 64                 # choose from [min:64, max:127]
+
+- name: Remove the IPv6 address and keep IPv4 (replaced withdraws omitted fields)
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: replaced
+    config:
+      - name: eth1/17
+        type: eth
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          mode: routed
+          admin_state: false
+          ipv4_addr: 192.0.2.1
+          ipv4_mask_len: 30
 
 # Private VLAN (int_pvlan_host, NDFC 12)
 
@@ -5932,6 +5972,10 @@ class DcnmIntf:
             int_vrf=dict(type="str", default="default"),
             ipv4_addr=dict(type="ipv4", default=""),
             ipv4_mask_len=dict(type="int", default=8),
+            ipv6_addr=dict(type="ipv6", default=""),
+            ipv6_mask_len=dict(
+                type="int", range_min=64, range_max=127, default=64
+            ),
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=9216, range_min=576, range_max=9216),
             speed=dict(type="str", default="Auto"),
@@ -7193,6 +7237,19 @@ class DcnmIntf:
                 )
             else:
                 intf["interfaces"][0]["nvPairs"]["PREFIX"] = ""
+            # int_routed_host renders `ipv6 address` only when both IPv6 and IPv6_PREFIX are set,
+            # and the controller stores both as "" when unset. Send the pair together, empty
+            # without an address, so a default prefix never travels on its own.
+            if delem[profile]["ipv6_addr"] != "":
+                intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
+                    delem[profile]["ipv6_addr"]
+                )
+                intf["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = str(
+                    delem[profile]["ipv6_mask_len"]
+                )
+            else:
+                intf["interfaces"][0]["nvPairs"]["IPv6"] = ""
+                intf["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = ""
             intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
                 "route_tag"
             ]
@@ -12639,6 +12696,31 @@ class DcnmIntf:
             self.dependency_blocked.append(dict(conflict, interface=name, parent=policy))
         return writes
 
+    def dcnm_intf_routed_ipv6_pair(self, state, want, have_nvpairs, match_pb):
+        """IPv6 and IPv6_PREFIX of a routed Ethernet port, resolved as a pair in merged state.
+
+        Merged keeps each omitted key at its stored value, key by key, and int_routed_host renders
+        `ipv6 address` only when both are set. When the playbook sets either key, the other half
+        is resolved against it: no address leaves no prefix stored, a prefix-only change keeps
+        the stored address, and a new address on a port without a stored prefix takes the
+        validated default. The returned nvPairs are compared as requested values. Other states
+        send the builder's pair unchanged."""
+        if state != "merged" or want.get("policy") != "int_routed_host" or not match_pb:
+            return {}
+        pb = match_pb[0]
+        if "ipv6_addr" not in pb and "ipv6_mask_len" not in pb:
+            return {}
+        nv = want["interfaces"][0]["nvPairs"]
+        stored_prefix = str(have_nvpairs.get("IPv6_PREFIX") or "")
+        addr = nv["IPv6"] if "ipv6_addr" in pb else str(have_nvpairs.get("IPv6") or "")
+        if addr == "":
+            return {"IPv6_PREFIX": ""} if stored_prefix else {}
+        if "ipv6_mask_len" in pb:
+            return {"IPv6": addr, "IPv6_PREFIX": str(int(pb["ipv6_mask_len"]))}
+        if not stored_prefix:
+            return {"IPv6_PREFIX": nv["IPv6_PREFIX"]}
+        return {}
+
     def dcnm_intf_compare_want_and_have(self, state):
         """
         Compare want and have states for each interface
@@ -13075,9 +13157,13 @@ class DcnmIntf:
                                         (intf[ik] for intf in d[k] if isinstance(intf.get(ik), dict)), {}
                                     )
                                     _d_written = set()
-                                    for _d_nvp, _d_wire in self.dcnm_intf_gie_dependencies(
+                                    _d_writes = dict(self.dcnm_intf_gie_dependencies(
                                         state, want, _d_have, pb_keys, name
-                                    ).items():
+                                    ))
+                                    _d_writes.update(
+                                        self.dcnm_intf_routed_ipv6_pair(state, want, _d_have, match_pb)
+                                    )
+                                    for _d_nvp, _d_wire in _d_writes.items():
                                         _d_written.add(_d_nvp)
                                         want[k][0][ik][_d_nvp] = _d_wire
                                         if _d_nvp not in nv_keys:
@@ -13941,6 +14027,8 @@ class DcnmIntf:
             eth_payload["interfaces"][0]["nvPairs"]["INTF_VRF"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["IP"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["PREFIX"] = ""
+            eth_payload["interfaces"][0]["nvPairs"]["IPv6"] = ""
+            eth_payload["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = ""
 
             if self._ndfc_version_gte("12.4.1"):

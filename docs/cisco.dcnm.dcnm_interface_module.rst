@@ -891,7 +891,8 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>IPV6 address of the interface. This object is applicable only if the &#x27;mode&#x27; is &#x27;epl_routed&#x27;</div>
+                        <div>IPV6 address of the interface. This object is applicable only if the &#x27;mode&#x27; is &#x27;routed&#x27; or &#x27;epl_routed&#x27;</div>
+                        <div>With <code>mode=routed</code>, an empty value removes the IPv6 address and its prefix length.</div>
                 </td>
             </tr>
             <tr>
@@ -906,11 +907,12 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">8</div>
+                        <b>Default:</b><br/><div style="color: blue">64</div>
                 </td>
                 <td>
-                        <div>IPV6 address mask length. This object is applicable only if the &#x27;mode&#x27; is &#x27;epl_routed&#x27;</div>
-                        <div>Minimum Value (1), Maximum Value (31)</div>
+                        <div>IPV6 address mask length. This object is applicable only if the &#x27;mode&#x27; is &#x27;routed&#x27; or &#x27;epl_routed&#x27;</div>
+                        <div>Minimum Value (64), Maximum Value (127)</div>
+                        <div>With <code>mode=routed</code>, it is sent only together with <em>ipv6_addr</em>.</div>
                 </td>
             </tr>
             <tr>
@@ -4893,6 +4895,42 @@ Examples
             mode: dot1q
             access_vlan: 41
             description: "ETH 1/12 Dot1q Tunnel"
+
+    # Routed Ethernet with IPv4 and IPv6 addresses (int_routed_host)
+
+    - name: Configure a routed interface with IPv4 and IPv6 addresses
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: eth1/17
+            type: eth
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              mode: routed
+              admin_state: false
+              ipv4_addr: 192.0.2.1
+              ipv4_mask_len: 30
+              ipv6_addr: 2001:db8:117::1
+              ipv6_mask_len: 64                 # choose from [min:64, max:127]
+
+    - name: Remove the IPv6 address and keep IPv4 (replaced withdraws omitted fields)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: replaced
+        config:
+          - name: eth1/17
+            type: eth
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              mode: routed
+              admin_state: false
+              ipv4_addr: 192.0.2.1
+              ipv4_mask_len: 30
 
     # Private VLAN (int_pvlan_host, NDFC 12)
 
