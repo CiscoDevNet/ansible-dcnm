@@ -714,11 +714,29 @@ def gie_binding_inert(binding, nvpairs):
     stored value is not something a replacement or a reset must withdraw. The gate value is compared
     in wire form (`_have_comparison_wire`), so native False and "false" agree. A gate absent from
     `nvpairs`, or any other value, is not inert: the caller keeps its normal classification.
+
+    A gate with `unless` {nvpair, values} is inert only when that other nvPair is present and holds
+    none of `values` (int_loopback: OSPF off leaves the tag live in the default VRF). An absent or
+    null `unless` nvPair proves nothing, so the binding is not inert.
     """
     gate = binding.get("inert_when") if binding else None
     if not gate or not isinstance(nvpairs, dict) or gate["nvpair"] not in nvpairs:
         return False
-    return _have_comparison_wire(nvpairs[gate["nvpair"]]) == gate["value"]
+    if _have_comparison_wire(nvpairs[gate["nvpair"]]) != gate["value"]:
+        return False
+    unless = gate.get("unless")
+    if unless is None:
+        return True
+    other = nvpairs.get(unless["nvpair"])
+    return other is not None and _have_comparison_wire(other) not in unless["values"]
+
+
+def gie_inert_gate_nvpairs(binding):
+    """The nvPairs `gie_binding_inert` reads for `binding`: its gate, then its `unless` nvPair if any."""
+    gate = binding.get("inert_when") if binding else None
+    if not gate:
+        return ()
+    return (gate["nvpair"],) + ((gate["unless"]["nvpair"],) if gate.get("unless") else ())
 
 
 def gie_binding_neutral_wires(binding):
@@ -760,6 +778,8 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
           "empty_while_on": a `required` dependent set to "" while its gate ends on, or left empty in HAVE
                            while this call turns its gate on (enabling OSPF requires a tag).
     A gate whose state cannot be established (absent, or "" for a non-empty inert value) is not judged.
+    A gate with `unless` whose other nvPair holds one of its values leaves the dependent live: it is neither
+    neutralized nor judged as set while off; an absent other nvPair is not judged either.
     Bindings this controller or capability cannot carry are skipped, as for withdrawal.
     """
     passthrough = parent_bindings_by_mechanism(parent_template, GIE_MECH_PASSTHROUGH) if parent_template else ()
@@ -785,7 +805,15 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
             return None
         wire = _have_comparison_wire(value)
         if wire == gate["value"]:
-            return "off"
+            unless = gate.get("unless")
+            if unless is None:
+                return "off"
+            other = current(unless["nvpair"])
+            if other is _GIE_ABSENT or other is None:
+                return None
+            # The gate is off but the dependent stays live (the default VRF of int_loopback): neither neutralized nor
+            # refused as set while off, and not "on" for a required value.
+            return "live" if _have_comparison_wire(other) in unless["values"] else "off"
         if wire == "":
             return None
         return "on"

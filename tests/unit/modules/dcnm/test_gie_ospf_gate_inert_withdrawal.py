@@ -10,8 +10,8 @@ int_routed_host through the module.
 The int_routed_host, int_subif and int_vlan template bodies validate and render `ospfTag` only
 under `ospf == true`, and with OSPF off they neither check it nor create the OSPF child. Those
 rows declare `inert_when: {nvpair: ospf, value: 'false'}`: a stored tag under a disabled gate is
-not a withdrawal target, is kept as stored, and transports nothing new. int_loopback is excluded
-(its template falls back to the fabric underlay when OSPF is off, so the tag stays live).
+not a withdrawal target, is kept as stored, and transports nothing new. In the default VRF int_loopback
+falls back to the fabric underlay when OSPF is off, so its tag stays live there (test_gie_loopback_ospf_withdrawal.py).
 
 The routed HAVE is a real NDFC 12.6.0.267 interface read (fixtures/dcnm_intf_routed_ospf_have.json).
 Real main() through gie_withdrawal_harness.
@@ -152,9 +152,12 @@ def test_ospf_off_keeps_the_inert_tag_on_subif_and_svi(parent):
     assert nv["ospf"] == "false" and nv["ospfTag"] == h.OSPF_CTX["ospf_tag"]
 
 
-def test_loopback_tag_is_not_inert_and_is_still_refused():
-    """int_loopback configures OSPF from the fabric underlay when ospf is false, with the stored tag first."""
-    assert "inert_when" not in table.resolve_by_nvpair(h.LOOPBACK, "ospfTag")
+def test_default_vrf_loopback_tag_stays_live_and_is_still_refused():
+    """int_loopback configures OSPF from the fabric underlay when ospf is false in the default VRF, with the stored tag
+    first: there the tag is not inert (`unless` INTF_VRF), and a disable that omits it is still refused."""
+    assert table.resolve_by_nvpair(h.LOOPBACK, "ospfTag")["inert_when"]["unless"] == {
+        "nvpair": "INTF_VRF", "values": ("", "default")}
+    assert h.base_for(h.LOOPBACK)["int_vrf"] == "default"
     have = h.build_have(h.LOOPBACK, **h.OSPF_CTX)
     result, calls = h.run(h.base_for(h.LOOPBACK, enable_ospf=False), "replaced", have=have, parent=h.LOOPBACK)
     assert result.get("failed") and h.writes(calls) == [], result.get("msg")

@@ -66,6 +66,16 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfTag
     profile_key: ospf_tag
+    # Inert with OSPF off outside the default VRF (installed bodies ba1f6dbe and 8082cbdf, not measured):
+    # required when ospf is true; rendered only when configureOspf, which is ospf true or the default VRF of an
+    # OSPF underlay. In the default VRF a stored tag stays the process the loopback joins, so it stays live there.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      required: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     type: string
@@ -104,6 +114,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfAdvertiseSubnet
     profile_key: ospf_advertise_subnet
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     type: boolean
@@ -122,6 +140,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfCost
     profile_key: ospf_cost
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     # MEASURED LIVE (see header): readback "42" -> ""; `ip ospf cost 42` removed.
@@ -142,6 +168,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfHelloInterval
     profile_key: ospf_hello_interval
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     # MEASURED LIVE (see header): readback "11" -> ""; `ip ospf hello-interval 11` removed.
@@ -162,6 +196,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfDeadInterval
     profile_key: ospf_dead_interval
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     # MEASURED LIVE (see header): readback "44" -> ""; `ip ospf dead-interval 44` removed.
@@ -182,6 +224,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfRetransmitInterval
     profile_key: ospf_retransmit_interval
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     # MEASURED LIVE (see header): readback "9" -> ""; `ip ospf retransmit-interval 9` removed.
@@ -202,6 +252,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfTransmitDelay
     profile_key: ospf_transmit_delay
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     # MEASURED LIVE (see header): readback "3" -> ""; `ip ospf transmit-delay 3` removed.
@@ -222,6 +280,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfPriority
     profile_key: ospf_priority
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     # MEASURED LIVE (see header): readback "77" -> ""; `ip ospf priority 77` removed.
@@ -242,6 +308,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfMtuIgnore
     profile_key: ospf_mtu_ignore
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     type: boolean
@@ -260,6 +334,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfShutdown
     profile_key: ospf_shutdown
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     type: boolean
@@ -279,6 +361,14 @@ bindings:
     parent_nvpair: ospfNetworkType
     wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
     profile_key: ospf_network_type
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     type: enum
@@ -302,6 +392,14 @@ bindings:
     # false -> no_change); see gie_normalize_ospf_aliases.
     wire_values: {no_change: noChange, enable: enable, disable: disable}   # SMU enum vocabulary; public valid_values unchanged
     profile_key: ospf_bfd_mode
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     type: enum
@@ -321,6 +419,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfAuthentication
     profile_key: enable_ospf_auth
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     type: boolean
@@ -339,6 +445,10 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: OSPF_AUTH_KEY_ID
     profile_key: ospf_auth_key_id
+    # Required and rendered only while ospfAuthentication is true (same bodies, not measured).
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
     applicable_interface_type: lo
     applicable_mode: lo
     type: integer
@@ -359,6 +469,13 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: OSPF_AUTH_KEY
     profile_key: ospf_auth_key
+    # Required and rendered only while ospfAuthentication is true, in every VRF (same bodies, not measured). Key
+    # material is cleared, not kept, when authentication ends off.
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+      required: true
+      clear: ''
     applicable_interface_type: lo
     applicable_mode: lo
     type: string
@@ -376,6 +493,10 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfAuthenticationKeyType
     profile_key: ospf_authentication_key_type
+    # Used and validated only with a non-empty simple key (same bodies, not measured).
+    inert_when:
+      nvpair: ospfAuthenticationKey
+      value: ''
     applicable_interface_type: lo
     applicable_mode: lo
     type: enum
@@ -394,6 +515,14 @@ bindings:
   - parent_template: int_loopback
     parent_nvpair: ospfAuthenticationKey
     profile_key: ospf_authentication_key
+    # OSPF option: refused with OSPF off and rendered only when configureOspf (same bodies, not measured).
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+      unless:
+        nvpair: INTF_VRF
+        values: ['', 'default']
     applicable_interface_type: lo
     applicable_mode: lo
     type: string

@@ -141,7 +141,7 @@ options:
       after its port-channel is deleted is not covered. With the capability disabled these
       fields are left unchanged, as before.
     - Some registered fields depend on another option of the same interface on
-      int_routed_host, int_subif and int_vlan - the OSPF options, process tag and
+      int_routed_host, int_subif, int_vlan and int_loopback - the OSPF options, process tag and
       authentication fields on C(enable_ospf), the message-digest key and key ID on
       C(enable_ospf_auth), the simple-key encryption type on C(ospf_authentication_key). While
       that option is disabled they configure nothing. Disabling it sends the neutral value of
@@ -152,8 +152,11 @@ options:
       OSPF option while OSPF ends disabled, an explicit empty C(ospf_tag) or C(ospf_auth_key)
       while its option is enabled, and enabling message-digest authentication over a cleared
       key without a new key. A port reset while such an option is still enabled is refused and
-      names the option to disable first. int_loopback is not covered (its OSPF follows the
-      fabric underlay in the default VRF).
+      names the option to disable first. On int_loopback in the default VRF (C(int_vrf) default)
+      the template keeps the loopback in the fabric underlay OSPF process whatever C(enable_ospf)
+      says, with the stored process tag first, so the tag and the OSPF options stay live there.
+      A disable in that VRF must state C(ospf_tag) and does not remove the OSPF line, and an
+      explicit C(merged) disable keeps the options. The authentication rules apply in every VRF.
     - Registered string fields whose letter case is part of the value (authentication keys and
       ACL, prefix-list or MACsec key-chain and policy names) are compared case-sensitively, so
       a change of case alone is sent. IPv6 text, numeric fields, booleans and enumerations keep
@@ -2947,6 +2950,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_carry_forward_bindings,
     gie_withdrawal_action,
     gie_binding_inert,
+    gie_inert_gate_nvpairs,
     gie_dependency_plan,
     gie_binding_is_owned_elsewhere,
     gie_patch_supported,
@@ -12570,15 +12574,16 @@ class DcnmIntf:
                                         # gate is taken from WANT when this pass sets it, else from
                                         # the authoritative HAVE the carry-forward will preserve.
                                         for _w_b, _w_entry in _w_gated:
-                                            _w_gate = _w_b["inert_when"]["nvpair"]
                                             _w_gate_nv = {}
-                                            if _w_gate in want[k][0][ik]:
-                                                _w_gate_nv[_w_gate] = want[k][0][ik][_w_gate]
-                                            else:
-                                                for intf in d[k]:
-                                                    if isinstance(intf.get(ik), dict) and _w_gate in intf[ik]:
-                                                        _w_gate_nv[_w_gate] = intf[ik][_w_gate]
-                                                        break
+                                            # The gate, and its `unless` nvPair when declared (int_loopback: INTF_VRF).
+                                            for _w_gate in gie_inert_gate_nvpairs(_w_b):
+                                                if _w_gate in want[k][0][ik]:
+                                                    _w_gate_nv[_w_gate] = want[k][0][ik][_w_gate]
+                                                else:
+                                                    for intf in d[k]:
+                                                        if isinstance(intf.get(ik), dict) and _w_gate in intf[ik]:
+                                                            _w_gate_nv[_w_gate] = intf[ik][_w_gate]
+                                                            break
                                             if not gie_binding_inert(_w_b, _w_gate_nv):
                                                 self.withdrawal_blocked.append(_w_entry)
                                             elif "clear" in _w_b["inert_when"]:

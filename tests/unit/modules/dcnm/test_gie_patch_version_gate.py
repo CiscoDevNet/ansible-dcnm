@@ -344,8 +344,10 @@ class TestPV09InventoryInvariants:
         # inline-compliance declaration (was 8ea855ab...).
         # SMU 017: regenerated from the same 34 slices with the loopback and subinterface OSPF BFD rows and the
         # subinterface passive row rebound to the enum nvPairs ospfBfdMode and ospfPassiveMode (was 15061dfc...).
+        # Loopback OSPF withdrawal: regenerated from the same 34 slices with `inert_when` on the int_loopback tag,
+        # options and authentication rows, the tag and options carrying `unless` INTF_VRF (was bcf144bc...).
         assert PROVENANCE_SHA256 == (
-            "bcf144bc4176666c0e019f3ca2cd1348aa6e5a362478de6185812b2ba6f0b2b7"
+            "2e0252ae289efe045faad7a0cc5de661e67225273a642dc3786aa93e4db41c86"
         )
 
 
