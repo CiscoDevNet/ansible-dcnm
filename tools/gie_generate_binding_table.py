@@ -997,7 +997,7 @@ POLICY_CHANGE_CLEARS_INLINE = {
 # is appended to the parent's tuple on that row and on no other. As for the parent declaration, the module uses it only
 # when the destination does not declare the field; every other field and destination keeps its refusal.
 POLICY_CHANGE_CLEARS_INLINE_FIELDS = {
-    # Measured on ND .80, NDFC 12.6.0.267, SMU 4.3.1.0175006017, NX-OS 10.5(5), one leaf access port (2026-10-22): a legacy
+    # Measured on NDFC 12.6.0.267, SMU 4.3.1.0175006017, NX-OS 10.5(5), one leaf access port: a legacy
     # interface/modify from int_access_host with loggingEventPortLinkStatus "true" to the role default int_trunk_host
     # (which does not declare the nvPair) left the pending `logging event port link-status default`; after one port
     # deploy the running, intent and children equalled the baseline. int_access_host body sha256 103fc249...,

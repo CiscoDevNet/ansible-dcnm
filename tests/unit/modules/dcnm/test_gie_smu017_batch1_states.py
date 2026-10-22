@@ -81,8 +81,7 @@ _ORIG_PHYSICAL = _physical_transport(PHYSICAL)
 
 def _detail_transport(calls, have):
     """The F2 physical-port flags plus the subinterface flag the harness does not model: a live 12.6.0.267
-    interface/detail read returned a user subinterface with `isPhysical: "false"` and `deletable: true`
-    (pr725-state-withdrawal/evidence/W2/G39-numeric-subif/capture/A-apply-arptimeout.log, Ethernet1/21.3001).
+    interface/detail read returned a user subinterface with `isPhysical: "false"` and `deletable: true`.
     `overridden` deletes a non-physical interface only when `deletable` is true."""
     inner = _ORIG_PHYSICAL(calls, have)
 

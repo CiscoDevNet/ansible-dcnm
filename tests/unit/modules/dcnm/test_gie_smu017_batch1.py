@@ -239,7 +239,7 @@ def test_border_reset_of_an_access_port_leaves_logging_to_the_routed_stanza(stat
 
 @pytest.mark.parametrize("state", ["deleted", "overridden"])
 def test_leaf_reset_of_an_access_port_with_logging_on_goes_to_trunk(state):
-    """6.3-F1: the controller removes the line with the access -> trunk policy change (measured); one reset, no access key.
+    """The controller removes the line with the access -> trunk policy change (measured); one reset, no access key.
     The identity, request and control-interface cases are in test_gie_access_logging_reset.py."""
     have = h.build_have(h.ACCESS, **dict(h.BASE_ACCESS, logging_event_port_link_status=True))
     result, calls = f2_run(state, have, "leaf")

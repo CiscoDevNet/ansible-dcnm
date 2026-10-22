@@ -346,7 +346,7 @@ class TestPV09InventoryInvariants:
         # subinterface passive row rebound to the enum nvPairs ospfBfdMode and ospfPassiveMode (was 15061dfc...).
         # SMU 017 first increment: regenerated from 35 slices, adding registry_slice_0b_37_smu017_batch1.yaml (five rows)
         # (was bcf144bc...).
-        # 6.3-F1: the same 35 slices with the generator's per-field declaration for access loggingEventPortLinkStatus ->
+        # The same 35 slices with the generator's per-field declaration for access loggingEventPortLinkStatus ->
         # int_trunk_host (was c9323853...).
         assert PROVENANCE_SHA256 == (
             "9d0d82a3b8093fe06ebd9f65b08802d89f56e0a78a6b820df6f8d8bd3c7750a2"

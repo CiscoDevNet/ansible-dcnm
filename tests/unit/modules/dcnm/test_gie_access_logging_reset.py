@@ -1,11 +1,10 @@
-"""6.3-F1: a leaf role-default reset of an int_access_host Ethernet with loggingEventPortLinkStatus true.
+"""A leaf role-default reset of an int_access_host Ethernet with loggingEventPortLinkStatus true.
 
-Measured on ND .80 (NDFC 12.6.0.267, SMU 4.3.1.0175006017, Leaf-101 Ethernet1/19, 2026-10-22): a legacy interface/modify
-from int_access_host with the line configured to the role default int_trunk_host left the pending
-`logging event port link-status default`; after one port deploy the running, intent and children equalled the baseline
-(kappa/newcap017-batch1/RESULT.md, evidence/a1api/A1API_summary.json). The registry declares that transition for this
-field only (POLICY_CHANGE_CLEARS_INLINE_FIELDS in the generator); every other access field and destination keeps its
-contract.
+Measured on NDFC 12.6.0.267, SMU 4.3.1.0175006017, NX-OS 10.5(5), one leaf access port: a legacy interface/modify from
+int_access_host with the line configured to the role default int_trunk_host left the pending
+`logging event port link-status default`; after one port deploy the running, intent and children equalled the baseline.
+The registry declares that transition for this field only (POLICY_CHANGE_CLEARS_INLINE_FIELDS in the generator); every
+other access field and destination keeps its contract.
 
 Real main() through gie_withdrawal_harness; only inventory, transport and sleep are mocked. Values are synthetic.
 """

@@ -6,7 +6,8 @@
 #     int_access_host  loggingEventPortLinkStatus  logging_event_port_link_status
 #     int_subif        pimBfdInstance              enable_pim_bfd_instance
 #
-# Sources: the bodies exported from the 017 controller on 2026-10-20 (template REST API, read only), sha256 of `content`:
+# Sources: the bodies exported from a controller with SMU 4.3.1.0175006017 (template REST API, read only), sha256 of
+# `content`:
 #     int_routed_host                          b5345584749288411fa44c5270b204fdffcb04941d70fb4e2daa2d1057b68918
 #     int_access_host                          103fc249900c...
 #     int_subif                                1937c6a5f49d...
@@ -124,8 +125,8 @@ bindings:
   #         config_builder.add_config('logging event port link-status', ...)        (L576)
   # Inline (setGeneratedConfig), no child policy: with false the line is not part of the expected stanza and NDFC
   # compliance negates it, as for the other inline access fields. int_trunk_host does not declare this nvPair. A leaf
-  # reset of an access port holding true to int_trunk_host was measured to remove the line in one policy change (ND .80,
-  # 2026-10-22), so the generator declares that transition for this field (POLICY_CHANGE_CLEARS_INLINE_FIELDS).
+  # reset of an access port holding true to int_trunk_host was measured to remove the line in one policy change (NDFC
+  # 12.6.0.267), so the generator declares that transition for this field (POLICY_CHANGE_CLEARS_INLINE_FIELDS).
   - parent_template: int_access_host
     parent_nvpair: loggingEventPortLinkStatus
     profile_key: logging_event_port_link_status
