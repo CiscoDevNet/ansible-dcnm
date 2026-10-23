@@ -3217,6 +3217,7 @@ Parameters
                 </td>
                 <td>
                         <div>A list of interface types which will be deleted/defaulted in overridden/deleted state. If this list is empty, then during overridden/deleted state, all interface types will be defaulted/deleted. If this list includes specific interface types, then only those interface types that are included in the list will be deleted/defaulted.</div>
+                        <div>Breakout ports present on the controller but not included in the playbook are un-broken out (restored to the original parent port, e.g. Ethernet1/1/1-4 back to Ethernet1/1) only if this list is empty or includes &#x27;breakout&#x27;. A breakout is retained if any of its child ports (e.g. Ethernet1/1/1, Ethernet1/1/1.10 or a port-channel/vPC member Ethernet1/1/2) is referenced in the playbook, or if any child port is in use by the fabric (e.g. an intra-fabric link, vPC peer-link or TOR uplink member); such breakouts are reported under &#x27;skipped&#x27;.</div>
                 </td>
             </tr>
             <tr>

@@ -1,0 +1,232 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+# Requires test_data_common.breakout_intf1: a breakout-capable parent port on
+# test_data_common.switch1 (for example "Ethernet1/50"). Optionally
+# test_data_common.breakout_map (default "10g-4x"). Skipped when not defined.
+
+- name: BREAKOUT OVERRIDE - Test Entry Point - [ndfc_interface]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_interface]               +"
+      - "+                   BREAKOUT OVERRIDE Tests                     +"
+      - "----------------------------------------------------------------"
+
+- name: BREAKOUT OVERRIDE - Skip when no breakout port is defined
+  ansible.builtin.debug:
+    msg: "test_data_common.breakout_intf1 is not defined, skipping BREAKOUT OVERRIDE tests"
+  when: test_data_common.breakout_intf1 is not defined
+
+- block:
+
+    - name: Remove local log file
+      local_action: command rm -f dcnm_intf.log
+
+    - name: Put the fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden
+      register: setup_result
+
+    - name: ASSERT - Check return codes for setup
+      ansible.builtin.assert:
+        that:
+          - item.RETURN_CODE == 200
+      loop: "{{ setup_result.response }}"
+
+    ##############################################
+    ##             SETUP VARS                   ##
+    ##############################################
+
+    - name: Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        bo_parent: "{{ test_data_common.breakout_intf1 }}"
+        bo_child: "{{ test_data_common.breakout_intf1 }}/1"
+        bo_breakout_conf:
+          - name: "{{ test_data_common.breakout_intf1 }}"
+            type: breakout
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            profile:
+              map: "{{ test_data_common.breakout_map | default('10g-4x') }}"
+        bo_child_conf:
+          - name: "{{ test_data_common.breakout_intf1 }}/1"
+            type: eth
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              mode: trunk
+              allowed_vlans: none
+              admin_state: true
+              description: "breakout child - to be removed by overridden"
+        bo_other_conf:
+          - name: lo150
+            type: lo
+            switch:
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
+            profile:
+              admin_state: true
+              mode: lo
+              int_vrf: ""
+              ipv4_addr: 192.169.150.1
+              route_tag: ""
+              cmds:
+                - no shutdown
+              description: "loopback kept by breakout override test"
+      delegate_to: localhost
+
+    ##############################################
+    ##                MERGE                     ##
+    ##############################################
+
+    - name: Merge breakout
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config: "{{ bo_breakout_conf }}"
+      register: merge_bo_result
+
+    - name: ASSERT - Merge breakout changed & return codes
+      ansible.builtin.assert:
+        that:
+          - merge_bo_result.changed == true
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_bo_result.response }}"
+
+    - name: Merge config on breakout child port
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config: "{{ bo_child_conf }}"
+      register: merge_child_result
+
+    - name: ASSERT - Merge child return codes
+      ansible.builtin.assert:
+        that:
+          - item.RETURN_CODE == 200
+      loop: "{{ merge_child_result.response }}"
+
+    ##############################################
+    ##       OVERRIDE - KEEP (child referenced) ##
+    ##############################################
+
+    - name: Override with child port referenced but no breakout entry (breakout kept)
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden
+        config: "{{ bo_child_conf + bo_other_conf }}"
+      register: override_keep_result
+
+    - name: ASSERT - Breakout is not removed when a child port is referenced
+      ansible.builtin.assert:
+        that:
+          - (override_keep_result.diff[0].deleted | selectattr('interfaceType', 'defined')
+             | selectattr('interfaceType', 'equalto', 'breakout_interface') | list | length) == 0
+
+    ##############################################
+    ##       OVERRIDE - UN-BREAKOUT             ##
+    ##############################################
+
+    - name: Override without breakout or child ports - check mode
+      cisco.dcnm.dcnm_interface: &bo_override
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden
+        config: "{{ bo_other_conf }}"
+      check_mode: true
+      register: override_cm_result
+
+    - name: ASSERT - Check mode reports the un-breakout without sending requests
+      ansible.builtin.assert:
+        that:
+          - override_cm_result.changed == true
+          - (override_cm_result.diff[0].deleted | selectattr('interfaceType', 'defined')
+             | selectattr('interfaceType', 'equalto', 'breakout_interface')
+             | map(attribute='ifName') | map('lower') | list) == [bo_parent | lower]
+
+    - name: Override without breakout or child ports
+      cisco.dcnm.dcnm_interface: *bo_override
+      register: override_result
+
+    - name: ASSERT - Override changed & return codes
+      ansible.builtin.assert:
+        that:
+          - override_result.changed == true
+          - item.RETURN_CODE == 200
+      loop: "{{ override_result.response }}"
+
+    - name: ASSERT - Un-breakout was sent to the Delete/Unbreakout Interfaces API
+      ansible.builtin.assert:
+        that:
+          - (override_result.response | selectattr('REQUEST_PATH', 'defined')
+             | selectattr('REQUEST_PATH', 'search', '/rest/interface$')
+             | selectattr('METHOD', 'equalto', 'DELETE') | list | length) == 1
+          - (override_result.response | selectattr('REQUEST_PATH', 'defined')
+             | selectattr('REQUEST_PATH', 'search', '/interface/breakout$')
+             | selectattr('METHOD', 'equalto', 'DELETE') | list | length) == 0
+          - (override_result.diff[0].replaced
+             | map(attribute='interfaces') | flatten | map(attribute='ifName')
+             | map('lower') | select('equalto', bo_child | lower) | list | length) == 0
+
+    - name: QUERY - Parent port is restored and child port is gone
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config:
+          - switch:
+              - "{{ test_data_common.switch1 }}"
+      register: query_result
+
+    - name: ASSERT - Parent port present, child port absent
+      ansible.builtin.assert:
+        that:
+          - bo_parent | lower in (query_result.response | map(attribute='ifName') | map('lower') | list)
+          - bo_child | lower not in (query_result.response | map(attribute='ifName') | map('lower') | list)
+
+    - name: Override without breakout or child ports - Idempotence
+      cisco.dcnm.dcnm_interface: *bo_override
+      register: override_idem_result
+
+    - name: ASSERT - No breakout left to remove on re-run
+      ansible.builtin.assert:
+        that:
+          - (override_idem_result.diff[0].deleted | selectattr('interfaceType', 'defined')
+             | selectattr('interfaceType', 'equalto', 'breakout_interface') | list | length) == 0
+
+  always:
+    ##############################################
+    ##             CLEANUP                      ##
+    ##############################################
+
+    - name: Remove breakout (cleanup)
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ test_data_common.fabric }}"
+        state: deleted
+        config: "{{ bo_breakout_conf }}"
+      register: cleanup_bo_result
+      when: bo_breakout_conf is defined
+
+    - name: Put fabric to default state (cleanup)
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden
+      register: cleanup_result
+      when: it_context is not defined
+
+    - name: ASSERT - Check return codes for cleanup
+      ansible.builtin.assert:
+        that:
+          - item.RETURN_CODE == 200
+      loop: "{{ cleanup_result.response }}"
+      when: it_context is not defined
+
+  when: test_data_common.breakout_intf1 is defined
