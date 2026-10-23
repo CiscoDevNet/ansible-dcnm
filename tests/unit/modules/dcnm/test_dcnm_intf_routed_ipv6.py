@@ -548,3 +548,17 @@ def test_stock_merged_prefix_without_address_stores_nothing():
                         stock_have())
     assert not result.get("failed"), result.get("msg")
     assert pair(sent(calls)[h.IF_A][1]) == ("", "")
+
+
+def test_ipv6_keys_stored_under_another_policy_do_not_count():
+    """epl_routed_intf stores IPv6 keys; they say nothing about the int_routed_host body."""
+    epl = {"mode": "epl_routed", "ipv4_addr": V4, "ipv4_mask_len": 24, "ipv6_addr": V6, "ipv6_mask_len": 64}
+    _result, calls = run([cfg(epl)], "replaced")
+    have = []
+    h._collect_policies([c["payload"] for c in h.writes(calls)], have)
+    have[0]["interfaces"][0].update({"interfaceType": "INTERFACE_ETHERNET", "fabricName": h.FABRIC})
+    assert "IPv6" in have[0]["interfaces"][0]["nvPairs"]
+    result, calls = run([cfg(BASE)], "merged", have)
+    out = sent(calls)
+    assert not result.get("failed"), result.get("msg")
+    assert out[h.IF_A][0] == h.ROUTED and no_ipv6_keys(out[h.IF_A][1])
