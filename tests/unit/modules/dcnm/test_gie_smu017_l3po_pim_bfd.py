@@ -246,65 +246,101 @@ def test_check_mode_reports_the_change_and_writes_nothing():
     assert h.writes(calls) == [] and result.get("changed") is True
 
 
-# ------------------------------------------------------------------ overridden
+# ------------------------------------------------------------------ overridden and deleted
+# interface/detail in the measured aggregate shape (NDFC 12.6.0.267): a user port-channel is INTERFACE_PORT_CHANNEL,
+# not physical and deletable; each member is a physical INTERFACE_ETHERNET, not deletable, with an underlay policy whose
+# source is its port-channel. The harness double answers every port-channel as a physical Ethernet port.
 _ORIG = h._transport
+MEM_A, MEM_B = h.PC_MEMBER, "Ethernet1/52"
+MEMBER_POLICY = "int_l3_port_channel_member"
+MARK, DEPLOY, MODIFY = "DELETE interface/markdelete", "POST globalInterface/deploy", "POST interface/modify"
 
 
-def _detail_deletable(calls, have):
-    """interface/detail for a user port-channel in the measured shape (fixtures/pvlan_po_g4r1_host_measured.json):
-    ifType INTERFACE_PORT_CHANNEL, isPhysical the string 'false', deletable. The harness answers every non-loopback,
-    non-SVI, non-vPC entry as a physical Ethernet port, which an override sweep resets instead of deleting."""
+def _measured_detail(calls, have):
     inner = _ORIG(calls, have)
+    member_of = dict((i["ifName"].lower(), i["nvPairs"]["PRIMARY_INTF"])
+                     for p in have if p["policy"] == MEMBER_POLICY for i in p["interfaces"])
 
     def send(mod, method, path, payload=None):
         resp = inner(mod, method, path, payload)
         if method == "GET" and "/interface/detail" in path and isinstance(resp.get("DATA"), list):
             for e in resp["DATA"]:
-                if str(e.get("ifName", "")).lower().startswith("port-channel"):
-                    e.update(ifType="INTERFACE_PORT_CHANNEL", isPhysical="false", deletable=True)
+                name = str(e.get("ifName", ""))
+                if name.lower() in member_of:
+                    e.update(ifType="INTERFACE_ETHERNET", isPhysical="true", deletable=False, editAllowed=True,
+                             underlayPolicies=[{"entityName": name, "source": member_of[name.lower()],
+                                                "templateName": MEMBER_POLICY, "serialNumber": h.SERIAL}])
+                elif name.lower().startswith("port-channel"):
+                    e.update(ifType="INTERFACE_PORT_CHANNEL", isPhysical="false", deletable=True, editAllowed=True)
         return resp
     return send
 
 
-def _overridden(configs, have):
-    with patch.object(h, "_transport", _detail_deletable):
-        return h.run_configs(configs, "overridden", have)
+def _member_have(member, po):
+    return [{"policy": MEMBER_POLICY, "interfaces": [{
+        "interfaceType": "INTERFACE_ETHERNET", "serialNumber": h.SERIAL, "ifName": member, "fabricName": h.FABRIC,
+        "nvPairs": {"INTF_NAME": member, "PRIMARY_INTF": po.lower(), "ADMIN_STATE": "true", "DESC": "", "CONF": ""}}]}]
+
+
+def _aggregate():
+    """Po A and Po B with the field set, each with its own member."""
+    return (_have({**BFD_ON, "members": [MEM_A]}) + _have({**BFD_ON, "members": [MEM_B]}, PO_B)
+            + _member_have(MEM_A, PO_A) + _member_have(MEM_B, PO_B))
+
+
+def _identities(calls):
+    """Every write in order, as (request, sorted [serial, ifName(, policy)])."""
+    out = []
+    for c in h.writes(calls):
+        kind = c["method"] + " " + c["path"].split("/rest/")[-1].split("?")[0]
+        found = []
+        h._collect_policies([c["payload"]], found)
+        if found:
+            ids = sorted([i["serialNumber"], i["ifName"], p["policy"]] for p in found for i in p["interfaces"])
+        else:
+            ids = sorted([e.get("serialNumber"), e.get("ifName")] for e in (c["payload"] or []) if isinstance(e, dict))
+        out.append((kind, ids))
+    return out
+
+
+def _run(configs, state, have):
+    with patch.object(h, "_transport", _measured_detail):
+        return h.run_configs(configs, state, have)
 
 
 def test_overridden_retained_port_channel_withdraws_the_field_and_keeps_the_control():
-    have = _have(BFD_ON) + _have(BFD_ON, PO_B)
-    result, calls = _overridden([_po(BASE), _po(BFD_ON, PO_B)], have)
+    configs = [_po({**BASE, "members": [MEM_A]}), _po({**BFD_ON, "members": [MEM_B]}, PO_B)]
+    result, calls = _run(configs, "overridden", _aggregate())
     assert not result.get("failed"), result.get("msg")
-    emitted = _emitted(calls)
-    assert [k[1].lower() for k in emitted] == [PO_A.lower()], "the retained control port-channel must not be written"
-    nv = list(emitted.values())[0][1]
-    assert nv[NVPAIR] == "false" and nv["MEMBER_INTERFACES"] == h.PC_MEMBER
+    assert _identities(calls) == [(MODIFY, [[h.SERIAL, PO_A, L3PO]]), (DEPLOY, [[h.SERIAL, PO_A]])]
+    nv = _only(calls)
+    assert nv[NVPAIR] == "false" and nv["MEMBER_INTERFACES"] == MEM_A
 
 
 def test_overridden_port_channel_left_out_is_deleted_and_the_retained_one_kept():
-    have = _have(BFD_ON) + _have(BFD_ON, PO_B)
-    result, calls = _overridden([_po(BFD_ON, PO_B)], have)
+    """After the markdelete of Po A, the sweep also resets its former member to the role default. That reset is
+    native port-channel behaviour (the same at the base, without the field); Po B and its member are never written."""
+    result, calls = _run([_po({**BFD_ON, "members": [MEM_B]}, PO_B)], "overridden", _aggregate())
     assert not result.get("failed"), result.get("msg")
-    writes = h.writes(calls)
-    deleted = [e.get("ifName", "").lower() for c in writes if "markdelete" in c["path"].lower() for e in (c["payload"] or [])]
-    assert deleted == [PO_A.lower()], [(c["path"], c["payload"]) for c in writes]
-    assert not any("modify" in c["path"] for c in writes)
-    result, calls = _overridden([_po(BFD_ON, PO_B)], _have(BFD_ON, PO_B))
+    assert _identities(calls) == [
+        (MARK, [[h.SERIAL, PO_A]]), (DEPLOY, [[h.SERIAL, PO_A]]),
+        (MODIFY, [[h.SERIAL, MEM_A, h.ROUTED]]), (DEPLOY, [[h.SERIAL, MEM_A]]),
+    ]
+    retained = _have({**BFD_ON, "members": [MEM_B]}, PO_B) + _member_have(MEM_B, PO_B)
+    result, calls = _run([_po({**BFD_ON, "members": [MEM_B]}, PO_B)], "overridden", retained)
     assert not result.get("failed"), result.get("msg")
-    assert h.writes(calls) == []
+    assert _identities(calls) == []
 
 
-# ------------------------------------------------------------------ deleted
 def test_deleted_retires_the_port_channel_and_a_repeat_writes_nothing():
     target = [{"name": PO_A, "type": "pc", "switch": [h.SWITCH_IP]}]
-    result, calls = h.run_configs(target, "deleted", _have(BFD_ON))
+    have = _have({**BFD_ON, "members": [MEM_A]}) + _member_have(MEM_A, PO_A)
+    result, calls = _run(target, "deleted", have)
     assert not result.get("failed"), result.get("msg")
-    assert _paths(calls) == ["DELETE interface/markdelete", "POST globalInterface/deploy"], _paths(calls)
-    deleted = [e.get("ifName", "").lower() for c in h.writes(calls) if "markdelete" in c["path"] for e in c["payload"]]
-    assert deleted == [PO_A.lower()]
-    result, calls = h.run_configs(target, "deleted", [])
+    assert _identities(calls) == [(MARK, [[h.SERIAL, PO_A]]), (DEPLOY, [[h.SERIAL, PO_A]])]
+    result, calls = _run(target, "deleted", [])
     assert not result.get("failed"), result.get("msg")
-    assert h.writes(calls) == []
+    assert _identities(calls) == []
 
 
 # ------------------------------------------------------------------ query
