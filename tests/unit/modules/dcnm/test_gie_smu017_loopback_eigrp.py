@@ -70,7 +70,7 @@ def _emitted(calls):
 def _only(calls):
     emitted = _emitted(calls)
     assert len(emitted) == 1, emitted.keys()
-    (key, (policy, nv)), = emitted.items()
+    key, (policy, nv) = next(iter(emitted.items()))
     assert policy == LO and key[0] == h.SERIAL and key[1].lower() == h.IF_LO, (key, policy)
     return nv
 
@@ -146,8 +146,9 @@ def test_explicit_update_sends_the_new_values_and_keeps_the_others(state):
     result, calls = h.run_configs([_lo({**EIGRP_SET, **changes})], state, have)
     assert not result.get("failed"), result.get("msg")
     nv = _only(calls)
-    assert {k: nv[k] for k in NVPAIRS} == {**SET_WIRE, "eigrpIpv4DistributeListDirection": "out",
-                                          "eigrpIpv6Routing": "false", "eigrpIpv6DistributeListPrefixList": "PILOT-PL6B"}
+    expected = {**SET_WIRE, "eigrpIpv4DistributeListDirection": "out", "eigrpIpv6Routing": "false",
+                "eigrpIpv6DistributeListPrefixList": "PILOT-PL6B"}
+    assert {k: nv[k] for k in NVPAIRS} == expected
     assert (nv["eigrpProcessTag"], nv["DESC"], nv["IP"]) == ("PILOT-EIGRP", "pilot", "192.0.2.131")
 
 
