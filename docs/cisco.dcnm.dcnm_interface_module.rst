@@ -893,6 +893,7 @@ Parameters
                 <td>
                         <div>IPV6 address of the interface. This object is applicable only if the &#x27;mode&#x27; is &#x27;routed&#x27; or &#x27;epl_routed&#x27;</div>
                         <div>With <code>mode=routed</code>, an empty value removes the IPv6 address and its prefix length.</div>
+                        <div>With <code>mode=routed</code>, the IPv6 address and prefix length are sent only when <em>ipv6_addr</em> or <em>ipv6_mask_len</em> is set, or when the interface intent on the controller already has them.</div>
                 </td>
             </tr>
             <tr>

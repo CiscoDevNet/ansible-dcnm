@@ -9,6 +9,9 @@ and nvPairs. The default HAVE is the module's own replaced payload with the IPv6
 it ("" and "" when unset, as in the measured int_routed_host read in fixtures/dcnm_intf_routed_ospf_have.json); the
 measured-shape cases use that 84-key read itself. Roles are the lower-case values NDFC returns ("leaf" resets to
 int_trunk_host, "border" to int_routed_host). Addresses are documentation values.
+
+The pair travels only when the playbook sets ipv6_addr or ipv6_mask_len or the stored int_routed_host intent
+already carries the keys; the "stock" cases below use an intent without them.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -57,9 +60,9 @@ def _inventory(role):
     return inv
 
 
-def run(configs, state, have=None, role="leaf"):
+def run(configs, state, have=None, role="leaf", check_mode=False):
     with patch.object(h, "_transport", _physical_transport):
-        return h.run_configs(configs, state, have=have,
+        return h.run_configs(configs, state, have=have, check_mode=check_mode,
                              extra_patch=patch.object(module, "get_fabric_inventory_details",
                                                       return_value=_inventory(role)))
 
@@ -195,6 +198,7 @@ def test_merged_without_ipv6_input_ignores_a_have_without_the_ipv6_keys():
     assert not result.get("failed"), result.get("msg")
     nv = sent(calls)[h.IF_A][1]
     assert nv["DESC"] == "only-description" and (nv["IP"], nv["PREFIX"]) == (V4, "24")
+    assert pair(nv) == ("<absent>", "<absent>")
 
 
 def test_merged_ipv6_input_is_sent_when_the_have_lacks_the_ipv6_keys():
@@ -358,12 +362,12 @@ def test_prefix_boundaries_are_accepted(mask):
 
 
 # ------------------------------------------------------------------ controls
-def test_ipv4_only_routed_create_is_unchanged_apart_from_the_empty_pair():
+def test_ipv4_only_routed_create_without_a_stored_intent_sends_no_ipv6_keys():
     result, calls = run([cfg(BASE)], "merged")
     nv = sent(calls)[h.IF_A][1]
     assert not result.get("failed"), result.get("msg")
     assert (nv["IP"], nv["PREFIX"], nv["INTF_VRF"], nv["DESC"], nv["ADMIN_STATE"]) == (V4, "24", "default", "routed-v6", "false")
-    assert pair(nv) == ("", "")
+    assert pair(nv) == ("<absent>", "<absent>")
 
 
 def test_epl_routed_still_sends_its_ipv6_pair():
@@ -386,3 +390,161 @@ def test_other_families_keep_their_prefix_range(profile, iftype, ifname):
     assert result.get("failed")
     assert "ipv6_mask_len" in result.get("msg", "")
     assert h.writes(calls) == []
+
+
+# ------------------------------------------------------------------ stored intent without the IPv6 keys
+# Some int_routed_host bodies do not declare IPv6 or IPv6_PREFIX (stock captures of NDFC 12.5 and 12.6), so
+# their stored intent has neither key. An IPv4-only request must not introduce them, even as empty strings.
+# An explicit request still sends the pair; whether such a body accepts it is not known.
+def stock_have(ifname=h.IF_A, **profile):
+    """A routed intent shaped like a body without IPv6 parameters: the keys are absent, not empty."""
+    have = routed_have(ifname, **profile)
+    for k in ("IPv6", "IPv6_PREFIX"):
+        have[0]["interfaces"][0]["nvPairs"].pop(k)
+    return have
+
+
+def trunk_have(ifname=h.IF_A):
+    """The module's own int_trunk_host payload, as the stored intent before a port becomes routed."""
+    _result, calls = run([cfg({"mode": "trunk"}, ifname)], "replaced")
+    found = []
+    h._collect_policies([c["payload"] for c in h.writes(calls)], found)
+    found[0]["interfaces"][0].update({"interfaceType": "INTERFACE_ETHERNET", "fabricName": h.FABRIC})
+    return found
+
+
+def no_ipv6_keys(nv):
+    return "IPv6" not in nv and "IPv6_PREFIX" not in nv
+
+
+def test_stock_merged_ipv4_conversion_from_trunk_sends_no_ipv6_keys():
+    result, calls = run([cfg(BASE)], "merged", trunk_have())
+    out = sent(calls)
+    assert not result.get("failed"), result.get("msg")
+    assert out[h.IF_A][0] == h.ROUTED and out[h.IF_A][1]["IP"] == V4
+    assert no_ipv6_keys(out[h.IF_A][1])
+
+
+def test_stock_merged_ipv4_update_sends_no_ipv6_keys():
+    result, calls = run([cfg({"mode": "routed", "description": "changed"})], "merged", stock_have())
+    nv = sent(calls)[h.IF_A][1]
+    assert not result.get("failed"), result.get("msg")
+    assert nv["DESC"] == "changed" and no_ipv6_keys(nv)
+
+
+@pytest.mark.parametrize("state", ["merged", "replaced"])
+def test_stock_ipv4_repeat_is_a_no_op(state):
+    result, calls = run([cfg(BASE)], state, stock_have())
+    assert not result.get("failed"), result.get("msg")
+    assert h.writes(calls) == []
+
+
+def test_stock_replaced_ipv4_change_sends_no_ipv6_keys():
+    result, calls = run([cfg(dict(BASE, ipv4_addr="192.0.2.5"))], "replaced", stock_have())
+    nv = sent(calls)[h.IF_A][1]
+    assert not result.get("failed"), result.get("msg")
+    assert nv["IP"] == "192.0.2.5" and no_ipv6_keys(nv)
+
+
+def test_stock_overridden_retained_ipv4_change_sends_no_ipv6_keys():
+    result, calls = run([cfg(dict(BASE, description="changed"))], "overridden", stock_have())
+    out = sent(calls)
+    assert not result.get("failed"), result.get("msg")
+    assert list(out) == [h.IF_A] and no_ipv6_keys(out[h.IF_A][1])
+
+
+@pytest.mark.parametrize("state", ["deleted", "overridden"])
+@pytest.mark.parametrize("role, policy", [("leaf", h.TRUNK), ("border", h.ROUTED)])
+def test_stock_reset_to_the_role_default_sends_no_ipv6_keys(state, role, policy):
+    have = stock_have(h.IF_A) + routed_have(h.IF_B)
+    configs = ([{"name": h.IF_A, "type": "eth", "switch": [h.SWITCH_IP]}] if state == "deleted"
+               else [cfg(BASE, h.IF_B)])
+    result, calls = run(configs, state, have, role=role)
+    out = sent(calls)
+    assert not result.get("failed"), result.get("msg")
+    assert list(out) == [h.IF_A] and out[h.IF_A][0] == policy
+    assert no_ipv6_keys(out[h.IF_A][1])
+
+
+def test_stock_border_reset_repeat_is_a_no_op():
+    have = stock_have(h.IF_A)
+    _result, calls = run([{"name": h.IF_A, "type": "eth", "switch": [h.SWITCH_IP]}], "deleted", have, role="border")
+    reset = []
+    h._collect_policies([c["payload"] for c in h.split_calls(calls)["updates"]], reset)
+    reset[0]["interfaces"][0].update({"interfaceType": "INTERFACE_ETHERNET", "fabricName": h.FABRIC})
+    result, calls = run([{"name": h.IF_A, "type": "eth", "switch": [h.SWITCH_IP]}], "deleted", reset, role="border")
+    assert not result.get("failed"), result.get("msg")
+    assert h.split_calls(calls)["updates"] == []
+
+
+def test_stock_query_returns_no_pair_and_writes_nothing():
+    result, calls = run([{"name": h.IF_A, "switch": [h.SWITCH_IP]}], "query", stock_have())
+    assert not result.get("failed"), result.get("msg")
+    assert h.writes(calls) == []
+    got = [i for r in result["response"] for i in r.get("interfaces", []) if i.get("ifName") == h.IF_A]
+    assert len(got) == 1 and no_ipv6_keys(got[0]["nvPairs"])
+
+
+def test_stock_check_mode_ipv4_change_writes_nothing_and_reports_no_ipv6_keys():
+    result, calls = run([cfg(dict(BASE, description="changed"))], "merged", stock_have(), check_mode=True)
+    assert not result.get("failed"), result.get("msg")
+    assert h.writes(calls) == []
+    assert result["changed"] is True
+    assert h.diff_nvpairs(result) and all(no_ipv6_keys(nv) for nv in h.diff_nvpairs(result))
+
+
+def test_check_mode_explicit_ipv6_reports_the_pair_and_writes_nothing():
+    result, calls = run([cfg(dict(BASE, ipv6_addr=V6, ipv6_mask_len=48))], "merged", stock_have(), check_mode=True)
+    assert not result.get("failed"), result.get("msg")
+    assert h.writes(calls) == []
+    assert any(pair(nv) == (V6, "48") for nv in h.diff_nvpairs(result))
+
+
+@pytest.mark.parametrize("state", ["merged", "replaced"])
+def test_stock_explicit_ipv6_is_sent(state):
+    """Positive control. Sending it does not show that a body without IPv6 parameters accepts it."""
+    result, calls = run([cfg(dict(BASE, ipv6_addr=V6, ipv6_mask_len=48))], state, stock_have())
+    assert not result.get("failed"), result.get("msg")
+    assert pair(sent(calls)[h.IF_A][1]) == (V6, "48")
+
+
+def test_stock_explicit_ipv6_over_trunk_is_sent():
+    result, calls = run([cfg(dict(BASE, ipv6_addr=V6, ipv6_mask_len=48))], "merged", trunk_have())
+    out = sent(calls)
+    assert not result.get("failed"), result.get("msg")
+    assert out[h.IF_A][0] == h.ROUTED and pair(out[h.IF_A][1]) == (V6, "48")
+
+
+def test_stock_explicit_empty_address_is_sent_as_an_empty_pair():
+    """Explicit empty is a request; omission is not (see the IPv4-only cases above)."""
+    result, calls = run([cfg(dict(BASE, ipv6_addr="", description="changed"))], "merged", stock_have())
+    assert not result.get("failed"), result.get("msg")
+    assert pair(sent(calls)[h.IF_A][1]) == ("", "")
+
+
+def test_stored_empty_keys_ipv4_update_keeps_the_empty_pair():
+    """Keys present but empty: the stored intent declares them, so the pair travels unchanged."""
+    result, calls = run([cfg(dict(BASE, description="changed"))], "replaced", routed_have())
+    nv = sent(calls)[h.IF_A][1]
+    assert not result.get("failed"), result.get("msg")
+    assert nv["DESC"] == "changed" and pair(nv) == ("", "")
+
+
+def test_stored_address_is_withdrawn_when_omitted_under_replaced():
+    """The guard keeps the withdrawal: the stored intent carries the keys."""
+    result, calls = run([cfg(BASE)], "replaced", routed_have(ipv6=V6, prefix="48"))
+    assert not result.get("failed"), result.get("msg")
+    assert pair(sent(calls)[h.IF_A][1]) == ("", "")
+
+
+def test_stock_merged_address_without_prefix_uses_the_validated_default():
+    result, calls = run([cfg({"mode": "routed", "ipv6_addr": V6})], "merged", stock_have())
+    assert not result.get("failed"), result.get("msg")
+    assert pair(sent(calls)[h.IF_A][1]) == (V6, "64")
+
+
+def test_stock_merged_prefix_without_address_stores_nothing():
+    result, calls = run([cfg({"mode": "routed", "ipv6_mask_len": 48, "description": "changed"})], "merged",
+                        stock_have())
+    assert not result.get("failed"), result.get("msg")
+    assert pair(sent(calls)[h.IF_A][1]) == ("", "")
