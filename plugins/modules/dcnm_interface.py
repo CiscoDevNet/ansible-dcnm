@@ -3681,6 +3681,62 @@ def svi_address_list_same(left, right):
     return dict(left) == dict(right)
 
 
+def routed_ipv6_requested(obj, state, name, sno, fabric):
+    """True when the playbook entry for this interface sets ipv6_addr or ipv6_mask_len."""
+    lookup = getattr(obj, "_replace_pb_input_lookup", None)
+    if state == "replaced" and lookup:
+        match_pb = lookup.get((name.lower(), str(sno), fabric), [])
+    else:
+        match_pb = [
+            pb
+            for pb in getattr(obj, "pb_input", [])
+            if (
+                (name.lower() == pb["ifname"].lower())
+                and (sno == pb["sno"])
+                and (fabric == pb["fabric"])
+            )
+        ]
+    return bool(match_pb) and ("ipv6_addr" in match_pb[0] or "ipv6_mask_len" in match_pb[0])
+
+
+def routed_ipv6_stored(have_payloads):
+    """True when a stored int_routed_host intent carries IPv6 or IPv6_PREFIX, even empty."""
+    return any(
+        ("IPv6" in intf.get("nvPairs", {})) or ("IPv6_PREFIX" in intf.get("nvPairs", {}))
+        for have in have_payloads
+        if have and have.get("policy") == "int_routed_host"
+        for intf in have.get("interfaces", [])
+    )
+
+
+def routed_ipv6_drop_unrequested(obj, state, want, match_have, name, sno, fabric):
+    """Remove the IPv6 pair from a routed request that neither the playbook nor the stored intent carries.
+
+    Some int_routed_host bodies do not declare IPv6 or IPv6_PREFIX, and the module cannot tell them
+    apart without the stored intent. An IPv4-only request therefore sends the pair only when the stored
+    int_routed_host intent already has the keys, which also keeps the withdrawal of a stored address in
+    replaced and overridden state."""
+    if want.get("policy") != "int_routed_host":
+        return
+    if routed_ipv6_stored(match_have):
+        return
+    if routed_ipv6_requested(obj, state, name, sno, fabric):
+        return
+    for intf in want.get("interfaces", []):
+        intf.get("nvPairs", {}).pop("IPv6", None)
+        intf.get("nvPairs", {}).pop("IPv6_PREFIX", None)
+
+
+def routed_ipv6_reset(payload, have_payload):
+    """Clear a stored IPv6 pair on a routed default reset when the stored intent carries the keys."""
+    if payload.get("policy") != "int_routed_host":
+        return
+    if not isinstance(have_payload, dict) or not routed_ipv6_stored([have_payload]):
+        return
+    payload["interfaces"][0]["nvPairs"]["IPv6"] = ""
+    payload["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = ""
+
+
 def _read_reason_key(stage, serial):
     authority = DcnmIntf._dcnm_intf_authority_key(serial)
     return (stage, authority.casefold()) if authority else None
@@ -12700,58 +12756,6 @@ class DcnmIntf:
             self.dependency_blocked.append(dict(conflict, interface=name, parent=policy))
         return writes
 
-    def dcnm_intf_routed_ipv6_requested(self, state, name, sno, fabric):
-        """True when the playbook entry for this interface sets ipv6_addr or ipv6_mask_len."""
-        if state == "replaced" and self._replace_pb_input_lookup:
-            match_pb = self._replace_pb_input_lookup.get((name.lower(), str(sno), fabric), [])
-        else:
-            match_pb = [
-                pb
-                for pb in self.pb_input
-                if (
-                    (name.lower() == pb["ifname"].lower())
-                    and (sno == pb["sno"])
-                    and (fabric == pb["fabric"])
-                )
-            ]
-        return bool(match_pb) and ("ipv6_addr" in match_pb[0] or "ipv6_mask_len" in match_pb[0])
-
-    @staticmethod
-    def dcnm_intf_routed_ipv6_stored(have_payloads):
-        """True when a stored int_routed_host intent carries IPv6 or IPv6_PREFIX, even empty."""
-        return any(
-            ("IPv6" in intf.get("nvPairs", {})) or ("IPv6_PREFIX" in intf.get("nvPairs", {}))
-            for have in have_payloads
-            if have and have.get("policy") == "int_routed_host"
-            for intf in have.get("interfaces", [])
-        )
-
-    def dcnm_intf_routed_ipv6_drop_unrequested(self, state, want, match_have, name, sno, fabric):
-        """Remove the IPv6 pair from a routed request that neither the playbook nor the stored intent carries.
-
-        Some int_routed_host bodies do not declare IPv6 or IPv6_PREFIX, and the module cannot tell them
-        apart without the stored intent. An IPv4-only request therefore sends the pair only when the stored
-        int_routed_host intent already has the keys, which also keeps the withdrawal of a stored address in
-        replaced and overridden state."""
-        if want.get("policy") != "int_routed_host":
-            return
-        if self.dcnm_intf_routed_ipv6_stored(match_have):
-            return
-        if self.dcnm_intf_routed_ipv6_requested(state, name, sno, fabric):
-            return
-        for intf in want.get("interfaces", []):
-            intf.get("nvPairs", {}).pop("IPv6", None)
-            intf.get("nvPairs", {}).pop("IPv6_PREFIX", None)
-
-    def dcnm_intf_routed_ipv6_reset(self, payload, have_payload):
-        """Clear a stored IPv6 pair on a routed default reset when the stored intent carries the keys."""
-        if payload.get("policy") != "int_routed_host":
-            return
-        if not isinstance(have_payload, dict) or not self.dcnm_intf_routed_ipv6_stored([have_payload]):
-            return
-        payload["interfaces"][0]["nvPairs"]["IPv6"] = ""
-        payload["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = ""
-
     def dcnm_intf_routed_ipv6_pair(self, state, want, have_nvpairs, match_pb):
         """IPv6 and IPv6_PREFIX of a routed Ethernet port, resolved as a pair in merged state.
 
@@ -12952,7 +12956,7 @@ class DcnmIntf:
                         and (sno == d["interfaces"][0]["serialNumber"])
                     )
                 ]
-            self.dcnm_intf_routed_ipv6_drop_unrequested(state, want, match_have, name, sno, fabric)
+            routed_ipv6_drop_unrequested(self, state, want, match_have, name, sno, fabric)
             if id(want) in pvlan_skip:
                 continue
             if want.get("policy") == PVLAN_POLICY:
@@ -14324,7 +14328,7 @@ class DcnmIntf:
                 intf["ifName"], intf["serialNumber"], item["fabricName"]
             )
             intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
-            self.dcnm_intf_routed_ipv6_reset(uelem, intf_payload)
+            routed_ipv6_reset(uelem, intf_payload)
 
             self.dcnm_intf_require_detail_authority(
                 intf["ifName"], intf["serialNumber"]
@@ -14980,7 +14984,7 @@ class DcnmIntf:
                 intf = self.dcnm_intf_get_intf_info(
                     have["ifName"], have["serialNo"], have["ifType"]
                 )
-                self.dcnm_intf_routed_ipv6_reset(uelem, intf)
+                routed_ipv6_reset(uelem, intf)
                 self.dcnm_intf_require_detail_authority(
                     have["ifName"], have["serialNo"]
                 )
@@ -15275,7 +15279,7 @@ class DcnmIntf:
                 self.dcnm_intf_queue_default_registered_resets(
                     uelem, *self.dcnm_intf_default_registered_resets(uelem, stored)
                 )
-                self.dcnm_intf_routed_ipv6_reset(uelem, stored)
+                routed_ipv6_reset(uelem, stored)
 
                 self.dcnm_intf_merge_intf_info(uelem, self.diff_replace)
                 self.changed_dict[0]["replaced"].append(copy.deepcopy(uelem))
@@ -15452,7 +15456,7 @@ class DcnmIntf:
                                 intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(
                                     intf
                                 )
-                                self.dcnm_intf_routed_ipv6_reset(uelem, intf_payload)
+                                routed_ipv6_reset(uelem, intf_payload)
                                 self.dcnm_intf_require_detail_authority(
                                     intf["ifName"], intf["serialNumber"]
                                 )
