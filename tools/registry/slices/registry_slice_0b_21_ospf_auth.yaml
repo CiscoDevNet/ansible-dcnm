@@ -1,0 +1,389 @@
+# Registry slice 0b_21 — the five OSPF authentication fields on int_routed_host, int_subif and int_vlan.
+#
+# One slice for three parents: unlike other OSPF fields (passive is an enum on routed/vlan and a boolean
+# on subif; retransmit is absent on routed), the five auth fields are identical in type, default, range
+# and valid values across the three templates (read from the templates, not assumed).
+# Sources: the int_routed_host, int_subif and int_vlan template bodies (see each row's evidence_ref).
+# The subif/vlan files match the existing OSPF slices (14 of 14 non-auth fields on type/min/max). The
+# `evidence_ref` shas are of the API-returned template content, so they differ from these files' sha256.
+#
+# Not the loopback case: retired slice 0b_10 (int_fabric_loopback_11_1) was withdrawn because fabric
+# loopback auth is underlay auth owned by fabricSettings. On these parents it is self-contained on the
+# interface, which is why the two global validators that blocked it were removed.
+#
+# no_log: only OSPF_AUTH_KEY and OSPF_AUTHENTICATION_KEY carry key material (the only `no_log: true` rows
+# in the registry). The key ID and encryption-type selector are not marked: Ansible scrubs by string
+# match, so marking a value like "1" or "7" would corrupt unrelated output. `no_log` has two consumers:
+# the module registers the values for scrubbing on arrival, and the engine emits `no_log=True` in the
+# generated prof_spec entry (it replaced the unused `sensitive` annotation).
+#
+# `enum OSPF_AUTHENTICATION_KEY_TYPE { validValues=0,3,7; }` maps to the `str` validator like every enum
+# (nvPairs are strings; NDFC returns "3"), so a playbook must write `ospf_authentication_key_type: "3"`.
+# Unquoted `3` is rejected on purpose (no raw-type coercion); the error names the expected type.
+#
+# `string OSPF_AUTH_KEY;` has no default and no length bounds in the template ("in 3DES encrypted form"
+# per NDFC's description), so none are added here; validating the encrypted form belongs to NDFC.
+
+bindings:
+  - parent_template: int_routed_host
+    parent_nvpair: ospfAuthentication
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: enable_ospf_auth
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_routed_host
+    parent_nvpair: OSPF_AUTH_KEY_ID
+    # Depends on message-digest authentication (int_routed_host body 6d37ea6a, not measured): validated and rendered
+    # only when ospfAuthentication is true.
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+    profile_key: ospf_auth_key_id
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    reset_wire: '1'
+    default_template: 1
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_routed_host
+    parent_nvpair: OSPF_AUTH_KEY
+    # Depends on message-digest authentication (int_routed_host body 6d37ea6a, not measured): required and rendered
+    # only when ospfAuthentication is true. Key material is cleared, not kept, when authentication ends
+    # off; NDFC stores this nvPair as "" with authentication off (read back on 12.6.0.267).
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+      required: true
+      clear: ''
+    profile_key: ospf_auth_key
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfAuthenticationKeyType
+    # Depends on the simple key (int_routed_host body 6d37ea6a, not measured): used and validated only when
+    # ospfAuthenticationKey is non-empty, so with the key cleared a stored type configures nothing.
+    inert_when:
+      nvpair: ospfAuthenticationKey
+      value: ''
+    profile_key: ospf_authentication_key_type
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    valid_values: ["0", "3", "7"]
+    default_template: "3"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfAuthenticationKey
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_authentication_key
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@e20773437cd7c0e3
+
+  - parent_template: int_subif
+    parent_nvpair: ospfAuthentication
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: enable_ospf_auth
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: OSPF_AUTH_KEY_ID
+    # Depends on message-digest authentication (int_subif body e9f9bd9c, not measured): validated and rendered
+    # only when ospfAuthentication is true.
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+    profile_key: ospf_auth_key_id
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    reset_wire: '1'
+    default_template: 1
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: OSPF_AUTH_KEY
+    # Depends on message-digest authentication (int_subif body e9f9bd9c, not measured): required and rendered
+    # only when ospfAuthentication is true. Key material is cleared, not kept, when authentication ends
+    # off; NDFC stores this nvPair as "" with authentication off (read back on 12.6.0.267).
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+      required: true
+      clear: ''
+    profile_key: ospf_auth_key
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: exact
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfAuthenticationKeyType
+    # Depends on the simple key (int_subif body e9f9bd9c, not measured): used and validated only when
+    # ospfAuthenticationKey is non-empty, so with the key cleared a stored type configures nothing.
+    inert_when:
+      nvpair: ospfAuthenticationKey
+      value: ''
+    profile_key: ospf_authentication_key_type
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    valid_values: ["0", "3", "7"]
+    default_template: "3"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfAuthenticationKey
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_authentication_key
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfAuthentication
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: enable_ospf_auth
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: OSPF_AUTH_KEY_ID
+    # Depends on message-digest authentication (int_vlan body f32ef586, not measured): validated and rendered
+    # only when ospfAuthentication is true.
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+    profile_key: ospf_auth_key_id
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    reset_wire: '1'
+    default_template: 1
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: OSPF_AUTH_KEY
+    # Depends on message-digest authentication (int_vlan body f32ef586, not measured): required and rendered
+    # only when ospfAuthentication is true. Key material is cleared, not kept, when authentication ends
+    # off; NDFC stores this nvPair as "" with authentication off (read back on 12.6.0.267).
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+      required: true
+      clear: ''
+    profile_key: ospf_auth_key
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfAuthenticationKeyType
+    # Depends on the simple key (int_vlan body f32ef586, not measured): used and validated only when
+    # ospfAuthenticationKey is non-empty, so with the key cleared a stored type configures nothing.
+    inert_when:
+      nvpair: ospfAuthenticationKey
+      value: ''
+    profile_key: ospf_authentication_key_type
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    valid_values: ["0", "3", "7"]
+    default_template: "3"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfAuthenticationKey
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_authentication_key
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57

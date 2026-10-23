@@ -1,0 +1,113 @@
+# Registry slice 0b_4 — BFD interval on int_subif (composition canary, one shared effect).
+#
+# Format B ({shared_effects, bindings}); designed offline (no engine, no live run).
+# 4 params (1 gate + 3 value_source) feed ONE child, interface_bfd_interval_11_1, through ONE
+# shared effect. The 3 values are mandatory when the gate is true (catalog:
+# mand=ENABLE_BFD_INTERVAL==true). Ranges from the catalog. No delete path designed yet, so
+# removal_semantics: unresolved.
+#
+# Mechanism: passthrough for all four rows (not child_pti, as the phase-0 ledger predicted). The
+# module writes the values into the PARENT's nvPairs and NDFC's own DSL instantiates
+# interface_bfd_interval_11_1 from them; the module never touches the child. Same as the OSPF
+# fields (`ip ospf cost` is rendered by ospf_interface_cost_11_1 and its binding is passthrough).
+# The ledger over-predicted child_pti: measured, only 3 of the 10 nvPairs it labelled that way are.
+# Per slice 0b_6, the BFD passthrough rows were confirmed live by measuring the device line.
+shared_effects:
+  - effect_id: bfd_interval@int_subif
+    parent_template: int_subif
+    child_template: interface_bfd_interval_11_1
+    gate_nvpair: ENABLE_BFD_INTERVAL
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate: [BFD_TX_INTERVAL, BFD_MIN_RX_INTERVAL, BFD_MULTIPLIER]
+    value_bindings:
+      - {source_parent_nvpair: bfdTxInterval,     target_child_nvpair: BFD_TX_INTERVAL,     transform: identity}
+      - {source_parent_nvpair: bfdMinRxInterval, target_child_nvpair: BFD_MIN_RX_INTERVAL, transform: identity}
+      - {source_parent_nvpair: bfdMultiplier,      target_child_nvpair: BFD_MULTIPLIER,      transform: identity}
+    evidence_ref: "int_subif.template#L559"
+
+bindings:
+  - parent_template: int_subif
+    parent_nvpair: bfdInterval
+    profile_key: enable_bfd_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_subif
+    effect_role: gate
+    evidence_ref: "int_subif.template#L555"
+
+  - parent_template: int_subif
+    parent_nvpair: bfdTxInterval
+    profile_key: bfd_tx_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    reset_wire: ''
+    min: 50
+    max: 999
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_subif
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_subif.template#L561"
+
+  - parent_template: int_subif
+    parent_nvpair: bfdMinRxInterval
+    profile_key: bfd_min_rx_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    reset_wire: ''
+    min: 50
+    max: 999
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_subif
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_subif.template#L562"
+
+  - parent_template: int_subif
+    parent_nvpair: bfdMultiplier
+    profile_key: bfd_multiplier
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 50
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_subif
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_subif.template#L563"

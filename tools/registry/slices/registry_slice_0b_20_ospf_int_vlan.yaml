@@ -1,0 +1,390 @@
+# Registry slice 0b_20 — OSPF on int_vlan. First bindings registered for this parent.
+#
+# EXTRACTED FROM THIS TEMPLATE, NOT COPIED FROM int_routed_host
+#   The three OSPF parents model the same concepts DIFFERENTLY; hence the table is keyed by
+#   (parent_template, parent_nvpair), and a copied slice would register nvPairs absent here:
+#
+#       concept      int_routed_host        int_subif                int_vlan
+#       passive      OSPF_PASSIVE_MODE      OSPF_PASSIVE_INTERFACE   OSPF_PASSIVE_MODE
+#                    enum                   BOOLEAN                  enum
+#       bfd          OSPF_BFD_MODE          OSPF_BFD                 OSPF_BFD_MODE
+#                    enum                   BOOLEAN                  enum
+#       retransmit   absent                 OSPF_RETRANSMIT_INTERVAL OSPF_RETRANSMIT_INTERVAL
+#
+#   Every type, default, range and length is read from the installed template
+#   (sha cee4cfc1d8a66d57), never inferred from a sibling parent.
+#
+# applicable_interface_type / applicable_mode are DESCRIPTIVE: resolve_binding matches on
+#   parent_template alone. They use the module vocabulary because
+#   `pol_ind_str = delem["type"] + "_" + profile["mode"]` selects the policy.
+#
+# MODULE WIRING: this parent had no engine hook before this slice. Two calls were added to
+#   dcnm_interface.py, mirroring the eth path: gie_extend_prof_spec in its validator and
+#   gie_contribute_nvpairs in its builder. No feature-specific key in either.
+#
+# EXCLUDED: the five authentication fields (ENABLE_OSPF_AUTH, OSPF_AUTH_KEY,
+#   OSPF_AUTHENTICATION_KEY, OSPF_AUTH_KEY_ID, OSPF_AUTHENTICATION_KEY_TYPE) carry or gate
+#   secrets and are registered separately, for all parents at once.
+#
+# MECHANISM: passthrough throughout; none owns a dedicated validation path.
+#   test_gie_mechanism_contract.py fails if a child_pti binding lacks a guarding implementation.
+#
+# REMOVAL SEMANTICS: unresolved, as on int_routed_host: the template creates a child per field
+#   and never deletes one. Withdrawal follows contract A, pending validation.
+#
+# LIVE CLEAR (rows with reset_wire ""): measured live on an SVI with no address (int_vlan, VRF
+#   default, mtu 9216, advSubnetInUnderlay 'false'), with ENABLE_OSPF 'true', OSPF_TAG '<tag>'
+#   and OSPF_AREA_ID '0.0.0.0'. Each clear sent only that nvPair as "": update 207 with a single
+#   SUCCESS, deploy 200. MEASURED readback is the EMPTY STRING (not a default predicted by the
+#   proposal). The field's CLI line disappeared; the absent address, mtu, other nvPairs, the
+#   association `ip router ospf <tag> area 0.0.0.0` and UNDERLAY {Lo0, Lo1, Eth1/1} held.
+#   Reapplying restored the value (1 update + 1 deploy, In-Sync). This answers the removal
+#   question for each such row on THIS parent.
+
+bindings:
+  - parent_template: int_vlan
+    parent_nvpair: ospf
+    profile_key: enable_ospf
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: OSPF_AREA_ID
+    profile_key: ospf_area_id
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: case_irrelevant
+    reset_wire: '0.0.0.0'
+    default_template: 0.0.0.0
+    min_length: 1
+    max_length: 15
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfBfdMode
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, enable: enable, disable: disable}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_bfd_mode
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, enable, disable]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfCost
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_cost
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # Clear measured live (see header): readback "42" -> "", `ip ospf cost 42` removed.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfDeadInterval
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_dead_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # Clear measured live (see header): readback "44" -> "", `ip ospf dead-interval 44` removed.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfHelloInterval
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_hello_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # Clear measured live (see header): readback "11" -> "", `ip ospf hello-interval 11` removed.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfMtuIgnore
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_mtu_ignore
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: "false"     # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfNetworkType
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_network_type
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, broadcast, point_to_point]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfPassiveMode
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, passive: passive, no_passive: noPassive}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_passive_mode
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, passive, no_passive]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfPriority
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_priority
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # Clear measured live (see header): readback "77" -> "", `ip ospf priority 77` removed.
+    reset_wire: ""
+    type: integer
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfRetransmitInterval
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_retransmit_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # Clear measured live (see header): readback "9" -> "", `ip ospf retransmit-interval 9` removed.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfShutdown
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_shutdown
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: "false"     # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfTag
+    profile_key: ospf_tag
+    # Inert while OSPF is disabled (read from the int_vlan body f32ef586, not measured): ospfTag is
+    # validated and rendered only under `ospf == true`, and with OSPF off the template neither checks it nor
+    # creates the OSPF child. A stored tag with ospf "false" is therefore not a configured withdrawal target.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      required: true
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: unverified
+    min_length: 1
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57
+
+  - parent_template: int_vlan
+    parent_nvpair: ospfTransmitDelay
+    # Depends on OSPF (int_vlan body f32ef586, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_transmit_delay
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # Clear measured live (see header): readback "3" -> "", `ip ospf transmit-delay 3` removed.
+    reset_wire: ""
+    type: integer
+    min: 1
+    max: 450
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@cee4cfc1d8a66d57

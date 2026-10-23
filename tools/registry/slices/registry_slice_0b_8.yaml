@@ -1,0 +1,49 @@
+# Registry slice 0b_8 — DISABLE_LLDP on int_access_host and int_trunk_host (inline parents).
+# Validated against a snapshot; revalidate before integration.
+#
+# No DSL dependency. Neither binding has an IsShow condition (verified in the DSL, not assumed).
+# The other 6 DISABLE_LLDP bindings (PC/vPC *_member_11_1 templates) are deferred, not registered:
+# see DEFERRED_pc_vpc_member_lldp.yaml.
+#
+# DISABLE_LLDP is rendered inline by these two parents but handed to a child by int_routed_host,
+# int_vpc_*_host and int_port_channel_*_host. That is the template's view; `mechanism` records who
+# owns validation, the invalid-parent guard, generic prof_spec, carry-forward and wire-form
+# conversion. vPC owns none of these, so its bindings are `passthrough` (as is
+# int_port_channel_trunk_host::DISABLE_LLDP), verified live before registration: see
+# registry_slice_0b_15.yaml. Mechanism is resolved per binding, never from the parameter name.
+#
+# default_template is template metadata only; never emitted when the user omits the field.
+
+- parent_template: int_access_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: boolean
+  default_template: false          # native boolean; decl int_access_host.template#L86
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []                 # inline CLI on the parent; no child PTI
+  evidence_ref: "int_access_host.template#L556"
+
+- parent_template: int_trunk_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: boolean
+  default_template: false          # native boolean; decl int_trunk_host.template#L101
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_trunk_host.template#L624"

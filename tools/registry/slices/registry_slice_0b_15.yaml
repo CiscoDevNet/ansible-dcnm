@@ -1,0 +1,238 @@
+# Registry slice 0b_15 — host fields also declared by the two reachable vPC parents (11 bindings).
+#
+#   int_vpc_trunk_host    6   pol_types[12]["vpc_trunk"]
+#   int_vpc_access_host   5   pol_types[12]["vpc_access"]   (no GUARD_MODE: not declared)
+#
+# These are the ONLY vPC parents a playbook can reach: the module builds the policy key as
+# <type>_<mode> and looks it up in pol_types, which for vPC has only "vpc_trunk" and
+# "vpc_access". Other vPC templates declaring these fields are NOT registered:
+#   int_vpc_*_po_11_1          intermediate level, created internally by the host
+#   int_vpc_*_po_member_11_1   in pol_pc_member_types, unreachable from a playbook
+#   int_vpc_dot1q_tunnel*      no pol_types entry
+#   int_vpc_pvlan*             pvlan is not supported by the module in any profile
+#
+# Mechanism: passthrough for all eleven, not child_pti. Slices 0b_7/0b_8/0b_9 call these fields
+# child_pti on vPC in the TEMPLATE sense (the parent hands the value to a child), which is true,
+# but the engine's `mechanism` means something else:
+#   passthrough  the engine owns validation, the invalid-parent guard, generic prof_spec and
+#                carry-forward, and converts the value to wire form (nvPairs is a map of STRINGS).
+#   child_pti    dedicated machinery governs the binding, which is EXEMPT from those four. Engine
+#                docstring: "that mechanism is the OSPF-MD domain, which reconciles through its
+#                own dedicated normalizer".
+# vPC has none of that machinery. child_pti would drop wire-form conversion and revive a fixed
+# defect: a native boolean compared against NDFC's "true" never converges. Precedent:
+# int_port_channel_trunk_host::DISABLE_LLDP also delegates to a child
+# (int_port_channel_trunk_member_11_1) and is registered passthrough, validated live. Delegating
+# to a child does not decide the engine mechanism.
+#
+# Validated live, not deduced: GUARD_MODE=root written to the parent vpc55 nvPairs via
+# POST /interface/modify (resending all 62 nvPairs) and deployed produced
+# `spanning-tree guard root` on port-channel55 on BOTH peer switches. The parent nvPair drives the
+# effect and the template replicates it to both peers.
+#
+# One row covers both peers: in NDFC the interface is vpc55 with a COMBINED serialNumber
+# SN-A~SN-B (port-channel55 on the switch). The module already splits that serial for GETs
+# (_dcnm_intf_query_serial), so the binding needs nothing special.
+#
+# Metadata read from the templates loaded on the controller (not copied from another slice):
+#   SPANNING_TREE_PORT_TYPE  enum     no,network,normal   defaultValue=no
+#   DISABLE_LLDP             boolean                      defaultValue=false
+#   ACL_FILTER               string   minLength 1 / maxLength 64   (no defaultValue)
+#   GUARD_MODE               enum     root,none,loop,no   defaultValue=no   (trunk only)
+#   DISABLE_QOS_STATS        boolean                      defaultValue=false
+#   DISABLE_QUEUING_STATS    boolean                      defaultValue=false
+# No default_template: registering it would turn omission into "set the default" instead of
+# "preserve"; passthrough fields enter carry-forward.
+#
+# Dependencies (template IsShow):
+#   SPANNING_TREE_PORT_TYPE  PORTTYPE_FAST_ENABLED != true
+#   DISABLE_QOS_STATS        ENABLE_QOS == true
+#   DISABLE_QUEUING_STATS    QUEUING_POLICY != ''
+#   DISABLE_LLDP, ACL_FILTER, GUARD_MODE   unconditional
+#
+# YAML 1.1: bare no/on/off/yes parse as booleans, so every enum value is quoted.
+#
+# parent_resolution: desired_parent is the only value the schema admits (every row in the
+# registry uses it); these rows had simply omitted it. It is documentary (nothing in plugins/ or
+# tools/ reads it), and nine of the eleven rows were already validated on hardware, so it was no
+# functional defect. evidence_ref is still absent on all eleven: the generator gate does not
+# require it, and adding it is a data decision needing a reference checked against the template
+# body.
+
+# ---------------------------------------------------------------- int_vpc_trunk_host (6)
+
+- parent_template: int_vpc_trunk_host
+  parent_nvpair: spanningTreePortType
+  profile_key: spanning_tree_port_type
+  reset_wire: 'no'
+  applicable_interface_type: vpc
+  applicable_mode: trunk
+  type: enum
+  valid_values: ["no", "network", "normal"]
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_trunk_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: vpc
+  applicable_mode: trunk
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_trunk_host
+  parent_nvpair: aclFilter
+  profile_key: acl_filter
+  reset_wire: ''
+  applicable_interface_type: vpc
+  applicable_mode: trunk
+  type: string
+  string_compare: exact
+  min_length: 1
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_trunk_host
+  parent_nvpair: GUARD_MODE
+  profile_key: guard_mode
+  reset_wire: 'no'
+  applicable_interface_type: vpc
+  applicable_mode: trunk
+  type: enum
+  valid_values: ["root", "none", "loop", "no"]
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_trunk_host
+  parent_nvpair: qosStatsSuppressed
+  profile_key: disable_qos_stats
+  reset_wire: 'false'
+  applicable_interface_type: vpc
+  applicable_mode: trunk
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_trunk_host
+  parent_nvpair: queuingStats
+  profile_key: disable_queuing_stats
+  reset_wire: 'false'
+  applicable_interface_type: vpc
+  applicable_mode: trunk
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+# --------------------------------------------------------------- int_vpc_access_host (5)
+# No GUARD_MODE: the access template does NOT declare it (checked in the DSL loaded on the
+# controller, not assumed from trunk).
+
+- parent_template: int_vpc_access_host
+  parent_nvpair: spanningTreePortType
+  profile_key: spanning_tree_port_type
+  reset_wire: 'no'
+  applicable_interface_type: vpc
+  applicable_mode: access
+  type: enum
+  valid_values: ["no", "network", "normal"]
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_access_host
+  parent_nvpair: DISABLE_LLDP
+  profile_key: disable_lldp
+  applicable_interface_type: vpc
+  applicable_mode: access
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_access_host
+  parent_nvpair: aclFilter
+  profile_key: acl_filter
+  reset_wire: ''
+  applicable_interface_type: vpc
+  applicable_mode: access
+  type: string
+  string_compare: exact
+  min_length: 1
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_access_host
+  parent_nvpair: qosStatsSuppressed
+  profile_key: disable_qos_stats
+  reset_wire: 'false'
+  applicable_interface_type: vpc
+  applicable_mode: access
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+
+- parent_template: int_vpc_access_host
+  parent_nvpair: queuingStats
+  profile_key: disable_queuing_stats
+  reset_wire: 'false'
+  applicable_interface_type: vpc
+  applicable_mode: access
+  type: boolean
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent

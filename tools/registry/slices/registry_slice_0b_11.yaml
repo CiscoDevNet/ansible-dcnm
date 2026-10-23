@@ -1,0 +1,79 @@
+# Registry slice 0b_11 — FLOWCONTROL_SEND on host Ethernet interfaces (2 bindings).
+#
+# Companion of FLOWCONTROL_RECEIVE (slice 0b), identical shape, declared in the same templates:
+#   int_trunk_host:152/158, int_access_host:137/143  enum { validValues=on,off; defaultValue=off; }
+# A sweep of the 90+ templates found FLOWCONTROL only on these two parents (not port-channel,
+# vPC or dot1q), so these rows cover the field completely.
+#
+# Mechanism: passthrough; the DSL consumes the value inline, no child:
+#   int_trunk_host:588   if flowcontrolSend == "on":
+#   int_trunk_host:589       config_builder.add_config('flowcontrol send on', ...)
+# Only "on" emits CLI, so "off" is a real off path: a valid value, not an emptied field (the
+# removal path the OSPF key pair lacks).
+#
+# As passthrough, the field enters HAVE carry-forward: omitting the key preserves the
+# controller's value. Measured for `receive` on both parents (doc 31). The template default
+# "off" must not turn omission into "set off"; emit_when: explicit_only keeps it from being
+# emitted on omission (see slice 0b).
+
+- parent_template: int_trunk_host
+  parent_nvpair: flowcontrolSend
+  reset_wire: "off"
+  profile_key: flowcontrol_send
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: enum
+  valid_values:
+    - "on"
+    - "off"
+  default_template: "off"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_trunk_host.template#L158
+  effect_rules:
+    - predicate: value_on
+      ndfc_effect: inline_config
+      cli: flowcontrol send on
+      phase: current
+      evidence_ref: int_trunk_host.template#L588
+    - predicate: value_off
+      ndfc_effect: no_config
+      phase: current
+      # "off" emits no CLI; NDFC's compliance engine generates the `no` itself when the
+      # line leaves the intent. Measured for `receive` (doc 31).
+      evidence_ref: int_trunk_host.template#L588
+
+- parent_template: int_access_host
+  parent_nvpair: flowcontrolSend
+  reset_wire: "off"
+  profile_key: flowcontrol_send
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: enum
+  valid_values:
+    - "on"
+    - "off"
+  default_template: "off"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_access_host.template#L143
+  effect_rules:
+    - predicate: value_on
+      ndfc_effect: inline_config
+      cli: flowcontrol send on
+      phase: current
+      evidence_ref: int_access_host.template#L349
+    - predicate: value_off
+      ndfc_effect: no_config
+      phase: current
+      evidence_ref: int_access_host.template#L349

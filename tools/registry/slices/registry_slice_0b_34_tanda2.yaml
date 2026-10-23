@@ -1,0 +1,142 @@
+# Registry slice 0b_34 — three unrelated bindings on two parents:
+#
+#     IPV4_ACL_IN            int_vlan                      string 1..64
+#     PRIVATE_VLAN_MAPPING   int_vlan                      integerRange -> string
+#     ENABLE_VPC_PEER_LINK   int_port_channel_trunk_host    boolean, defaultValue=false
+#
+# Read from the template bodies installed on the controller:
+#     int_vlan.template@0efb09af7f837b30
+#     int_port_channel_trunk_host.template@840029af16a406cf
+#     interface_ip_access_group_in_11_1.template@617432cc71988a99
+#
+# None is native: ipv4_acl_in, private_vlan_mapping and enable_vpc_peer_link have 0 uses in
+# dcnm_interface.py. ipv4_acl_in reuses the public key already registered for int_routed_host (slice
+# 0b_16); bindings are keyed by (parent, nvpair).
+#
+# 1. IPV4_ACL_IN
+#   The parent declares `IPV4_ACL_IN` and passes it to the child as `IPV4_ACL`:
+#       {"INTF_NAME": intfName, "IPV4_ACL": ipv4AclIn}      (int_vlan:1641)
+#   This row uses the parent name (same pattern as IPv6_LINK_LOCAL and MACsec, slice 0b_33); the child
+#   name would be stored by NDFC but read by nobody.
+#   Verification caveat (measured live): NDFC lowercases the ACL name and NX-OS `include` is
+#   case-sensitive, so searching for the name as written in the playbook finds nothing.
+#
+# 2. PRIVATE_VLAN_MAPPING
+#       integerRange PRIVATE_VLAN_MAPPING { min = 1; max = 4094; }
+#   `integerRange` is not in _TYPE_TO_VALIDATOR (boolean/enum/string/integer) and would make the binding
+#   unreachable (fail-closed), like `long` (PIM_DR_PRIORITY) and `ipV6Address` (IPv6_LINK_LOCAL). It is
+#   registered as `string` because the value is a list or range (template Description: "Secondary VLAN
+#   IDs for private-vlan mapping. Example: 3194,3196 or 3194-3196"). min/max are NOT carried over: 1..4094
+#   bounds each VLAN ID inside the list, validated by NDFC. max_length 64 is not declared by the template;
+#   it matches the other strings on this parent and is revisable.
+#
+# 3. ENABLE_VPC_PEER_LINK
+#   Template rules (int_port_channel_trunk_host:450, :457):
+#       "vPC peer-link and vPC orphan port cannot both be enabled on the same port-channel."
+#       "vPC peer-link requires default MTU. Set MTU to default before enabling vPC peer-link."
+#   Side effect (:653-655): enabling emits two lines, `vpc peer-link` (:686) and
+#   `spanning-tree port type network`, and displaces the BPDU guard branch:
+#       if enableVpcPeerLink == "true":
+#           config_builder.add_config('spanning-tree port type network', ...)
+#       elif BPDUGUARD_ENABLED == "true":
+#           ...
+#   Precedence, not collision (read from the installed template): a later block does
+#       if enableVpcPeerLink == "true":
+#           pass                                          # :670
+#       elif spanningTreePortType != "" and ...:
+#           add_config('spanning-tree port type {}')
+#   so an operator `spanning_tree_port_type` (and BPDUFILTER_ENABLED) is silently ignored when
+#   `enable_vpc_peer_link: true`: changed=True, `network` on the device, no warning. Expected template
+#   behaviour, not a binding defect.
+#
+#   Status: validated live as far as the lab allows:
+#     - The live vPC pair's peer-link (Po500) carries exactly the two lines this binding produces.
+#     - NX-OS rejects a second peer-link in the domain and NDFC does not check it:
+#         ERROR: Operation failed: [vPC Peer-link has already been configured on po500]
+#       per switch, deploy 500. The device validates coherence, not the controller.
+#     - The failure is partial: the :654 line lands and :686 does not, so the binding did reach the device.
+#     - The silent discard is double, measured with a control: peer-link off emits `port type normal` and
+#       `bpduguard enable`; peer-link true emits neither, `port type network` instead.
+#     - Not detectable: NDFC stores "normal" and its own pendingConfig emits `network`, so the interface
+#       is In-Sync with the requested value stored but never applied (measured with forceShowRun=true).
+#     - Resend gives `replaced: []` (idempotent at the intent layer); omission preserves the stored "true";
+#       the vPC stayed identical line by line on both peers.
+#   NOT measurable in the lab: an accepted `vpc peer-link` (the domain already has one and there is a
+#   single pair). A topology limit, not a binding gap.
+#
+#   Parallel to the data-model path (measured): NaC never emits this nvPair. Its `vpc_peers` peer-link uses
+#   int_vpc_peer_link_po, whose nvPairs lack ENABLE_VPC_PEER_LINK, and the NaC schema only accepts physical
+#   interfaces (schema.yaml:319,321). The flag lives on user port-channel templates; dcnm_vpc_pair requires
+#   `templateName` on LANClassic/External fabrics (optional elsewhere), where the peer-link is the
+#   operator's. So this is a prerequisite for a NaC feature that does not exist yet.
+
+shared_effects: []
+
+bindings:
+
+  # 1. IPV4_ACL_IN on int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: ipv4AclIn
+    profile_key: ipv4_acl_in
+    reset_wire: ''
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#L1636"
+
+  # 2. PRIVATE_VLAN_MAPPING on int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: privateVlanMapping
+    profile_key: private_vlan_mapping
+    # Measured live (not derived from the template or GUI): explicit `private_vlan_mapping: ""` over a
+    # configured '3214,3216' leaves the controller at '' and removes `private-vlan mapping 3214,3216` from
+    # the running-config; primary, secondaries and HSRP intact, leaf In-Sync. The public clear passes
+    # because `""` exits before the `min_length` check.
+    reset_wire: ''
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # `integerRange` in the template; string because the value is a list or range ("3194,3196" /
+    # "3194-3196"), see header.
+    type: string
+    string_compare: case_irrelevant
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#PRIVATE_VLAN_MAPPING"
+
+  # 3. ENABLE_VPC_PEER_LINK on int_port_channel_trunk_host
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: ENABLE_VPC_PEER_LINK
+    smu_unsupported: true   # no counterpart in the installed SMU build
+    profile_key: enable_vpc_peer_link
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host.template@840029af16a406cf#L686"

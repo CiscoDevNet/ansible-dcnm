@@ -1,0 +1,116 @@
+# Registry slice 0b_26 — HSRP on int_vlan: three fields layered on NATIVE module HSRP fields.
+#
+# Attributes read from the installed body `int_vlan.template@0efb09af7f837b30` (fetched from the
+# controller and verified byte-identical to the local copy):
+#     integer HSRP_PRIORITY_FORWARDING_THRESHOLD_LOWER { min = 0;   max = 255;  }
+#     integer HSRP_PRIORITY_FORWARDING_THRESHOLD_UPPER { min = 0;   max = 255;  }
+#     integer HSRP_PREEMPT_DELAY_MINIMUM               { min = 0;   max = 3600; }
+# `int_vlan` is the only one of the four parents that declares HSRP.
+#
+# Dependency on native fields: these three only take effect on top of fields dcnm_interface
+# already supports natively, outside the engine:
+#     enable_hsrp     bool, default False                dcnm_interface.py:3765
+#     hsrp_vip        ipv4, required when enable_hsrp    :3794
+#     hsrp_group      int,  required when enable_hsrp    :3795
+#     preempt         bool, default False                :3796
+#     hsrp_priority   int                                :3806
+# The engine has no other HSRP rows; it adds only the three fields the native arg spec lacks. A
+# test must first build a working HSRP group with the native fields.
+#
+# The template enforces the dependency chain itself (installed body ~:782-:830). These rows do NOT
+# reimplement it: NDFC fails loudly, the engine validates membership and transports the integer.
+#     "HSRP must be enabled before configuring secondary VIP, preempt delay, or forwarding
+#      thresholds."
+#     "HSRP preempt must be enabled before configuring preempt delay minimum."
+#     "HSRP priority forwarding thresholds require a primary HSRP IPv4 address."
+#     "HSRP priority is required before configuring forwarding thresholds."
+#     "Both HSRP lower and upper forwarding thresholds are required."
+#     "HSRP lower forwarding threshold cannot be greater than upper forwarding threshold."
+# IsShow gates:
+#     LOWER/UPPER  IsShow="ENABLE_HSRP==true && HSRP_VIP!=null && HSRP_PRIORITY!=null"
+#     DELAY        IsShow="ENABLE_HSRP==true && HSRP_VIP!=null && PREEMPT==true"
+# lower <= upper is a cross-field range rule that per-field min/max cannot express and the
+# registry cannot declare.
+#
+# Rendering (read from the installed children):
+#     interface_hsrp_priority_forwarding_threshold_11_1
+#         hsrp $$HSRP_GROUP$$
+#           priority $$PRIORITY$$ forwarding-threshold lower $$LOWER_THRESHOLD$$ upper $$UPPER_THRESHOLD$$
+#     interface_hsrp_preempt_delay_minimum_11_1
+#         hsrp $$HSRP_GROUP$$
+#           preempt delay minimum $$HSRP_PREEMPT_DELAY_MINIMUM$$
+# Both thresholds render ONE line together with `priority` from the native `hsrp_priority`, and
+# that line REPLACES the one `interface_hsrp_priority` would emit (`priority $$PRIORITY$$`).
+# Counting lines, or seeing the priority line change, is not evidence that either threshold was
+# transported: both values must be read inside the line.
+#
+# All four children are installed (verified on the controller):
+# interface_hsrp_priority_forwarding_threshold_11_1, interface_hsrp_preempt_delay_minimum_11_1,
+# interface_hsrp_priority, interface_hsrp_preempt. This contradicts the `Pending` sheet ("the
+# parent renders this field itself, no child"); that sheet's Comments column derives from the
+# `To implement` source rows, not the DSL, so it is not authoritative about children.
+#
+# Hardware: the lab image nxos64-cs-lite.10.5.5.M.bin does not support EIGRP but does support
+# HSRP (established by the operator on an SVI). `feature hsrp` was measured disabled on all seven
+# lab switches, so a live test must enable it by NDFC policy.
+
+bindings:
+  - parent_template: int_vlan
+    parent_nvpair: hsrpPriorityForwardingThresholdLower
+    profile_key: hsrp_priority_forwarding_threshold_lower
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    # reset_wire measured together with the upper threshold, as one coordinated HSRP withdrawal.
+    reset_wire: ''
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: hsrpPriorityForwardingThresholdUpper
+    profile_key: hsrp_priority_forwarding_threshold_upper
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    # reset_wire measured together with the lower threshold, as one coordinated HSRP withdrawal.
+    reset_wire: ''
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: hsrpPreemptDelayMinimum
+    profile_key: hsrp_preempt_delay_minimum
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    # Removing the delay retains the HSRP preempt setting.
+    reset_wire: ''
+    min: 0
+    max: 3600
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
