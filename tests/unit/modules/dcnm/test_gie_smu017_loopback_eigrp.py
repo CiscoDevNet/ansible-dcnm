@@ -292,61 +292,92 @@ def test_check_mode_reports_the_change_and_writes_nothing():
     assert h.writes(calls) == [] and result.get("changed") is True
 
 
-# ------------------------------------------------------------------ overridden
+# ------------------------------------------------------------------ overridden and deleted
+# interface/detail in the measured aggregate shape (NDFC 12.6.0.267): a user loopback is deletable; a fabric loopback
+# is not, with an int_fabric_loopback_11_1 underlay whose source is UNDERLAY. The harness double marks neither.
 _ORIG = h._transport
+FABRIC_LO, FABRIC_LO_POLICY = "loopback0", "int_fabric_loopback_11_1"
+MARK, DEPLOY, MODIFY = "DELETE interface/markdelete", "POST globalInterface/deploy", "POST interface/modify"
 
 
-def _detail_deletable(calls, have):
-    """interface/detail as the controller returns it for user loopbacks: not physical and deletable."""
+def _measured_detail(calls, have):
     inner = _ORIG(calls, have)
+    policy_of = dict((i["ifName"].lower(), p["policy"]) for p in have for i in p["interfaces"])
 
     def send(mod, method, path, payload=None):
         resp = inner(mod, method, path, payload)
         if method == "GET" and "/interface/detail" in path and isinstance(resp.get("DATA"), list):
             for e in resp["DATA"]:
-                if str(e.get("ifName", "")).lower().startswith("loopback"):
-                    e["deletable"] = True
+                name = str(e.get("ifName", ""))
+                if policy_of.get(name.lower()) == FABRIC_LO_POLICY:
+                    e.update(ifType="INTERFACE_LOOPBACK", isPhysical="false", deletable=False, editAllowed=True,
+                             underlayPolicies=[{"entityName": name, "source": "UNDERLAY",
+                                                "templateName": FABRIC_LO_POLICY, "serialNumber": h.SERIAL}])
+                elif name.lower().startswith("loopback"):
+                    e.update(deletable=True, editAllowed=True)
         return resp
     return send
 
 
+def _fabric_lo_have():
+    return [{"policy": FABRIC_LO_POLICY, "interfaces": [{
+        "interfaceType": "INTERFACE_LOOPBACK", "serialNumber": h.SERIAL, "ifName": FABRIC_LO, "fabricName": h.FABRIC,
+        "nvPairs": {"INTF_NAME": FABRIC_LO, "IP": "10.2.0.1", "ADMIN_STATE": "true"}}]}]
+
+
+def _identities(calls):
+    """Every write in order, as (request, sorted [serial, ifName(, policy)])."""
+    out = []
+    for c in h.writes(calls):
+        kind = c["method"] + " " + c["path"].split("/rest/")[-1].split("?")[0]
+        found = []
+        h._collect_policies([c["payload"]], found)
+        if found:
+            ids = sorted([i["serialNumber"], i["ifName"], p["policy"]] for p in found for i in p["interfaces"])
+        else:
+            ids = sorted([e.get("serialNumber"), e.get("ifName")] for e in (c["payload"] or []) if isinstance(e, dict))
+        out.append((kind, ids))
+    return out
+
+
 def _overridden(configs, have):
-    with patch.object(h, "_transport", _detail_deletable):
+    with patch.object(h, "_transport", _measured_detail):
         return h.run_configs(configs, "overridden", have)
 
 
+def _aggregate():
+    """The omitted or withdrawn user loopback, the retained one and the fabric loopback."""
+    return _have(EIGRP_SET) + _have(EIGRP_SET, IF_LO2) + _fabric_lo_have()
+
+
 def test_overridden_retained_loopback_withdraws_its_omitted_fields_and_keeps_the_control():
-    have = _have(EIGRP_SET) + _have(EIGRP_SET, IF_LO2)
-    result, calls = _overridden([_lo(EIGRP_ON), _lo(EIGRP_SET, IF_LO2)], have)
+    result, calls = _overridden([_lo(EIGRP_ON), _lo(EIGRP_SET, IF_LO2)], _aggregate())
     assert not result.get("failed"), result.get("msg")
-    emitted = _emitted(calls)
-    assert [k[1].lower() for k in emitted] == [h.IF_LO], "the retained control loopback must not be written"
-    nv = list(emitted.values())[0][1]
+    assert _identities(calls) == [(MODIFY, [[h.SERIAL, "Loopback931", LO]]), (DEPLOY, [[h.SERIAL, "Loopback931"]])]
+    nv = _only(calls)
     assert {k: nv[k] for k in NVPAIRS} == RESET_WIRE
     assert (nv["eigrpProcessTag"], nv["eigrpRouting"]) == ("PILOT-EIGRP", "true")
 
 
-def test_overridden_loopback_left_out_is_deleted_and_the_retained_one_kept():
-    have = _have(EIGRP_SET) + _have(EIGRP_SET, IF_LO2)
-    result, calls = _overridden([_lo(EIGRP_SET, IF_LO2)], have)
+def test_overridden_loopback_left_out_is_deleted_and_the_retained_and_fabric_ones_kept():
+    result, calls = _overridden([_lo(EIGRP_SET, IF_LO2)], _aggregate())
     assert not result.get("failed"), result.get("msg")
-    writes = h.writes(calls)
-    deleted = [e.get("ifName", "").lower() for c in writes if "markdelete" in c["path"].lower() for e in (c["payload"] or [])]
-    assert deleted == [h.IF_LO], [(c["path"], c["payload"]) for c in writes]
-    assert not any("modify" in c["path"] or c["path"].endswith("/rest/interface") for c in writes)
-    result, calls = _overridden([_lo(EIGRP_SET, IF_LO2)], _have(EIGRP_SET, IF_LO2))
+    assert _identities(calls) == [(MARK, [[h.SERIAL, "Loopback931"]]), (DEPLOY, [[h.SERIAL, "Loopback931"]])]
+    result, calls = _overridden([_lo(EIGRP_SET, IF_LO2)], _have(EIGRP_SET, IF_LO2) + _fabric_lo_have())
     assert not result.get("failed"), result.get("msg")
-    assert h.writes(calls) == []
+    assert _identities(calls) == []
 
 
-# ------------------------------------------------------------------ deleted
 def test_deleted_retires_the_loopback_and_a_repeat_writes_nothing():
-    result, calls = h.run_configs([{"name": h.IF_LO, "type": "lo", "switch": [h.SWITCH_IP]}], "deleted", _have(EIGRP_SET))
+    target = [{"name": h.IF_LO, "type": "lo", "switch": [h.SWITCH_IP]}]
+    with patch.object(h, "_transport", _measured_detail):
+        result, calls = h.run_configs(target, "deleted", _have(EIGRP_SET) + _fabric_lo_have())
     assert not result.get("failed"), result.get("msg")
-    assert _paths(calls) == ["DELETE interface/markdelete", "POST globalInterface/deploy"], _paths(calls)
-    result, calls = h.run_configs([{"name": h.IF_LO, "type": "lo", "switch": [h.SWITCH_IP]}], "deleted", [])
+    assert _identities(calls) == [(MARK, [[h.SERIAL, "Loopback931"]]), (DEPLOY, [[h.SERIAL, "Loopback931"]])]
+    with patch.object(h, "_transport", _measured_detail):
+        result, calls = h.run_configs(target, "deleted", _fabric_lo_have())
     assert not result.get("failed"), result.get("msg")
-    assert h.writes(calls) == []
+    assert _identities(calls) == []
 
 
 # ------------------------------------------------------------------ query
