@@ -1,0 +1,135 @@
+# Registry slice 0b_38 -- SMU 4.3.1.0175006017 loopback EIGRP fields. Five bindings on int_loopback.
+#
+#     eigrpIpv6Routing                   enable_eigrp_ipv6_routing               reset "false"
+#     eigrpIpv4DistributeListPrefixList  eigrp_ipv4_distribute_list_prefix_list  reset ""
+#     eigrpIpv4DistributeListDirection   eigrp_ipv4_distribute_list_direction    reset "out"
+#     eigrpIpv6DistributeListPrefixList  eigrp_ipv6_distribute_list_prefix_list  reset ""
+#     eigrpIpv6DistributeListDirection   eigrp_ipv6_distribute_list_direction    reset "out"
+#
+# Slice 0b_25 left these five out because the int_loopback body it measured (27cd9ce7) did not declare them. The body
+# exported from a controller with SMU 4.3.1.0175006017 (template REST API, read only) declares all five. sha256 of
+# `content`: int_loopback 8082cbdf77e5cf99...
+#     L168  boolean eigrpIpv6Routing { defaultValue=false; }                         IsShow="eigrpProcessTag!=''"
+#     L188  string eigrpIpv4DistributeListPrefixList { maxLength = 63; regularExpr=^[a-zA-Z0-9_.:-]*$; }   IsShow tag
+#     L194  enum eigrpIpv4DistributeListDirection { validValues=in,out; defaultValue=out; }
+#                                                    IsShow="eigrpIpv4DistributeListPrefixList!=''"
+#     L200  string eigrpIpv6DistributeListPrefixList (as IPv4)
+#     L206  enum eigrpIpv6DistributeListDirection (as IPv4, gated on the IPv6 prefix list)
+# The declarations equal those of int_routed_host, int_subif and int_vlan in the same 017 export (whitespace aside), so
+# the rows reuse the public keys, types, bounds and resets of slice 0b_22.
+#
+# CREATION AND REMOVAL, read from the body. add() calls delete() (L575), which markDeletes every child of the interface,
+# and recreates only the selected children, all inside `if eigrpProcessTag != "":` (L858):
+#     eigrpIpv6Routing == "true"       -> eigrp_interface_ipv6_router_11_1          ipv6 router eigrp <tag>
+#     eigrpIpv4...PrefixList != ""     -> eigrp_interface_ipv4_distribute_list_11_1  ip distribute-list eigrp <tag> prefix-list <pl> <dir>
+#     eigrpIpv6...PrefixList != ""     -> eigrp_interface_ipv6_distribute_list_11_1  ipv6 distribute-list eigrp <tag> prefix-list <pl> <dir>
+#   An empty direction is normalised to "out" (L425, L432). A direction is used only inside its prefix-list branch, so a
+#   direction without a prefix list renders nothing. The reset of each field is therefore its template default, whose
+#   branch creates no child. Children sha256 (same export): ipv6 router a53a0777..., ipv4 list a8eff573..., ipv6 list
+#   6e030770....
+#
+# GATE AND REFUSALS. The body refuses any EIGRP option with an empty tag (L452, "EIGRP process tag is required when EIGRP
+# interface options are enabled."), and both prefix lists count as options. As on the other three parents (slice 0b_22),
+# the module does not duplicate that rule: it transports the request and NDFC fails it. No inert_when is declared. The
+# regularExpr is not enforced by the engine (only max_length), as for every EIGRP string row.
+#
+# NOT VRF-GATED. The EIGRP block sits outside the VRF and IPv6 conditions of the body. Whether NX-OS accepts these lines on
+# a loopback in a given VRF, and whether the referenced prefix lists must exist first, are device questions; the module
+# never creates or deletes a prefix-list definition.
+#
+# NOTHING HERE IS MEASURED LIVE. removal_semantics stays unresolved until a controller and a device confirm the removal
+# paths read from the body. The module admits these rows only with SMU 4.3.1.0175006017 or a numeric ND release >= 4.4.1;
+# the 4.4.1 bodies were not read.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpIpv6Routing
+    profile_key: enable_eigrp_ipv6_routing
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_loopback.template@8082cbdf77e5cf99#L168"
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpIpv4DistributeListPrefixList
+    profile_key: eigrp_ipv4_distribute_list_prefix_list
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: string
+    string_compare: exact
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_loopback.template@8082cbdf77e5cf99#L188"
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpIpv4DistributeListDirection
+    profile_key: eigrp_ipv4_distribute_list_direction
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: enum
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_loopback.template@8082cbdf77e5cf99#L194"
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpIpv6DistributeListPrefixList
+    profile_key: eigrp_ipv6_distribute_list_prefix_list
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: string
+    string_compare: exact
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_loopback.template@8082cbdf77e5cf99#L200"
+
+  - parent_template: int_loopback
+    parent_nvpair: eigrpIpv6DistributeListDirection
+    profile_key: eigrp_ipv6_distribute_list_direction
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: enum
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_loopback.template@8082cbdf77e5cf99#L206"

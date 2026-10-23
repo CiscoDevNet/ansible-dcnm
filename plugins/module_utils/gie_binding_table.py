@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = f39b3265bf9769a6726d5c4dd5406be23a3a3426a4a8c0652450a9efeb7f56c9
+# provenance_sha256 = ff58c3f68de4ebbcb92accef273dff22c8067ee2a4622bfd7a848694e410a2ca
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "f39b3265bf9769a6726d5c4dd5406be23a3a3426a4a8c0652450a9efeb7f56c9"
+PROVENANCE_SHA256 = "ff58c3f68de4ebbcb92accef273dff22c8067ee2a4622bfd7a848694e410a2ca"
 
 BINDING_TABLE = (
     {
@@ -224,12 +224,81 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_loopback',
+        'parent_nvpair': 'eigrpIpv4DistributeListDirection',
+        'profile_key': 'eigrp_ipv4_distribute_list_direction',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'enum',
+        'valid_values': ('in', 'out'),
+        'default_template': 'out',
+        'reset_wire': 'out',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'eigrpIpv4DistributeListPrefixList',
+        'profile_key': 'eigrp_ipv4_distribute_list_prefix_list',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 63,
+        'no_log': False,
+        'string_compare': 'exact',
+    },
+    {
+        'parent_template': 'int_loopback',
         'parent_nvpair': 'eigrpIpv4Passive',
         'profile_key': 'eigrp_ipv4_passive',
         'applicable_interface_type': 'lo',
         'applicable_mode': 'lo',
         'type': 'boolean',
         'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'eigrpIpv6DistributeListDirection',
+        'profile_key': 'eigrp_ipv6_distribute_list_direction',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'enum',
+        'valid_values': ('in', 'out'),
+        'default_template': 'out',
+        'reset_wire': 'out',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'eigrpIpv6DistributeListPrefixList',
+        'profile_key': 'eigrp_ipv6_distribute_list_prefix_list',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 63,
+        'no_log': False,
+        'string_compare': 'exact',
+    },
+    {
+        'parent_template': 'int_loopback',
+        'parent_nvpair': 'eigrpIpv6Routing',
+        'profile_key': 'enable_eigrp_ipv6_routing',
+        'applicable_interface_type': 'lo',
+        'applicable_mode': 'lo',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,

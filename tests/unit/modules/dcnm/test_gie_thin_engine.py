@@ -453,6 +453,15 @@ PVLAN_C1_ROWS = {
 # IQ1 (PR725 ingress QoS) adds int_vpc_pvlan_host::qosStatsSuppressed (disable_qos_stats, inferred reset).
 IQ1_ROWS = {("int_vpc_pvlan_host", "qosStatsSuppressed", "disable_qos_stats")}
 
+# SMU 017 loopback EIGRP, slice 0b_38.
+LOEIGRP017_ROWS = {
+    ("int_loopback", "eigrpIpv6Routing", "enable_eigrp_ipv6_routing"),
+    ("int_loopback", "eigrpIpv4DistributeListPrefixList", "eigrp_ipv4_distribute_list_prefix_list"),
+    ("int_loopback", "eigrpIpv4DistributeListDirection", "eigrp_ipv4_distribute_list_direction"),
+    ("int_loopback", "eigrpIpv6DistributeListPrefixList", "eigrp_ipv6_distribute_list_prefix_list"),
+    ("int_loopback", "eigrpIpv6DistributeListDirection", "eigrp_ipv6_distribute_list_direction"),
+}
+
 # SMU 017 first increment, slice 0b_37.
 BATCH017_ROWS = {
     ("int_routed_host", "CDP_ENABLE", "enable_cdp"),
@@ -483,14 +492,14 @@ def test_package_provenance_and_size():
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
-        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS
+        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
-    assert len(BINDING_TABLE) == len(actual_keys) == 251
+    assert len(BINDING_TABLE) == len(actual_keys) == 256   # 251 + LOEIGRP017_ROWS
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -565,7 +574,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 251   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(rows) == 256   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 + 0b_38
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():

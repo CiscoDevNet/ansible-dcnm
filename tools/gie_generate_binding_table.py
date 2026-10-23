@@ -669,6 +669,13 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "ospfRetransmitInterval"): "ospf_retransmit_interval",
     ("int_access_host", "loggingEventPortLinkStatus"): "logging_event_port_link_status",
     ("int_subif", "pimBfdInstance"): "enable_pim_bfd_instance",
+    # SMU 4.3.1.0175006017 loopback EIGRP fields (slice 0b_38). The 017 int_loopback body declares them as the routed,
+    # subinterface and SVI parents do; the keys are those of slice 0b_22. Read from the 017 body; not measured live.
+    ("int_loopback", "eigrpIpv6Routing"): "enable_eigrp_ipv6_routing",
+    ("int_loopback", "eigrpIpv4DistributeListPrefixList"): "eigrp_ipv4_distribute_list_prefix_list",
+    ("int_loopback", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
+    ("int_loopback", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
+    ("int_loopback", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the

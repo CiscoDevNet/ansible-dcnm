@@ -120,6 +120,16 @@ options:
       single request; C(int_trunk_host) does not declare the field, and the controller removes the line with the
       policy change (measured on NDFC 12.6.0.267 with the C(4.3.1.0175006017) templates). C(enable_cdp) keeps its
       native behaviour on the access, trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles.
+    - On a loopback, the C(4.3.1.0175006017) templates also declare the EIGRP fields that the routed, subinterface and
+      SVI profiles already accept (NOT LIVE TESTED; read from the installed template body) -
+      C(enable_eigrp_ipv6_routing) (bool; renders C(ipv6 router eigrp <tag>)),
+      C(eigrp_ipv4_distribute_list_prefix_list) and C(eigrp_ipv6_distribute_list_prefix_list) (up to 63 characters;
+      render C(ip distribute-list eigrp <tag> prefix-list <name> <direction>) and its IPv6 form), and
+      C(eigrp_ipv4_distribute_list_direction) and C(eigrp_ipv6_distribute_list_direction) (C(in) or C(out), default
+      C(out); used only with their prefix list). All need C(eigrp_process_tag); the template refuses an option without
+      it and the module does not check it. The module never creates or deletes the referenced prefix lists. Under
+      C(replaced) and C(overridden) an omitted value is reset to the template default (C(false), an empty list, C(out));
+      under C(merged) it is preserved.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -2880,6 +2890,26 @@ EXAMPLES = """
           ipv4_addr: 192.0.2.9
           ipv4_mask_len: 30
           enable_pim_bfd_instance: true               # "ip pim bfd-instance"
+
+# Loopback EIGRP fields of SMU 4.3.1.0175006017 (NOT LIVE TESTED). The prefix lists must already exist on the switch.
+- name: Loopback EIGRP IPv6 routing and distribute lists
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ fabric }}"
+    state: merged
+    patch_version: "4.3.1.0175006017"
+    config:
+      - name: lo101
+        type: lo
+        switch: ["{{ switch_ip }}"]
+        profile:
+          mode: lo
+          ipv4_addr: 192.0.2.101
+          eigrp_process_tag: EIGRP-1
+          enable_eigrp_routing: true
+          enable_eigrp_ipv6_routing: true                       # "ipv6 router eigrp EIGRP-1"
+          eigrp_ipv4_distribute_list_prefix_list: PL-V4         # "ip distribute-list eigrp EIGRP-1 prefix-list PL-V4 in"
+          eigrp_ipv4_distribute_list_direction: in
+          eigrp_ipv6_distribute_list_prefix_list: PL-V6         # direction omitted: "out"
 """
 
 import collections

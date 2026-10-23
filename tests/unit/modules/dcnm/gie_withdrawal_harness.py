@@ -749,10 +749,10 @@ PILOT = {
     # the reset. That is why their context includes the prefix-list: without it
     # there is no carrier line and nothing to observe.
     #
-    # `int_loopback` carries ONLY TWO. Its installed parent declares neither
-    # eigrpIpv6Routing nor the four distribute-list fields; registering any of
-    # those five for it would be exactly the silent loss this registry exists to
-    # prevent. Eight fields, not thirteen.
+    # `int_loopback` carried ONLY TWO here while its installed parent (27cd9ce7) declared neither
+    # eigrpIpv6Routing nor the four distribute-list fields. The SMU 4.3.1.0175006017 body declares
+    # all five with the declarations of the three parents above, so slice 0b_38 registers them; they
+    # are read from that body, NOT measured live.
     (ROUTED, "eigrpRouting"): ("enable_eigrp_routing", True, "false", dict(EIGRP_CTX)),
     (ROUTED, "eigrpShutdown"): ("enable_eigrp_shutdown", True, "false", dict(EIGRP_CTX)),
     (ROUTED, "eigrpIpv6Routing"): ("enable_eigrp_ipv6_routing", True, "false", dict(EIGRP_CTX)),
@@ -776,6 +776,11 @@ PILOT = {
     (SVI, "eigrpIpv6DistributeListDirection"): ("eigrp_ipv6_distribute_list_direction", "in", "out", dict(EIGRP_DL6)),
     (LOOPBACK, "eigrpRouting"): ("enable_eigrp_routing", True, "false", dict(EIGRP_CTX)),
     (LOOPBACK, "eigrpShutdown"): ("enable_eigrp_shutdown", True, "false", dict(EIGRP_CTX)),
+    (LOOPBACK, "eigrpIpv6Routing"): ("enable_eigrp_ipv6_routing", True, "false", dict(EIGRP_CTX)),
+    (LOOPBACK, "eigrpIpv4DistributeListPrefixList"): ("eigrp_ipv4_distribute_list_prefix_list", "PILOT-PL4", "", dict(EIGRP_CTX)),
+    (LOOPBACK, "eigrpIpv6DistributeListPrefixList"): ("eigrp_ipv6_distribute_list_prefix_list", "PILOT-PL6", "", dict(EIGRP_CTX)),
+    (LOOPBACK, "eigrpIpv4DistributeListDirection"): ("eigrp_ipv4_distribute_list_direction", "in", "out", dict(EIGRP_DL4)),
+    (LOOPBACK, "eigrpIpv6DistributeListDirection"): ("eigrp_ipv6_distribute_list_direction", "in", "out", dict(EIGRP_DL6)),
 
     # The eight BFD rows. MUTUALLY EXCLUSIVE: the parent refuses the request if
     # `eigrpBfd` and `eigrpBfdDisable` both travel true, so each row carries ONLY
