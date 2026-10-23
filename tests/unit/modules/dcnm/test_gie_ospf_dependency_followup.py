@@ -304,7 +304,7 @@ def test_reenabling_authentication_with_a_new_key_is_accepted():
 
 
 # ------------------------------------------------------------------ registry, engine and generator contract
-def test_declared_dependencies_cover_the_three_parents_and_not_loopback():
+def test_declared_dependencies_cover_the_three_parents_and_the_loopback_contract():
     for parent in PARENTS:
         rows = dict((r["parent_nvpair"], r.get("inert_when")) for r in table.BINDING_TABLE if r["parent_template"] == parent)
         assert rows["ospfTag"] == {"nvpair": "ospf", "value": "false", "required": True}
@@ -312,7 +312,14 @@ def test_declared_dependencies_cover_the_three_parents_and_not_loopback():
         assert rows["ospfAuthenticationKeyType"] == {"nvpair": "ospfAuthenticationKey", "value": ""}
         assert rows["ospfCost"] == {"nvpair": "ospf", "value": "false", "strict": True}
         assert rows["ospf"] is None and rows["OSPF_AREA_ID"] is None
-    assert not [r for r in table.BINDING_TABLE if r["parent_template"] == h.LOOPBACK and r.get("inert_when")]
+    # int_loopback: the same authentication gates; the tag and the options also stay live in the default VRF.
+    lo = dict((r["parent_nvpair"], r.get("inert_when")) for r in table.BINDING_TABLE if r["parent_template"] == h.LOOPBACK)
+    vrf = {"nvpair": "INTF_VRF", "values": ("", "default")}
+    assert lo["ospfTag"] == {"nvpair": "ospf", "value": "false", "required": True, "unless": vrf}
+    assert lo["ospfCost"] == {"nvpair": "ospf", "value": "false", "strict": True, "unless": vrf}
+    assert lo["OSPF_AUTH_KEY"] == {"nvpair": "ospfAuthentication", "value": "false", "required": True, "clear": ""}
+    assert lo["ospfAuthenticationKeyType"] == {"nvpair": "ospfAuthenticationKey", "value": ""}
+    assert lo["ospf"] is None and lo["OSPF_AREA_ID"] is None
 
 
 def test_engine_plan_chains_gates_and_never_judges_an_unknown_gate():

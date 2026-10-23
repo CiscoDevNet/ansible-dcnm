@@ -344,12 +344,10 @@ class TestPV09InventoryInvariants:
         # inline-compliance declaration (was 8ea855ab...).
         # SMU 017: regenerated from the same 34 slices with the loopback and subinterface OSPF BFD rows and the
         # subinterface passive row rebound to the enum nvPairs ospfBfdMode and ospfPassiveMode (was 15061dfc...).
-        # SMU 017 first increment: regenerated from 35 slices, adding registry_slice_0b_37_smu017_batch1.yaml (five rows)
-        # (was bcf144bc...).
-        # The same 35 slices with the generator's per-field declaration for access loggingEventPortLinkStatus ->
-        # int_trunk_host (was c9323853...).
+        # 35 slices: the SMU 017 batch-1 rows, the access link-status logging destination and the int_loopback
+        # dependency rows (was 9d0d82a3... and 2e0252ae...).
         assert PROVENANCE_SHA256 == (
-            "9d0d82a3b8093fe06ebd9f65b08802d89f56e0a78a6b820df6f8d8bd3c7750a2"
+            "f39b3265bf9769a6726d5c4dd5406be23a3a3426a4a8c0652450a9efeb7f56c9"
         )
 
 

@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 9d0d82a3b8093fe06ebd9f65b08802d89f56e0a78a6b820df6f8d8bd3c7750a2
+# provenance_sha256 = f39b3265bf9769a6726d5c4dd5406be23a3a3426a4a8c0652450a9efeb7f56c9
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "9d0d82a3b8093fe06ebd9f65b08802d89f56e0a78a6b820df6f8d8bd3c7750a2"
+PROVENANCE_SHA256 = "f39b3265bf9769a6726d5c4dd5406be23a3a3426a4a8c0652450a9efeb7f56c9"
 
 BINDING_TABLE = (
     {
@@ -178,6 +178,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
         'string_compare': 'exact',
+        'inert_when': {'nvpair': 'ospfAuthentication', 'value': 'false', 'required': True, 'clear': ''},
     },
     {
         'parent_template': 'int_loopback',
@@ -193,6 +194,7 @@ BINDING_TABLE = (
         'min_value': 0,
         'max_value': 255,
         'no_log': False,
+        'inert_when': {'nvpair': 'ospfAuthentication', 'value': 'false'},
     },
     {
         'parent_template': 'int_loopback',
@@ -321,6 +323,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -334,6 +337,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -347,6 +351,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'no_log': True,
         'string_compare': 'exact',
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -360,6 +365,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'inert_when': {'nvpair': 'ospfAuthenticationKey', 'value': ''},
     },
     {
         'parent_template': 'int_loopback',
@@ -375,6 +381,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
         'wire_values': {'no_change': 'noChange', 'enable': 'enable', 'disable': 'disable'},
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -389,6 +396,7 @@ BINDING_TABLE = (
         'min_value': 1,
         'max_value': 65535,
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -403,6 +411,7 @@ BINDING_TABLE = (
         'min_value': 1,
         'max_value': 65535,
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -417,6 +426,7 @@ BINDING_TABLE = (
         'min_value': 1,
         'max_value': 65535,
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -430,6 +440,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -445,6 +456,7 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
         'wire_values': {'no_change': 'noChange', 'broadcast': 'broadcast', 'point_to_point': 'pointToPoint'},
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -459,6 +471,7 @@ BINDING_TABLE = (
         'min_value': 0,
         'max_value': 255,
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -473,6 +486,7 @@ BINDING_TABLE = (
         'min_value': 1,
         'max_value': 65535,
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -486,6 +500,7 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -499,6 +514,7 @@ BINDING_TABLE = (
         'max_length': 20,
         'no_log': False,
         'string_compare': 'unverified',
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'required': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_loopback',
@@ -513,6 +529,7 @@ BINDING_TABLE = (
         'min_value': 1,
         'max_value': 450,
         'no_log': False,
+        'inert_when': {'nvpair': 'ospf', 'value': 'false', 'strict': True, 'unless': {'nvpair': 'INTF_VRF', 'values': ('', 'default')}},
     },
     {
         'parent_template': 'int_port_channel_access_host',

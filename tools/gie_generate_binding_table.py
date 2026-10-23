@@ -859,8 +859,8 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 # `inert_when` -- {nvpair, value}: this binding produces no configuration while the gate nvPair of
 # the SAME parent holds `value`, so a stored value under that gate is not a withdrawal target. It is
 # declared per row from the template body (the field is neither validated nor rendered with the gate
-# off), never inferred from an effect relationship: int_loopback's OSPF tag stays live with OSPF off
-# (fabric underlay fallback) and carries no marker. Compiled as the same mapping. The gate
+# off), never inferred from an effect relationship: int_loopback's OSPF tag stays live with OSPF off in
+# the default VRF (fabric underlay fallback), which its `unless` marker states. Compiled as the same mapping. The gate
 # must be a committed binding of the same parent and `value` its verified reset or declared default.
 # Optional markers, each read from the same template body:
 #   required: the template requires a non-empty value while the gate is active ("OSPF process tag is
@@ -869,6 +869,10 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
 #             reset_wire, which an explicit merged disable of the gate sends.
 #   clear:    "" only, on a string row without a reset_wire: the value sent when the gate ends off,
 #             so stored material (an authentication key) is cleared rather than kept.
+#   unless:   {nvpair, values}: the binding stays live while another nvPair of the interface holds one of
+#             `values`, even with the gate off. int_loopback renders OSPF in the default VRF of an OSPF
+#             underlay whatever its `ospf` flag (INTF_VRF "" or "default"), so its tag and options are inert
+#             with OSPF off only outside that VRF. An absent or null value of that nvPair is not inert.
 
 # `dropped_on_policy_change` -- True or absent, COMPUTED per parent, never written in a slice. Every
 # binding of a parent listed in POLICY_CHANGE_DROPS_CHILDREN carries it: that parent realizes all its
@@ -1123,13 +1127,25 @@ def _check_registry_schema(r, key):
     if "inert_when" in r:
         iw = r["inert_when"]
         if (not isinstance(iw, dict) or not {"nvpair", "value"} <= set(iw)
-                or not set(iw) <= {"nvpair", "value", "required", "strict", "clear"}
+                or not set(iw) <= {"nvpair", "value", "required", "strict", "clear", "unless"}
                 or not all(isinstance(iw[k], str) and not isinstance(iw[k], bool) for k in ("nvpair", "value"))):
             raise ValueError(
                 "binding {0!r} declares inert_when {1!r}; it must be a mapping with string keys "
                 "'nvpair' and 'value' (the gate nvPair and its wire value), optionally 'required', "
-                "'strict' and 'clear'".format(key, iw)
+                "'strict', 'clear' and 'unless'".format(key, iw)
             )
+        if "unless" in iw:
+            un = iw["unless"]
+            if (not isinstance(un, dict) or set(un) != {"nvpair", "values"} or not isinstance(un["nvpair"], str)
+                    or not un["nvpair"] or un["nvpair"] in (r["parent_nvpair"], iw["nvpair"])
+                    or not isinstance(un["values"], (list, tuple)) or not un["values"]
+                    or not all(isinstance(v, str) for v in un["values"])
+                    or len(set(un["values"])) != len(un["values"])):
+                raise ValueError(
+                    "binding {0!r} declares inert_when unless {1!r}; it must be a mapping with 'nvpair' (another "
+                    "nvPair of the interface, not the binding or its gate) and 'values' (a non-empty list of "
+                    "distinct wire strings at which the binding stays live)".format(key, un)
+                )
         for flag in ("required", "strict"):
             if flag in iw and not isinstance(iw[flag], bool):
                 raise ValueError(
@@ -1205,7 +1221,9 @@ def compile_rows(slice_rows):
                     v = tuple(v)
                 if f == "inert_when":
                     # Fixed key order, so the rendered table does not depend on how a slice orders them.
-                    v = dict((k, v[k]) for k in ("nvpair", "value", "required", "strict", "clear") if k in v)
+                    v = dict((k, v[k]) for k in ("nvpair", "value", "required", "strict", "clear", "unless") if k in v)
+                    if "unless" in v:
+                        v["unless"] = {"nvpair": v["unless"]["nvpair"], "values": tuple(v["unless"]["values"])}
                 row[f] = v
         if r["parent_template"] in POLICY_CHANGE_DROPS_CHILDREN:
             row["dropped_on_policy_change"] = True
