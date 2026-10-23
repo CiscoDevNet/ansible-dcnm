@@ -189,7 +189,7 @@ R2_REGISTERED_BINDINGS = {
     "enable_macsec_interface_policy": ("macsecInterfacePolicy", "bool", ("int_routed_host",)),
     "enable_ospf": ("ospf", "bool", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_ospf_auth": ("ospfAuthentication", "bool", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
-    "enable_pim_bfd_instance": ("pimBfdInstance", "bool", ("int_routed_host", "int_subif")),
+    "enable_pim_bfd_instance": ("pimBfdInstance", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif")),
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "bool", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     # SMU 017 first increment (registry slice 0b_37). enable_cdp is checked here on the routed parent only; on the
     # other profiles it stays a native field.

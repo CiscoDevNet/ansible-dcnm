@@ -669,6 +669,9 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "ospfRetransmitInterval"): "ospf_retransmit_interval",
     ("int_access_host", "loggingEventPortLinkStatus"): "logging_event_port_link_status",
     ("int_subif", "pimBfdInstance"): "enable_pim_bfd_instance",
+    # SMU 4.3.1.0175006017 PIM BFD instance on the routed port-channel (slice 0b_39). Read from the 017 body; not
+    # measured live.
+    ("int_l3_port_channel", "pimBfdInstance"): "enable_pim_bfd_instance",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the

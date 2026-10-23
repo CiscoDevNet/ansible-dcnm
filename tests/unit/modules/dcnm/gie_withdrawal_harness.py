@@ -94,6 +94,9 @@ PC_ACCESS = "int_port_channel_access_host"
 PC_TRUNK = "int_port_channel_trunk_host"
 PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
 PC_PARENTS = (PC_ACCESS, PC_TRUNK, PC_DOT1Q)
+# The routed port-channel (`type: pc`, `mode: l3`). Kept out of PC_PARENTS: the layer-2 port-channel cases iterate that
+# tuple with fields this parent does not declare.
+PC_L3 = "int_l3_port_channel"
 VPC_ACCESS = "int_vpc_access_host"
 VPC_TRUNK = "int_vpc_trunk_host"
 VPC_DOT1Q = "int_vpc_dot1q_tunnel"
@@ -103,7 +106,7 @@ VPC_PARENTS = (VPC_ACCESS, VPC_TRUNK, VPC_DOT1Q)
 # `parent in PC_PARENTS` to decide "does this config need a different type/name?" asks this
 # instead, so adding the subinterface parent could not leave one of those places behind
 # silently building an ethernet config and measuring the wrong policy.
-NON_ETH_PARENTS = PC_PARENTS + VPC_PARENTS + (SUBIF, LOOPBACK, SVI)
+NON_ETH_PARENTS = PC_PARENTS + VPC_PARENTS + (SUBIF, LOOPBACK, SVI, PC_L3)
 
 PC_A = "Port-channel301"
 PC_MEMBER = "Ethernet1/50"
@@ -859,6 +862,9 @@ PILOT = {
     (ROUTED, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
     (ACCESS, "loggingEventPortLinkStatus"): ("logging_event_port_link_status", True, "false", {}),
     (SUBIF, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", dict(PIM_ON)),
+    # SMU 017 routed port-channel (slice 0b_39). Read from the 017 body, not measured live. The body does not gate the
+    # field on sparse mode, which is not registered on this parent.
+    (PC_L3, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", {}),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became
@@ -980,6 +986,8 @@ BASE_PC_TRUNK = {"mode": "trunk", "description": "pilot", "members": [PC_MEMBER]
                  "pc_mode": "active"}
 BASE_PC_DOT1Q = {"mode": "dot1q", "description": "pilot", "members": [PC_MEMBER],
                  "pc_mode": "active"}
+BASE_PC_L3 = {"mode": "l3", "description": "pilot", "members": [PC_MEMBER], "pc_mode": "active",
+              "int_vrf": "default", "ipv4_addr": "192.0.2.33", "ipv4_mask_len": 30}
 BASE_VPC_ACCESS = {"mode": "access", "peer1_pcid": 11, "peer2_pcid": 11,
                    "peer1_members": [VPC_MEMBER], "peer2_members": [VPC_MEMBER],
                    "pc_mode": "active", "admin_state": True,
@@ -1043,7 +1051,7 @@ def base_for(parent, **extra):
     """
     base = {TRUNK: BASE_TRUNK, ROUTED: BASE_ROUTED, SUBIF: BASE_SUBIF,
             PC_ACCESS: BASE_PC_ACCESS, PC_TRUNK: BASE_PC_TRUNK,
-            PC_DOT1Q: BASE_PC_DOT1Q, VPC_ACCESS: BASE_VPC_ACCESS,
+            PC_DOT1Q: BASE_PC_DOT1Q, PC_L3: BASE_PC_L3, VPC_ACCESS: BASE_VPC_ACCESS,
             VPC_TRUNK: BASE_VPC_TRUNK, VPC_DOT1Q: BASE_VPC_DOT1Q, LOOPBACK: BASE_LOOPBACK,
             SVI: BASE_SVI}.get(parent, BASE_ACCESS)
     prof = dict(base)
@@ -1076,7 +1084,7 @@ def iftype_for(parent):
     test, it is a different object: the module would resolve a different policy."""
     if parent in VPC_PARENTS:
         return "vpc"
-    if parent in PC_PARENTS:
+    if parent in PC_PARENTS or parent == PC_L3:
         return "pc"
     if parent == LOOPBACK:
         return "lo"
@@ -1090,7 +1098,7 @@ def ifname_for(parent):
     `sub_int` config needs the dotted name -- an undotted one resolves a different policy."""
     if parent in VPC_PARENTS:
         return {VPC_ACCESS: "vpc11", VPC_TRUNK: "vpc12", VPC_DOT1Q: "vpc13"}[parent]
-    if parent in PC_PARENTS:
+    if parent in PC_PARENTS or parent == PC_L3:
         return PC_A
     if parent == LOOPBACK:
         return IF_LO

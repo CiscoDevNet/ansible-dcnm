@@ -233,8 +233,8 @@ def test_registering_this_reset_left_the_sibling_svi_bindings_alone():
         BINDING_TABLE)
     rows = {(r["parent_template"], r["parent_nvpair"]): r for r in BINDING_TABLE}
     # + the eleven PVLAN companion rows (other parents, inferred resets): 234 -> 245, 207 -> 218; + one vPC PVLAN row: 246, 219.
-    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5  # + 5: SMU 017 first increment, slice 0b_37 (each row with a reset)
-    assert sum("reset_wire" in r for r in BINDING_TABLE) == 207 + 11 + 1 + 5   # + slice 0b_37
+    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 1  # + 5: slice 0b_37, + 1: slice 0b_39 (each row with a reset)
+    assert sum("reset_wire" in r for r in BINDING_TABLE) == 207 + 11 + 1 + 5 + 1   # + slices 0b_37 and 0b_39
     # The four int_vlan identities that remain deliberately unregistered.
     for nv in ("HSRP_GROUPv6", "HSRP_VIPv6", "OSPF_AUTH_KEY", "ospfTag"):
         assert "reset_wire" not in rows[("int_vlan", nv)], nv

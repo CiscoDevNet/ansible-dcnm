@@ -373,7 +373,8 @@ def test_e13_registry_rows_and_resets_are_unchanged_except_the_c1_pvlan_companio
                 pvlan += isinstance(parent, ast.Constant) and "pvlan" in parent.value
     # The vPC PVLAN qosStatsSuppressed row (inferred reset): one more row, reset and PVLAN row.
     # + 5 rows and 5 resets: SMU 017 first increment, slice 0b_37 (no PVLAN parent).
-    assert (rows, resets, pvlan) == (234 + 11 + 1 + 5, 207 + 11 + 1 + 5, 11 + 1)
+    # + 1 row and 1 reset: SMU 017 routed port-channel PIM BFD, slice 0b_39 (no PVLAN parent).
+    assert (rows, resets, pvlan) == (234 + 11 + 1 + 5 + 1, 207 + 11 + 1 + 5 + 1, 11 + 1)
 
 
 # ===================================================================================== E14

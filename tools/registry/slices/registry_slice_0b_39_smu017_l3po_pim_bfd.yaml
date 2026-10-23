@@ -1,0 +1,51 @@
+# Registry slice 0b_39 -- SMU 4.3.1.0175006017 PIM BFD instance on the routed port-channel. One binding.
+#
+#     int_l3_port_channel  pimBfdInstance  enable_pim_bfd_instance  reset "false"
+#
+# This is the first row on int_l3_port_channel. The parent is the native `type: pc`, `mode: l3` profile
+# (pol_types "pc_l3"), which the module already creates, updates, deletes and queries; the row only adds the field.
+#
+# Source: the int_l3_port_channel body exported from a controller with SMU 4.3.1.0175006017 (template REST API, read
+# only), sha256 of `content` 81c9392e92a48897...
+#     L156   boolean pimBfdInstance { defaultValue=false; }
+#     L497   interfaceOptions["pimBfdInstance"] = normalize(scope.get("pimBfdInstance", "false")).lower()
+#     L1015  add() calls delete(True), which deletes every PTI of the port-channel, unless the internal
+#            SKIP_DEL_ON_ADD (L413, default false) is true
+#     L1215  if pimBfdInstance == "true": createOrUpdate(... "pim_bfd_instance_interface" ...)
+#            child pim_bfd_instance_interface 58a88c0b4bb8...  ->  ip pim bfd-instance
+# There is no else branch: unlike int_routed_host and int_subif, the body never calls deleteChildTemplate for this child.
+# A "false" is removed by the delete(True) that precedes every add. The reset is the template default, whose branch
+# creates nothing.
+#
+# PIM DEPENDENCY. The body does not gate pimBfdInstance on ENABLE_PIM_SPARSE (L144) or on anything else, as on
+# int_routed_host and int_subif. ENABLE_PIM_SPARSE is not registered on this parent, so the module cannot enable sparse
+# mode on a routed port-channel. Whether NX-OS accepts `ip pim bfd-instance` without `ip pim sparse-mode` is a device
+# question.
+#
+# NOTHING HERE IS MEASURED LIVE. removal_semantics stays unresolved until a controller and a device confirm the removal
+# path read from the body. The module admits the row only with SMU 4.3.1.0175006017 or a numeric ND release >= 4.4.1;
+# the 4.4.1 bodies were not read.
+#
+# ospfRetransmitInterval on this parent is NOT registered: the body refuses it unless `ospf` is true with a tag and an
+# area (L906-930), and no public key reaches those nvPairs on a routed port-channel.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: pimBfdInstance
+    profile_key: enable_pim_bfd_instance
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L1215"

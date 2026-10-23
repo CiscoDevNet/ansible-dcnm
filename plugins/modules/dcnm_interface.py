@@ -120,6 +120,11 @@ options:
       single request; C(int_trunk_host) does not declare the field, and the controller removes the line with the
       policy change (measured on NDFC 12.6.0.267 with the C(4.3.1.0175006017) templates). C(enable_cdp) keeps its
       native behaviour on the access, trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles.
+    - On a routed port-channel (C(type) C(pc), C(mode) C(l3)), the C(4.3.1.0175006017) template also declares
+      C(enable_pim_bfd_instance) (bool; renders C(ip pim bfd-instance); NOT LIVE TESTED, read from the installed
+      template body). The template does not require PIM sparse mode, which this profile does not accept. Under
+      C(replaced) and C(overridden) an omitted value is reset to false; under C(merged) it is preserved. The template's
+      OSPF fields, including the retransmit interval, are not accepted on this profile.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -2880,6 +2885,15 @@ EXAMPLES = """
           ipv4_addr: 192.0.2.9
           ipv4_mask_len: 30
           enable_pim_bfd_instance: true               # "ip pim bfd-instance"
+      - name: po21
+        type: pc
+        switch: ["{{ switch_ip }}"]
+        profile:
+          mode: l3
+          members: [e1/31]
+          ipv4_addr: 192.0.2.13
+          ipv4_mask_len: 30
+          enable_pim_bfd_instance: true               # "ip pim bfd-instance" on the routed port-channel
 """
 
 import collections
@@ -4789,6 +4803,9 @@ class DcnmIntf:
             pc_prof_spec_dot1q,
             "int_port_channel_dot1q_tunnel_host",
             config[0]["profile"],
+        )
+        gie_extend_prof_spec(
+            pc_prof_spec_l3, "int_l3_port_channel", config[0]["profile"]
         )
 
         if "pvlan" == config[0]["profile"]["mode"]:

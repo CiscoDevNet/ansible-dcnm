@@ -450,6 +450,12 @@ PVLAN_C1_ROWS = {
     ("int_vpc_pvlan_host", "queuingStats", "disable_queuing_stats"),
     ("int_vpc_pvlan_host", "aclFilter", "acl_filter"),
 }
+
+# SMU 017 routed port-channel PIM BFD, slice 0b_39.
+L3PO017_ROWS = {
+    ("int_l3_port_channel", "pimBfdInstance", "enable_pim_bfd_instance"),
+}
+
 # IQ1 (PR725 ingress QoS) adds int_vpc_pvlan_host::qosStatsSuppressed (disable_qos_stats, inferred reset).
 IQ1_ROWS = {("int_vpc_pvlan_host", "qosStatsSuppressed", "disable_qos_stats")}
 
@@ -483,14 +489,14 @@ def test_package_provenance_and_size():
         | SUBIF_OSPF_ROWS | VLAN_OSPF_ROWS | AUTH_OSPF_ROWS | EIGRP_ROWS
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
-        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS
+        | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | L3PO017_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
-    assert len(BINDING_TABLE) == len(actual_keys) == 251
+    assert len(BINDING_TABLE) == len(actual_keys) == 252   # 251 + L3PO017_ROWS
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -565,7 +571,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 251   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(rows) == 252   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 + 0b_39
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
