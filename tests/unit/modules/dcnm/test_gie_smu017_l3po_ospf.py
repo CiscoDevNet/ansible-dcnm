@@ -121,7 +121,7 @@ def test_merged_create_sends_the_family_with_the_native_profile():
 
 
 def test_merged_description_change_carries_every_stored_ospf_value():
-    """The first live question of the mandate, offline: an update that names no OSPF key keeps the family."""
+    """An update that names no OSPF key keeps the family."""
     have = _have(FULL)
     result, calls = h.run_configs([_po({**BASE, "description": "changed"})], "merged", have)
     _ok(result)
