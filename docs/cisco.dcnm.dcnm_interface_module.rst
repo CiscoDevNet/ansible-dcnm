@@ -2661,7 +2661,8 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.</div>
+                        <div>Source interface for DHCP relay, normally an Ethernet, port-channel or loopback interface. The <code>int_vlan</code> body of SMU <code>4.3.1.0175006011</code> accepts only these.</div>
+                        <div>The <code>int_vlan</code> body served with SMU <code>4.3.1.0175006017</code> also accepts a VLAN interface, for example <code>vlan2301</code>. The module does not validate the interface name; the installed template decides whether the controller accepts it. A supported <code>patch_version</code> selects the nvPair name only, so it does not show that an untested controller body accepts a VLAN source (NOT LIVE TESTED).</div>
                         <div>Independent of the DHCP server addresses; it can be set on its own.</div>
                         <div>The nvPair name depends on the installed <code>int_vlan</code> body and is selected by <code>patch_version</code> (legacy <code>DHCP_RELAY_SRC_INTF</code>, SMU body <code>dhcpRelaySourceInterface</code>).</div>
                         <div>An explicit empty string clears a configured source interface, also under <code>merged</code>; an omitted value is preserved under <code>merged</code> and reset under <code>replaced</code> and <code>overridden</code> (NOT LIVE TESTED).</div>

@@ -23,6 +23,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
+import json
 
 from . import test_dcnm_intf_svi_dhcp4_template_compat as compat
 from .dcnm_module import AnsibleExitJson, AnsibleFailJson, loadPlaybookData, set_module_args
@@ -175,6 +176,48 @@ class TestSviDhcp4FamilyGuard(compat.TestSviDhcp4TemplateCompat):
         status, result, _writes = self.run_any("merged", profile=CLEAR, have=have, patch=APPROVED_SMU)
         assert status == "exit", result
         assert {k: v for k, v in self.reported(result).items() if k in SMU.values()} == {}
+
+    # ------------------------------------------------------------------ a VLAN relay source (SMU 017 int_vlan body)
+    def svi_writes(self):
+        """(method, path, serialNumber, nvPairs) of every write whose payload names the SVI under test."""
+        out = []
+        for call in self.run_dcnm_send.call_args_list:
+            args = call.args
+            if len(args) < 4 or args[1] not in ("POST", "PUT") or not args[3]:
+                continue
+            try:
+                body = json.loads(args[3])
+            except (TypeError, ValueError):
+                continue
+            for payload in body if isinstance(body, list) else [body]:
+                for intf in payload.get("interfaces", []) if isinstance(payload, dict) else []:
+                    if intf.get("ifName") == "vlan1001":
+                        out.append((args[1], args[2], intf.get("serialNumber"), intf["nvPairs"]))
+        return out
+
+    def test_f3_guard_vlan_relay_source_is_sent_under_the_017_body(self):
+        """The SMU 017 int_vlan body accepts a VLAN relay source; the module sends the value unchanged under its SMU name."""
+        status, result, writes = self.run_any("merged", profile={"dhcp_relay_src_intf": "vlan2301"},
+                                              have=self.stored(SMU, relay=""), patch=APPROVED_SMU)
+        assert status == "exit" and writes >= 1, result
+        sent = self.svi_writes()
+        assert len(sent) == 1, sent
+        method, path, serial, nv = sent[0]
+        assert method == "PUT" and path.endswith("/interface"), (method, path)
+        assert serial == "SAL1819SAN8"
+        assert nv[SMU["dhcp_relay_src_intf"]] == "vlan2301"
+        assert LEGACY["dhcp_relay_src_intf"] not in nv and LEGACY["dhcp_server_addr4"] not in nv
+        # the other DHCP values: servers 1-3 as the task sets them; the stored server 4 and its VRF are not in the request
+        assert [nv["dhcpServerAddr%d" % i] for i in (1, 2, 3)] == ["192.200.1.1", "192.200.1.2", "192.200.1.3"]
+        assert [nv["vrfDhcp%d" % i] for i in (1, 2, 3)] == ["blue", "blue", "blue"]
+        assert SMU["dhcp_server_addr4"] not in nv and SMU["vrf_dhcp4"] not in nv, nv
+        changed = {k: v for k, v in self.reported(result).items() if "dhcp" in k.lower() or "relay" in k.lower()}
+        assert changed == {SMU["dhcp_relay_src_intf"]: "vlan2301"}, changed
+
+    def test_f3_guard_vlan_relay_source_repeat_writes_nothing(self):
+        status, result, writes = self.run_any("merged", profile={"dhcp_relay_src_intf": "vlan2301"},
+                                              have=self.stored(SMU, relay="vlan2301"), patch=APPROVED_SMU)
+        assert status == "exit" and writes == 0, (writes, result)
 
 
 def _switch_off_inherited_tests():
