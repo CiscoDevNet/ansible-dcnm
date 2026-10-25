@@ -669,6 +669,8 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "ospfRetransmitInterval"): "ospf_retransmit_interval",
     ("int_access_host", "loggingEventPortLinkStatus"): "logging_event_port_link_status",
     ("int_subif", "pimBfdInstance"): "enable_pim_bfd_instance",
+    # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
+    ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the
