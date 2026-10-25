@@ -197,7 +197,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # int_routed_host, logging_event_port_link_status on int_access_host, enable_pim_bfd_instance on int_subif.
     # 121 = 119 + enable_eigrp_ipv6_routing on int_loopback (slice 0b_38) + enable_pim_bfd_instance on int_l3_port_channel
     # (slice 0b_39).
-    assert len(BOOL_PASSTHROUGH) == 121
+    # 125 = 121 + ospf, ospfAuthentication, ospfMtuIgnore and ospfShutdown on int_l3_port_channel (slice 0b_40).
+    assert len(BOOL_PASSTHROUGH) == 125
 
 
 # ------------------------------------------------------- what the engine emits --

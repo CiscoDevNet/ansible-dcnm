@@ -319,6 +319,9 @@ OSPF_PARENT_CONFIG = {
                                             "ipv4_addr": "10.3.1.1", "ipv4_mask_len": 30}),
     "int_vlan": ("vlan100", "svi", {"mode": "vlan", "ipv4_addr": "10.3.2.1",
                                     "ipv4_mask_len": 30}),
+    # The routed port-channel joined with the OSPF family of slice 0b_40.
+    "int_l3_port_channel": ("po21", "pc", {"mode": "l3", "members": ["eth1/31"], "ipv4_addr": "10.3.3.1",
+                                           "ipv4_mask_len": 30}),
 }
 
 

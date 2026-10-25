@@ -40,7 +40,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
     resolve_binding,
 )
 
-PARENTS = ["int_routed_host", "int_subif", "int_vlan"]
+# int_l3_port_channel joined with slice 0b_40 (the int_routed_host contracts on identical 017 declarations).
+PARENTS = ["int_routed_host", "int_subif", "int_vlan", "int_l3_port_channel"]
 NDFC = "12.6.0.267"
 # Declared explicitly for this file's one engine entry point, _emit.
 PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]

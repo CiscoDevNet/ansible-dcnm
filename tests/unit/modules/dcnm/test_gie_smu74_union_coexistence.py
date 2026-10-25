@@ -56,8 +56,10 @@ UNION_RESET_TOTAL = 74
 # int_vpc_pvlan_host::qosStatsSuppressed (IQ1_ADDITIONS), reset inferred: 218 + 1 = 219.
 # SMU 017 first increment (BATCH017_ADDITIONS), resets read from the 017 bodies, not measured: 219 + 5 = 224.
 # SMU 017 loopback EIGRP (LOEIGRP017_ADDITIONS, slice 0b_38): 224 + 5 = 229; SMU 017 routed port-channel PIM BFD
-# (L3PO017_ADDITIONS, slice 0b_39): 229 + 1 = 230. Resets read from the 017 bodies, not measured.
-CANDIDATE_RESET_TOTAL = 230
+# (L3PO017_ADDITIONS, slice 0b_39): 229 + 1 = 230. Resets read from the 017 bodies, not measured. The routed
+# port-channel OSPF family (L3PO_OSPF_ADDITIONS, slice 0b_40), 16 resets copied from the routed rows on identical 017
+# declarations: 230 + 16 = 246.
+CANDIDATE_RESET_TOTAL = 246
 
 # The additions this candidate is allowed to carry, and nothing else: four
 # `int_routed_host` and four `int_subif` rows, plus two `int_loopback` and four
@@ -479,6 +481,28 @@ L3PO017_ADDITIONS = (
 )
 L3PO017_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in L3PO017_ADDITIONS)
 
+# The routed port-channel OSPF family, slice 0b_40: the 16 rows with a reset (ospfTag, OSPF_AUTH_KEY and
+# ospfAuthenticationKeyType have none, as on int_routed_host). NOT measured on this parent.
+L3PO_OSPF_ADDITIONS = (
+    ("int_l3_port_channel", "ospf", "enable_ospf", "false"),
+    ("int_l3_port_channel", "OSPF_AREA_ID", "ospf_area_id", "0.0.0.0"),
+    ("int_l3_port_channel", "ospfAuthentication", "enable_ospf_auth", "false"),
+    ("int_l3_port_channel", "OSPF_AUTH_KEY_ID", "ospf_auth_key_id", "1"),
+    ("int_l3_port_channel", "ospfAuthenticationKey", "ospf_authentication_key", ""),
+    ("int_l3_port_channel", "ospfPassiveMode", "ospf_passive_mode", "noChange"),
+    ("int_l3_port_channel", "ospfCost", "ospf_cost", ""),
+    ("int_l3_port_channel", "ospfMtuIgnore", "ospf_mtu_ignore", "false"),
+    ("int_l3_port_channel", "ospfHelloInterval", "ospf_hello_interval", ""),
+    ("int_l3_port_channel", "ospfDeadInterval", "ospf_dead_interval", ""),
+    ("int_l3_port_channel", "ospfShutdown", "ospf_shutdown", "false"),
+    ("int_l3_port_channel", "ospfTransmitDelay", "ospf_transmit_delay", ""),
+    ("int_l3_port_channel", "ospfRetransmitInterval", "ospf_retransmit_interval", ""),
+    ("int_l3_port_channel", "ospfPriority", "ospf_priority", ""),
+    ("int_l3_port_channel", "ospfNetworkType", "ospf_network_type", "noChange"),
+    ("int_l3_port_channel", "ospfBfdMode", "ospf_bfd_mode", "noChange"),
+)
+L3PO_OSPF_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in L3PO_OSPF_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
@@ -486,12 +510,12 @@ ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + DAMPENING_EXPERIMENTAL_ADDITIONS + PIMACL_ADDITIONS
                  + VPC13_ADDITIONS + HSRP3_ADDITIONS + VPC_DOT1Q6_ADDITIONS
                  + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS + BATCH017_ADDITIONS
-                 + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS)
+                 + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS + L3PO_OSPF_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
                         | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
                         | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES | BATCH017_IDENTITIES
-                        | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES)
+                        | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES)
 
 
 def _rows():
@@ -651,9 +675,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # + 1 vPC PVLAN qosStatsSuppressed row (IQ1_ADDITIONS, inferred reset) = 145, and 74 + 145 = 219.
     # + 5 SMU 017 rows (BATCH017_ADDITIONS, resets read from the bodies) = 150, and 74 + 150 = 224.
     # + 5 SMU 017 loopback EIGRP rows (LOEIGRP017_ADDITIONS, slice 0b_38) = 155, + 1 routed port-channel PIM BFD row
-    # (L3PO017_ADDITIONS, slice 0b_39) = 156, and 74 + 156 = 230.
-    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 156"
+    # (L3PO017_ADDITIONS, slice 0b_39) = 156, + 16 routed port-channel OSPF rows (L3PO_OSPF_ADDITIONS, slice 0b_40) = 172,
+    # and 74 + 172 = 246.
+    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 172"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -759,7 +784,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               # SMU 017 loopback EIGRP, slice 0b_38: resets read from the 017 body, NOT measured live
               ("SMU017 loopback EIGRP/from template", set(LOEIGRP017_IDENTITIES), 5),
               # SMU 017 routed port-channel PIM BFD, slice 0b_39: reset read from the 017 body, NOT measured live
-              ("SMU017 routed port-channel PIM BFD/from template", set(L3PO017_IDENTITIES), 1))
+              ("SMU017 routed port-channel PIM BFD/from template", set(L3PO017_IDENTITIES), 1),
+              # The routed port-channel OSPF family, slice 0b_40: routed resets on identical 017 declarations, NOT measured
+              ("routed port-channel OSPF/from template", set(L3PO_OSPF_IDENTITIES), 16))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -771,17 +798,18 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
              | EIGRP_IDENTITIES | MACSEC_IDENTITIES | DAMPENING_EXPERIMENTAL_IDENTITIES
              | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES
              | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES
-             | BATCH017_IDENTITIES | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES)
+             | BATCH017_IDENTITIES | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 156, (
+    assert len(union) == 172, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
         "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN + 11 PVLAN companions + 1 IQ1 "
-        "+ 5 SMU017 batch 1 + 5 SMU017 loopback EIGRP + 1 SMU017 routed port-channel PIM BFD = 156, and 74 + 156 = 230"
+        "+ 5 SMU017 batch 1 + 5 SMU017 loopback EIGRP + 1 SMU017 routed port-channel PIM BFD "
+        "+ 16 routed port-channel OSPF = 172, and 74 + 172 = 246"
         % len(union))
 
 
@@ -1005,10 +1033,11 @@ def test_the_four_share_one_parent_and_did_not_spread_to_its_unmeasured_siblings
     expected.update({(p, key): "false" for p in ("int_pvlan_host", "int_port_channel_pvlan_host", "int_vpc_pvlan_host")
                      for key in ("disable_lldp_receive", "disable_lldp_transmit")})
     expected.update({(p, "ospf_network_type"): "noChange" for p in
-                     ("int_loopback", "int_routed_host", "int_subif", "int_vlan")})
+                     ("int_loopback", "int_routed_host", "int_subif", "int_vlan", "int_l3_port_channel")})
     # int_subif joined with SMU 017 (it declared the boolean ospfPassiveInterface before); that row is not measured live.
+    # int_l3_port_channel joined with slice 0b_40 (routed contract on an identical 017 declaration); not measured live.
     expected.update({(p, "ospf_passive_mode"): "noChange" for p in
-                     ("int_routed_host", "int_subif", "int_vlan")})
+                     ("int_routed_host", "int_subif", "int_vlan", "int_l3_port_channel")})
     actual = {(r["parent_template"], r["profile_key"]): r["reset_wire"]
               for r in _rows()
               if r["profile_key"] in ("disable_lldp_receive", "disable_lldp_transmit",

@@ -456,6 +456,29 @@ L3PO017_ROWS = {
     ("int_l3_port_channel", "pimBfdInstance", "enable_pim_bfd_instance"),
 }
 
+# The routed port-channel OSPF family, slice 0b_40.
+L3PO_OSPF_ROWS = {
+    ("int_l3_port_channel", "ospf", "enable_ospf"),
+    ("int_l3_port_channel", "ospfTag", "ospf_tag"),
+    ("int_l3_port_channel", "OSPF_AREA_ID", "ospf_area_id"),
+    ("int_l3_port_channel", "ospfAuthentication", "enable_ospf_auth"),
+    ("int_l3_port_channel", "OSPF_AUTH_KEY_ID", "ospf_auth_key_id"),
+    ("int_l3_port_channel", "OSPF_AUTH_KEY", "ospf_auth_key"),
+    ("int_l3_port_channel", "ospfAuthenticationKeyType", "ospf_authentication_key_type"),
+    ("int_l3_port_channel", "ospfAuthenticationKey", "ospf_authentication_key"),
+    ("int_l3_port_channel", "ospfPassiveMode", "ospf_passive_mode"),
+    ("int_l3_port_channel", "ospfCost", "ospf_cost"),
+    ("int_l3_port_channel", "ospfMtuIgnore", "ospf_mtu_ignore"),
+    ("int_l3_port_channel", "ospfHelloInterval", "ospf_hello_interval"),
+    ("int_l3_port_channel", "ospfDeadInterval", "ospf_dead_interval"),
+    ("int_l3_port_channel", "ospfShutdown", "ospf_shutdown"),
+    ("int_l3_port_channel", "ospfTransmitDelay", "ospf_transmit_delay"),
+    ("int_l3_port_channel", "ospfRetransmitInterval", "ospf_retransmit_interval"),
+    ("int_l3_port_channel", "ospfPriority", "ospf_priority"),
+    ("int_l3_port_channel", "ospfNetworkType", "ospf_network_type"),
+    ("int_l3_port_channel", "ospfBfdMode", "ospf_bfd_mode"),
+}
+
 # IQ1 (PR725 ingress QoS) adds int_vpc_pvlan_host::qosStatsSuppressed (disable_qos_stats, inferred reset).
 IQ1_ROWS = {("int_vpc_pvlan_host", "qosStatsSuppressed", "disable_qos_stats")}
 
@@ -499,13 +522,14 @@ def test_package_provenance_and_size():
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
+        | L3PO_OSPF_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
-    assert len(BINDING_TABLE) == len(actual_keys) == 257   # 251 + LOEIGRP017_ROWS + L3PO017_ROWS
+    assert len(BINDING_TABLE) == len(actual_keys) == 276   # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -580,7 +604,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 257   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 + 0b_38 + 0b_39
+    assert len(rows) == 276   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_40
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():

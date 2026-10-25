@@ -102,11 +102,11 @@ def test_the_public_key_and_reset_match_the_routed_and_subinterface_rows():
         assert other["parent_nvpair"] == NVPAIR and other["reset_wire"] == "false", parent
 
 
-def test_it_is_the_only_row_on_the_parent():
-    """ospfRetransmitInterval and every other int_l3_port_channel nvPair stay unregistered."""
-    assert resolve_binding(L3PO, "ospf_retransmit_interval") is None
-    assert resolve_binding(L3PO, "enable_ospf") is None
+def test_pim_bfd_is_the_only_pim_row_on_the_parent():
+    """pimBfdInstance is the only PIM row; sparse mode stays unregistered. The OSPF family on this parent is slice
+    0b_40 (test_gie_smu017_l3po_ospf.py)."""
     assert resolve_binding(L3PO, "enable_pim_sparse") is None
+    assert resolve_binding(L3PO, "pim_dr_priority") is None
 
 
 # ------------------------------------------------------------------ merged
@@ -398,10 +398,10 @@ def test_the_routed_ethernet_row_is_unchanged():
     assert [(p["policy"], p["interfaces"][0]["nvPairs"][NVPAIR]) for p in found] == [(h.ROUTED, "true")]
 
 
-@pytest.mark.parametrize("key,value", [("ospf_retransmit_interval", 10), ("enable_ospf", True)])
-def test_ospf_fields_stay_refused_on_the_routed_port_channel(key, value):
-    """The body refuses ospfRetransmitInterval unless OSPF is enabled with a tag and an area (L906-930); none of those
-    is reachable on this parent, so the retransmit interval is left out of this delivery."""
-    result, calls = h.run_configs([_po({**BASE, key: value})], "merged", [])
-    assert result.get("failed") and "is not supported on this interface (type 'pc', mode 'l3')" in result["msg"]
-    assert h.writes(calls) == []
+def test_the_pim_bfd_field_and_the_ospf_family_travel_together():
+    """The two increments on this parent are independent rows in one payload: setting both sends both."""
+    prof = {**BFD_ON, "enable_ospf": True, "ospf_tag": "PILOT-OSPF", "ospf_area_id": "0.0.0.0"}
+    result, calls = h.run_configs([_po(prof)], "merged", [])
+    assert not result.get("failed"), result.get("msg")
+    nv = _only(calls)
+    assert (nv[NVPAIR], nv["ospf"], nv["ospfTag"], nv["OSPF_AREA_ID"]) == ("true", "true", "PILOT-OSPF", "0.0.0.0")

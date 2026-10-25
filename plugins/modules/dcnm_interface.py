@@ -133,8 +133,15 @@ options:
     - On a routed port-channel (C(type) C(pc), C(mode) C(l3)), the C(4.3.1.0175006017) template also declares
       C(enable_pim_bfd_instance) (bool; renders C(ip pim bfd-instance); NOT LIVE TESTED, read from the installed
       template body). The template does not require PIM sparse mode, which this profile does not accept. Under
-      C(replaced) and C(overridden) an omitted value is reset to false; under C(merged) it is preserved. The template's
-      OSPF fields, including the retransmit interval, are not accepted on this profile.
+      C(replaced) and C(overridden) an omitted value is reset to false; under C(merged) it is preserved.
+    - The routed port-channel also accepts the OSPF keys of the routed Ethernet profile, with the same meaning and
+      dependencies (NOT LIVE TESTED; the C(4.3.1.0175006017) declarations are identical) - C(enable_ospf),
+      C(ospf_tag), C(ospf_area_id), C(enable_ospf_auth), C(ospf_auth_key_id), C(ospf_auth_key),
+      C(ospf_authentication_key_type), C(ospf_authentication_key), C(ospf_passive_mode), C(ospf_cost),
+      C(ospf_mtu_ignore), C(ospf_hello_interval), C(ospf_dead_interval), C(ospf_shutdown), C(ospf_transmit_delay),
+      C(ospf_retransmit_interval), C(ospf_priority), C(ospf_network_type) and C(ospf_bfd_mode). Every option needs
+      C(enable_ospf) true with a tag and an area; disabling OSPF clears the options and the message-digest key in the
+      same request, and keeps the tag stored but inert.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -2909,6 +2916,10 @@ EXAMPLES = """
           ipv4_addr: 192.0.2.13
           ipv4_mask_len: 30
           enable_pim_bfd_instance: true               # "ip pim bfd-instance" on the routed port-channel
+          enable_ospf: true                           # OSPF on the routed port-channel: gate, tag and area first
+          ospf_tag: "100"
+          ospf_area_id: 0.0.0.0
+          ospf_retransmit_interval: 10                # "ip ospf retransmit-interval 10"
 
 # Loopback EIGRP fields of SMU 4.3.1.0175006017 (NOT LIVE TESTED). The prefix lists must already exist on the switch.
 - name: Loopback EIGRP IPv6 routing and distribute lists

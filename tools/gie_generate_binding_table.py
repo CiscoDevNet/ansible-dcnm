@@ -679,6 +679,27 @@ COMMITTED_BINDINGS = {
     # SMU 4.3.1.0175006017 PIM BFD instance on the routed port-channel (slice 0b_39). Read from the 017 body; not
     # measured live.
     ("int_l3_port_channel", "pimBfdInstance"): "enable_pim_bfd_instance",
+    # The OSPF family on the routed port-channel (slice 0b_40), the int_routed_host contracts on the identical 017
+    # declarations. Read from the 017 body; not measured live.
+    ("int_l3_port_channel", "ospf"): "enable_ospf",
+    ("int_l3_port_channel", "ospfTag"): "ospf_tag",
+    ("int_l3_port_channel", "OSPF_AREA_ID"): "ospf_area_id",
+    ("int_l3_port_channel", "ospfAuthentication"): "enable_ospf_auth",
+    ("int_l3_port_channel", "OSPF_AUTH_KEY_ID"): "ospf_auth_key_id",
+    ("int_l3_port_channel", "OSPF_AUTH_KEY"): "ospf_auth_key",
+    ("int_l3_port_channel", "ospfAuthenticationKeyType"): "ospf_authentication_key_type",
+    ("int_l3_port_channel", "ospfAuthenticationKey"): "ospf_authentication_key",
+    ("int_l3_port_channel", "ospfPassiveMode"): "ospf_passive_mode",
+    ("int_l3_port_channel", "ospfCost"): "ospf_cost",
+    ("int_l3_port_channel", "ospfMtuIgnore"): "ospf_mtu_ignore",
+    ("int_l3_port_channel", "ospfHelloInterval"): "ospf_hello_interval",
+    ("int_l3_port_channel", "ospfDeadInterval"): "ospf_dead_interval",
+    ("int_l3_port_channel", "ospfShutdown"): "ospf_shutdown",
+    ("int_l3_port_channel", "ospfTransmitDelay"): "ospf_transmit_delay",
+    ("int_l3_port_channel", "ospfRetransmitInterval"): "ospf_retransmit_interval",
+    ("int_l3_port_channel", "ospfPriority"): "ospf_priority",
+    ("int_l3_port_channel", "ospfNetworkType"): "ospf_network_type",
+    ("int_l3_port_channel", "ospfBfdMode"): "ospf_bfd_mode",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the

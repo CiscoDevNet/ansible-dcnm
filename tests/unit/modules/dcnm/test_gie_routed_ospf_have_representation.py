@@ -251,6 +251,15 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_routed_host", "ospfRetransmitInterval"),
         ("int_routed_host", "ospfTransmitDelay"),
         ("int_routed_host", "PIM_DR_PRIORITY"),
+        # The routed port-channel OSPF family (slice 0b_40): the seven OSPF integers of int_routed_host on identical
+        # 017 declarations. NDFC returns them as strings ("" when unset) on that parent; the same exemption applies.
+        ("int_l3_port_channel", "OSPF_AUTH_KEY_ID"),
+        ("int_l3_port_channel", "ospfCost"),
+        ("int_l3_port_channel", "ospfDeadInterval"),
+        ("int_l3_port_channel", "ospfHelloInterval"),
+        ("int_l3_port_channel", "ospfPriority"),
+        ("int_l3_port_channel", "ospfRetransmitInterval"),
+        ("int_l3_port_channel", "ospfTransmitDelay"),
         # The six BFD intervals, committed. Reviewed individually, not generated
         # into this list: each was read off the installed template (tx and min_rx 50-999,
         # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC

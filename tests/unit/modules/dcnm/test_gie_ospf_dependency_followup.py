@@ -28,7 +28,8 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_gie_thin
 
 SYN_MD5 = "SYNTH-MD5-KEY-NOT-REAL-0001"
 SYN_SIMPLE = "SYNTH-SIMPLE-NOT-REAL-02"
-PARENTS = (h.ROUTED, h.SUBIF, h.SVI)
+# The routed port-channel joined with slice 0b_40; it runs through the generic h.run/h.build_have path like subif and SVI.
+PARENTS = (h.ROUTED, h.SUBIF, h.SVI, h.PC_L3)
 NO_REQUEST = "No configuration or deployment request was sent"
 
 
@@ -179,7 +180,8 @@ def test_border_reset_clears_a_leftover_message_digest_key(state):
 def test_merged_explicit_disable_neutralizes_the_stored_options(parent):
     option = {h.ROUTED: ("ospf_passive_mode", "passive", "ospfPassiveMode", "noChange"),
               h.SUBIF: ("ospf_passive_mode", "passive", "ospfPassiveMode", "noChange"),
-              h.SVI: ("ospf_passive_mode", "passive", "ospfPassiveMode", "noChange")}[parent]
+              h.SVI: ("ospf_passive_mode", "passive", "ospfPassiveMode", "noChange"),
+              h.PC_L3: ("ospf_passive_mode", "passive", "ospfPassiveMode", "noChange")}[parent]
     have = have_for(parent, enable_ospf=True, ospf_tag="LAB-OSPF", ospf_area_id="0.0.0.0", ospf_cost=10,
                     enable_ospf_auth=True, ospf_auth_key_id=5, ospf_auth_key=SYN_MD5, **{option[0]: option[1]})
     result, calls = run_parent(parent, disable_profile(parent), "merged", have)
