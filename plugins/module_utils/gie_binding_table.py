@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = ff58c3f68de4ebbcb92accef273dff22c8067ee2a4622bfd7a848694e410a2ca
+# provenance_sha256 = 07a372a7289e7d883f49ed5e2c3e42dddfd7bdf3ab883b4629ed79a8b0001f9d
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "ff58c3f68de4ebbcb92accef273dff22c8067ee2a4622bfd7a848694e410a2ca"
+PROVENANCE_SHA256 = "07a372a7289e7d883f49ed5e2c3e42dddfd7bdf3ab883b4629ed79a8b0001f9d"
 
 BINDING_TABLE = (
     {
@@ -138,6 +138,19 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
         'cleared_on_change_to': ('int_routed_host',),
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'pimBfdInstance',
+        'profile_key': 'enable_pim_bfd_instance',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_loopback',

@@ -52,6 +52,9 @@ BUILDERS = {
         "int_port_channel_trunk_host",
         "int_port_channel_dot1q_tunnel_host",
         "int_port_channel_pvlan_host",   # same note as int_pvlan_host
+        # The routed port-channel (mode l3) shares the builder; its contribution is the method-level call after the
+        # mode branches.
+        "int_l3_port_channel",
     ),
     "dcnm_intf_get_vpc_payload": (
         "int_vpc_trunk_host",

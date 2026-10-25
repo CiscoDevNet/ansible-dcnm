@@ -153,6 +153,7 @@ R2_PARENT_YAML = {
     "int_port_channel_access_host": ("pc", "access", "po21", "Port-channel21"),
     "int_port_channel_dot1q_tunnel_host": ("pc", "dot1q", "po21", "Port-channel21"),
     "int_port_channel_pvlan_host": ("pc", "pvlan", "po21", "Port-channel21"),
+    "int_l3_port_channel": ("pc", "l3", "po21", "Port-channel21"),
     "int_vpc_trunk_host": ("vpc", "trunk", "vpc21", "vPC21"),
     "int_vpc_access_host": ("vpc", "access", "vpc21", "vPC21"),
     "int_vpc_dot1q_tunnel": ("vpc", "dot1q", "vpc21", "vPC21"),

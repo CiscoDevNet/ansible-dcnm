@@ -676,6 +676,9 @@ COMMITTED_BINDINGS = {
     ("int_loopback", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
     ("int_loopback", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
     ("int_loopback", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
+    # SMU 4.3.1.0175006017 PIM BFD instance on the routed port-channel (slice 0b_39). Read from the 017 body; not
+    # measured live.
+    ("int_l3_port_channel", "pimBfdInstance"): "enable_pim_bfd_instance",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the
