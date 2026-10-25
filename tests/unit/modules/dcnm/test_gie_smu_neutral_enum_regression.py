@@ -60,7 +60,8 @@ NEUTRAL_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, _nv in NEUTRAL_RO
 def test_the_derived_set_covers_all_eleven_neutral_enum_rows():
     """Guard the guard: eleven rows over three fields -- the eight of the earlier SMU plus the loopback BFD and
     subinterface BFD and passive rows that SMU 017 turned into enums."""
-    assert len(NEUTRAL_ROWS) == 11, NEUTRAL_ROWS
+    # + 3: ospfPassiveMode, ospfNetworkType and ospfBfdMode on int_l3_port_channel (slice 0b_40) = 14.
+    assert len(NEUTRAL_ROWS) == 14, NEUTRAL_ROWS
     assert {nv for _p, _k, nv in NEUTRAL_ROWS} == set(REVIEWED_NEUTRAL)
 
 

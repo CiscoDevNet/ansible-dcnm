@@ -865,6 +865,25 @@ PILOT = {
     # SMU 017 routed port-channel (slice 0b_39). Read from the 017 body, not measured live. The body does not gate the
     # field on sparse mode, which is not registered on this parent.
     (PC_L3, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", {}),
+    # The routed port-channel OSPF family (slice 0b_40): the sixteen int_routed_host rows with a reset, with the same
+    # applied values and contexts, on the identical 017 declarations. Read from the body, not measured live.
+    (PC_L3, "ospf"): ("enable_ospf", True, "false", dict(OSPF_CTX, ospf_tag="PILOT-OSPF")),
+    (PC_L3, "OSPF_AREA_ID"): ("ospf_area_id", "0.0.0.77", "0.0.0.0", dict(OSPF_CTX_NO_AREA)),
+    (PC_L3, "ospfAuthentication"): ("enable_ospf_auth", True, "false", dict(AUTH_MD_NO_GATE)),
+    (PC_L3, "OSPF_AUTH_KEY_ID"): ("ospf_auth_key_id", 7, "1", dict(AUTH_MD_NO_ID)),
+    (PC_L3, "ospfAuthenticationKey"): ("ospf_authentication_key", "3DES-PLACEHOLDER", "",
+                                       dict(OSPF_CTX, ospf_authentication_key_type="3")),
+    (PC_L3, "ospfPassiveMode"): ("ospf_passive_mode", "no_passive", "noChange", dict(OSPF_CTX)),
+    (PC_L3, "ospfCost"): ("ospf_cost", 42, "", dict(OSPF_CTX)),
+    (PC_L3, "ospfMtuIgnore"): ("ospf_mtu_ignore", True, "false", dict(OSPF_CTX)),
+    (PC_L3, "ospfHelloInterval"): ("ospf_hello_interval", 11, "", dict(OSPF_CTX)),
+    (PC_L3, "ospfDeadInterval"): ("ospf_dead_interval", 44, "", dict(OSPF_CTX)),
+    (PC_L3, "ospfShutdown"): ("ospf_shutdown", True, "false", dict(OSPF_CTX)),
+    (PC_L3, "ospfTransmitDelay"): ("ospf_transmit_delay", 3, "", dict(OSPF_CTX)),
+    (PC_L3, "ospfRetransmitInterval"): ("ospf_retransmit_interval", 9, "", dict(OSPF_CTX)),
+    (PC_L3, "ospfPriority"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
+    (PC_L3, "ospfNetworkType"): ("ospf_network_type", "point_to_point", "noChange", dict(OSPF_CTX)),
+    (PC_L3, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became

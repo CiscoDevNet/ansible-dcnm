@@ -706,10 +706,10 @@ def test_helper_a_name_only_exclusion_would_drop_eight_legitimate_rows():
                   if r["parent_nvpair"] in names
                   and r["parent_template"] != "int_fabric_loopback_11_1"]
     assert not on_owner, "the owning parent now carries rows with those names; recheck"
-    assert len(collateral) == 8, sorted(
+    assert len(collateral) == 10, sorted(   # + the two rows on int_l3_port_channel (slice 0b_40)
         (r["parent_template"], r["parent_nvpair"]) for r in collateral)
     assert {r["parent_template"] for r in collateral} == {
-        "int_loopback", ROUTED, "int_subif", "int_vlan"}
+        "int_loopback", ROUTED, "int_subif", "int_vlan", "int_l3_port_channel"}
     assert any(r.get("no_log") for r in collateral)
 
 

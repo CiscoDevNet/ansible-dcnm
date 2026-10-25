@@ -54,7 +54,8 @@ def sent_values(calls, nvpair):
 # ------------------------------------------------------------------ the registry decision itself
 def test_every_registered_string_binding_declares_a_comparison_category():
     strings = [b for b in table.BINDING_TABLE if b["type"] == "string"]
-    assert len(strings) == 45
+    # 49 = 45 + ospfTag, OSPF_AREA_ID, OSPF_AUTH_KEY and ospfAuthenticationKey on int_l3_port_channel (slice 0b_40).
+    assert len(strings) == 49
     assert {b["string_compare"] for b in strings} == {"exact", "casefold", "case_irrelevant", "unverified"}
     assert not [b for b in table.BINDING_TABLE if b["type"] != "string" and "string_compare" in b]
 

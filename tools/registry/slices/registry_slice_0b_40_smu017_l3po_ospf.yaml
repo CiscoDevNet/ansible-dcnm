@@ -1,0 +1,462 @@
+# Registry slice 0b_40 -- the OSPF family on the routed port-channel (int_l3_port_channel, `type: pc`, `mode: l3`).
+# Nineteen bindings: the gate (ospf), the process tag and area, the five authentication nvPairs, and the eleven
+# interface options. The SMU 4.3.1.0175006017 body is the first int_l3_port_channel body this registry reads; not every
+# nvPair is new in 017 (ospfRetransmitInterval is), but the retransmit interval is usable only with the gate, tag and
+# area, and the other options share the gate's refusal, so the family is registered as one unit.
+#
+# Source: the int_l3_port_channel body exported from a controller with SMU 4.3.1.0175006017 (template REST API, read
+# only), sha256 of `content` 81c9392e92a488977d2a5c22fd2f79797fa826ff28b89d536d087fc8f9afe655. Compared with the 017
+# int_routed_host body (b5345584749288411fa44c5270b204fdffcb04941d70fb4e2daa2d1057b68918), whose nineteen OSPF rows
+# (slices 0b_18, 0b_19, 0b_21, 0b_37) these rows copy:
+#   * declarations (type, IsMandatory, IsShow, Enum, bounds, regularExpr, defaultValue): 19 of 19 identical
+#     (int_l3_port_channel L243-L352, int_routed_host L234-L343);
+#   * interfaceOptions normalisation and the normalisation block of add() (the empty-string defaults, "5" -> "" for the
+#     retransmit interval, noChange defaults): identical (L708-L761 against L717-L770);
+#   * validation (gate refusal "Enable OSPF on routed port-channel before configuring OSPF interface options", tag and
+#     area required with the gate, message-digest key ID and key required with ospfAuthentication, enum checks):
+#     identical apart from the error-report fabric variable (L906-L953 against L893-L940);
+#   * rendering of the children under `if enableOspf == "true"` (base ospf_interface_11_1 with OSPF_TAG and
+#     OSPF_AREA_ID, and one child per option): identical (L1298-L1429 against L1354-L1485).
+# Hence every contract field (type, reset_wire, bounds, valid_values, wire_values, string_compare, no_log, inert_when)
+# is the routed row's. Not copied: validated_on (the routed rows were measured live; these are not), and the
+# documentation-only shared-effect metadata of slice 0b_18 (effect_id, effect_role, required_when_gate), which the
+# generator does not compile and the engine does not read.
+#
+# Removal: add() calls delete(True) (L1015), which deletes every PTI of the port-channel, then recreates only the
+# children the current values select, so a withdrawn option leaves no child. removal_semantics stays unresolved: nothing
+# here is measured live.
+#
+# No OSPF boolean input alias: those exist only for keys an earlier SMU served on int_loopback and int_subif; the
+# routed port-channel never accepted an OSPF key before.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospf
+    profile_key: enable_ospf
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L243
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfTag
+    profile_key: ospf_tag
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      required: true
+    type: string
+    string_compare: unverified
+    min_length: 1
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L248
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: OSPF_AREA_ID
+    profile_key: ospf_area_id
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: case_irrelevant
+    reset_wire: 0.0.0.0
+    min_length: 1
+    max_length: 15
+    default_template: 0.0.0.0
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L254
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfAuthentication
+    profile_key: enable_ospf_auth
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L262
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: OSPF_AUTH_KEY_ID
+    profile_key: ospf_auth_key_id
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+    type: integer
+    reset_wire: '1'
+    default_template: 1
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L267
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: OSPF_AUTH_KEY
+    profile_key: ospf_auth_key
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospfAuthentication
+      value: 'false'
+      required: true
+      clear: ''
+    type: string
+    string_compare: exact
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L274
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfAuthenticationKeyType
+    profile_key: ospf_authentication_key_type
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospfAuthenticationKey
+      value: ''
+    type: enum
+    valid_values:
+    - '0'
+    - '3'
+    - '7'
+    default_template: '3'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L277
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfAuthenticationKey
+    profile_key: ospf_authentication_key
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: true
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L283
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfPassiveMode
+    profile_key: ospf_passive_mode
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values:
+      no_change: noChange
+      passive: passive
+      no_passive: noPassive
+    type: enum
+    valid_values:
+    - no_change
+    - passive
+    - no_passive
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    reset_wire: noChange
+    evidence_ref: int_l3_port_channel.template@81c9392e#L286
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfCost
+    profile_key: ospf_cost
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L296
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfMtuIgnore
+    profile_key: ospf_mtu_ignore
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L302
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfHelloInterval
+    profile_key: ospf_hello_interval
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L307
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfDeadInterval
+    profile_key: ospf_dead_interval
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L313
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfShutdown
+    profile_key: ospf_shutdown
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L319
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfTransmitDelay
+    profile_key: ospf_transmit_delay
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 450
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L324
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfRetransmitInterval
+    profile_key: ospf_retransmit_interval
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    reset_wire: ''
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L330
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfPriority
+    profile_key: ospf_priority
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    type: integer
+    reset_wire: ''
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L336
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfNetworkType
+    profile_key: ospf_network_type
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values:
+      no_change: noChange
+      broadcast: broadcast
+      point_to_point: pointToPoint
+    type: enum
+    valid_values:
+    - no_change
+    - broadcast
+    - point_to_point
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    reset_wire: noChange
+    evidence_ref: int_l3_port_channel.template@81c9392e#L342
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ospfBfdMode
+    profile_key: ospf_bfd_mode
+    applicable_interface_type: pc
+    applicable_mode: l3
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values:
+      no_change: noChange
+      enable: enable
+      disable: disable
+    type: enum
+    reset_wire: noChange
+    valid_values:
+    - no_change
+    - enable
+    - disable
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_l3_port_channel.template@81c9392e#L348

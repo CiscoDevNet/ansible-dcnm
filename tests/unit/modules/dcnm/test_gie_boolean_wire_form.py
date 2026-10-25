@@ -196,7 +196,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 119 = 115 + four SMU 017 booleans (slice 0b_37): enable_cdp and enable_evpn_multisite_dci_tracking on
     # int_routed_host, logging_event_port_link_status on int_access_host, enable_pim_bfd_instance on int_subif.
     # 120 = 119 + enable_pim_bfd_instance on int_l3_port_channel (slice 0b_39).
-    assert len(BOOL_PASSTHROUGH) == 120
+    # 124 = 120 + ospf, ospfAuthentication, ospfMtuIgnore and ospfShutdown on int_l3_port_channel (slice 0b_40).
+    assert len(BOOL_PASSTHROUGH) == 124
 
 
 # ------------------------------------------------------- what the engine emits --
