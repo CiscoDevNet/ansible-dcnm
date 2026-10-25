@@ -135,13 +135,18 @@ options:
       template body). The template does not require PIM sparse mode, which this profile does not accept. Under
       C(replaced) and C(overridden) an omitted value is reset to false; under C(merged) it is preserved.
     - The routed port-channel also accepts the OSPF keys of the routed Ethernet profile, with the same meaning and
-      dependencies (NOT LIVE TESTED; the C(4.3.1.0175006017) declarations are identical) - C(enable_ospf),
+      dependencies (the C(4.3.1.0175006017) declarations are identical) - C(enable_ospf),
       C(ospf_tag), C(ospf_area_id), C(enable_ospf_auth), C(ospf_auth_key_id), C(ospf_auth_key),
       C(ospf_authentication_key_type), C(ospf_authentication_key), C(ospf_passive_mode), C(ospf_cost),
       C(ospf_mtu_ignore), C(ospf_hello_interval), C(ospf_dead_interval), C(ospf_shutdown), C(ospf_transmit_delay),
       C(ospf_retransmit_interval), C(ospf_priority), C(ospf_network_type) and C(ospf_bfd_mode). Every option needs
       C(enable_ospf) true with a tag and an area; disabling OSPF clears the options and the message-digest key in the
-      same request, and keeps the tag stored but inert.
+      same request, and keeps the tag stored but inert. Configuration measured on NDFC 12.6.0.267 with the
+      C(4.3.1.0175006017) templates for C(enable_ospf), C(ospf_tag), C(ospf_area_id), C(ospf_cost),
+      C(ospf_hello_interval), C(ospf_dead_interval), C(ospf_priority), C(ospf_network_type), C(ospf_passive_mode) and
+      C(ospf_retransmit_interval) under C(merged), C(replaced) and C(deleted). The authentication fields,
+      C(ospf_mtu_ignore), C(ospf_shutdown), C(ospf_transmit_delay), C(ospf_bfd_mode), C(overridden) and the C(4.4.1)
+      bodies are NOT LIVE TESTED.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
