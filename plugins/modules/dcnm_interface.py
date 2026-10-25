@@ -1449,7 +1449,12 @@ options:
             default: ""
           dhcp_relay_src_intf:
             description:
-            - Source interface for DHCP relay. Valid interfaces are Ethernet, port-channel or loopback.
+            - Source interface for DHCP relay, normally an Ethernet, port-channel or loopback interface. The C(int_vlan) body
+              of SMU C(4.3.1.0175006011) accepts only these.
+            - The C(int_vlan) body served with SMU C(4.3.1.0175006017) also accepts a VLAN interface, for example C(vlan2301).
+              The module does not validate the interface name; the installed template decides whether the controller accepts
+              it. A supported C(patch_version) selects the nvPair name only, so it does not show that an untested controller
+              body accepts a VLAN source (NOT LIVE TESTED).
             - Independent of the DHCP server addresses; it can be set on its own.
             - The nvPair name depends on the installed C(int_vlan) body and is selected by C(patch_version)
               (legacy C(DHCP_RELAY_SRC_INTF), SMU body C(dhcpRelaySourceInterface)).
