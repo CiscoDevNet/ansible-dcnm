@@ -15,7 +15,7 @@
 # The option is therefore not a synchronised setting of every member and the module does not write the member children.
 #
 # WHY IT MUST BE REGISTERED. A description-only `merged` call on the unmodified module omits the key from the modify
-# payload, and the controller then stores the template default: a parent that held true became false (measured on ND .90).
+# payload, and the controller then stores the template default: a stored parent true became false (measured).
 # A registered passthrough row carries the stored parent value into a `merged` update when the option is omitted.
 #
 # RESET. Under `replaced` and for a retained port-channel under `overridden`, an omitted option is sent as the template
