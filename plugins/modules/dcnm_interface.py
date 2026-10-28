@@ -142,12 +142,15 @@ options:
       C(ospf_retransmit_interval), C(ospf_priority), C(ospf_network_type) and C(ospf_bfd_mode). Every option needs
       C(enable_ospf) true with a tag and an area; disabling OSPF clears the options and the message-digest key in the
       same request, and keeps the tag stored but inert. Configuration of all 19 keys was measured on NDFC 12.6.0.267
-      with the C(4.3.1.0175006017) templates under C(merged), C(replaced) and C(deleted). Under C(overridden), with the
-      port-channel kept and C(override_intf_types) C([pc]), the authentication fields, C(ospf_mtu_ignore),
-      C(ospf_shutdown), C(ospf_transmit_delay) and C(ospf_bfd_mode) were set and withdrawn while the other keys stayed
-      unchanged. The simple key was measured with C(ospf_authentication_key_type) C(7) only, and the message-digest key
-      with a type 3 encrypted key, which the template renders after C(md5 3). C(query), the C(4.4.1) bodies, OSPF
-      adjacency and traffic are NOT LIVE TESTED.
+      with the C(4.3.1.0175006017) templates under C(merged) and C(replaced). C(deleted) removed a port-channel that
+      carried C(enable_ospf), C(ospf_tag), C(ospf_area_id), C(ospf_cost), C(ospf_hello_interval), C(ospf_dead_interval),
+      C(ospf_priority), C(ospf_network_type), C(ospf_passive_mode) and C(ospf_retransmit_interval); the other keys were
+      not set at that point. Under C(overridden), with the port-channel kept and C(override_intf_types) C([pc]),
+      C(ospf_authentication_key), C(enable_ospf_auth) with C(ospf_auth_key), C(ospf_mtu_ignore), C(ospf_shutdown),
+      C(ospf_transmit_delay) and C(ospf_bfd_mode) were set and withdrawn while the other keys stayed unchanged, and
+      C(ospf_auth_key_id) stayed C(1). The simple key was measured with C(ospf_authentication_key_type) C(7) only, and
+      the message-digest key with a type 3 encrypted key, which the template renders after C(md5 3). C(query), the
+      C(4.4.1) bodies, OSPF adjacency and traffic are NOT LIVE TESTED.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
       when it joins the port-channel, and it does not change members that already exist. On the controller (save only,
