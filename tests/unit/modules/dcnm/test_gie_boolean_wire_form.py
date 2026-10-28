@@ -133,6 +133,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # Batch 2, slice 0b_34: its only boolean. ipv4_acl_in and
         # private_vlan_mapping are strings.
         "enable_vpc_peer_link",
+        # Trunk port-channel reset-skip default, slice rs1 (int_port_channel_trunk_host).
+        "link_transmit_reset_skip",
         # EIGRP, slice 0b_22 -- eight distinct keys, each on all three overlay parents.
         "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
         "enable_eigrp_bfd", "disable_eigrp_bfd",
@@ -198,7 +200,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 121 = 119 + enable_eigrp_ipv6_routing on int_loopback (slice 0b_38) + enable_pim_bfd_instance on int_l3_port_channel
     # (slice 0b_39).
     # 125 = 121 + ospf, ospfAuthentication, ospfMtuIgnore and ospfShutdown on int_l3_port_channel (slice 0b_40).
-    assert len(BOOL_PASSTHROUGH) == 125
+    # 126 = 125 + link_transmit_reset_skip on int_port_channel_trunk_host (slice rs1).
+    assert len(BOOL_PASSTHROUGH) == 126
 
 
 # ------------------------------------------------------- what the engine emits --

@@ -700,6 +700,8 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "ospfPriority"): "ospf_priority",
     ("int_l3_port_channel", "ospfNetworkType"): "ospf_network_type",
     ("int_l3_port_channel", "ospfBfdMode"): "ospf_bfd_mode",
+    # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
+    ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the

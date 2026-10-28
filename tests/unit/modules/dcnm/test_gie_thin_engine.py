@@ -492,6 +492,8 @@ LOEIGRP017_ROWS = {
 }
 
 # SMU 017 first increment, slice 0b_37.
+RS1_ROWS = {("int_port_channel_trunk_host", "linkTransmitResetSkip", "link_transmit_reset_skip")}   # slice rs1
+
 BATCH017_ROWS = {
     ("int_routed_host", "CDP_ENABLE", "enable_cdp"),
     ("int_routed_host", "evpnMultisiteDciTracking", "enable_evpn_multisite_dci_tracking"),
@@ -522,14 +524,14 @@ def test_package_provenance_and_size():
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
-        | L3PO_OSPF_ROWS
+        | L3PO_OSPF_ROWS | RS1_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
-    assert len(BINDING_TABLE) == len(actual_keys) == 276   # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS
+    assert len(BINDING_TABLE) == len(actual_keys) == 277   # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS + RS1_ROWS
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -604,7 +606,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 276   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_40
+    assert len(rows) == 277   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_40, rs1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -717,6 +719,8 @@ def test_registered_keys_per_parent():
         # Batch 2, slice 0b_34: only this port-channel parent declares the peer-link.
         # The slice records its validation scope.
         "enable_vpc_peer_link",
+        # The member default of the trunk port-channel reset-skip, slice rs1.
+        "link_transmit_reset_skip",
     }
     assert registered_profile_keys(PC_ACCESS) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -977,6 +981,7 @@ def test_all_registered_and_guarded_keys():
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
+        "link_transmit_reset_skip",
         "disable_bfd_echo", "ipv4_acl_in",
         # OSPF, slices 0b_18/0b_19/0b_20. SIXTEEN distinct names across the three overlay
         # parents plus int_loopback. Written as one list on purpose: the earlier version listed
@@ -1070,6 +1075,7 @@ def test_all_registered_and_guarded_keys():
         "disable_bfd_echo", "ipv4_acl_in",
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
+        "link_transmit_reset_skip",
         # The routed OSPF slice is passthrough, so the generic guard owns it -- unlike the
         # fabric-loopback OSPF-MD trio asserted out of this set just below. Delegating to a
         # child template inside NDFC does not change which side of this line a binding sits on.

@@ -314,8 +314,8 @@ class TestPV09InventoryInvariants:
 
     def test_234_identities_and_207_reset_values_unchanged(self):
         # The eleven PVLAN companion rows, each with an inferred reset: 234 + 11, 207 + 11; plus one vPC PVLAN row.
-        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19  # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40
-        assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == 207 + 11 + 1 + 5 + 5 + 1 + 16   # + 0b_37 to 0b_40
+        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1  # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1
+        assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == 207 + 11 + 1 + 5 + 5 + 1 + 16 + 1   # + 0b_37 to 0b_40, rs1
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -344,12 +344,14 @@ class TestPV09InventoryInvariants:
         # inline-compliance declaration (was 8ea855ab...).
         # SMU 017: regenerated from the same 34 slices with the loopback and subinterface OSPF BFD rows and the
         # subinterface passive row rebound to the enum nvPairs ospfBfdMode and ospfPassiveMode (was 15061dfc...).
+        # 36 slices: the trunk port-channel reset-skip row of slice rs1 (was f39b3265...).
         # 35 slices: the SMU 017 batch-1 rows, the access link-status logging destination and the int_loopback
         # dependency rows (was 9d0d82a3... and 2e0252ae...).
         # 38 slices: the SMU 017 loopback EIGRP rows of slice 0b_38, the routed port-channel PIM BFD row of slice 0b_39
         # and the routed port-channel OSPF family of slice 0b_40 (was 07a372a7... and ee8f4c9c...).
+        # 39 slices: those 38 and slice rs1 (was b77a881f... and b460471a...).
         assert PROVENANCE_SHA256 == (
-            "b77a881fecc7c4717b989191812fe74a3b324043e9d7cb66f7e2f9e3a29f2e8a"
+            "7db4bd8abf25b2180b9cfa4b96de9db39f0a0df5c35c2e062e2160beb5e78e17"
         )
 
 

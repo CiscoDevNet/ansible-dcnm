@@ -948,6 +948,8 @@ PILOT_PC = {
     (PC_TRUNK, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
     (PC_TRUNK, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (PC_TRUNK, "GUARD_MODE"): ("guard_mode", "root", "no", {}),
+    # Trunk port-channel reset-skip default (slice rs1): the PARENT value only. Existing members keep their stored values.
+    (PC_TRUNK, "linkTransmitResetSkip"): ("link_transmit_reset_skip", True, "false", {}),
     (PC_TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
     (PC_DOT1Q, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
     (PC_DOT1Q, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),

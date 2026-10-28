@@ -58,8 +58,9 @@ UNION_RESET_TOTAL = 74
 # SMU 017 loopback EIGRP (LOEIGRP017_ADDITIONS, slice 0b_38): 224 + 5 = 229; SMU 017 routed port-channel PIM BFD
 # (L3PO017_ADDITIONS, slice 0b_39): 229 + 1 = 230. Resets read from the 017 bodies, not measured. The routed
 # port-channel OSPF family (L3PO_OSPF_ADDITIONS, slice 0b_40), 16 resets copied from the routed rows on identical 017
-# declarations: 230 + 16 = 246.
-CANDIDATE_RESET_TOTAL = 246
+# declarations: 230 + 16 = 246. Trunk port-channel reset-skip default (RS1_ADDITIONS), reset read from
+# the 017 body: 246 + 1 = 247.
+CANDIDATE_RESET_TOTAL = 247
 
 # The additions this candidate is allowed to carry, and nothing else: four
 # `int_routed_host` and four `int_subif` rows, plus two `int_loopback` and four
@@ -503,6 +504,10 @@ L3PO_OSPF_ADDITIONS = (
 )
 L3PO_OSPF_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in L3PO_OSPF_ADDITIONS)
 
+# Trunk port-channel reset-skip default, slice rs1. Reset read from the 017 body (defaultValue=false).
+RS1_ADDITIONS = (("int_port_channel_trunk_host", "linkTransmitResetSkip", "link_transmit_reset_skip", "false"),)
+RS1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in RS1_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
@@ -510,12 +515,12 @@ ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + DAMPENING_EXPERIMENTAL_ADDITIONS + PIMACL_ADDITIONS
                  + VPC13_ADDITIONS + HSRP3_ADDITIONS + VPC_DOT1Q6_ADDITIONS
                  + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS + BATCH017_ADDITIONS
-                 + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS + L3PO_OSPF_ADDITIONS)
+                 + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS + L3PO_OSPF_ADDITIONS + RS1_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
                         | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
                         | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES | BATCH017_IDENTITIES
-                        | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES)
+                        | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES)
 
 
 def _rows():
@@ -676,9 +681,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # + 5 SMU 017 rows (BATCH017_ADDITIONS, resets read from the bodies) = 150, and 74 + 150 = 224.
     # + 5 SMU 017 loopback EIGRP rows (LOEIGRP017_ADDITIONS, slice 0b_38) = 155, + 1 routed port-channel PIM BFD row
     # (L3PO017_ADDITIONS, slice 0b_39) = 156, + 16 routed port-channel OSPF rows (L3PO_OSPF_ADDITIONS, slice 0b_40) = 172,
-    # and 74 + 172 = 246.
-    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 172"
+    # + 1 trunk port-channel reset-skip row (RS1_ADDITIONS, reset read from the body) = 173, and 74 + 173 = 247.
+    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 173"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -786,7 +791,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               # SMU 017 routed port-channel PIM BFD, slice 0b_39: reset read from the 017 body, NOT measured live
               ("SMU017 routed port-channel PIM BFD/from template", set(L3PO017_IDENTITIES), 1),
               # The routed port-channel OSPF family, slice 0b_40: routed resets on identical 017 declarations, NOT measured
-              ("routed port-channel OSPF/from template", set(L3PO_OSPF_IDENTITIES), 16))
+              ("routed port-channel OSPF/from template", set(L3PO_OSPF_IDENTITIES), 16),
+              # trunk port-channel reset-skip default: reset read from the 017 body, NOT measured as a withdrawal
+              ("Po reset-skip RS1/from template", set(RS1_IDENTITIES), 1))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -798,18 +805,18 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
              | EIGRP_IDENTITIES | MACSEC_IDENTITIES | DAMPENING_EXPERIMENTAL_IDENTITIES
              | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES
              | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES
-             | BATCH017_IDENTITIES | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES)
+             | BATCH017_IDENTITIES | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 172, (
+    assert len(union) == 173, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
         "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN + 11 PVLAN companions + 1 IQ1 "
         "+ 5 SMU017 batch 1 + 5 SMU017 loopback EIGRP + 1 SMU017 routed port-channel PIM BFD "
-        "+ 16 routed port-channel OSPF = 172, and 74 + 172 = 246"
+        "+ 16 routed port-channel OSPF + 1 trunk port-channel reset-skip = 173, and 74 + 173 = 247"
         % len(union))
 
 

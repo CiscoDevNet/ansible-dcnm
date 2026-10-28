@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = b77a881fecc7c4717b989191812fe74a3b324043e9d7cb66f7e2f9e3a29f2e8a
+# provenance_sha256 = 7db4bd8abf25b2180b9cfa4b96de9db39f0a0df5c35c2e062e2160beb5e78e17
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "b77a881fecc7c4717b989191812fe74a3b324043e9d7cb66f7e2f9e3a29f2e8a"
+PROVENANCE_SHA256 = "7db4bd8abf25b2180b9cfa4b96de9db39f0a0df5c35c2e062e2160beb5e78e17"
 
 BINDING_TABLE = (
     {
@@ -1146,6 +1146,19 @@ BINDING_TABLE = (
         'max_length': 64,
         'no_log': False,
         'string_compare': 'exact',
+    },
+    {
+        'parent_template': 'int_port_channel_trunk_host',
+        'parent_nvpair': 'linkTransmitResetSkip',
+        'profile_key': 'link_transmit_reset_skip',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'trunk',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
