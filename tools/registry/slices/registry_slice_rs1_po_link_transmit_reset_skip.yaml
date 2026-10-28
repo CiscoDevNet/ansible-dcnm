@@ -9,13 +9,13 @@
 #     L601      memberResetSkipDict[interface] = nvPairs.get("linkTransmitResetSkip", "")   (the member's own stored value)
 #     L812      "linkTransmitResetSkip": memberResetSkip   (the value handed to the member child)
 #
-# WHAT THE OPTION MEANS. It is the DEFAULT a member takes when it JOINS the port-channel. Measured on the controller (save
-# only, no deploy of the line): a member added while the parent holds true stores true; a member that already existed keeps
-# its stored value when the parent is raised or lowered; lowering the parent does not reset a member that stored true.
+# WHAT THE OPTION MEANS. It is the DEFAULT a member takes when it JOINS the port-channel: a member added while the parent
+# holds true stores true; a member that already existed keeps its stored value when the parent is raised or lowered;
+# lowering the parent does not reset a member that stored true.
 # The option is therefore not a synchronised setting of every member and the module does not write the member children.
 #
 # WHY IT MUST BE REGISTERED. A description-only `merged` call on the unmodified module omits the key from the modify
-# payload, and the controller then stores the template default: a stored parent true became false (measured).
+# payload, and the controller then stores the template default, so a stored parent true becomes false.
 # A registered passthrough row carries the stored parent value into a `merged` update when the option is omitted.
 #
 # RESET. Under `replaced` and for a retained port-channel under `overridden`, an omitted option is sent as the template
@@ -23,9 +23,7 @@
 # member-command withdrawal. `deleted` and an omitted `overridden` port-channel use the existing aggregate removal and
 # member release; nothing special is added for this field.
 #
-# DEVICE LIMITATION, kept apart from this row. On the lab image (nxos64-cs.10.6.2.F on a C9300v) NX-OS executed
-# `link transmit reset-skip` with status SUCCESS and the running configuration did not hold the line, through both the
-# module-driven legacy path and the GUI. The cause is not established. This row says nothing about device convergence.
+# DEVICE. This row covers the controller policy only; it says nothing about device convergence.
 #
 # The module admits the row with SMU 4.3.1.0175006017 or a numeric ND release >= 4.4.1 (the 4.4.1 bodies were not read).
 

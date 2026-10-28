@@ -153,17 +153,15 @@ options:
       C(4.4.1) bodies, OSPF adjacency and traffic are NOT LIVE TESTED.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
-      when it joins the port-channel, and it does not change members that already exist. On the controller (save only,
-      no deploy of the line), a member added while the option is true stores true, and an existing member keeps its
-      stored value when the option is raised or lowered. A false option therefore does not mean every member is false.
-      The module writes only the port-channel parent. It never writes a member and never detaches or rejoins one.
-      Under C(merged), an explicit true or false replaces the stored parent value and an omitted option keeps it,
-      including in a description-only update. Under C(replaced), and for a port-channel that C(overridden) keeps, an
-      omitted option resets the parent to the template default (C(false)); the controller keeps each member's stored
-      value, so this does not withdraw a member command. C(deleted) and a port-channel that C(overridden) leaves out
-      use the existing aggregate removal and member release. C(query) returns the parent value as the controller
-      stores it and does not show that the members match it. Whether a device keeps the rendered C(link transmit
-      reset-skip) line is outside what the module decides.
+      when it joins the port-channel. A member that already exists keeps its stored value when the option is raised or
+      lowered, so a false option does not mean every member is false. The module writes only the port-channel parent. It
+      never writes a member and never detaches or rejoins one. Under C(merged), an explicit true or false replaces the
+      stored parent value and an omitted option keeps it, including in a description-only update. Under C(replaced), and
+      for a port-channel that C(overridden) keeps, an omitted option resets the parent to the template default
+      (C(false)); each member keeps its stored value, so this does not withdraw a member command. C(deleted) and a
+      port-channel that C(overridden) leaves out use the existing aggregate removal and member release. C(query) returns
+      the parent value as the controller stores it and does not show that the members match it. The module does not
+      check whether the device applies the rendered C(link transmit reset-skip) line.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its

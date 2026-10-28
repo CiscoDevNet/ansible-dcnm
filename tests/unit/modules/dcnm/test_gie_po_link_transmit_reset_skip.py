@@ -14,11 +14,10 @@
 
 """Trunk port-channel `link_transmit_reset_skip` (nvPair linkTransmitResetSkip on int_port_channel_trunk_host).
 
-The option is the DEFAULT a member takes when it joins the port-channel. Measured on the controller (save only):
-a member added while the parent is true stores true; a member that already exists keeps its stored value when the
-parent is raised or lowered. These tests therefore assert only what the module writes for the PARENT: no member
-child is ever written, and a parent value that differs from a member's is not treated as corrupt state.
-Nothing here says anything about the device, which did not keep the line on the lab image.
+The option is the DEFAULT a member takes when it joins the port-channel: a member added while the parent is true
+stores true; a member that already exists keeps its stored value when the parent is raised or lowered. These tests
+therefore assert only what the module writes for the PARENT: no member child is ever written, and a parent value that
+differs from a member's is not treated as corrupt state. They make no claim about the device.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -265,8 +264,8 @@ _ORIG = h._transport
 def _po_detail(calls, have):
     """interface/detail for port-channels, the shape the user-loopback and PVLAN port-channel reads document.
 
-    NOT measured for an ordinary trunk port-channel on the lab controller: a synthesized shape, used only so that the
-    overridden sweep sees a deletable aggregate."""
+    For an ordinary trunk port-channel this is a synthesized shape, used only so that the overridden sweep sees a
+    deletable aggregate."""
     inner = _ORIG(calls, have)
 
     def send(mod, method, path, payload=None):
