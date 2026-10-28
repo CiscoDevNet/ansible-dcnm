@@ -208,6 +208,7 @@ R2_REGISTERED_BINDINGS = {
     "ipv4_acl_in": ("ipv4AclIn", "str_exact", ("int_routed_host", "int_vlan")),
     "ipv6_link_local": ("ipv6LinkLocal", "str_fold", ("int_routed_host", "int_subif", "int_vlan")),
     "ipv6_nd_suppress_ra": ("ipv6NdSuppressRa", "bool", ("int_routed_host", "int_subif", "int_vlan")),
+    "link_transmit_reset_skip": ("linkTransmitResetSkip", "bool", ("int_port_channel_trunk_host",)),
     "macsec_fallback_key_chain_name": ("macsecFallbackKeyChainName", "str_exact", ("int_routed_host",)),
     "macsec_key_chain_name": ("macsecKeyChainName", "str_exact", ("int_routed_host",)),
     "macsec_policy_name": ("macsecPolicyName", "str_exact", ("int_routed_host",)),
