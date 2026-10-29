@@ -35,6 +35,13 @@ options:
     - Name of the target fabric for network operations
     type: str
     required: yes
+  patch_version:
+    description:
+    - ND software version used to enable version-gated features.
+    - For C(ipv4_acl_in), specify the applicable patched release or ND 4.4.1 or later.
+    - This is a control parameter and is not sent to the controller.
+    type: str
+    required: false
   _fabric_details:
     description:
     - INTERNAL PARAMETER - DO NOT USE
@@ -264,21 +271,26 @@ options:
       secondary_ip_gw1:
         description:
         - IP address with subnet for secondary gateway 1
+        - NDFC versions from the minimum known-compatible 12.2.3.70 use an aggregate list and require gateways in slot order without gaps
+        - Older versions keep the four positional fields; an unknown version with configured gateways fails before any write
         type: str
         required: false
       secondary_ip_gw2:
         description:
         - IP address with subnet for secondary gateway 2
+        - See secondary_ip_gw1 for version compatibility and slot ordering
         type: str
         required: false
       secondary_ip_gw3:
         description:
         - IP address with subnet for secondary gateway 3
+        - See secondary_ip_gw1 for version compatibility and slot ordering
         type: str
         required: false
       secondary_ip_gw4:
         description:
         - IP address with subnet for secondary gateway 4
+        - See secondary_ip_gw1 for version compatibility and slot ordering
         type: str
         required: false
       trm_enable:
@@ -315,6 +327,15 @@ options:
         - Interface Vlan Netflow Monitor
         - Applicable only if 'Layer 2 Only' is not enabled. Provide monitor name defined in fabric setting for Layer 3 Record
         - Netflow configs are supported on NDFC only
+        type: str
+        required: false
+      ipv4_acl_in:
+        description:
+        - IPv4 access-list applied inbound on the SVI.
+        - The access-list name must contain 1 to 64 characters.
+        - Requires the top-level O(patch_version) option set to the applicable patched release or ND 4.4.1 or later.
+        - Supported on standalone and parent fabrics only. It cannot be overridden in O(config[].child_fabric_config).
+        - In C(state=merged), omitting this option preserves the value returned by the controller.
         type: str
         required: false
       vlan_nf_monitor:
@@ -621,6 +642,16 @@ EXAMPLES = """
           - ip_address: 192.168.1.225
             ports: [Ethernet1/18]
         deploy: true
+
+- name: Configure an inbound IPv4 ACL on a supported ND controller
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-fabric
+    patch_version: "{{ nd_patch_version }}"
+    state: merged
+    config:
+      - net_name: ansible-acl-net
+        vrf_name: Tenant-1
+        ipv4_acl_in: TENANT-1-IN
 
 # ---------------------------------------------------------------------------
 # STATE: REPLACED - Replace Network Configuration
@@ -1053,6 +1084,12 @@ from ..module_utils.common.log_v2 import Log
 class DcnmNetwork:
 
     BULK_GET_HAVE_NETWORK_THRESHOLD = 5
+    IPV4_ACL_IN_PATCH_VERSION = "4.3.1.0175006011"
+    IPV4_ACL_IN_MIN_ND_VERSION = (4, 4, 1)
+    # The template declares IPV4_ACL_IN, but the network REST API persists
+    # the effective value under inboundIpv4Acl.
+    IPV4_ACL_IN_TEMPLATE_KEY = "inboundIpv4Acl"
+    IPV4_ACL_IN_LEGACY_TEMPLATE_KEY = "IPV4_ACL_IN"
 
     dcnm_network_paths = {
         11: {
@@ -1095,6 +1132,7 @@ class DcnmNetwork:
 
         self.module = module
         self.params = module.params
+        self.patch_version = module.params.get("patch_version")
 
         msg = "self.params: "
         msg += f"{json.dumps(self.params, indent=4, sort_keys=True)}"
@@ -1105,6 +1143,7 @@ class DcnmNetwork:
         self.check_mode = False
         self.have_create = []
         self.want_create = []
+        self.want_create_names = set()
         self.diff_create = []
         self.diff_create_update = []
         # This variable is created specifically to hold all the create payloads which are missing a
@@ -1247,47 +1286,12 @@ class DcnmNetwork:
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
-    @staticmethod
-    def find_dict_in_list_by_key_value(search: list, key: str, value: str):
-        """
-        # Summary
-
-        Find a dictionary in a list of dictionaries.
-
-
-        ## Raises
-
-        None
-
-        ## Parameters
-
-        -   search: A list of dict
-        -   key: The key to lookup in each dict
-        -   value: The desired matching value for key
-
-        ## Returns
-
-        Either the first matching dict or None
-
-        ## Usage
-
-        ```python
-        content = [{"foo": "bar"}, {"foo": "baz"}]
-
-        match = find_dict_in_list_by_key_value(search=content, key="foo", value="baz")
-        print(f"{match}")
-        # -> {"foo": "baz"}
-
-        match = find_dict_in_list_by_key_value(search=content, key="foo", value="bingo")
-        print(f"{match}")
-        # -> None
-        ```
-        """
-        if search is None:
-            return None
-
-        match = (d for d in search if d[key] == value)
-        return next(match, None)
+    def get_no_deploy_net_names(self):
+        """Return names whose first playbook entry sets deploy: false."""
+        config_by_name = {}
+        for cfg in self.config or []:
+            config_by_name.setdefault(cfg["net_name"], cfg)
+        return {name for name, cfg in config_by_name.items() if cfg.get("deploy") is False}
 
     @staticmethod
     def merge_port_lists(port_lists):
@@ -1320,6 +1324,174 @@ class DcnmNetwork:
                 secondary_gws.append({"gatewayIpAddress": secondary_gw})
 
         return json.dumps({"secondaryGWs": secondary_gws}, separators=(",", ":"))
+
+    # Accept normalized major.minor.maintenance versions with an optional build.
+    _NDFC_VERSION_CANONICAL_RE = re.compile(r"[0-9]+(?:\.[0-9]+){2,3}")
+
+    def _parse_ndfc_version_components(self):
+        """Return the NDFC version as numbers, or None if it is invalid."""
+
+        version = getattr(self, "ndfc_version", None)
+        if not isinstance(version, str) or not version:
+            return None
+
+        if self._NDFC_VERSION_CANONICAL_RE.fullmatch(version):
+            return tuple(int(part) for part in version.split("."))
+
+        return None
+
+    def secondary_gws_capability(self):
+        """Return how this NDFC version handles secondaryGWs."""
+
+        components = self._parse_ndfc_version_components()
+        if components is None:
+            return "unknown"
+
+        boundary = (12, 2, 3)
+        current = components[:3]
+        if current < boundary:
+            return "legacy"
+        if current > boundary:
+            return "aggregate"
+
+        # current == boundary: the 12.2.3 build number is required to decide.
+        if len(components) < 4:
+            return "unknown"
+        return "aggregate" if components[3] >= 70 else "legacy"
+
+    def _validate_remote_secondary_gws_representable(self, raw_aggregate, gw_values, template_conf):
+        """Reject controller data that cannot fit in four gateway fields."""
+
+        network_name = template_conf.get("networkName", "")
+
+        if raw_aggregate in (None, ""):
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs is present but null/empty, "
+                "which is not a valid encoding (the valid empty aggregate is the JSON string "
+                "'{\"secondaryGWs\":[]}'); cannot be safely represented."
+            )
+            return
+
+        try:
+            parsed = json.loads(raw_aggregate)
+        except (TypeError, ValueError):
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs is not valid JSON and cannot be safely represented."
+            )
+            return
+
+        entries = parsed.get("secondaryGWs") if isinstance(parsed, dict) else None
+        if not isinstance(entries, list):
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs is malformed (expected a 'secondaryGWs' list)."
+            )
+            return
+
+        unexpected_top_level_keys = sorted(set(parsed.keys()) - {"secondaryGWs"})
+        if unexpected_top_level_keys:
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs has unexpected top-level "
+                f"key(s) {unexpected_top_level_keys}; only 'secondaryGWs' is representable "
+                "and cannot be safely preserved or silently discarded."
+            )
+            return
+
+        if len(entries) > 4:
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs has {len(entries)} entries; "
+                "only four are representable by this module."
+            )
+            return
+
+        remote_ips = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                self.module.fail_json(
+                    msg=f"Network '{network_name}': remote secondaryGWs contains an entry that is not "
+                    "an object and cannot be safely represented."
+                )
+                return
+            unexpected_entry_keys = sorted(set(entry.keys()) - {"gatewayIpAddress"})
+            if unexpected_entry_keys:
+                self.module.fail_json(
+                    msg=f"Network '{network_name}': remote secondaryGWs contains an entry with "
+                    f"unexpected key(s) {unexpected_entry_keys}; only 'gatewayIpAddress' is "
+                    "representable and cannot be safely preserved or silently discarded."
+                )
+                return
+            gateway_ip = entry.get("gatewayIpAddress")
+            if not isinstance(gateway_ip, str) or not gateway_ip:
+                self.module.fail_json(
+                    msg=f"Network '{network_name}': remote secondaryGWs contains an entry with a "
+                    "non-string or empty 'gatewayIpAddress' and cannot be safely represented."
+                )
+                return
+            remote_ips.append(gateway_ip)
+
+        expected_ips = [value for value in gw_values if value]
+        if remote_ips != expected_ips:
+            self.module.fail_json(
+                msg=f"Network '{network_name}': remote secondaryGWs {remote_ips} contradicts the "
+                f"populated legacy secondaryGW1-4 slots {expected_ips}; refusing to silently "
+                "truncate or reindex brownfield state."
+            )
+            return
+
+    def apply_secondary_gws_compat(self, template_conf, validate_remote=False, defer_prefix_fail_closed=False):
+        """Validate and set secondaryGWs based on the NDFC version."""
+
+        raw_aggregate = template_conf.get("secondaryGWs")
+        gw_values = [template_conf.get(f"secondaryGW{index}") or "" for index in range(1, 5)]
+
+        if validate_remote:
+            self._validate_remote_secondary_gws_representable(raw_aggregate, gw_values, template_conf)
+
+        capability = self.secondary_gws_capability()
+
+        if capability == "legacy":
+            template_conf.pop("secondaryGWs", None)
+            return
+
+        if capability == "unknown":
+            template_conf.pop("secondaryGWs", None)
+            if any(gw_values):
+                network_name = template_conf.get("networkName", "")
+                self.module.fail_json(
+                    msg=f"Network '{network_name}': cannot determine secondaryGWs aggregate support "
+                    f"for NDFC version {self.ndfc_version!r} while secondary_ip_gw1-4 are populated; "
+                    "refusing to guess. Confirm the controller version or omit all four secondary "
+                    "gateways."
+                )
+            return
+
+        # The compact aggregate loses slot positions, so gaps would be reindexed.
+        if not self._is_contiguous_secondary_gw_prefix(gw_values):
+            template_conf.pop("secondaryGWs", None)
+            if defer_prefix_fail_closed:
+                return
+            network_name = template_conf.get("networkName", "")
+            self.module.fail_json(
+                msg=f"Network '{network_name}': secondaryGW1-4 {gw_values} is not a contiguous "
+                "prefix. The compact secondaryGWs aggregate can only safely represent a "
+                "contiguous prefix (GW1, GW1+GW2, GW1+GW2+GW3, or all four); once a slot is "
+                "empty, every higher slot must also be empty. Specify the gateways in "
+                "contiguous slot order or omit the higher slots."
+            )
+            return
+
+        template_conf["secondaryGWs"] = self.get_secondary_gws_template_config(template_conf)
+
+    @staticmethod
+    def _is_contiguous_secondary_gw_prefix(gw_values):
+        """Return whether gateway slots are filled from GW1 without gaps."""
+
+        seen_empty = False
+        for value in gw_values:
+            if not value:
+                seen_empty = True
+            elif seen_empty:
+                return False
+        return True
 
     @staticmethod
     def _torports_comparison_key(torports):
@@ -2081,6 +2253,7 @@ class DcnmNetwork:
         intvlan_nfmon_changed = False
         vlan_nfmon_changed = False
         xconnect_changed = False
+        ipv4_acl_in_changed = False
 
         if want.get("networkId") and want["networkId"] != have["networkId"]:
             self.module.fail_json(msg="networkId can not be updated on existing network: {0}".format(want["networkName"]))
@@ -2093,6 +2266,20 @@ class DcnmNetwork:
 
         json_to_dict_want = json.loads(want["networkTemplateConfig"])
         json_to_dict_have = json.loads(have["networkTemplateConfig"])
+
+        # A controller may return the patched field even when this invocation
+        # did not opt in to managing it. Preserve that value in unrelated
+        # standalone/parent updates instead of accidentally clearing it.
+        if (
+            not self._supports_ipv4_acl_in()
+            and self.fabric_type not in ["multisite_child", "multicluster_child"]
+            and self._has_ipv4_acl_in(json_to_dict_have)
+        ):
+            json_to_dict_want[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict_have
+            )
+            json_to_dict_want.pop(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY, None)
+            want["networkTemplateConfig"] = json.dumps(json_to_dict_want)
 
         gw_ip_want = json_to_dict_want.get("gatewayIpAddress", "")
         gw_ip_have = json_to_dict_have.get("gatewayIpAddress", "")
@@ -2140,6 +2327,8 @@ class DcnmNetwork:
         vlan_nfen_have = json_to_dict_have.get("VLAN_NETFLOW_MONITOR", "")
         xconnect_want = str(json_to_dict_want.get("xconnect", "")).lower()
         xconnect_have = str(json_to_dict_have.get("xconnect", "")).lower()
+        ipv4_acl_in_want = self._get_ipv4_acl_in(json_to_dict_want)
+        ipv4_acl_in_have = self._get_ipv4_acl_in(json_to_dict_have)
 
         if vlanId_have != "":
             vlanId_have = int(vlanId_have)
@@ -2261,6 +2450,13 @@ class DcnmNetwork:
                 xconnect_diff = xconnect_have != xconnect_want
                 comparisons.append(xconnect_diff)
 
+            if (
+                self._supports_ipv4_acl_in()
+                and self.IPV4_ACL_IN_TEMPLATE_KEY not in skipped_template_keys
+            ):
+                ipv4_acl_in_diff = ipv4_acl_in_have != ipv4_acl_in_want
+                comparisons.append(ipv4_acl_in_diff)
+
             if any(comparisons):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -2316,6 +2512,9 @@ class DcnmNetwork:
                 if self._ndfc_version_gte("12.4.1"):
                     if xconnect_have != xconnect_want:
                         xconnect_changed = True
+                if self._supports_ipv4_acl_in():
+                    if ipv4_acl_in_have != ipv4_acl_in_want:
+                        ipv4_acl_in_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -2429,6 +2628,13 @@ class DcnmNetwork:
                 xconnect_diff = xconnect_have != xconnect_want
                 comparisons.append(xconnect_diff)
 
+            if (
+                self._supports_ipv4_acl_in()
+                and self.IPV4_ACL_IN_TEMPLATE_KEY not in skipped_template_keys
+            ):
+                ipv4_acl_in_diff = ipv4_acl_in_have != ipv4_acl_in_want
+                comparisons.append(ipv4_acl_in_diff)
+
             if any(comparisons):
                 # The network updates with missing networkId will have to use existing
                 # networkId from the instance of the same network on DCNM.
@@ -2481,6 +2687,9 @@ class DcnmNetwork:
                 if self._ndfc_version_gte("12.4.1"):
                     if xconnect_have != xconnect_want:
                         xconnect_changed = True
+                if self._supports_ipv4_acl_in():
+                    if ipv4_acl_in_have != ipv4_acl_in_want:
+                        ipv4_acl_in_changed = True
 
                 want.update({"networkId": have["networkId"]})
                 create = want
@@ -2511,6 +2720,7 @@ class DcnmNetwork:
             intvlan_nfmon_changed,
             vlan_nfmon_changed,
             xconnect_changed,
+            ipv4_acl_in_changed,
         )
 
     def update_create_params(self, net):
@@ -2592,6 +2802,10 @@ class DcnmNetwork:
             template_conf.update(
                 xconnect=False if xconnect is None else xconnect
             )
+        if self._supports_ipv4_acl_in():
+            template_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = (
+                net.get("ipv4_acl_in") or ""
+            )
 
         if template_conf["vlanId"] is None:
             template_conf["vlanId"] = ""
@@ -2641,8 +2855,10 @@ class DcnmNetwork:
             template_conf["secondaryGW3"] = ""
         if template_conf["secondaryGW4"] is None:
             template_conf["secondaryGW4"] = ""
-        if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-            template_conf["secondaryGWs"] = self.get_secondary_gws_template_config(template_conf)
+        # Query/delete never write this template. Merged intent may be partial
+        # until update_want() restores omitted slots, so only its gap check waits.
+        if self.fabric_type not in ["multisite_child", "multicluster_child"] and state not in ("query", "deleted"):
+            self.apply_secondary_gws_compat(template_conf, defer_prefix_fail_closed=(state == "merged"))
         if self.dcnm_version > 11:
             if template_conf["SVI_NETFLOW_MONITOR"] is None:
                 template_conf["SVI_NETFLOW_MONITOR"] = ""
@@ -2695,9 +2911,27 @@ class DcnmNetwork:
             t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
         if "xconnect" in json_to_dict:
             t_conf.update(xconnect=json_to_dict["xconnect"])
+        if self._has_ipv4_acl_in(json_to_dict):
+            t_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict
+            )
 
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-            t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
+            secondary_gws_key_present = "secondaryGWs" in json_to_dict
+            if secondary_gws_key_present:
+                t_conf["secondaryGWs"] = json_to_dict.get("secondaryGWs")
+
+            # Read-only and delete-only paths preserve controller state. In
+            # overridden state, validate only networks retained for update.
+            module = getattr(self, "module", None)
+            state = getattr(module, "params", {}).get("state") if module is not None else None
+
+            skip_aggregate_validation = state in ("query", "deleted")
+            if state == "overridden":
+                skip_aggregate_validation = net.get("networkName") not in self.want_create_names
+
+            if not skip_aggregate_validation:
+                self.apply_secondary_gws_compat(t_conf, validate_remote=secondary_gws_key_present)
 
         if "mcastGroup" not in json_to_dict:
             del t_conf["mcastGroup"]
@@ -2747,10 +2981,9 @@ class DcnmNetwork:
         and overlays nvPairs.CONF onto the matching have_attach entries so
         diff_for_attach_deploy can detect freeform-only updates and explicit clears.
 
-        Policy-to-network matching is a two-stage best-effort:
-          1. If only one attached network exists on the switch, that network wins.
-          2. Otherwise match by entityName == networkName, then by
-             description containing the network name.
+        Match NDFC's Config_Profile secondary entity first, then legacy network
+        hints in entityName, description or nvPairs. A sole task candidate is
+        not proof of ownership: the switch may have unrelated freeform policies.
         Raw policy dicts are logged at debug level so we can refine matching once
         we have concrete NDFC responses.
         """
@@ -2816,11 +3049,24 @@ class DcnmNetwork:
     def _match_freeform_policy_to_network(policy, candidate_networks):
         """Best-effort match a switch_freeform_config policy to one of the
         candidate networks attached to the same switch. Returns the matched
-        network name or None."""
+        network name or None. Even a single candidate requires a network hint;
+        otherwise switch-wide policies could be mistaken for attachment CLI.
+        """
         if not candidate_networks:
             return None
-        if len(candidate_networks) == 1:
-            return candidate_networks[0]
+
+        nv_pairs = policy.get("nvPairs") or {}
+        # Overlay freeform policies identify their network as a secondary
+        # Config_Profile; their primary entity is just SWITCH. Generated CLI
+        # policies expose top-level fields, while the parent Python policy also
+        # carries SECENTTYPE/SECENTITY in nvPairs. Explicit ownership outside
+        # this task must not fall through to a weaker description match.
+        for entity_type, profile_name in (
+            (policy.get("secondaryEntityType"), policy.get("secondaryEntityName")),
+            (nv_pairs.get("SECENTTYPE"), nv_pairs.get("SECENTITY")),
+        ):
+            if str(entity_type).lower() == "config_profile" and profile_name:
+                return profile_name if profile_name in candidate_networks else None
 
         entity_name = policy.get("entityName") or ""
         for net in candidate_networks:
@@ -2832,7 +3078,6 @@ class DcnmNetwork:
             if net and net in description:
                 return net
 
-        nv_pairs = policy.get("nvPairs") or {}
         for candidate_field in ("NETWORK_NAME", "networkName", "network_name"):
             value = nv_pairs.get(candidate_field)
             if not value:
@@ -3213,6 +3458,7 @@ class DcnmNetwork:
             want_deploy.update({"networkNames": all_networks[:-1]})
 
         self.want_create = want_create
+        self.want_create_names = {net["networkName"] for net in want_create}
         self.want_attach = want_attach
         self.want_deploy = want_deploy
 
@@ -3242,21 +3488,19 @@ class DcnmNetwork:
         all_nets = ""
 
         if self.config:
+            have_create_names = {have_c["networkName"] for have_c in self.have_create}
+            have_attach_by_name = {}
+            for attach in self.have_attach:
+                have_attach_by_name.setdefault(attach["networkName"], attach)
 
             for want_c in self.want_create:
-                if not next(
-                    (have_c for have_c in self.have_create if have_c["networkName"] == want_c["networkName"]),
-                    None,
-                ):
+                if want_c["networkName"] not in have_create_names:
                     continue
 
                 network_name = want_c["networkName"]
                 diff_delete.update({network_name: "DEPLOYED"})
 
-                have_a = next(
-                    (attach for attach in self.have_attach if attach["networkName"] == network_name),
-                    None,
-                )
+                have_a = have_attach_by_name.get(network_name)
 
                 if not have_a:
                     continue
@@ -3333,15 +3577,14 @@ class DcnmNetwork:
         diff_deploy = self.diff_deploy
         diff_undeploy = self.diff_undeploy
 
+        want_create_names = {net["networkName"] for net in self.want_create}
+
         for have_a in self.have_attach:
             # This block will take care of deleting all the networks that are only present on ND but not on playbook
             # The "if not found" block will go through all attachments under those networks and update them so that
             # they will be detached and also the network name will be added to delete payload.
 
-            found = next(
-                (net for net in self.want_create if net["networkName"] == have_a["networkName"]),
-                None,
-            )
+            found = have_a["networkName"] in want_create_names
 
             to_del = []
             if not found:
@@ -3390,44 +3633,47 @@ class DcnmNetwork:
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
 
+        diff_attach_by_name = {}
+        for entry in diff_attach:
+            diff_attach_by_name.setdefault(entry["networkName"], entry)
+        want_create_names = {net["networkName"] for net in self.want_create}
+        want_attach_by_name = {}
+        for entry in self.want_attach:
+            want_attach_by_name.setdefault(entry["networkName"], entry)
+
         for have_a in self.have_attach:
             r_net_list = []
             h_in_w = False
-            for want_a in self.want_attach:
+            want_a = want_attach_by_name.get(have_a["networkName"])
+            if want_a is not None:
                 # This block will take care of deleting any attachments that are present only on DCNM
                 # but, not on the playbook. In this case, the playbook will have a network and few attaches under it,
                 # but, the attaches may be different to what the ND has for the same network.
-                if have_a["networkName"] == want_a["networkName"]:
-                    h_in_w = True
-                    atch_h = have_a["lanAttachList"]
-                    atch_w = want_a.get("lanAttachList")
+                h_in_w = True
+                atch_h = have_a["lanAttachList"]
+                atch_w = want_a.get("lanAttachList")
 
-                    for a_h in atch_h:
-                        if not a_h["isAttached"]:
-                            continue
-                        a_match = False
+                for a_h in atch_h:
+                    if not a_h["isAttached"]:
+                        continue
+                    a_match = False
 
-                        if atch_w:
-                            for a_w in atch_w:
-                                if a_h["serialNumber"] == a_w["serialNumber"]:
-                                    # Have is already in diff, no need to continue looking for it.
-                                    a_match = True
-                                    break
-                        if not a_match:
-                            del a_h["isAttached"]
-                            a_h.update({"deployment": False})
-                            r_net_list.append(a_h)
-                    break
+                    if atch_w:
+                        for a_w in atch_w:
+                            if a_h["serialNumber"] == a_w["serialNumber"]:
+                                # Have is already in diff, no need to continue looking for it.
+                                a_match = True
+                                break
+                    if not a_match:
+                        del a_h["isAttached"]
+                        a_h.update({"deployment": False})
+                        r_net_list.append(a_h)
 
             if not h_in_w:
                 # This block will take care of deleting all the attachments which are in ND but
                 # are not mentioned in the playbook. The playbook just has the network, but, does not have any attach
                 # under it.
-                found = next(
-                    (net for net in self.want_create if net["networkName"] == have_a["networkName"]),
-                    None,
-                )
-                if found:
+                if have_a["networkName"] in want_create_names:
                     atch_h = have_a["lanAttachList"]
                     for a_h in atch_h:
                         if not a_h["isAttached"]:
@@ -3437,29 +3683,22 @@ class DcnmNetwork:
                         r_net_list.append(a_h)
 
             if r_net_list:
-                in_diff = False
-                for d_attach in self.diff_attach:
-                    if have_a["networkName"] == d_attach["networkName"]:
-                        in_diff = True
-                        d_attach["lanAttachList"].extend(r_net_list)
-                        break
-
-                if not in_diff:
+                d_attach = diff_attach_by_name.get(have_a["networkName"])
+                if d_attach is not None:
+                    d_attach["lanAttachList"].extend(r_net_list)
+                else:
                     r_net_dict = {
                         "networkName": have_a["networkName"],
                         "lanAttachList": r_net_list,
                     }
                     diff_attach.append(r_net_dict)
+                    diff_attach_by_name[have_a["networkName"]] = r_net_dict
                     all_nets += have_a["networkName"] + ","
 
         if all_nets:
-            modified_all_nets = copy.deepcopy(all_nets[:-1].split(","))
             # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
-            for net in all_nets[:-1].split(","):
-                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
-                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
-                    modified_all_nets.remove(net)
-            all_nets = ",".join(modified_all_nets)
+            no_deploy_nets = self.get_no_deploy_net_names()
+            all_nets = ",".join(net for net in all_nets[:-1].split(",") if net not in no_deploy_nets)
 
         if not all_nets:
             self.diff_create = diff_create
@@ -3528,68 +3767,72 @@ class DcnmNetwork:
         intvlan_nfmon_changed = {}
         vlan_nfmon_changed = {}
         xconnect_changed = {}
+        ipv4_acl_in_changed = {}
+
+        have_create_by_name = {}
+        for have in self.have_create:
+            have_create_by_name.setdefault(have["networkName"], have)
 
         for want_c in self.want_create:
-            found = False
-            for have_c in self.have_create:
-                if want_c["networkName"] == have_c["networkName"]:
+            have_c = have_create_by_name.get(want_c["networkName"])
+            found = have_c is not None
+            if found:
+                (
+                    diff,
+                    gw_chg,
+                    tg_chg,
+                    warn_msg,
+                    l2only_chg,
+                    vn_chg,
+                    idesc_chg,
+                    mtu_chg,
+                    arpsup_chg,
+                    dhcp_servers_chg,
+                    dhcp_loopbk_chg,
+                    mcast_grp_chg,
+                    gwv6_chg,
+                    sec_gw1_chg,
+                    sec_gw2_chg,
+                    sec_gw3_chg,
+                    sec_gw4_chg,
+                    trm_en_chg,
+                    rt_both_chg,
+                    l3gw_onbd_chg,
+                    net_name_chg,
+                    nf_en_chg,
+                    intvlan_nfmon_chg,
+                    vlan_nfmon_chg,
+                    xconnect_chg,
+                    ipv4_acl_in_chg,
+                ) = self.diff_for_create(want_c, have_c)
 
-                    found = True
-                    (
-                        diff,
-                        gw_chg,
-                        tg_chg,
-                        warn_msg,
-                        l2only_chg,
-                        vn_chg,
-                        idesc_chg,
-                        mtu_chg,
-                        arpsup_chg,
-                        dhcp_servers_chg,
-                        dhcp_loopbk_chg,
-                        mcast_grp_chg,
-                        gwv6_chg,
-                        sec_gw1_chg,
-                        sec_gw2_chg,
-                        sec_gw3_chg,
-                        sec_gw4_chg,
-                        trm_en_chg,
-                        rt_both_chg,
-                        l3gw_onbd_chg,
-                        net_name_chg,
-                        nf_en_chg,
-                        intvlan_nfmon_chg,
-                        vlan_nfmon_chg,
-                        xconnect_chg,
-                    ) = self.diff_for_create(want_c, have_c)
-
-                    gw_changed.update({want_c["networkName"]: gw_chg})
-                    tg_changed.update({want_c["networkName"]: tg_chg})
-                    l2only_changed.update({want_c["networkName"]: l2only_chg})
-                    vn_changed.update({want_c["networkName"]: vn_chg})
-                    intdesc_changed.update({want_c["networkName"]: idesc_chg})
-                    mtu_changed.update({want_c["networkName"]: mtu_chg})
-                    arpsup_changed.update({want_c["networkName"]: arpsup_chg})
-                    dhcp_servers_changed.update({want_c["networkName"]: dhcp_servers_chg})
-                    dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
-                    if self.is_ms_fabric is False:
-                        multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
-                    gwv6_changed.update({want_c["networkName"]: gwv6_chg})
-                    sec_gw1_changed.update({want_c["networkName"]: sec_gw1_chg})
-                    sec_gw2_changed.update({want_c["networkName"]: sec_gw2_chg})
-                    sec_gw3_changed.update({want_c["networkName"]: sec_gw3_chg})
-                    sec_gw4_changed.update({want_c["networkName"]: sec_gw4_chg})
-                    trm_en_changed.update({want_c["networkName"]: trm_en_chg})
-                    rt_both_changed.update({want_c["networkName"]: rt_both_chg})
-                    l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
-                    net_name_changed.update({want_c["networkName"]: net_name_chg})
-                    nf_en_changed.update({want_c["networkName"]: nf_en_chg})
-                    intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
-                    vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
-                    xconnect_changed.update({want_c["networkName"]: xconnect_chg})
-                    if diff:
-                        diff_create_update.append(diff)
-                    break
+                gw_changed.update({want_c["networkName"]: gw_chg})
+                tg_changed.update({want_c["networkName"]: tg_chg})
+                l2only_changed.update({want_c["networkName"]: l2only_chg})
+                vn_changed.update({want_c["networkName"]: vn_chg})
+                intdesc_changed.update({want_c["networkName"]: idesc_chg})
+                mtu_changed.update({want_c["networkName"]: mtu_chg})
+                arpsup_changed.update({want_c["networkName"]: arpsup_chg})
+                dhcp_servers_changed.update({want_c["networkName"]: dhcp_servers_chg})
+                dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
+                if self.is_ms_fabric is False:
+                    multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
+                gwv6_changed.update({want_c["networkName"]: gwv6_chg})
+                sec_gw1_changed.update({want_c["networkName"]: sec_gw1_chg})
+                sec_gw2_changed.update({want_c["networkName"]: sec_gw2_chg})
+                sec_gw3_changed.update({want_c["networkName"]: sec_gw3_chg})
+                sec_gw4_changed.update({want_c["networkName"]: sec_gw4_chg})
+                trm_en_changed.update({want_c["networkName"]: trm_en_chg})
+                rt_both_changed.update({want_c["networkName"]: rt_both_chg})
+                l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
+                net_name_changed.update({want_c["networkName"]: net_name_chg})
+                nf_en_changed.update({want_c["networkName"]: nf_en_chg})
+                intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
+                vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
+                xconnect_changed.update({want_c["networkName"]: xconnect_chg})
+                ipv4_acl_in_changed.update({want_c["networkName"]: ipv4_acl_in_chg})
+                if diff:
+                    diff_create_update.append(diff)
             if not found:
                 net_id = want_c.get("networkId", None)
 
@@ -3652,61 +3895,65 @@ class DcnmNetwork:
                 else:
                     diff_create.append(want_c)
 
+        # Every existing entry for a name is processed, so keep them all in order.
+        have_attach_matches = {}
+        for have in self.have_attach:
+            have_attach_matches.setdefault(have["networkName"], []).append(have)
+
         # Check for deployment needed due to configuration changes (without attachment changes)
         all_nets = []
         for want_a in self.want_attach:
             dep_net = ""
             found = False
-            for have_a in self.have_attach:
-                if want_a["networkName"] == have_a["networkName"]:
+            for have_a in have_attach_matches.get(want_a["networkName"], []):
+                found = True
+                diff, net = self.diff_for_attach_deploy(
+                    want_a["lanAttachList"],
+                    have_a["lanAttachList"],
+                    replace,
+                    network_vlan=want_a.get("vlan_id") or 0,
+                )
 
-                    found = True
-                    diff, net = self.diff_for_attach_deploy(
-                        want_a["lanAttachList"],
-                        have_a["lanAttachList"],
-                        replace,
-                        network_vlan=want_a.get("vlan_id") or 0,
-                    )
+                if diff:
+                    base = want_a.copy()
+                    del base["lanAttachList"]
+                    base.pop("vlan_id", None)
+                    base.update({"lanAttachList": diff})
+                    diff_attach.append(base)
+                    if net:
+                        dep_net = want_a["networkName"]
+                else:
+                    # Check if any configuration changes require deployment
+                    network_name = want_a["networkName"]
 
-                    if diff:
-                        base = want_a.copy()
-                        del base["lanAttachList"]
-                        base.pop("vlan_id", None)
-                        base.update({"lanAttachList": diff})
-                        diff_attach.append(base)
-                        if net:
-                            dep_net = want_a["networkName"]
-                    else:
-                        # Check if any configuration changes require deployment
-                        network_name = want_a["networkName"]
-
-                        if (
-                            net
-                            or gw_changed.get(want_a["networkName"], False)
-                            or tg_changed.get(want_a["networkName"], False)
-                            or l2only_changed.get(want_a["networkName"], False)
-                            or vn_changed.get(want_a["networkName"], False)
-                            or intdesc_changed.get(want_a["networkName"], False)
-                            or mtu_changed.get(want_a["networkName"], False)
-                            or arpsup_changed.get(want_a["networkName"], False)
-                            or dhcp_servers_changed.get(want_a["networkName"], False)
-                            or dhcp_loopback_changed.get(want_a["networkName"], False)
-                            or multicast_group_address_changed.get(want_a["networkName"], False)
-                            or gwv6_changed.get(want_a["networkName"], False)
-                            or sec_gw1_changed.get(want_a["networkName"], False)
-                            or sec_gw2_changed.get(want_a["networkName"], False)
-                            or sec_gw3_changed.get(want_a["networkName"], False)
-                            or sec_gw4_changed.get(want_a["networkName"], False)
-                            or trm_en_changed.get(want_a["networkName"], False)
-                            or rt_both_changed.get(want_a["networkName"], False)
-                            or l3gw_onbd_changed.get(want_a["networkName"], False)
-                            or net_name_changed.get(want_a["networkName"], False)
-                            or nf_en_changed.get(want_a["networkName"], False)
-                            or intvlan_nfmon_changed.get(want_a["networkName"], False)
-                            or vlan_nfmon_changed.get(want_a["networkName"], False)
-                            or xconnect_changed.get(want_a["networkName"], False)
-                        ):
-                            dep_net = want_a["networkName"]
+                    if (
+                        net
+                        or gw_changed.get(want_a["networkName"], False)
+                        or tg_changed.get(want_a["networkName"], False)
+                        or l2only_changed.get(want_a["networkName"], False)
+                        or vn_changed.get(want_a["networkName"], False)
+                        or intdesc_changed.get(want_a["networkName"], False)
+                        or mtu_changed.get(want_a["networkName"], False)
+                        or arpsup_changed.get(want_a["networkName"], False)
+                        or dhcp_servers_changed.get(want_a["networkName"], False)
+                        or dhcp_loopback_changed.get(want_a["networkName"], False)
+                        or multicast_group_address_changed.get(want_a["networkName"], False)
+                        or gwv6_changed.get(want_a["networkName"], False)
+                        or sec_gw1_changed.get(want_a["networkName"], False)
+                        or sec_gw2_changed.get(want_a["networkName"], False)
+                        or sec_gw3_changed.get(want_a["networkName"], False)
+                        or sec_gw4_changed.get(want_a["networkName"], False)
+                        or trm_en_changed.get(want_a["networkName"], False)
+                        or rt_both_changed.get(want_a["networkName"], False)
+                        or l3gw_onbd_changed.get(want_a["networkName"], False)
+                        or net_name_changed.get(want_a["networkName"], False)
+                        or nf_en_changed.get(want_a["networkName"], False)
+                        or intvlan_nfmon_changed.get(want_a["networkName"], False)
+                        or vlan_nfmon_changed.get(want_a["networkName"], False)
+                        or xconnect_changed.get(want_a["networkName"], False)
+                        or ipv4_acl_in_changed.get(want_a["networkName"], False)
+                    ):
+                        dep_net = want_a["networkName"]
 
             if not found and want_a.get("lanAttachList"):
                 atch_list = []
@@ -3738,11 +3985,8 @@ class DcnmNetwork:
         modified_all_nets = copy.deepcopy(all_nets)
         if all_nets:
             # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
-            for net in all_nets:
-                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
-                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
-                    modified_all_nets.remove(net)
-            modified_all_nets = list(set(modified_all_nets))
+            no_deploy_nets = self.get_no_deploy_net_names()
+            modified_all_nets = list(set(net for net in all_nets if net not in no_deploy_nets))
             final_count = len(modified_all_nets)
 
         if modified_all_nets:
@@ -4001,6 +4245,8 @@ class DcnmNetwork:
                 found_c.update({"vlan_nf_monitor": json_to_dict.get("VLAN_NETFLOW_MONITOR", "")})
             if "xconnect" in json_to_dict:
                 found_c.update({"xconnect": json_to_dict["xconnect"]})
+            if self._has_ipv4_acl_in(json_to_dict):
+                found_c.update({"ipv4_acl_in": self._get_ipv4_acl_in(json_to_dict)})
             found_c.update({"attach": []})
 
             del found_c["fabric"]
@@ -5089,9 +5335,13 @@ class DcnmNetwork:
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
                 if "xconnect" in json_to_dict:
                     t_conf.update(xconnect=json_to_dict["xconnect"])
+                if self._has_ipv4_acl_in(json_to_dict):
+                    t_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                        json_to_dict
+                    )
 
                 if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-                    t_conf["secondaryGWs"] = self.get_secondary_gws_template_config(t_conf)
+                    self.apply_secondary_gws_compat(t_conf)
 
                 # Remove skipped attributes from template config for parent fabrics
                 for key in list(t_conf.keys()):
@@ -5299,6 +5549,46 @@ class DcnmNetwork:
         except (ValueError, AttributeError):
             return False
 
+    def _supports_ipv4_acl_in_version(self):
+        """Return whether patch_version enables the SVI ACL field."""
+        patch_version = getattr(self, "patch_version", None)
+        if patch_version == self.IPV4_ACL_IN_PATCH_VERSION:
+            return True
+        if not isinstance(patch_version, str):
+            return False
+
+        version_parts = patch_version.split(".")
+        if len(version_parts) < 3 or any(
+            not part.isdigit() for part in version_parts
+        ):
+            return False
+        current_version = tuple(int(part) for part in version_parts[:3])
+        return current_version >= self.IPV4_ACL_IN_MIN_ND_VERSION
+
+    def _supports_ipv4_acl_in(self):
+        """Return whether this invocation may manage the SVI ACL field."""
+        return (
+            self._supports_ipv4_acl_in_version()
+            and getattr(self, "fabric_type", None) in [
+                "standalone",
+                "multisite_parent",
+                "multicluster_parent",
+            ]
+        )
+
+    def _has_ipv4_acl_in(self, template_config):
+        """Return whether a controller template contains the SVI ACL field."""
+        return (
+            self.IPV4_ACL_IN_TEMPLATE_KEY in template_config
+            or self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY in template_config
+        )
+
+    def _get_ipv4_acl_in(self, template_config):
+        """Return the controller SVI ACL value, preferring its canonical key."""
+        if self.IPV4_ACL_IN_TEMPLATE_KEY in template_config:
+            return template_config.get(self.IPV4_ACL_IN_TEMPLATE_KEY) or ""
+        return template_config.get(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY) or ""
+
     def get_template_config_mapping(self):
         """
         Get mapping from network spec attributes to template config keys.
@@ -5338,6 +5628,8 @@ class DcnmNetwork:
         }
         if self._ndfc_version_gte("12.4.1"):
             mapping["xconnect"] = "xconnect"
+        if self._supports_ipv4_acl_in():
+            mapping["ipv4_acl_in"] = self.IPV4_ACL_IN_TEMPLATE_KEY
         return mapping
 
     def get_network_spec(self, fabric_type=None):
@@ -5402,6 +5694,7 @@ class DcnmNetwork:
                 secondary_ip_gw4=dict(type="ipv4", default=""),
                 route_target_both=dict(type="bool", default=False),
                 intfvlan_nf_monitor=dict(type="str"),
+                ipv4_acl_in=dict(type="str", length_min=1, length_max=64),
             )
 
             # Adjust deploy field for query state
@@ -5445,6 +5738,7 @@ class DcnmNetwork:
                 netflow_enable=dict(type="bool", default=False),
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
+                ipv4_acl_in=dict(type="str", length_min=1, length_max=64),
             )
             net_spec["xconnect"] = dict(type="bool")
             # Adjust deploy field for query state
@@ -5461,6 +5755,31 @@ class DcnmNetwork:
         self.log.debug(msg)
 
         """Parse the playbook values, validate to param specs."""
+
+        # Keep this check ahead of want/diff construction so an unsupported
+        # request cannot reach a controller mutation path.
+        if self.config:
+            for net in self.config:
+                if "ipv4_acl_in" not in net:
+                    continue
+                network_name = net.get("net_name", "unknown")
+                if self.fabric_type in ["multisite_child", "multicluster_child"]:
+                    self.module.fail_json(
+                        msg=(
+                            f"Network '{network_name}': ipv4_acl_in cannot be configured at the child fabric level; "
+                            "configure it on the parent network."
+                        )
+                    )
+                if not self._supports_ipv4_acl_in_version():
+                    supplied_patch = self.patch_version if self.patch_version is not None else "not provided"
+                    min_version = ".".join(str(part) for part in self.IPV4_ACL_IN_MIN_ND_VERSION)
+                    self.module.fail_json(
+                        msg=(
+                            f"Network '{network_name}': ipv4_acl_in requires patch_version "
+                            f"'{self.IPV4_ACL_IN_PATCH_VERSION}' or ND version '{min_version}' or later "
+                            f"(received: {supplied_patch})."
+                        )
+                    )
 
         # Make sure mutually exclusive dhcp properties are not set
         if self.config:
@@ -5760,6 +6079,7 @@ class DcnmNetwork:
         # whenever there is a failure in any of the APIs.
         # The idea would be to run overridden state with want=have and have=dcnm_state
         self.want_create = self.have_create
+        self.want_create_names = {net["networkName"] for net in self.want_create}
         self.want_attach = self.have_attach
         self.want_deploy = self.have_deploy
 
@@ -5904,7 +6224,7 @@ class DcnmNetwork:
             json_to_dict_want["secondaryGW4"] = json_to_dict_have["secondaryGW4"]
 
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-            json_to_dict_want["secondaryGWs"] = self.get_secondary_gws_template_config(json_to_dict_want)
+            self.apply_secondary_gws_compat(json_to_dict_want)
 
         # Route target configuration (common for all fabric types)
         if cfg.get("route_target_both", None) is None:
@@ -6014,7 +6334,39 @@ class DcnmNetwork:
             else:
                 json_to_dict_want["xconnect"] = False
 
+        # Preserve the controller-returned ACL for merged updates when the
+        # playbook omits it. This is intentionally independent of the patch
+        # gate so an ordinary update cannot erase intent created elsewhere.
+        if (
+            self.fabric_type not in ["multisite_child", "multicluster_child"]
+            and cfg.get("ipv4_acl_in", None) is None
+            and self._has_ipv4_acl_in(json_to_dict_have)
+        ):
+            json_to_dict_want[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict_have
+            )
+            json_to_dict_want.pop(self.IPV4_ACL_IN_LEGACY_TEMPLATE_KEY, None)
+
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
+
+    def finalize_secondary_gws_compat(self):
+        """Validate new merged networks after omitted slots are restored."""
+
+        if self.params["state"] != "merged":
+            return
+
+        if self.fabric_type in ["multisite_child", "multicluster_child"]:
+            return
+
+        have_names = {have["networkName"] for have in self.have_create}
+
+        for net in self.want_create:
+            if net["networkName"] in have_names:
+                continue
+
+            template_conf = json.loads(net["networkTemplateConfig"])
+            self.apply_secondary_gws_compat(template_conf)
+            net["networkTemplateConfig"] = json.dumps(template_conf)
 
     def update_want(self):
         """
@@ -6052,19 +6404,26 @@ class DcnmNetwork:
         if self.want_create == []:
             return
 
+        have_create_by_name = {}
+        for have in self.have_create:
+            have_create_by_name.setdefault(have["networkName"], have)
+        config_by_name = {}
+        for cfg in self.config:
+            config_by_name.setdefault(cfg["net_name"], cfg)
+
         for net in self.want_create:
 
             # Get the matching have to copy values if required
-            match_have = [have for have in self.have_create if ((net["networkName"] == have["networkName"]))]
-            if match_have == []:
+            match_have = have_create_by_name.get(net["networkName"])
+            if match_have is None:
                 continue
 
             # Get the network from self.config to check if a particular object is included or not
-            match_cfg = [cfg for cfg in self.config if ((net["networkName"] == cfg["net_name"]))]
-            if match_cfg == []:
+            match_cfg = config_by_name.get(net["networkName"])
+            if match_cfg is None:
                 continue
 
-            self.dcnm_update_network_information(net, match_have[0], match_cfg[0])
+            self.dcnm_update_network_information(net, match_have, match_cfg)
 
 
 def main():
@@ -6079,6 +6438,7 @@ def main():
 
     element_spec = dict(
         fabric=dict(required=True, type="str"),
+        patch_version=dict(required=False, type="str"),
         _fabric_details=dict(
             required=False,
             type="dict",
@@ -6125,6 +6485,7 @@ def main():
     # state, objects not included in the playbook must be left as they are and for state 'replaced'
     # they must be purged or defaulted.
     dcnm_net.update_want()
+    dcnm_net.finalize_secondary_gws_compat()
 
     if module.params["state"] == "merged":
         warn_msg = dcnm_net.get_diff_merge()
