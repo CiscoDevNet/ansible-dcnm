@@ -52,6 +52,8 @@ BUILDERS = {
         "int_port_channel_trunk_host",
         "int_port_channel_dot1q_tunnel_host",
         "int_port_channel_pvlan_host",   # same note as int_pvlan_host
+        # The peer-link branch sends only the engine's contribution; every other nvPair comes from HAVE in the comparator.
+        "int_vpc_peer_link_po",
         # The routed port-channel (mode l3) shares the builder; its contribution is the method-level call after the
         # mode branches.
         "int_l3_port_channel",

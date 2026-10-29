@@ -156,6 +156,7 @@ R2_REGISTERED_BINDINGS = {
         "int_trunk_host",
         "int_vpc_access_host",
         "int_vpc_dot1q_tunnel",
+        "int_vpc_peer_link_po",
         "int_vpc_pvlan_host",
         "int_vpc_trunk_host",
     )),
@@ -195,6 +196,9 @@ R2_REGISTERED_BINDINGS = {
     # other profiles it stays a native field.
     "enable_cdp": ("CDP_ENABLE", "bool", ("int_routed_host",)),
     "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "bool", ("int_routed_host",)),
+    # The peer-link QoS keys (slice pl1), registered on int_vpc_peer_link_po only and native on the other profiles.
+    "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po",)),
+    "qos_policy": ("QOS_POLICY", "str_fold", ("int_vpc_peer_link_po",)),
     "logging_event_port_link_status": ("loggingEventPortLinkStatus", "bool", ("int_access_host",)),
     "enable_vpc_peer_link": ("ENABLE_VPC_PEER_LINK", "bool", ()),
     "flowcontrol_receive": ("flowcontrolReceive", "enum", ("int_access_host", "int_trunk_host")),
@@ -241,6 +245,7 @@ R2_REGISTERED_BINDINGS = {
         "int_trunk_host",
         "int_vpc_access_host",
         "int_vpc_dot1q_tunnel",
+        "int_vpc_peer_link_po",
         "int_vpc_pvlan_host",
         "int_vpc_trunk_host",
     )),
@@ -284,6 +289,7 @@ R2_PARENT_BY_TYPE_MODE = {
     ("pc", "l3"): "int_l3_port_channel",
     ("pc", "dot1q"): "int_port_channel_dot1q_tunnel_host",
     ("pc", "pvlan"): "int_port_channel_pvlan_host",
+    ("pc", "peer_link"): "int_vpc_peer_link_po",
     ("vpc", "trunk"): "int_vpc_trunk_host",
     ("vpc", "access"): "int_vpc_access_host",
     ("vpc", "dot1q"): "int_vpc_dot1q_tunnel",

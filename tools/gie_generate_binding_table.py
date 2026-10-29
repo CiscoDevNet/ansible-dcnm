@@ -702,6 +702,11 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "ospfBfdMode"): "ospf_bfd_mode",
     # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
     ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
+    # Existing vPC peer-link parent (slice pl1). Read from the 017 body; not measured live.
+    ("int_vpc_peer_link_po", "ENABLE_QOS"): "enable_qos",
+    ("int_vpc_peer_link_po", "QOS_POLICY"): "qos_policy",
+    ("int_vpc_peer_link_po", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_vpc_peer_link_po", "spanningTreePortType"): "spanning_tree_port_type",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the

@@ -373,7 +373,24 @@ options:
               (private-vlan, channel-group, vpc, interface, mtu, speed, negotiate, duplex,
               spanning-tree, description, cdp, lldp, lacp, shutdown, priority-flow-control,
               service-policy, ip port access-group) and an indented sub-command.
-            choices: ['trunk', 'access', 'l3', 'dot1q', 'monitor', 'pvlan']
+            - Mode 'peer_link' updates an existing vPC peer-link port-channel (policy
+              int_vpc_peer_link_po). The vPC pairing creates the peer-link and owns every other
+              field, so the module never creates or deletes it and refuses state 'deleted' with this
+              mode. 'switch' must name both switches of the vPC pair, and both peers receive the same
+              values. The accepted fields are 'enable_qos', 'qos_policy', 'disable_qos_stats' and
+              'spanning_tree_port_type', each explicit-only with no default; any other field is
+              refused. The mode requires an approved C(patch_version). Every other stored nvPair of
+              the peer-link, including its member list, is sent back unchanged.
+            - In mode 'peer_link', 'merged' sets the listed fields and keeps the others. 'replaced',
+              and an 'overridden' item that names the peer-link, return an omitted
+              'spanning_tree_port_type' to 'no' and an omitted 'disable_qos_stats' to false.
+              'overridden' does not remove a peer-link that the request does not name.
+            - In mode 'peer_link' the template keeps the QoS policy attached when QoS is disabled, until
+              the pair is unpaired. While QoS is enabled on the controller, 'enable_qos' false, an empty
+              'qos_policy' and, under 'replaced' or 'overridden', omitting either field are refused
+              before any change is sent. 'enable_qos' true requires a non-empty 'qos_policy' of at most
+              40 characters without whitespace.
+            choices: ['trunk', 'access', 'l3', 'dot1q', 'monitor', 'pvlan', 'peer_link']
             type: str
             required: true
           pvlan_mode:
@@ -503,12 +520,16 @@ options:
             description:
             - Enable QoS on the interface.
               This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
+            - In mode 'peer_link' it is explicit-only, with no default, and needs an approved
+              C(patch_version). See 'mode' for the QoS restrictions of that mode.
             type: bool
             default: false
           qos_policy:
             description:
             - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
               This option is applicable only for interfaces whose 'mode' is 'trunk', 'access', or 'l3'
+            - In mode 'peer_link' it is explicit-only, with no default, and needs an approved
+              C(patch_version). See 'mode' for the QoS restrictions of that mode.
             type: str
             default: ""
           queuing_policy:
@@ -539,7 +560,9 @@ options:
           spanning_tree_port_type:
             description:
             - Spanning-tree port type. This option is applicable only when mode
-              is trunk, access, dot1q or pvlan.
+              is trunk, access, dot1q, pvlan or peer_link.
+            - In mode 'peer_link' the peer-link copies the value to each of its members,
+              and 'port_type_fast' does not apply.
             - Requires 'port_type_fast' to be false. The parent template rejects
               'network' or 'normal' while port type fast is enabled, and port type
               fast defaults to true, so both must be sent together.
@@ -552,7 +575,7 @@ options:
           disable_qos_stats:
             description:
             - Disable statistics for the attached QoS policy. This option is
-              applicable only when mode is trunk, access or dot1q.
+              applicable only when mode is trunk, access, dot1q or peer_link.
             - Does NOT produce a configuration line of its own. It appends
               ' no-stats' to the 'service-policy type qos input' line that
               'enable_qos' and 'qos_policy' produce. With no QoS policy in effect
@@ -2653,6 +2676,24 @@ EXAMPLES = """
           port_type_fast: false             # required with a spanning-tree port type other than 'no'
           spanning_tree_port_type: network  # registered: Po 'spanning-tree port type network'
 
+- name: Update the existing vPC peer-link on both peers (the vPC pairing keeps its members and other fields)
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    patch_version: "4.3.1.0175006017"   # required by mode peer_link
+    config:
+      - name: po1                         # the peer-link port-channel
+        type: pc
+        switch:                           # both switches of the vPC pair
+          - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch2 }}"
+        deploy: true
+        profile:
+          mode: peer_link
+          spanning_tree_port_type: network
+          enable_qos: true
+          qos_policy: PEER_LINK_QOS       # an existing QoS policy, at most 40 characters
+
 - name: Delete that port-channel (its member is released to the fabric's host interface default)
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
@@ -3013,6 +3054,13 @@ from ..module_utils.common.log_v2 import Log
 # same-parent carry-forward is scoped to it. Named for the parent, not for the OSPF-MD
 # feature that used to be the reason for looking at it.
 LOOPBACK_CARRY_FORWARD_PARENT = "int_fabric_loopback_11_1"
+
+# Existing vPC peer-link port-channel (mode 'peer_link'). The vPC pairing creates and owns it; the
+# module only updates the profile keys below and sends every other stored nvPair back unchanged.
+PEER_LINK_POLICY = "int_vpc_peer_link_po"
+PEER_LINK_PROFILE_KEYS = frozenset(
+    {"mode", "enable_qos", "qos_policy", "disable_qos_stats", "spanning_tree_port_type"}
+)
 
 # Profile keys withdrawn with the fabric-loopback OSPF-auth capability.
 #
@@ -4204,6 +4252,7 @@ class DcnmIntf:
                 "pc_l3": "int_l3_port_channel",
                 "pc_dot1q": "int_port_channel_dot1q_tunnel_host",
                 "pc_pvlan": "int_port_channel_pvlan_host",
+                "pc_peer_link": PEER_LINK_POLICY,
                 "sub_int_subint": "int_subif",
                 "lo_lo": "int_loopback",
                 "lo_fabric": "int_fabric_loopback_11_1",
@@ -4695,6 +4744,9 @@ class DcnmIntf:
                                 continue
                             seen.add((str(ifname).lower(), c[ck]["sno"]))
 
+                        if pol_ind_str == "pc_peer_link":
+                            self.dcnm_intf_peer_link_check_pair(cfg, ifname)
+
                         c[ck]["ifname"] = ifname
                         c[ck]["policy"] = self.pol_types[self.dcnm_version][
                             pol_ind_str
@@ -4923,6 +4975,32 @@ class DcnmIntf:
             )
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_pvlan
+            )
+        if "peer_link" == config[0]["profile"]["mode"]:
+            # Raw input first: only the listed keys are accepted, before any coercion or read.
+            # Everything else on the peer-link belongs to the vPC pairing.
+            extra = sorted(k for k in config[0]["profile"] if k not in PEER_LINK_PROFILE_KEYS)
+            if extra:
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, mode 'peer_link' "
+                    "accepts only {1}; not accepted: {2}. No change was sent.".format(
+                        config[0]["name"],
+                        ", ".join(sorted(PEER_LINK_PROFILE_KEYS - {"mode"})),
+                        ", ".join(extra),
+                    )
+                )
+            policy_name = config[0]["profile"].get("qos_policy")
+            if isinstance(policy_name, str) and any(ch.isspace() for ch in policy_name):
+                self.module.fail_json(
+                    msg="Invalid parameters in playbook: while processing interface {0}, 'qos_policy' "
+                    "must not contain whitespace. No change was sent.".format(config[0]["name"])
+                )
+            pc_prof_spec_peer_link = dict(mode=dict(required=True, type="str"))
+            gie_extend_prof_spec(
+                pc_prof_spec_peer_link, PEER_LINK_POLICY, config[0]["profile"]
+            )
+            self.dcnm_intf_validate_interface_input(
+                config, pc_spec, pc_prof_spec_peer_link
             )
         if "trunk" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
@@ -6085,6 +6163,12 @@ class DcnmIntf:
             cfg.append(citem)
 
             if self.module.params["state"] == "deleted":
+                if (item.get("profile") or {}).get("mode") == "peer_link":
+                    # The vPC pairing owns the peer-link; this mode never deletes it.
+                    self.module.fail_json(
+                        msg="Interface {0}: mode 'peer_link' does not support state 'deleted'; the "
+                        "peer-link belongs to the vPC pairing. No change was sent.".format(item.get("name"))
+                    )
                 # config for delete state is different for all interfaces. It may not have the profile
                 # construct. So validate deleted state differently
                 self.dcnm_intf_validate_delete_state_input(cfg)
@@ -6154,6 +6238,18 @@ class DcnmIntf:
             if gie_err:
                 self.module.fail_json(msg=gie_err)
             intf["interfaces"][0]["nvPairs"].update(gie_add)
+            return
+
+        if delem[profile]["mode"] == "peer_link":
+            # Only the explicit registered keys. The comparison pass refuses a missing peer-link and
+            # adds every other stored nvPair from HAVE, so nothing the pairing owns is reset.
+            gie_add, gie_err = gie_contribute_nvpairs(
+                intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+                getattr(self, "patch_version", None)
+            )
+            if gie_err:
+                self.module.fail_json(msg=gie_err)
+            intf["interfaces"][0]["nvPairs"] = gie_add
             return
 
         if delem[profile]["mode"] == "trunk":
@@ -12515,6 +12611,10 @@ class DcnmIntf:
                 if self.dcnm_intf_pvlan_vpc_compare(state, want, match_have, name, sno, fabric, deploy) != "create":
                     continue
                 # A new vPC continues in the generic creation path below.
+            if want.get("policy") == PEER_LINK_POLICY:
+                # Refuses a missing or foreign target and a QoS withdrawal; an admitted peer-link
+                # continues in the generic update path, which also preserves its other nvPairs.
+                self.dcnm_intf_peer_link_admit(state, want, match_have, name, sno, fabric)
             if not match_have:
                 self.dcnm_intf_require_detail_authority(name, sno)
                 # A new interface has no stored dependents: only its explicit input is judged.
@@ -12841,6 +12941,25 @@ class DcnmIntf:
                                             want[k][0][ik], _fo_have
                                         ).items():
                                             want[k][0][ik][_fo_nvp] = _fo_val
+
+                                    # The vPC pairing owns every peer-link nvPair outside the four
+                                    # registered keys (members, PO_ID, description, freeform, ...), and
+                                    # a modify that omitted MEMBER_INTERFACES would rebuild the
+                                    # peer-link without members. Send them back exactly as stored, in
+                                    # every state, after nv_keys so they are never reported as a diff.
+                                    if want.get("policy") == PEER_LINK_POLICY:
+                                        _pl_have = next(
+                                            (
+                                                intf[ik]
+                                                for intf in d[k]
+                                                if isinstance(intf.get(ik), dict)
+                                            ),
+                                            {},
+                                        )
+                                        for _pl_nvp, _pl_val in gie_have_carry_forward_nvpairs(
+                                            want[k][0][ik], _pl_have
+                                        ).items():
+                                            want[k][0][ik][_pl_nvp] = _pl_val
 
                                     if (
                                         state == "merged"
@@ -13953,6 +14072,110 @@ class DcnmIntf:
                 ),
             }
         )
+
+    def dcnm_intf_peer_link_check_pair(self, cfg, ifname):
+        """Mode 'peer_link': one item names both peers of one vPC pair, and both get its values."""
+        switches = cfg.get("switch") or []
+        pairs = [self.vpc_ip_sn.get(sw) for sw in switches]
+        if (
+            len(switches) != 2
+            or len(set(switches)) != 2
+            or not pairs[0]
+            or pairs[0] != pairs[1]
+            or set(pairs[0].split("~")) != {self.ip_sn.get(sw) for sw in switches}
+        ):
+            self.module.fail_json(
+                msg="Interface {0}: mode 'peer_link' needs exactly the two switches of one vPC pair in "
+                "`switch`; both peers receive the same values. No change was sent.".format(ifname)
+            )
+        if not gie_patch_supported(getattr(self, "patch_version", None)):
+            self.module.fail_json(
+                msg="Interface {0}: mode 'peer_link' requires caller-supplied patch_version 4.3.1.0175006017 "
+                "or numeric ND 4.4.1 or later. No change was sent.".format(ifname)
+            )
+        seen = self.__dict__.setdefault("peer_link_items", {})
+        if seen.setdefault((str(ifname).lower(), pairs[0]), id(cfg)) != id(cfg):
+            self.module.fail_json(
+                msg="Interface {0}: more than one item names this peer-link; give both peers in one item. "
+                "No change was sent.".format(ifname)
+            )
+
+    def dcnm_intf_peer_link_admit(self, state, want, match_have, name, sno, fabric):
+        """Refuse, before any write, a peer-link item the module must not apply.
+
+        The target must be the existing peer-link parent on this peer: one intent with policy
+        int_vpc_peer_link_po and one detail row whose underlay policy is that template with an empty
+        source. The module never creates or deletes it.
+
+        The template keeps the QoS attachment when ENABLE_QOS is false ("Retain saved attachments
+        during parent rebuilds until unpairing"), so disabling or omitting QoS while it is stored on is
+        refused instead of reporting a change the device would not make.
+        """
+        def refuse(reason):
+            self.module.fail_json(
+                msg="Interface {0} on {1} (mode 'peer_link'): {2}. No change was sent.".format(name, sno, reason)
+            )
+
+        if not match_have:
+            self.dcnm_intf_require_detail_authority(name, sno)
+            refuse("no peer-link policy exists; the module updates an existing peer-link only, which "
+                   "the vPC pairing creates")
+        if len(match_have) != 1:
+            refuse("current state is ambiguous ({0} intent entries)".format(len(match_have)))
+        have_policy = match_have[0].get("policy")
+        if have_policy != PEER_LINK_POLICY:
+            refuse("the interface holds policy {0}, not {1}".format(have_policy, PEER_LINK_POLICY))
+        authority = self._dcnm_intf_authority_key(sno)
+        if authority not in self.have_all_cached_snos or authority in self.have_all_failed_snos:
+            self.dcnm_intf_get_have_all_with_sno(sno)
+        self.dcnm_intf_require_summary_authority(sno)
+        rows = [
+            h for h in self.have_all
+            if str(h.get("ifName", "")).lower() == name.lower()
+            and self._dcnm_intf_authority_key(h.get("serialNo", "")) == authority
+        ]
+        if len(rows) != 1:
+            refuse("the interface detail holds {0} entries for it".format(len(rows)))
+        row = rows[0]
+        owned = [
+            p for p in (row.get("underlayPolicies") or [])
+            if isinstance(p, dict) and p.get("templateName") == PEER_LINK_POLICY and p.get("source") == ""
+        ]
+        if row.get("ifType") != "INTERFACE_PORT_CHANNEL" or len(owned) != 1:
+            refuse("the interface detail does not show a port-channel with one {0} underlay policy "
+                   "and an empty source".format(PEER_LINK_POLICY))
+        if str(row.get("markDeleted")).lower() == "true":
+            refuse("the peer-link is marked for deletion")
+
+        intfs = match_have[0].get("interfaces") or [{}]
+        have_nv = intfs[0].get("nvPairs") if isinstance(intfs[0].get("nvPairs"), dict) else {}
+        match_pb = [
+            pb for pb in self.pb_input
+            if name.lower() == pb["ifname"].lower() and sno == pb["sno"] and fabric == pb["fabric"]
+        ]
+        explicit = dict(
+            (k, v) for k, v in (match_pb[0] if match_pb else {}).items()
+            if k in PEER_LINK_PROFILE_KEYS and v is not None
+        )
+        have_qos = str(have_nv.get("ENABLE_QOS", "false")).strip().lower() == "true"
+        have_policy_name = str(have_nv.get("QOS_POLICY") or "").strip()
+        withdraws = state in ("replaced", "overridden")
+        if have_qos:
+            retention = ("the stored QoS policy stays attached when ENABLE_QOS is false (the template keeps "
+                         "it until the pair is unpaired), so {0} is refused")
+            if explicit.get("enable_qos") is False:
+                refuse(retention.format("'enable_qos' false"))
+            if explicit.get("qos_policy") == "":
+                refuse(retention.format("an empty 'qos_policy'"))
+            if withdraws and "enable_qos" not in explicit:
+                refuse(retention.format("omitting 'enable_qos' under state '{0}'".format(state)))
+            if withdraws and "qos_policy" not in explicit and have_policy_name:
+                refuse(retention.format("omitting 'qos_policy' under state '{0}'".format(state)))
+        final_qos = explicit["enable_qos"] if "enable_qos" in explicit else (have_qos and not withdraws)
+        final_policy = (explicit["qos_policy"] if "qos_policy" in explicit
+                        else (have_policy_name if not withdraws else ""))
+        if final_qos and not str(final_policy).strip():
+            refuse("'enable_qos' true needs a non-empty 'qos_policy'")
 
     def dcnm_intf_is_vpc_peer_link_port_channel(self, intf):
 
@@ -15702,6 +15925,13 @@ class DcnmIntf:
                 # vPC names without paying the VPC lookup cost for every
                 # non-vPC interface in the playbook.
                 need_vpc_pair_lookup = cfg_name.lower().startswith("vpc")
+            if (
+                cfg.get("type") == "pc"
+                and isinstance(cfg.get("profile"), dict)
+                and cfg["profile"].get("mode") == "peer_link"
+            ):
+                # The peer-link item must name the two switches of one vPC pair.
+                need_vpc_pair_lookup = True
 
             for sw_elem in cfg["switch"][:]:
                 if sw_elem in self.ip_sn or sw_elem in self.hn_sn:

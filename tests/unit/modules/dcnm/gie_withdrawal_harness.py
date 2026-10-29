@@ -1230,11 +1230,14 @@ def _transport(calls, have):
 
 def run_configs(configs, state, have=None, deploy=True, check_mode=False,
                 allow_failed=True, ndfc_version=_UNSET, extra_patch=None,
-                patch_version=_UNSET):
+                patch_version=_UNSET, transport=None, pair=False):
     """Drive real `main()` over one or more interface configs.
 
     Returns (result, calls). `calls` is every intercepted REST call, in order, so the
     caller can separate reads from updates and deploys.
+
+    `transport(calls, have)` replaces the default controller double, and `pair=True` loads the
+    two-switch vPC inventory for a non-vPC item (a peer-link port-channel names both peers).
 
     `patch_version` defaults to the one approved caller patch (`SUPPORTED_PATCH`): every
     pre-existing fixture that drives a registered binding through this harness therefore
@@ -1249,7 +1252,7 @@ def run_configs(configs, state, have=None, deploy=True, check_mode=False,
     have = copy.deepcopy(have or [])
     with harness_case(ndfc_version) as test:
         test.load_fixtures()
-        if any(config.get("type") == "vpc" for config in configs):
+        if pair or any(config.get("type") == "vpc" for config in configs):
             inventory = copy.deepcopy(test.config_data["mock_fab_inv_data"])
             inventory[SWITCH_IP]["isVpcConfigured"] = "True"
             inventory[SWITCH_IP]["vpcDomain"] = 90
@@ -1258,7 +1261,7 @@ def run_configs(configs, state, have=None, deploy=True, check_mode=False,
             test.run_fabric_details.side_effect = [inventory]
             test.run_ip_sn.side_effect = [[{SWITCH_IP: SERIAL, PEER_IP: PEER_SERIAL}, []]]
         test.run_bulk.return_value = True
-        test.run_send.side_effect = _transport(calls, have)
+        test.run_send.side_effect = (transport or _transport)(calls, have)
         args = {"state": state, "fabric": FABRIC, "deploy": deploy,
                 "config": copy.deepcopy(configs)}
         if patch_version is PATCH_KEY_OMITTED:

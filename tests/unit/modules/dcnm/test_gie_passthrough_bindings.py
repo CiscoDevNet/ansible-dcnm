@@ -105,11 +105,11 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 277   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
-    # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1)
-    assert len(set(keys)) == 277, "duplicate (parent, nvpair) row"
+    assert len(BINDING_TABLE) == 281   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4)
+    assert len(set(keys)) == 281, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 277, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 281, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -187,7 +187,7 @@ def _as_slice_rows(rows):
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 277   # 246 + slices 0b_37, 0b_38, 0b_39, 0b_40 and rs1
+    assert len(gen.compile_rows(rows)) == 281   # 246 + slices 0b_37, 0b_38, 0b_39, 0b_40, rs1 and pl1
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -219,7 +219,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 277   # 246 + slices 0b_37, 0b_38, 0b_39, 0b_40 and rs1
+    assert len(gen.compile_rows(rows)) == 281   # 246 + slices 0b_37, 0b_38, 0b_39, 0b_40, rs1 and pl1
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -315,7 +315,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 277   # 246 + slices 0b_37, 0b_38, 0b_39, 0b_40 and rs1
+    assert len(gen.compile_rows(rows)) == 281   # 246 + slices 0b_37, 0b_38, 0b_39, 0b_40, rs1 and pl1
 
 
 # ------------------------------------------------------------------ positive transport
@@ -724,7 +724,9 @@ def test_keymap_carries_every_new_nvpair():
     assert km["CDP_ENABLE"] == "enable_cdp"
     # 78 = 77 + linkTransmitResetSkip (slice rs1, int_port_channel_trunk_host).
     assert km["linkTransmitResetSkip"] == "link_transmit_reset_skip"
-    assert len(km) == 78
+    # 80 = 78 + ENABLE_QOS and QOS_POLICY (slice pl1, int_vpc_peer_link_po); the other two peer-link nvPairs were mapped.
+    assert km["ENABLE_QOS"] == "enable_qos" and km["QOS_POLICY"] == "qos_policy"
+    assert len(km) == 80
 
 
 def test_all_registered_keys():
@@ -733,6 +735,8 @@ def test_all_registered_keys():
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "link_transmit_reset_skip",
+        # The peer-link QoS keys, slice pl1 (native on the other Ethernet, port-channel and vPC profiles).
+        "enable_qos", "qos_policy",
         "disable_bfd_echo", "ipv4_acl_in",
         # OSPF, slices 0b_18/0b_19/0b_20. SIXTEEN distinct names across the three overlay
         # parents plus int_loopback, written as one list: the lots share most of their names,

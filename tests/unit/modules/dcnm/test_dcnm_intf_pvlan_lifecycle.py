@@ -375,8 +375,9 @@ def test_e13_registry_rows_and_resets_are_unchanged_except_the_c1_pvlan_companio
     # + 5 rows and 5 resets: SMU 017 first increment, slice 0b_37 (no PVLAN parent).
     # + 5 rows and 5 resets: SMU 017 loopback EIGRP, slice 0b_38; + 1 row and 1 reset: routed port-channel PIM BFD,
     # slice 0b_39; + 19 rows and 16 resets: the routed port-channel OSPF family, slice 0b_40; + 1 row and 1 reset: the
-    # trunk port-channel reset-skip default, slice rs1 (no PVLAN parent).
-    assert (rows, resets, pvlan) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1, 207 + 11 + 1 + 5 + 5 + 1 + 16 + 1, 11 + 1)
+    # trunk port-channel reset-skip default, slice rs1 (no PVLAN parent); + 4 rows and 2 resets: the peer-link parent,
+    # slice pl1 (no PVLAN parent).
+    assert (rows, resets, pvlan) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4, 207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2, 11 + 1)
 
 
 # ===================================================================================== E14

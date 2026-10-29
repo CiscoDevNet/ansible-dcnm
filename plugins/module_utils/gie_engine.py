@@ -903,7 +903,9 @@ def gie_nvpair_keymap():
 # legacy discard it had before the key was registered.
 #   enable_cdp: registered on int_routed_host (SMU 017 CDP_ENABLE, slice 0b_37); native on the access,
 #               trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles.
-GIE_NATIVE_ELSEWHERE_KEYS = frozenset({"enable_cdp"})
+#   enable_qos, qos_policy: registered on int_vpc_peer_link_po (slice pl1); native on the Ethernet,
+#               port-channel and vPC profiles.
+GIE_NATIVE_ELSEWHERE_KEYS = frozenset({"enable_cdp", "enable_qos", "qos_policy"})
 
 
 def gie_guarded_keys():

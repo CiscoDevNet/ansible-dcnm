@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 7db4bd8abf25b2180b9cfa4b96de9db39f0a0df5c35c2e062e2160beb5e78e17
+# provenance_sha256 = 1b7d7b01c10743eeffa29e08a9ab58ee92bb92a4aef43d27ce2601fa22826337
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "7db4bd8abf25b2180b9cfa4b96de9db39f0a0df5c35c2e062e2160beb5e78e17"
+PROVENANCE_SHA256 = "1b7d7b01c10743eeffa29e08a9ab58ee92bb92a4aef43d27ce2601fa22826337"
 
 BINDING_TABLE = (
     {
@@ -3734,6 +3734,59 @@ BINDING_TABLE = (
         'profile_key': 'spanning_tree_port_type',
         'applicable_interface_type': 'vpc',
         'applicable_mode': 'dot1q',
+        'type': 'enum',
+        'valid_values': ('no', 'network', 'normal'),
+        'default_template': 'no',
+        'reset_wire': 'no',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_peer_link_po',
+        'parent_nvpair': 'ENABLE_QOS',
+        'profile_key': 'enable_qos',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'peer_link',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_peer_link_po',
+        'parent_nvpair': 'QOS_POLICY',
+        'profile_key': 'qos_policy',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'peer_link',
+        'type': 'string',
+        'default_template': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 40,
+        'no_log': False,
+        'string_compare': 'unverified',
+    },
+    {
+        'parent_template': 'int_vpc_peer_link_po',
+        'parent_nvpair': 'qosStatsSuppressed',
+        'profile_key': 'disable_qos_stats',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'peer_link',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_peer_link_po',
+        'parent_nvpair': 'spanningTreePortType',
+        'profile_key': 'spanning_tree_port_type',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'peer_link',
         'type': 'enum',
         'valid_values': ('no', 'network', 'normal'),
         'default_template': 'no',

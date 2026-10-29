@@ -128,6 +128,12 @@ def test_the_fixture_matrix_covers_every_registered_reset():
     pvlan_registered = {k for k in registered if k[0] in ("int_pvlan_host", "int_port_channel_pvlan_host", "int_vpc_pvlan_host")}
     assert pvlan_registered == set(PVLAN_ROUTE_RESET_IDENTITIES), sorted(pvlan_registered ^ set(PVLAN_ROUTE_RESET_IDENTITIES))
     registered = registered - pvlan_registered
+    # The same holds for the peer-link parent: its two resets are pinned per identity in test_dcnm_intf_peer_link.py.
+    from .test_dcnm_intf_peer_link import PEER_LINK_ROUTE_RESET_IDENTITIES
+    peer_link_registered = {k for k in registered if k[0] == "int_vpc_peer_link_po"}
+    assert peer_link_registered == set(PEER_LINK_ROUTE_RESET_IDENTITIES), sorted(
+        peer_link_registered ^ set(PEER_LINK_ROUTE_RESET_IDENTITIES))
+    registered = registered - peer_link_registered
     assert fixtures, "the fixture matrix collected nothing; every test below is a no-op"
     assert fixtures == registered, (
         "fixture matrix and registry disagree.\n  registered but untested: %s\n"
