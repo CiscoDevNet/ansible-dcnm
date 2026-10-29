@@ -510,7 +510,7 @@ RS1_ADDITIONS = (("int_port_channel_trunk_host", "linkTransmitResetSkip", "link_
 RS1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in RS1_ADDITIONS)
 
 # Existing vPC peer-link parent, slice pl1: the two rows with a reset (ENABLE_QOS and QOS_POLICY have none, because the
-# template keeps the QoS attachment when it is disabled). Read from the 017 body, NOT measured live.
+# 017 body keeps the QoS attachment when it is disabled; NOT measured live).
 PL1_ADDITIONS = (
     ("int_vpc_peer_link_po", "qosStatsSuppressed", "disable_qos_stats", "false"),
     ("int_vpc_peer_link_po", "spanningTreePortType", "spanning_tree_port_type", "no"),

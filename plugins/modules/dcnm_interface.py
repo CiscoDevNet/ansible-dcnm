@@ -373,23 +373,32 @@ options:
               (private-vlan, channel-group, vpc, interface, mtu, speed, negotiate, duplex,
               spanning-tree, description, cdp, lldp, lacp, shutdown, priority-flow-control,
               service-policy, ip port access-group) and an indented sub-command.
-            - Mode 'peer_link' updates an existing vPC peer-link port-channel (policy
+            - Mode 'peer_link' (NOT LIVE TESTED) updates an existing vPC peer-link port-channel (policy
               int_vpc_peer_link_po). The vPC pairing creates the peer-link and owns every other
               field, so the module never creates or deletes it and refuses state 'deleted' with this
               mode. 'switch' must name both switches of the vPC pair, and both peers receive the same
               values. The accepted fields are 'enable_qos', 'qos_policy', 'disable_qos_stats' and
               'spanning_tree_port_type', each explicit-only with no default; any other field is
-              refused. The mode requires an approved C(patch_version). Every other stored nvPair of
-              the peer-link, including its member list, is sent back unchanged.
+              refused. The mode requires NDFC 12 and an approved C(patch_version). Every other stored
+              nvPair of the peer-link, including its member list, is sent back unchanged.
             - In mode 'peer_link', 'merged' sets the listed fields and keeps the others. 'replaced',
               and an 'overridden' item that names the peer-link, return an omitted
               'spanning_tree_port_type' to 'no' and an omitted 'disable_qos_stats' to false.
               'overridden' does not remove a peer-link that the request does not name.
-            - In mode 'peer_link' the template keeps the QoS policy attached when QoS is disabled, until
-              the pair is unpaired. While QoS is enabled on the controller, 'enable_qos' false, an empty
-              'qos_policy' and, under 'replaced' or 'overridden', omitting either field are refused
-              before any change is sent. 'enable_qos' true requires a non-empty 'qos_policy' of at most
-              40 characters without whitespace.
+            - In mode 'peer_link', QoS withdrawal is not supported. The captured template body keeps the
+              QoS attachment when QoS is disabled, and whether a controller removes it is not verified.
+              While QoS is enabled on the controller, 'enable_qos' false, an empty 'qos_policy' and,
+              under 'replaced' or 'overridden', omitting either field are refused before any change is
+              sent.
+            - In mode 'peer_link', 'replaced' and 'overridden' also refuse to omit 'qos_policy' while a
+              policy name is stored with QoS disabled, for example after QoS was disabled outside the
+              module. Restate the stored name, or use 'merged', which keeps it. Neither withdraws QoS,
+              and an explicit empty 'qos_policy' only clears the stored name.
+            - In mode 'peer_link', 'qos_policy' and 'disable_qos_stats' are accepted while QoS is
+              disabled. The controller stores them, but a stored value does not show an active policy
+              on the device, and a name stored this way must then be restated under 'replaced' and
+              'overridden'. 'enable_qos' true requires a non-empty 'qos_policy' of at most 40
+              characters without whitespace.
             choices: ['trunk', 'access', 'l3', 'dot1q', 'monitor', 'pvlan', 'peer_link']
             type: str
             required: true
@@ -561,8 +570,8 @@ options:
             description:
             - Spanning-tree port type. This option is applicable only when mode
               is trunk, access, dot1q, pvlan or peer_link.
-            - In mode 'peer_link' the peer-link copies the value to each of its members,
-              and 'port_type_fast' does not apply.
+            - In mode 'peer_link' the captured template body copies the value to each member
+              (NOT LIVE TESTED), and 'port_type_fast' does not apply.
             - Requires 'port_type_fast' to be false. The parent template rejects
               'network' or 'normal' while port type fast is enabled, and port type
               fast defaults to true, so both must be sent together.
@@ -4745,6 +4754,11 @@ class DcnmIntf:
                             seen.add((str(ifname).lower(), c[ck]["sno"]))
 
                         if pol_ind_str == "pc_peer_link":
+                            if pol_ind_str not in self.pol_types[self.dcnm_version]:
+                                self.module.fail_json(
+                                    msg="Interface {0}: mode 'peer_link' (int_vpc_peer_link_po) is not implemented "
+                                    "for this controller version. No change was sent.".format(ifname)
+                                )
                             self.dcnm_intf_peer_link_check_pair(cfg, ifname)
 
                         c[ck]["ifname"] = ifname
@@ -14107,9 +14121,9 @@ class DcnmIntf:
         int_vpc_peer_link_po and one detail row whose underlay policy is that template with an empty
         source. The module never creates or deletes it.
 
-        The template keeps the QoS attachment when ENABLE_QOS is false ("Retain saved attachments
-        during parent rebuilds until unpairing"), so disabling or omitting QoS while it is stored on is
-        refused instead of reporting a change the device would not make.
+        Removing QoS from the peer-link is not verified on a controller (the captured template body
+        keeps the attachment when ENABLE_QOS is false), so disabling or omitting QoS while it is stored
+        on is refused instead of reporting a withdrawal that may not happen.
         """
         def refuse(reason):
             self.module.fail_json(
@@ -14161,8 +14175,8 @@ class DcnmIntf:
         have_policy_name = str(have_nv.get("QOS_POLICY") or "").strip()
         withdraws = state in ("replaced", "overridden")
         if have_qos:
-            retention = ("the stored QoS policy stays attached when ENABLE_QOS is false (the template keeps "
-                         "it until the pair is unpaired), so {0} is refused")
+            retention = ("QoS withdrawal from the peer-link is not verified, so {0} is refused while QoS "
+                         "is enabled")
             if explicit.get("enable_qos") is False:
                 refuse(retention.format("'enable_qos' false"))
             if explicit.get("qos_policy") == "":

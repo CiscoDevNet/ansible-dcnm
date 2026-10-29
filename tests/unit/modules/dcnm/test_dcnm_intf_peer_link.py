@@ -27,9 +27,12 @@ import copy
 import json
 from urllib.parse import parse_qs, urlsplit
 
+from unittest.mock import patch
+
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_binding
+from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
 
 PL = "int_vpc_peer_link_po"
@@ -229,7 +232,7 @@ def test_merged_enable_qos_without_a_policy_is_refused():
 def test_merged_qos_disable_while_stored_on_is_refused(profile, words):
     have = _have(ENABLE_QOS="true", QOS_POLICY="PL-QOS")
     result, calls = _run(_cfg(**profile), "merged", have)
-    _assert_refused(result, calls, words, "stays attached")
+    _assert_refused(result, calls, words, "is not verified")
 
 
 def test_merged_explicit_disable_while_off_is_a_no_op():
@@ -280,7 +283,7 @@ def test_omission_with_nothing_stored_writes_nothing(state):
 def test_qos_omission_while_stored_on_is_refused(state, profile, words):
     have = _have(ENABLE_QOS="true", QOS_POLICY="PL-QOS")
     result, calls = _run(_cfg(**profile), state, have)
-    _assert_refused(result, calls, words, "stays attached")
+    _assert_refused(result, calls, words, "is not verified")
 
 
 def test_replaced_restating_the_qos_policy_resets_only_the_omitted_statistics():
@@ -290,6 +293,45 @@ def test_replaced_restating_the_qos_policy_resets_only_the_omitted_statistics():
     for nv in _modifies(calls).values():
         assert nv["qosStatsSuppressed"] == "false"
         assert nv["ENABLE_QOS"] == "true" and nv["QOS_POLICY"] == "PL-QOS"
+
+
+# QoS disabled with a policy name still stored, for example after QoS was disabled outside the module.
+NAME_KEPT = {"ENABLE_QOS": "false", "QOS_POLICY": "PL-QOS"}
+
+
+@pytest.mark.parametrize("state", ["replaced", "overridden"])
+@pytest.mark.parametrize("profile", [{}, {"spanning_tree_port_type": "network"}, {"enable_qos": False}])
+def test_omitting_a_stored_name_while_qos_is_off_is_refused(state, profile):
+    result, calls = _run(_cfg(**profile), state, _have(**NAME_KEPT))
+    _assert_refused(result, calls, "qos_policy on " + PL)
+
+
+@pytest.mark.parametrize("state,profile", [
+    ("merged", {"spanning_tree_port_type": "network"}),
+    ("replaced", {"spanning_tree_port_type": "network", "qos_policy": "PL-QOS"}),
+    ("overridden", {"spanning_tree_port_type": "network", "qos_policy": "PL-QOS"}),
+])
+def test_a_stored_name_is_kept_by_merged_or_by_restating_it(state, profile):
+    result, calls = _run(_cfg(**profile), state, _have(**NAME_KEPT))
+    assert not result.get("failed"), result.get("msg")
+    sent = _modifies(calls)
+    assert set(sent) == set(SERIALS)
+    for nv in sent.values():
+        assert nv["spanningTreePortType"] == "network"
+        assert nv["ENABLE_QOS"] == "false" and nv["QOS_POLICY"] == "PL-QOS"
+
+
+@pytest.mark.parametrize("key,value,nvpair,wire", [
+    ("qos_policy", "PL-QOS", "QOS_POLICY", "PL-QOS"),
+    ("disable_qos_stats", True, "qosStatsSuppressed", "true"),
+])
+def test_a_qos_sub_key_is_stored_while_qos_is_off(key, value, nvpair, wire):
+    result, calls = _run(_cfg(**{key: value}), "merged", _have())
+    assert not result.get("failed"), result.get("msg")
+    sent = _modifies(calls)
+    assert set(sent) == set(SERIALS)
+    for nv in sent.values():
+        assert nv[nvpair] == wire and "ENABLE_QOS" not in nv
 
 
 # One row per registered reset of the parent. test_dcnm_intf_withdrawal.py requires this set to equal the registry.
@@ -363,6 +405,31 @@ def test_a_peer_link_marked_for_deletion_is_refused():
     _assert_refused(result, calls, "marked for deletion")
 
 
+# The first peer is valid and the second is not: the item is refused before either peer is written.
+@pytest.mark.parametrize("have,detail,profile,words", [
+    ([_intent(h.SERIAL), _intent(h.PEER_SERIAL, policy="int_port_channel_trunk_host")], None,
+     {"spanning_tree_port_type": "network"}, "holds policy int_port_channel_trunk_host"),
+    ([_intent(h.SERIAL)], None, {"spanning_tree_port_type": "network"}, "updates an existing peer-link only"),
+    (None, [_detail_row(h.SERIAL), dict(_detail_row(h.PEER_SERIAL), markDeleted=True)],
+     {"spanning_tree_port_type": "network"}, "marked for deletion"),
+    (None, [_detail_row(h.SERIAL), _detail_row(h.PEER_SERIAL, source="vPC1")],
+     {"spanning_tree_port_type": "network"}, "does not show a port-channel"),
+    ([_intent(h.SERIAL), _intent(h.PEER_SERIAL, ENABLE_QOS="true", QOS_POLICY="PL-QOS")], None,
+     {"enable_qos": False}, "'enable_qos' false"),
+], ids=["policy", "no-intent", "marked-deleted", "foreign-source", "qos-on-second-peer"])
+def test_an_invalid_second_peer_refuses_the_item_with_no_request(have, detail, profile, words):
+    result, calls = _run(_cfg(**profile), "merged", have or _have(), detail=detail)
+    _assert_refused(result, calls, h.PEER_SERIAL, words)
+
+
+@pytest.mark.parametrize("state", ["merged", "replaced", "overridden"])
+def test_a_refused_later_item_stops_the_valid_first_item(state):
+    first = _cfg(spanning_tree_port_type="network")
+    second = dict(_cfg(spanning_tree_port_type="network"), name="po2")
+    result, calls = _run([first, second], state, _have())
+    _assert_refused(result, calls, "Port-channel2", "updates an existing peer-link only")
+
+
 # ------------------------------------------------------------------ pair
 def test_a_single_peer_is_refused():
     result, calls = _run(_cfg(switch=[h.SWITCH_IP], spanning_tree_port_type="network"), "merged", _have())
@@ -401,6 +468,14 @@ def test_a_registered_key_of_another_parent_is_refused():
 def test_the_mode_needs_an_approved_patch_version(patch_version):
     result, calls = _run(_cfg(), "merged", _have(), patch_version=patch_version)
     _assert_refused(result, calls, "patch_version")
+
+
+@pytest.mark.parametrize("state", ["merged", "replaced", "overridden"])
+def test_a_dcnm_11_controller_is_refused_before_any_request(state):
+    result, calls = _run(_cfg(spanning_tree_port_type="network"), state, _have(),
+                         extra_patch=patch.object(dcnm_interface, "dcnm_version_supported",
+                                                  return_value=(11, "11.5.3")))
+    _assert_refused(result, calls, "not implemented for this controller version")
 
 
 def test_numeric_nd_441_is_admitted():

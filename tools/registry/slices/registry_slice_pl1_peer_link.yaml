@@ -18,8 +18,9 @@
 # when qosStatsSuppressed is true, with QOS_POLICY as the class map; the name is required, at most 40 characters and
 # without whitespace while ENABLE_QOS is true. syncPeerLinkQos (L116-142) keeps one attachment and mark-deletes the others,
 # but returns without change when ENABLE_QOS is not true ("Retain saved attachments during parent rebuilds until
-# unpairing"), and delete(force=True) (L357-370) keeps the QoS children. False therefore does not detach the policy, so
-# ENABLE_QOS and QOS_POLICY carry no reset_wire, and the module refuses false, "" and omission while QoS is stored on.
+# unpairing"), and delete(force=True) (L357-370) keeps the QoS children. By the body, false does not detach the policy;
+# no controller has confirmed it. ENABLE_QOS and QOS_POLICY therefore carry no reset_wire, and the module refuses false,
+# "" and omission while QoS is stored on.
 #
 # STP. The parent copies spanningTreePortType into every member child (int_vpc_peer_link_po_member_11_1, L299-332),
 # which renders `spanning-tree port type <value>` unless the value is `no`.
