@@ -8,6 +8,24 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.13.1`_
+=====================
+
+**Release Date:** ``2026-10-29``
+
+Fixed
+-----
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/568
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/708
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/715
+- https://github.com/CiscoDevNet/ansible-dcnm/pull/726
+- https://github.com/CiscoDevNet/ansible-dcnm/pull/727
+- https://github.com/CiscoDevNet/ansible-dcnm/pull/728
+- https://github.com/CiscoDevNet/ansible-dcnm/pull/732
+- https://github.com/CiscoDevNet/ansible-dcnm/pull/734
+- https://github.com/CiscoDevNet/ansible-dcnm/pull/736
+
+
 `3.13.0`_
 =====================
 
@@ -51,6 +69,7 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/673
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/698
 
+
 `3.12.0`_
 =====================
 
@@ -86,6 +105,7 @@ Fixed
 
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/668
 
+
 `3.11.0`_
 =====================
 
@@ -109,6 +129,7 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/617
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/634
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/637
+
 
 `3.10.0`_
 =====================
@@ -146,6 +167,7 @@ Fixed
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/609
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/615
 - https://github.com/CiscoDevNet/ansible-dcnm/issues/626
+
 
 `3.9.1`_
 =====================
@@ -799,6 +821,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.13.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.13.0...3.13.1
 .. _3.13.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.12.1...3.13.0
 .. _3.12.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.12.0...3.12.1
 .. _3.12.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.11.1...3.12.0
