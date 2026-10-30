@@ -440,6 +440,47 @@ def test_r2_registered_qos_parents_keep_the_passthrough(tmp_path, parent):
     assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": ""}))["failed"] is True
 
 
+# ---- native CDP of the ordinary parents
+# The parents whose module payload sends CDP_ENABLE: dcnm_intf_get_eth_payload (trunk, access, dot1q),
+# dcnm_intf_get_pc_payload (trunk, access), dcnm_intf_get_vpc_payload (trunk, access, dot1q) and the PVLAN companions
+# (interface_pvlan COMPANIONS, PO_NATIVE_COMPANIONS and VPC_NATIVE_COMPANIONS). int_routed_host keeps its registry row.
+NATIVE_CDP_PARENTS = sorted((
+    "int_trunk_host", "int_access_host", "int_dot1q_tunnel_host", "int_pvlan_host",
+    "int_port_channel_trunk_host", "int_port_channel_access_host", "int_port_channel_pvlan_host",
+    "int_vpc_trunk_host", "int_vpc_access_host", "int_vpc_dot1q_tunnel", "int_vpc_pvlan_host",
+))
+NO_CDP_PARENTS = ["int_l3_port_channel", "int_port_channel_dot1q_tunnel_host", "int_vpc_peer_link_po", "int_vpc_uplink_access",
+                  "int_subif", "int_loopback", "int_vlan"]
+
+
+def test_r2_native_cdp_parents_are_the_module_payload_families():
+    assert sorted(S.R2_NATIVE_CDP_PARENTS) == NATIVE_CDP_PARENTS
+    assert set(S.R2_NATIVE_CDP_PARENTS) <= set(S.R2_PARENT_BY_TYPE_MODE.values())
+    assert not set(S.R2_REGISTERED_BINDINGS["enable_cdp"][2]) & set(S.R2_NATIVE_CDP_PARENTS)
+
+
+@pytest.mark.parametrize("parent", NATIVE_CDP_PARENTS)
+@pytest.mark.parametrize("requested, good, bad", [(True, "true", "false"), (False, "false", "true")], ids=["true", "false"])
+def test_r2_native_cdp_correct_passes_wrong_and_missing_fail(tmp_path, parent, requested, good, bad):
+    cfg = [r2_cfg(parent, enable_cdp=requested)]
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"CDP_ENABLE": good}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"CDP_ENABLE": requested}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"CDP_ENABLE": bad}))["failed"] is True
+    res = r2_run(tmp_path, cfg, r2_back(parent, {}))
+    assert res["failed"] is True and "CDP_ENABLE" in res["msg"], res["msg"]
+
+
+def test_r2_native_cdp_null_is_an_omission(tmp_path):
+    assert r2_run(tmp_path, [r2_cfg("int_trunk_host", enable_cdp=None)], r2_back("int_trunk_host", {}))["failed"] is False
+
+
+@pytest.mark.parametrize("parent", NO_CDP_PARENTS)
+def test_r2_cdp_on_a_parent_without_native_cdp_stays_diagnosed(tmp_path, parent):
+    res = r2_run(tmp_path, [r2_cfg(parent, enable_cdp=False)], r2_back(parent, {"CDP_ENABLE": "false"}))
+    assert res["failed"] is True, res["msg"]
+    assert "'enable_cdp' (CDP_ENABLE) cannot be validated - not a registered field of the expected parent %s" % parent in res["msg"]
+
+
 def test_r2_upstream_eth_merge_template_qos_is_compared(tmp_path):
     import jinja2
     path = Path(__file__).resolve().parents[3] / "integration/targets/dcnm_interface/templates/dcnm_eth/merge_conf.j2"
