@@ -197,7 +197,8 @@ R2_REGISTERED_BINDINGS = {
     # other profiles it stays a native field.
     "enable_cdp": ("CDP_ENABLE", "bool", ("int_routed_host",)),
     "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "bool", ("int_routed_host",)),
-    # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles.
+    # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
+    # (R2_NATIVE_QOS_PARENTS).
     "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
     "qos_policy": ("QOS_POLICY", "str_fold", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
     # The ToR-uplink storm-control keys (slice ul1), registered on int_vpc_uplink_access only and native on the access,
@@ -338,6 +339,26 @@ R2_PVLAN_KINDS = {
     "PEER2_MEMBER_INTERFACES": "members",
 }
 
+# Parents whose module payload carries ENABLE_QOS and QOS_POLICY natively (not registry rows): the eth trunk, access
+# and routed payloads, dcnm_intf_set_qos_nv_pairs for pc trunk, access, l3 and dot1q, the vpc trunk, access and dot1q
+# payload, and the PVLAN companions of int_pvlan_host and int_vpc_pvlan_host. The module sends a policy name only with
+# enable_qos true; otherwise it sends QOS_POLICY "" or refuses the request.
+R2_NATIVE_QOS_PARENTS = frozenset((
+    "int_access_host",
+    "int_l3_port_channel",
+    "int_port_channel_access_host",
+    "int_port_channel_dot1q_tunnel_host",
+    "int_port_channel_trunk_host",
+    "int_pvlan_host",
+    "int_routed_host",
+    "int_trunk_host",
+    "int_vpc_access_host",
+    "int_vpc_dot1q_tunnel",
+    "int_vpc_pvlan_host",
+    "int_vpc_trunk_host",
+))
+R2_NATIVE_QOS_KEYS = ("enable_qos", "qos_policy")
+
 R2_NVPAIR_KIND = dict((nv, kind) for nv, kind, _parents in R2_REGISTERED_BINDINGS.values())
 R2_NVPAIR_KIND.update(R2_PVLAN_KINDS)
 
@@ -476,6 +497,25 @@ def r2_wire(parent, nvpair, kind, value):
     if kind == "enum":
         return R2_WIRE_VALUES.get((parent, nvpair), {}).get(value, value)
     return value
+
+
+def r2_native_qos(profile, nvpairs):
+    """Add the expected ENABLE_QOS / QOS_POLICY of a parent in R2_NATIVE_QOS_PARENTS to `nvpairs`; returns the problems.
+
+    A policy name is expected only with enable_qos true in the same item, because the module does not send it
+    otherwise. An empty name is a value ("" is what the module sends). null is an omission.
+    """
+    enabled = profile.get("enable_qos")
+    policy = profile.get("qos_policy")
+    if enabled is not None:
+        nvpairs["ENABLE_QOS"] = r2_wire(None, "ENABLE_QOS", "bool", enabled)
+    if policy is None:
+        return []
+    if policy == "" or r2_normalize("ENABLE_QOS", enabled) == "true":
+        nvpairs["QOS_POLICY"] = r2_wire(None, "QOS_POLICY", "str_fold", policy)
+        return []
+    return ["'qos_policy' (QOS_POLICY) cannot be validated - the module sends a policy name only with enable_qos true in "
+            "the same item"]
 
 
 def r2_apply_ospf_aliases(parent, profile):
@@ -815,6 +855,10 @@ class DcnmInterfaceQuerySchema(BaseModel):
         - ipv6_addr → V6IP (string) for loopback interfaces
         - ipv6_mask_len → IPv6_PREFIX (integer → string)
 
+        Ingress QoS on R2_NATIVE_QOS_PARENTS (r2_native_qos):
+        - enable_qos → ENABLE_QOS (boolean → string)
+        - qos_policy → QOS_POLICY, only with enable_qos true or an empty name; otherwise diagnosed
+
         Interface-specific mappings:
         Loopback interfaces:
         - ipv6_addr → V6IP (instead of IPv6)
@@ -830,9 +874,9 @@ class DcnmInterfaceQuerySchema(BaseModel):
 
         Auto-generated fields (excluded from comparison):
         - CDP_ENABLE, ENABLE_MONITOR, ENABLE_NETFLOW, ENABLE_ORPHAN_PORT
-        - ENABLE_PFC, ENABLE_QOS, NETFLOW_MONITOR, NETFLOW_SAMPLER
+        - ENABLE_PFC, NETFLOW_MONITOR, NETFLOW_SAMPLER
         - POLICY_DESC, POLICY_ID, PORT_DUPLEX_MODE, PRIORITY
-        - PTP, QOS_POLICY, QUEUING_POLICY, SERIAL_NUMBER
+        - PTP, QUEUING_POLICY, SERIAL_NUMBER
         - Policy field (auto-determined by NDFC)
 
         Always included:
@@ -1068,6 +1112,8 @@ class DcnmInterfaceQuerySchema(BaseModel):
             parent = r2_expected_parent(interface)
             reg_profile, alias_problems = r2_apply_ospf_aliases(parent, profile)
             problems.extend("%s: %s" % (expanded_name, m) for m in alias_problems)
+            if parent in R2_NATIVE_QOS_PARENTS:
+                problems.extend("%s: %s" % (expanded_name, m) for m in r2_native_qos(profile, intf_dict["nvPairs"]))
             for key in sorted(set(reg_profile) & set(R2_REGISTERED_BINDINGS)):
                 val = reg_profile[key]
                 if val is None:
@@ -1077,6 +1123,8 @@ class DcnmInterfaceQuerySchema(BaseModel):
                     # Registered on another parent and native here (the uplink storm-control keys): the legacy
                     # mapping above carries it.
                     continue
+                if parent in R2_NATIVE_QOS_PARENTS and key in R2_NATIVE_QOS_KEYS:
+                    continue  # registered on the peer-link and uplink parents, native here (r2_native_qos above)
                 if parent is None or parent not in parents:
                     reason = R2_EXCEPTIONS.get((parent, nvpair)) or (
                         "not a registered field of the expected parent %s" % parent if parent

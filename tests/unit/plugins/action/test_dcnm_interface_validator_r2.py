@@ -14,6 +14,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -151,6 +152,7 @@ R2_PARENT_YAML = {
     "int_access_host": ("eth", "access", "eth1/21", "Ethernet1/21"),
     "int_routed_host": ("eth", "routed", "eth1/21", "Ethernet1/21"),
     "int_pvlan_host": ("eth", "pvlan", "eth1/21", "Ethernet1/21"),
+    "int_dot1q_tunnel_host": ("eth", "dot1q", "eth1/21", "Ethernet1/21"),
     "int_port_channel_trunk_host": ("pc", "trunk", "po21", "Port-channel21"),
     "int_port_channel_access_host": ("pc", "access", "po21", "Port-channel21"),
     "int_port_channel_dot1q_tunnel_host": ("pc", "dot1q", "po21", "Port-channel21"),
@@ -374,6 +376,83 @@ def test_r2_unrepresentable_requests_are_diagnosed_never_passed(tmp_path, parent
     nv = S.R2_REGISTERED_BINDINGS[key][0]
     res = r2_run(tmp_path, [r2_cfg(parent, **{key: value})], r2_back(parent, {nv: S._r2_native(value)}))
     assert res["failed"] is True and "cannot be validated" in res["msg"] and key in res["msg"] and reason in res["msg"], res["msg"]
+
+
+# ---- native ingress QoS of the ordinary parents
+# The parents whose module payload sends ENABLE_QOS / QOS_POLICY: dcnm_intf_get_eth_payload (trunk, access, routed),
+# dcnm_intf_set_qos_nv_pairs (pc trunk, access, l3, dot1q), dcnm_intf_get_vpc_payload (vpc trunk, access, dot1q) and the
+# PVLAN companions (interface_pvlan COMPANIONS and VPC_NATIVE_COMPANIONS).
+NATIVE_QOS_PARENTS = sorted((
+    "int_trunk_host", "int_access_host", "int_routed_host", "int_pvlan_host",
+    "int_port_channel_trunk_host", "int_port_channel_access_host", "int_l3_port_channel", "int_port_channel_dot1q_tunnel_host",
+    "int_vpc_trunk_host", "int_vpc_access_host", "int_vpc_dot1q_tunnel", "int_vpc_pvlan_host",
+))
+NO_QOS_PARENTS = ["int_dot1q_tunnel_host", "int_port_channel_pvlan_host", "int_subif", "int_loopback", "int_vlan"]
+
+
+def test_r2_native_qos_parents_are_the_module_payload_families():
+    assert sorted(S.R2_NATIVE_QOS_PARENTS) == NATIVE_QOS_PARENTS
+    assert set(S.R2_NATIVE_QOS_PARENTS) <= set(S.R2_PARENT_BY_TYPE_MODE.values())
+    for key in S.R2_NATIVE_QOS_KEYS:
+        assert not set(S.R2_REGISTERED_BINDINGS[key][2]) & set(S.R2_NATIVE_QOS_PARENTS), key
+
+
+@pytest.mark.parametrize("parent", NATIVE_QOS_PARENTS)
+def test_r2_native_qos_correct_passes_wrong_and_missing_fail(tmp_path, parent):
+    cfg = [r2_cfg(parent, enable_qos=True, qos_policy="R2-QOS-A")]
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "true", "QOS_POLICY": "R2-QOS-A"}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": True, "QOS_POLICY": "r2-qos-a"}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "true", "QOS_POLICY": "R2-QOS-B"}))["failed"] is True
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": "R2-QOS-A"}))["failed"] is True
+    res = r2_run(tmp_path, cfg, r2_back(parent, {}))
+    assert res["failed"] is True and "ENABLE_QOS" in res["msg"] and "QOS_POLICY" in res["msg"], res["msg"]
+
+
+@pytest.mark.parametrize("parent", NATIVE_QOS_PARENTS)
+def test_r2_native_qos_enable_alone_and_disabled_empty_name(tmp_path, parent):
+    enable_only = [r2_cfg(parent, enable_qos=True)]
+    assert r2_run(tmp_path, enable_only, r2_back(parent, {"ENABLE_QOS": "true", "QOS_POLICY": ""}))["failed"] is False
+    assert r2_run(tmp_path, enable_only, r2_back(parent, {"ENABLE_QOS": "false"}))["failed"] is True
+    disabled = [r2_cfg(parent, enable_qos=False, qos_policy="")]
+    assert r2_run(tmp_path, disabled, r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": ""}))["failed"] is False
+    assert r2_run(tmp_path, disabled, r2_back(parent, {"ENABLE_QOS": "true", "QOS_POLICY": ""}))["failed"] is True
+    assert r2_run(tmp_path, disabled, r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": "R2-QOS-A"}))["failed"] is True
+
+
+@pytest.mark.parametrize("parent", ["int_port_channel_trunk_host", "int_vpc_trunk_host", "int_pvlan_host"])
+@pytest.mark.parametrize("profile", [{"qos_policy": "R2-QOS-A"}, {"enable_qos": False, "qos_policy": "R2-QOS-A"}])
+def test_r2_native_qos_policy_without_enable_true_is_diagnosed(tmp_path, parent, profile):
+    res = r2_run(tmp_path, [r2_cfg(parent, **profile)], r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": ""}))
+    assert res["failed"] is True and "'qos_policy' (QOS_POLICY) cannot be validated" in res["msg"], res["msg"]
+    assert "enable_qos true" in res["msg"] and "R2-QOS-A" not in res["msg"]
+
+
+@pytest.mark.parametrize("parent", NO_QOS_PARENTS)
+def test_r2_qos_on_a_parent_without_native_qos_stays_diagnosed(tmp_path, parent):
+    res = r2_run(tmp_path, [r2_cfg(parent, enable_qos=True)], r2_back(parent, {"ENABLE_QOS": "true"}))
+    assert res["failed"] is True and "not a registered field of the expected parent %s" % parent in res["msg"], res["msg"]
+
+
+@pytest.mark.parametrize("parent", ["int_vpc_peer_link_po", "int_vpc_uplink_access"])
+def test_r2_registered_qos_parents_keep_the_passthrough(tmp_path, parent):
+    cfg = [r2_cfg(parent, enable_qos=False, qos_policy="R2-QOS-A")]
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": "R2-QOS-A"}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": ""}))["failed"] is True
+
+
+def test_r2_upstream_eth_merge_template_qos_is_compared(tmp_path):
+    import jinja2
+    path = Path(__file__).resolve().parents[3] / "integration/targets/dcnm_interface/templates/dcnm_eth/merge_conf.j2"
+    env = jinja2.Environment(undefined=jinja2.StrictUndefined)
+    env.filters["bool"] = bool
+    common = dict(("eth_intf%d" % n, "Ethernet1/%d" % n) for n in range(7, 12))
+    common.update(switch1=SW1, deploy=False)
+    config = yaml.safe_load(env.from_string(path.read_text()).render(test_data_common=common))
+    diagnostics = []
+    expected = S.DcnmInterfaceQuerySchema.yaml_config_to_dict(config, FABRIC, TEST_DATA["sw_sn"], diagnostics=diagnostics)
+    assert diagnostics == []
+    qos = dict((i["interfaces"][0]["ifName"], i["interfaces"][0]["nvPairs"].get("ENABLE_QOS")) for i in expected["response"])
+    assert qos["Ethernet1/7"] == "true" and qos["Ethernet1/8"] == "true", qos
 
 
 def test_r2_unknown_parent_is_diagnosed(tmp_path):
