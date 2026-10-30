@@ -764,6 +764,12 @@ def reconcile(state, raw_profile, ifname, have_policy, have_nv, ndfc_version=Non
         if same_policy and have_raw is not None and _companion_equal(kind, value, have_raw):
             value = have_raw
         nv[nvp] = value
+    # A requested policy name needs QoS enabled in the RESULTING state ("qos_policy is only valid when enable_qos is true";
+    # the template renders the policy only with ENABLE_QOS true). An omitted enable_qos resolves from HAVE under merged and
+    # to the template default false otherwise. A name kept from HAVE while QoS is disabled is not refused.
+    if raw_profile.get("qos_policy") and str(nv.get("ENABLE_QOS", "false")).strip().lower() != "true":
+        out["blocked"].append("qos_policy requires enable_qos true (the template ignores the policy while QoS is disabled); set "
+                              "enable_qos true in the same request or remove qos_policy")
 
     # ---- registry companions. On the SAME policy the registry owns lldpTransmit/lldpReceive: an explicit value always
     # wins over the old preservation, and an omitted one follows the engine (merged keeps HAVE; replaced withdraws or, without an
