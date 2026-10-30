@@ -707,7 +707,7 @@ COMMITTED_BINDINGS = {
     ("int_vpc_peer_link_po", "QOS_POLICY"): "qos_policy",
     ("int_vpc_peer_link_po", "qosStatsSuppressed"): "disable_qos_stats",
     ("int_vpc_peer_link_po", "spanningTreePortType"): "spanning_tree_port_type",
-    # Existing ToR-uplink vPC parent on the leaf pair (slice ul1). Read from the 017 bodies; no value change measured.
+    # Existing ToR-uplink vPC parent on the leaf pair (slice ul1). Read from the template bodies; no value change measured.
     ("int_vpc_uplink_access", "ENABLE_QOS"): "enable_qos",
     ("int_vpc_uplink_access", "QOS_POLICY"): "qos_policy",
     ("int_vpc_uplink_access", "qosStatsSuppressed"): "disable_qos_stats",

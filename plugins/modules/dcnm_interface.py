@@ -2742,7 +2742,7 @@ EXAMPLES = """
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
     state: merged
-    patch_version: "4.3.1.0175006017"   # required by mode uplink_access
+    patch_version: "{{ nd_patch_version }}"   # an approved patch release; required by mode uplink_access
     config:
       - name: vpc2                        # the uplink vPC the ToR pairing created
         type: vpc
@@ -14369,7 +14369,7 @@ class DcnmIntf:
             )
         if not gie_patch_supported(getattr(self, "patch_version", None)):
             self.module.fail_json(
-                msg="Interface {0}: mode 'uplink_access' requires caller-supplied patch_version 4.3.1.0175006017 "
+                msg="Interface {0}: mode 'uplink_access' requires an approved caller-supplied patch_version "
                 "or numeric ND 4.4.1 or later. No change was sent.".format(ifname)
             )
         seen = self.__dict__.setdefault("uplink_items", {})

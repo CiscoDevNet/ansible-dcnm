@@ -10,8 +10,8 @@
 #     int_vpc_uplink_access  STORM_CONTROL_{B,M,U}CAST_LEVEL_PERCENT  storm_control_{broadcast,multicast,unicast}_level_percent
 #     int_vpc_uplink_access  STORM_CONTROL_{B,M,U}CAST_LEVEL_PPS      storm_control_{broadcast,multicast,unicast}_level_pps
 #
-# Source: the int_vpc_uplink_access body exported from a controller with SMU 4.3.1.0175006017 (template REST API, read
-# only), sha256 of `content` 03e4fd18c5dd5142f6f982cce2c5b2b1234fec3bc28ae9086531d60d513bec7f, and its port-channel child
+# Source: the int_vpc_uplink_access body exported from a controller with the patched templates (template REST API,
+# read only), sha256 of `content` 03e4fd18c5dd5142f6f982cce2c5b2b1234fec3bc28ae9086531d60d513bec7f, and its port-channel child
 # int_vpc_uplink_access_po, 28914942bee6bc6229483188d646225837625bc2adbe6a42b7b4cfb4f1166c60. A controller with a paired
 # ToR was measured to hold these exact bodies.
 #

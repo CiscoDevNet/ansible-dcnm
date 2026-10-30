@@ -60,7 +60,7 @@ UNION_RESET_TOTAL = 74
 # port-channel OSPF family (L3PO_OSPF_ADDITIONS, slice 0b_40), 16 resets copied from the routed rows on identical 017
 # declarations: 230 + 16 = 246. Trunk port-channel reset-skip default (RS1_ADDITIONS), reset read from
 # the 017 body: 246 + 1 = 247. Peer-link STP and QoS-statistics rows (PL1_ADDITIONS), resets read from the 017 body:
-# 247 + 2 = 249. ToR-uplink parent rows (UL1_ADDITIONS), resets read from the 017 bodies: 249 + 12 = 261.
+# 247 + 2 = 249. ToR-uplink parent rows (UL1_ADDITIONS), resets read from the template bodies: 249 + 12 = 261.
 CANDIDATE_RESET_TOTAL = 261
 
 # The additions this candidate is allowed to carry, and nothing else: four
@@ -518,7 +518,7 @@ PL1_ADDITIONS = (
 PL1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in PL1_ADDITIONS)
 
 # Existing ToR-uplink vPC parent, slice ul1: all twelve rows carry a reset (the child rebuilds its sub-policies from the
-# forwarded values). Read from the 017 bodies, NOT measured live.
+# forwarded values). Read from the template bodies, NOT measured live.
 UL1_ADDITIONS = tuple(
     ("int_vpc_uplink_access", nv, key, reset) for nv, key, reset in (
         ("ENABLE_QOS", "enable_qos", "false"),
@@ -829,7 +829,7 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               ("Po reset-skip RS1/from template", set(RS1_IDENTITIES), 1),
               # existing peer-link parent: resets read from the 017 body, NOT measured as a withdrawal
               ("peer-link PL1/from template", set(PL1_IDENTITIES), 2),
-              # existing ToR-uplink parent: resets read from the 017 bodies, NOT measured as a withdrawal
+              # existing ToR-uplink parent: resets read from the template bodies, NOT measured as a withdrawal
               ("uplink UL1/from template", set(UL1_IDENTITIES), 12))
     for name, group, expected in groups:
         assert len(group) == expected, (
