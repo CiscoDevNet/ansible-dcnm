@@ -392,12 +392,13 @@ options:
               sent.
             - In mode 'peer_link', 'replaced' and 'overridden' also refuse to omit 'qos_policy' while a
               policy name is stored with QoS disabled, for example after QoS was disabled outside the
-              module. Restate the stored name, or use 'merged', which keeps it. Neither withdraws QoS,
-              and an explicit empty 'qos_policy' only clears the stored name.
+              module. Restate the stored name, or use 'merged', which keeps it. Neither withdraws QoS.
+              An explicit empty 'qos_policy' sends an empty name; its effect on a QoS attachment that
+              the controller kept is not verified.
             - In mode 'peer_link', 'qos_policy' and 'disable_qos_stats' are accepted while QoS is
-              disabled. The controller stores them, but a stored value does not show an active policy
-              on the device, and a name stored this way must then be restated under 'replaced' and
-              'overridden'. 'enable_qos' true requires a non-empty 'qos_policy' of at most 40
+              disabled. The module sends them, but a value sent this way does not show an active
+              policy on the device, and a name sent this way must then be restated under 'replaced'
+              and 'overridden'. 'enable_qos' true requires a non-empty 'qos_policy' of at most 40
               characters without whitespace.
             choices: ['trunk', 'access', 'l3', 'dot1q', 'monitor', 'pvlan', 'peer_link']
             type: str
