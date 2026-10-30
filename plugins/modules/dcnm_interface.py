@@ -743,6 +743,15 @@ options:
               stored PPS level is cleared by setting the percent level of that type. 'replaced', and an
               'overridden' item that names the uplink, clear an omitted stored level. 'enable_storm_control'
               false under 'merged' keeps the stored action and levels.
+            - In mode 'uplink_access', enabled storm control uses one unit for every configured traffic type,
+              as in the other storm-control modes. NX-OS rejected a PPS level next to a percent level of
+              another traffic type on the tested leaves. A request that names a storm-control field and
+              would leave storm control enabled with percent and PPS levels, requested or stored, is
+              refused before any write. To change the unit, give every configured traffic type the new
+              unit in one request, or clear the other levels; the module neither clears another traffic
+              type nor converts a level. A percent level of 100 is not rendered and has no unit.
+              Disabling storm control, and a request that names no storm-control field, are not judged
+              on the stored levels.
             choices: ['trunk', 'access', 'dot1q', 'pvlan', 'uplink_access']
             type: str
             required: true
@@ -2759,8 +2768,8 @@ EXAMPLES = """
           spanning_tree_port_type: normal
           enable_storm_control: true
           storm_control_action: trap
-          storm_control_broadcast_level_percent: "10.50"
-          storm_control_multicast_level_pps: 100000
+          storm_control_broadcast_level_percent: "10.50"   # one unit for every traffic type
+          storm_control_multicast_level_percent: "30"
 
 - name: Delete that port-channel (its member is released to the fabric's host interface default)
   cisco.dcnm.dcnm_interface:
@@ -14394,7 +14403,7 @@ class DcnmIntf:
         the module never chooses one. Explicit storm-control action and levels need storm control
         enabled. For one traffic type the body refuses a percent
         and a PPS level together, so under 'merged' a level in one unit clears a stored level in the
-        other unit of that type.
+        other unit of that type. Enabled storm control must end with one unit across the traffic types.
         """
         def refuse(reason):
             self.module.fail_json(
@@ -14482,6 +14491,27 @@ class DcnmIntf:
                     want_nv[other] = ""
                     for pb in match_pb:
                         pb[other_key] = ""
+
+        # One unit for every configured traffic type, as the native storm-control rule requires: the
+        # switch refused a multicast PPS level next to a broadcast percent level. Judged on the
+        # resulting levels when the request names a storm-control key and storm control ends enabled,
+        # so disabling, or an update that leaves storm control alone, is not blocked by stored levels.
+        # A level the template does not render (empty, or a percent of 100) has no unit.
+        def renders(percent):
+            try:
+                return Decimal(percent) != Decimal("100")
+            except InvalidOperation:
+                return True
+
+        storm_nvpairs = ["ENABLE_STORM_CONTROL", "STORM_CONTROL_ACTION"] + [
+            nvpair for lv in UPLINK_STORM_LEVELS for nvpair in lv[2:]]
+        if any(nv in want_nv for nv in storm_nvpairs) and final("ENABLE_STORM_CONTROL", "false").lower() == "true":
+            percent_keys = [lv[0] for lv in UPLINK_STORM_LEVELS if final(lv[2], "") and renders(final(lv[2], ""))]
+            pps_keys = [lv[1] for lv in UPLINK_STORM_LEVELS if final(lv[3], "")]
+            if percent_keys and pps_keys:
+                refuse("storm control would end with percent levels ({0}) and PPS levels ({1}); configure one "
+                       "unit for every traffic type in the same request, clear the other levels, or set "
+                       "'enable_storm_control' false".format(", ".join(percent_keys), ", ".join(pps_keys)))
 
     def dcnm_intf_is_vpc_peer_link_port_channel(self, intf):
 

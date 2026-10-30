@@ -358,6 +358,8 @@ def test_merged_change_keeps_the_other_stored_keys():
 
 
 # ------------------------------------------------------------------ replaced / overridden
+# Every key set. The storm levels mix units, which the module refuses to write; a reset or a request that leaves
+# storm control alone is still accepted over them.
 STORED_SET = {
     "ENABLE_QOS": "true", "QOS_POLICY": "UL-QOS", "qosStatsSuppressed": "true", "spanningTreePortType": "network",
     "ENABLE_STORM_CONTROL": "true", "STORM_CONTROL_ACTION": "shutdown",
@@ -562,14 +564,14 @@ def test_a_policy_name_longer_than_40_characters_is_refused():
 # ------------------------------------------------------------------ storm control
 def test_storm_enable_action_and_levels():
     profile = {"enable_storm_control": True, "storm_control_action": "trap",
-               "storm_control_broadcast_level_percent": "50.5", "storm_control_multicast_level_pps": 1000,
+               "storm_control_broadcast_level_percent": "50.5", "storm_control_multicast_level_percent": "30",
                "storm_control_unicast_level_percent": "0"}
     result, calls = _run(_cfg(**profile), "merged", _have())
     assert not result.get("failed"), result.get("msg")
     nv = _modify(calls)
     assert nv["ENABLE_STORM_CONTROL"] == "true" and nv["STORM_CONTROL_ACTION"] == "trap"
     assert nv["STORM_CONTROL_BCAST_LEVEL_PERCENT"] == "50.5"
-    assert nv["STORM_CONTROL_MCAST_LEVEL_PPS"] == "1000"
+    assert nv["STORM_CONTROL_MCAST_LEVEL_PERCENT"] == "30"
     assert nv["STORM_CONTROL_UCAST_LEVEL_PERCENT"] == "0"
 
 
@@ -640,12 +642,13 @@ def test_merged_level_in_one_unit_clears_the_stored_other_unit_of_that_type(prof
     assert nv[cleared] == ""
 
 
-def test_another_traffic_type_keeps_its_stored_unit():
+def test_another_traffic_type_keeps_its_stored_level():
+    # A level in the other unit would mix units; test_dcnm_intf_uplink_storm_units.py covers that refusal.
     have = _have(ENABLE_STORM_CONTROL="true", STORM_CONTROL_MCAST_LEVEL_PPS="1000")
-    result, calls = _run(_cfg(storm_control_broadcast_level_percent="40"), "merged", have)
+    result, calls = _run(_cfg(storm_control_broadcast_level_pps=500), "merged", have)
     assert not result.get("failed"), result.get("msg")
     nv = _modify(calls)
-    assert nv["STORM_CONTROL_MCAST_LEVEL_PPS"] == "1000" and "STORM_CONTROL_BCAST_LEVEL_PPS" not in nv
+    assert nv["STORM_CONTROL_MCAST_LEVEL_PPS"] == "1000" and "STORM_CONTROL_BCAST_LEVEL_PERCENT" not in nv
 
 
 def test_replaced_switches_unit_by_resetting_the_omitted_one():
