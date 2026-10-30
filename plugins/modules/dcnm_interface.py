@@ -744,14 +744,13 @@ options:
               'overridden' item that names the uplink, clear an omitted stored level. 'enable_storm_control'
               false under 'merged' keeps the stored action and levels.
             - In mode 'uplink_access', enabled storm control uses one unit for every configured traffic type,
-              as in the other storm-control modes. NX-OS rejected a PPS level next to a percent level of
-              another traffic type on the tested leaves. A request that names a storm-control field and
-              would leave storm control enabled with percent and PPS levels, requested or stored, is
-              refused before any write. To change the unit, give every configured traffic type the new
-              unit in one request, or clear the other levels; the module neither clears another traffic
-              type nor converts a level. A percent level of 100 is not rendered and has no unit.
-              Disabling storm control, and a request that names no storm-control field, are not judged
-              on the stored levels.
+              as in the other storm-control modes. A request that names a storm-control field or changes
+              any other field, and would leave storm control enabled with percent and PPS levels,
+              requested or stored, is refused before any write. To change the unit, give every configured
+              traffic type the new unit in one request, or clear the other levels; the module neither
+              clears another traffic type nor converts a level. A percent level of 100 is not rendered
+              and has no unit. Disabling storm control, and a request that names no storm-control field
+              and changes nothing, are not judged on the stored levels.
             choices: ['trunk', 'access', 'dot1q', 'pvlan', 'uplink_access']
             type: str
             required: true
@@ -4895,9 +4894,9 @@ class DcnmIntf:
 
         if prof_spec is not None:
 
-            # The native storm-control rules (one rate mode per interface, defaults for omitted
-            # levels) do not apply to mode 'uplink_access', which carries the same public keys as
-            # registry rows and judges them per traffic type against the stored values.
+            # The native storm-control expansion (defaults for omitted levels, clearing the other
+            # unit on every traffic type) does not apply to mode 'uplink_access'; its admission
+            # judges the resulting units.
             native_storm = (
                 "enable_storm_control" in prof_spec
                 and (config[0].get("profile") or {}).get("mode") != "uplink_access"
@@ -5327,7 +5326,7 @@ class DcnmIntf:
         self.dcnm_intf_validate_interface_input(cfg, vpc_spec, prof_spec)
 
         # The same percent format as the native storm-control keys (the body also accepts it), and
-        # one unit per traffic type in the request. Stored values are judged at admission.
+        # percent and PPS exclusive per traffic type in the request. Stored values are judged at admission.
         validated = self.intf_info[-1]["profile"]
         for percent_key, pps_key, _percent_nvpair, _pps_nvpair in UPLINK_STORM_LEVELS:
             percent = validated.get(percent_key)
@@ -14403,7 +14402,8 @@ class DcnmIntf:
         the module never chooses one. Explicit storm-control action and levels need storm control
         enabled. For one traffic type the body refuses a percent
         and a PPS level together, so under 'merged' a level in one unit clears a stored level in the
-        other unit of that type. Enabled storm control must end with one unit across the traffic types.
+        other unit of that type. Enabled storm control must end with one unit across the traffic types
+        whenever the request names a storm-control key or changes any value.
         """
         def refuse(reason):
             self.module.fail_json(
@@ -14492,20 +14492,30 @@ class DcnmIntf:
                     for pb in match_pb:
                         pb[other_key] = ""
 
-        # One unit for every configured traffic type, as the native storm-control rule requires: the
-        # switch refused a multicast PPS level next to a broadcast percent level. Judged on the
-        # resulting levels when the request names a storm-control key and storm control ends enabled,
-        # so disabling, or an update that leaves storm control alone, is not blocked by stored levels.
-        # A level the template does not render (empty, or a percent of 100) has no unit.
+        # One unit for every configured traffic type, as the native storm-control rule requires. Judged
+        # on the resulting levels when storm control ends enabled and the request names a storm-control
+        # key or changes any value: an update of another key writes the stored levels back, and a
+        # deployment renders them. Disabling, and an unchanged request that names no storm-control key,
+        # are not judged on stored levels. A level the template does not render (empty, or a percent
+        # of 100) has no unit.
         def renders(percent):
             try:
                 return Decimal(percent) != Decimal("100")
             except InvalidOperation:
                 return True
 
+        def changes(nvpair):
+            # The comparison that decides the write, so a no-op such as a case-only QoS policy name is not
+            # judged.
+            return self.dcnm_intf_compare_elements(
+                name, sno, fabric, want_nv[nvpair], have_nv.get(nvpair), nvpair, state,
+                exact_string=gie_string_compare(UPLINK_ACCESS_POLICY, nvpair) == "exact",
+            ) not in ("dont_add", "copy_and_add")
+
         storm_nvpairs = ["ENABLE_STORM_CONTROL", "STORM_CONTROL_ACTION"] + [
             nvpair for lv in UPLINK_STORM_LEVELS for nvpair in lv[2:]]
-        if any(nv in want_nv for nv in storm_nvpairs) and final("ENABLE_STORM_CONTROL", "false").lower() == "true":
+        if final("ENABLE_STORM_CONTROL", "false").lower() == "true" and (
+                any(nv in want_nv for nv in storm_nvpairs) or any(changes(nv) for nv in want_nv)):
             percent_keys = [lv[0] for lv in UPLINK_STORM_LEVELS if final(lv[2], "") and renders(final(lv[2], ""))]
             pps_keys = [lv[1] for lv in UPLINK_STORM_LEVELS if final(lv[3], "")]
             if percent_keys and pps_keys:

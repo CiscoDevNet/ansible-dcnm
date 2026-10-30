@@ -15,9 +15,9 @@
 """Mode 'uplink_access': enabled storm control ends with one unit for every configured traffic type.
 
 The rule is judged on the resulting parent levels (requested, then stored under 'merged' or reset under 'replaced'
-and 'overridden') when the request names a storm-control key and storm control ends enabled. An empty level and a
-percent of 100 render no line and have no unit. Real main() through the uplink controller double; every value is
-synthetic. NOT LIVE TESTED beyond the device refusal of the mixed request recorded for this mode.
+and 'overridden') when storm control ends enabled and the request names a storm-control key or changes any other
+value. An empty level and a percent of 100 render no line and have no unit. Real main() through the uplink
+controller double; every value is synthetic. The tests make no claim about the template or the device.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -144,12 +144,12 @@ def test_one_resulting_unit_is_accepted(state, stored, profile, sent):
 
 @pytest.mark.parametrize("state,stored,profile,check", [
     ("merged", MIXED_ON, dict(enable_storm_control=False), ("ENABLE_STORM_CONTROL", "false")),
+    ("merged", MIXED_ON, dict(enable_qos=True, qos_policy="UL-QOS", enable_storm_control=False),
+     ("ENABLE_STORM_CONTROL", "false")),
     ("merged", MIXED_OFF, dict(spanning_tree_port_type="network"), ("spanningTreePortType", "network")),
-    ("merged", MIXED_ON, dict(spanning_tree_port_type="network"), ("spanningTreePortType", "network")),
-    ("merged", MIXED_ON, dict(enable_qos=True, qos_policy="UL-QOS"), ("QOS_POLICY", "UL-QOS")),
     ("replaced", MIXED_ON, {}, ("ENABLE_STORM_CONTROL", "false")),
-], ids=["disable", "stp-over-dormant", "stp-over-active", "qos-over-active", "replaced-reset"])
-def test_stored_mixed_levels_do_not_block_disabling_or_other_fields(state, stored, profile, check):
+], ids=["disable", "disable-with-qos", "stp-over-dormant", "replaced-reset"])
+def test_stored_mixed_levels_do_not_block_disabling_or_dormant_levels(state, stored, profile, check):
     result, calls = _run(_cfg(deploy=False, **profile), state, _have(**stored))
     assert not result.get("failed"), result.get("msg")
     nv = _modify(calls)
@@ -157,6 +157,54 @@ def test_stored_mixed_levels_do_not_block_disabling_or_other_fields(state, store
     if state == "merged":
         # The stored levels are sent back as they are: nothing is cleared or converted.
         assert nv["STORM_CONTROL_BCAST_LEVEL_PERCENT"] == "10.50" and nv["STORM_CONTROL_MCAST_LEVEL_PPS"] == "1000"
+
+
+@pytest.mark.parametrize("profile", [
+    dict(spanning_tree_port_type="network"),
+    dict(enable_qos=True, qos_policy="UL-QOS"),
+    dict(disable_qos_stats=True),
+], ids=["stp-over-active", "qos-over-active", "qos-stats-over-active"])
+@pytest.mark.parametrize("deploy", [True, False])
+def test_another_field_over_active_mixed_levels_is_refused_before_any_write(profile, deploy):
+    # The update would write the stored levels back, and a deployment would render both units.
+    result, calls = _run(_cfg(deploy=deploy, **profile), "merged", _have(**MIXED_ON))
+    _assert_refused(result, calls, REFUSAL, "storm_control_broadcast_level_percent",
+                    "storm_control_multicast_level_pps")
+
+
+@pytest.mark.parametrize("profile", [
+    dict(enable_qos=True, qos_policy="UL-QOS"),
+    dict(enable_qos=True, qos_policy="ul-qos"),
+    dict(spanning_tree_port_type="network"),
+], ids=["qos", "qos-case-only", "stp"])
+def test_an_unchanged_request_over_active_mixed_levels_writes_nothing(profile):
+    stored = dict(MIXED_ON, ENABLE_QOS="true", QOS_POLICY="UL-QOS", spanningTreePortType="network")
+    result, calls = _run(_cfg(**profile), "merged", _have(**stored))
+    assert not result.get("failed"), result.get("msg")
+    assert h.writes(calls) == [] and result["changed"] is False
+
+
+@pytest.mark.parametrize("repair,sent", [
+    (dict(storm_control_broadcast_level_percent=""),
+     dict(STORM_CONTROL_BCAST_LEVEL_PERCENT="", STORM_CONTROL_MCAST_LEVEL_PPS="1000")),
+    (dict(storm_control_broadcast_level_pps=500),
+     dict(STORM_CONTROL_BCAST_LEVEL_PPS="500", STORM_CONTROL_BCAST_LEVEL_PERCENT="",
+          STORM_CONTROL_MCAST_LEVEL_PPS="1000")),
+], ids=["clear-percent", "percent-type-to-pps"])
+def test_a_qos_change_with_a_unit_repair_over_active_mixed_levels_is_sent(repair, sent):
+    result, calls = _run(_cfg(deploy=False, enable_qos=True, qos_policy="UL-QOS", **repair), "merged",
+                         _have(**MIXED_ON))
+    assert not result.get("failed"), result.get("msg")
+    nv = _modify(calls)
+    assert nv["ENABLE_QOS"] == "true" and nv["QOS_POLICY"] == "UL-QOS" and nv["ENABLE_STORM_CONTROL"] == "true"
+    for k, v in sent.items():
+        assert nv[k] == v, k
+
+
+def test_a_valid_first_item_is_not_written_when_the_uplink_item_resends_active_mixed_levels():
+    configs = [h.cfg_for(h.VPC_TRUNK, h.BASE_VPC_TRUNK), _cfg(deploy=True, enable_qos=True, qos_policy="UL-QOS")]
+    result, calls = _run(configs, "merged", _have(**MIXED_ON))
+    _assert_refused(result, calls, REFUSAL)
 
 
 @pytest.mark.parametrize("stored,profile", [

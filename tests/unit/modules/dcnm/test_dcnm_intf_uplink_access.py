@@ -358,8 +358,8 @@ def test_merged_change_keeps_the_other_stored_keys():
 
 
 # ------------------------------------------------------------------ replaced / overridden
-# Every key set. The storm levels mix units, which the module refuses to write; a reset or a request that leaves
-# storm control alone is still accepted over them.
+# Every key set. The storm levels mix units, which the module refuses to write; a reset, disabling, or an unchanged
+# request is still accepted over them.
 STORED_SET = {
     "ENABLE_QOS": "true", "QOS_POLICY": "UL-QOS", "qosStatsSuppressed": "true", "spanningTreePortType": "network",
     "ENABLE_STORM_CONTROL": "true", "STORM_CONTROL_ACTION": "shutdown",
