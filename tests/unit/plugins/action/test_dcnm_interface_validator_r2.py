@@ -419,12 +419,28 @@ def test_r2_native_qos_enable_alone_and_disabled_empty_name(tmp_path, parent):
     assert r2_run(tmp_path, disabled, r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": "R2-QOS-A"}))["failed"] is True
 
 
-@pytest.mark.parametrize("parent", ["int_port_channel_trunk_host", "int_vpc_trunk_host", "int_pvlan_host"])
-@pytest.mark.parametrize("profile", [{"qos_policy": "R2-QOS-A"}, {"enable_qos": False, "qos_policy": "R2-QOS-A"}])
-def test_r2_native_qos_policy_without_enable_true_is_diagnosed(tmp_path, parent, profile):
+@pytest.mark.parametrize("parent, profile, reason", [
+    ("int_port_channel_trunk_host", {"qos_policy": "R2-QOS-A"}, "only with enable_qos true"),
+    ("int_port_channel_trunk_host", {"enable_qos": False, "qos_policy": "R2-QOS-A"}, "only with enable_qos true"),
+    ("int_vpc_trunk_host", {"qos_policy": "R2-QOS-A"}, "only with enable_qos true"),
+    ("int_vpc_trunk_host", {"enable_qos": False, "qos_policy": "R2-QOS-A"}, "only with enable_qos true"),
+    ("int_pvlan_host", {"enable_qos": False, "qos_policy": "R2-QOS-A"}, "refuses a policy name with enable_qos false"),
+    ("int_vpc_pvlan_host", {"enable_qos": False, "qos_policy": "R2-QOS-A"}, "refuses a policy name with enable_qos false"),
+])
+def test_r2_native_qos_policy_the_module_does_not_send_is_diagnosed(tmp_path, parent, profile, reason):
     res = r2_run(tmp_path, [r2_cfg(parent, **profile)], r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": ""}))
     assert res["failed"] is True and "'qos_policy' (QOS_POLICY) cannot be validated" in res["msg"], res["msg"]
-    assert "enable_qos true" in res["msg"] and "R2-QOS-A" not in res["msg"]
+    assert reason in res["msg"] and "R2-QOS-A" not in res["msg"]
+
+
+@pytest.mark.parametrize("parent", ["int_pvlan_host", "int_vpc_pvlan_host"])
+def test_r2_native_qos_pvlan_policy_with_enable_omitted_is_compared(tmp_path, parent):
+    # Under merged the PVLAN builders keep the stored enable_qos and send the new name.
+    cfg = [r2_cfg(parent, qos_policy="R2-QOS-NEW")]
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "true", "QOS_POLICY": "R2-QOS-NEW"}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "true", "QOS_POLICY": "R2-QOS-OLD"}))["failed"] is True
+    res = r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "true"}))
+    assert res["failed"] is True and "QOS_POLICY" in res["msg"], res["msg"]
 
 
 @pytest.mark.parametrize("parent", NO_QOS_PARENTS)

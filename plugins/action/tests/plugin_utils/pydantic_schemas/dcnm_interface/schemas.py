@@ -341,8 +341,8 @@ R2_PVLAN_KINDS = {
 
 # Parents whose module payload carries ENABLE_QOS and QOS_POLICY natively (not registry rows): the eth trunk, access
 # and routed payloads, dcnm_intf_set_qos_nv_pairs for pc trunk, access, l3 and dot1q, the vpc trunk, access and dot1q
-# payload, and the PVLAN companions of int_pvlan_host and int_vpc_pvlan_host. The module sends a policy name only with
-# enable_qos true; otherwise it sends QOS_POLICY "" or refuses the request.
+# payload, and the PVLAN companions of int_pvlan_host and int_vpc_pvlan_host. The regular payload builders send a policy
+# name only with enable_qos true in the same item; otherwise they send QOS_POLICY "".
 R2_NATIVE_QOS_PARENTS = frozenset((
     "int_access_host",
     "int_l3_port_channel",
@@ -358,6 +358,9 @@ R2_NATIVE_QOS_PARENTS = frozenset((
     "int_vpc_trunk_host",
 ))
 R2_NATIVE_QOS_KEYS = ("enable_qos", "qos_policy")
+# The PVLAN builders (interface_pvlan reconcile / reconcile_vpc) take an omitted enable_qos from the stored parent under
+# merged and send the policy name; they refuse a name with an explicit enable_qos false.
+R2_NATIVE_QOS_STORED_ENABLE_PARENTS = frozenset(("int_pvlan_host", "int_vpc_pvlan_host"))
 
 # Parents whose module payload carries CDP_ENABLE natively (not a registry row): the eth trunk, access and dot1q
 # payloads, the pc trunk and access payloads, the vpc trunk, access and dot1q payload, and the PVLAN companions of
@@ -516,11 +519,12 @@ def r2_wire(parent, nvpair, kind, value):
     return value
 
 
-def r2_native_qos(profile, nvpairs):
+def r2_native_qos(parent, profile, nvpairs):
     """Add the expected ENABLE_QOS / QOS_POLICY of a parent in R2_NATIVE_QOS_PARENTS to `nvpairs`; returns the problems.
 
-    A policy name is expected only with enable_qos true in the same item, because the module does not send it
-    otherwise. An empty name is a value ("" is what the module sends). null is an omission.
+    A policy name is expected with enable_qos true in the same item, and on R2_NATIVE_QOS_STORED_ENABLE_PARENTS also
+    with enable_qos omitted; in the other cases the module does not send it. An empty name is a value ("" is what the
+    module sends). null is an omission.
     """
     enabled = profile.get("enable_qos")
     policy = profile.get("qos_policy")
@@ -528,9 +532,13 @@ def r2_native_qos(profile, nvpairs):
         nvpairs["ENABLE_QOS"] = r2_wire(None, "ENABLE_QOS", "bool", enabled)
     if policy is None:
         return []
-    if policy == "" or r2_normalize("ENABLE_QOS", enabled) == "true":
+    stored_enable = parent in R2_NATIVE_QOS_STORED_ENABLE_PARENTS
+    if policy == "" or r2_normalize("ENABLE_QOS", enabled) == "true" or (enabled is None and stored_enable):
         nvpairs["QOS_POLICY"] = r2_wire(None, "QOS_POLICY", "str_fold", policy)
         return []
+    if stored_enable:
+        return ["'qos_policy' (QOS_POLICY) cannot be validated - on this parent the module refuses a policy name with "
+                "enable_qos false"]
     return ["'qos_policy' (QOS_POLICY) cannot be validated - the module sends a policy name only with enable_qos true in "
             "the same item"]
 
@@ -874,7 +882,8 @@ class DcnmInterfaceQuerySchema(BaseModel):
 
         Ingress QoS on R2_NATIVE_QOS_PARENTS (r2_native_qos):
         - enable_qos → ENABLE_QOS (boolean → string)
-        - qos_policy → QOS_POLICY, only with enable_qos true or an empty name; otherwise diagnosed
+        - qos_policy → QOS_POLICY, only with enable_qos true or an empty name, or with enable_qos omitted on the PVLAN
+          parents (R2_NATIVE_QOS_STORED_ENABLE_PARENTS); otherwise diagnosed
 
         CDP on R2_NATIVE_CDP_PARENTS:
         - enable_cdp → CDP_ENABLE (boolean → string)
@@ -1133,7 +1142,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
             reg_profile, alias_problems = r2_apply_ospf_aliases(parent, profile)
             problems.extend("%s: %s" % (expanded_name, m) for m in alias_problems)
             if parent in R2_NATIVE_QOS_PARENTS:
-                problems.extend("%s: %s" % (expanded_name, m) for m in r2_native_qos(profile, intf_dict["nvPairs"]))
+                problems.extend("%s: %s" % (expanded_name, m) for m in r2_native_qos(parent, profile, intf_dict["nvPairs"]))
             if parent in R2_NATIVE_CDP_PARENTS and profile.get("enable_cdp") is not None:
                 intf_dict["nvPairs"]["CDP_ENABLE"] = r2_wire(None, "CDP_ENABLE", "bool", profile["enable_cdp"])
             for key in sorted(set(reg_profile) & set(R2_REGISTERED_BINDINGS)):
