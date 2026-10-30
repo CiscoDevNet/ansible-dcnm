@@ -481,6 +481,26 @@ def test_r2_cdp_on_a_parent_without_native_cdp_stays_diagnosed(tmp_path, parent)
     assert "'enable_cdp' (CDP_ENABLE) cannot be validated - not a registered field of the expected parent %s" % parent in res["msg"]
 
 
+# ---- the shared QoS and STP keys on the ToR-uplink parent; the one-parent-per-key test selects another parent for them
+UPLINK = "int_vpc_uplink_access"
+UPLINK_SHARED_CASES = [
+    ("enable_qos", True, "ENABLE_QOS", "true", "false"),
+    ("qos_policy", "UL-QOS", "QOS_POLICY", "UL-QOS", "OTHER"),
+    ("disable_qos_stats", True, "qosStatsSuppressed", "true", "false"),
+    ("spanning_tree_port_type", "network", "spanningTreePortType", "network", "no"),
+]
+
+
+@pytest.mark.parametrize("key, requested, nv, good, bad", UPLINK_SHARED_CASES, ids=[c[0] for c in UPLINK_SHARED_CASES])
+def test_r2_uplink_shared_qos_and_stp_keys_correct_passes_wrong_and_missing_fail(tmp_path, key, requested, nv, good, bad):
+    assert r2_row(key, UPLINK)["parent_nvpair"] == nv
+    cfg = [r2_cfg(UPLINK, **{key: requested})]
+    assert r2_run(tmp_path, cfg, r2_back(UPLINK, {nv: good}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(UPLINK, {nv: bad}))["failed"] is True
+    res = r2_run(tmp_path, cfg, r2_back(UPLINK, {}))
+    assert res["failed"] is True and nv in res["msg"], res["msg"]
+
+
 def test_r2_upstream_eth_merge_template_qos_is_compared(tmp_path):
     import jinja2
     path = Path(__file__).resolve().parents[3] / "integration/targets/dcnm_interface/templates/dcnm_eth/merge_conf.j2"
