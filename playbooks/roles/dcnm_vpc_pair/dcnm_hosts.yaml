@@ -1,16 +1,20 @@
+---
+# Inventory for Crescit demo playbooks
+# Target: NDFC controller at 10.78.210.227
+# Fabric: cisco_test_fabric1
+
 all:
   vars:
-    ansible_user: "admin"
-    ansible_password: "password-secret"
     ansible_python_interpreter: python
     ansible_httpapi_validate_certs: false
     ansible_httpapi_use_ssl: true
   children:
-    dcnm:
+    ndfc:
       vars:
         ansible_connection: ansible.netcommon.httpapi
         ansible_network_os: cisco.dcnm.dcnm
-        ansible_httpapi_validate_certs: false
+        ansible_user: admin
+        ansible_password: "Admin1@#"
       hosts:
-        nac-ndfc1:
-          ansible_host: 10.10.5.1
+        ndfc1:
+          ansible_host: 10.78.210.227
