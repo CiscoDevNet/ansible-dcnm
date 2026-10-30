@@ -159,6 +159,7 @@ R2_REGISTERED_BINDINGS = {
         "int_vpc_peer_link_po",
         "int_vpc_pvlan_host",
         "int_vpc_trunk_host",
+        "int_vpc_uplink_access",
     )),
     "disable_queuing_stats": ("queuingStats", "bool", (
         "int_access_host",
@@ -196,9 +197,19 @@ R2_REGISTERED_BINDINGS = {
     # other profiles it stays a native field.
     "enable_cdp": ("CDP_ENABLE", "bool", ("int_routed_host",)),
     "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "bool", ("int_routed_host",)),
-    # The peer-link QoS keys (slice pl1), registered on int_vpc_peer_link_po only and native on the other profiles.
-    "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po",)),
-    "qos_policy": ("QOS_POLICY", "str_fold", ("int_vpc_peer_link_po",)),
+    # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles.
+    "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
+    "qos_policy": ("QOS_POLICY", "str_fold", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
+    # The ToR-uplink storm-control keys (slice ul1), registered on int_vpc_uplink_access only and native on the access,
+    # trunk and dot1q-tunnel profiles.
+    "enable_storm_control": ("ENABLE_STORM_CONTROL", "bool", ("int_vpc_uplink_access",)),
+    "storm_control_action": ("STORM_CONTROL_ACTION", "enum", ("int_vpc_uplink_access",)),
+    "storm_control_broadcast_level_percent": ("STORM_CONTROL_BCAST_LEVEL_PERCENT", "str_fold", ("int_vpc_uplink_access",)),
+    "storm_control_multicast_level_percent": ("STORM_CONTROL_MCAST_LEVEL_PERCENT", "str_fold", ("int_vpc_uplink_access",)),
+    "storm_control_unicast_level_percent": ("STORM_CONTROL_UCAST_LEVEL_PERCENT", "str_fold", ("int_vpc_uplink_access",)),
+    "storm_control_broadcast_level_pps": ("STORM_CONTROL_BCAST_LEVEL_PPS", "int", ("int_vpc_uplink_access",)),
+    "storm_control_multicast_level_pps": ("STORM_CONTROL_MCAST_LEVEL_PPS", "int", ("int_vpc_uplink_access",)),
+    "storm_control_unicast_level_pps": ("STORM_CONTROL_UCAST_LEVEL_PPS", "int", ("int_vpc_uplink_access",)),
     "logging_event_port_link_status": ("loggingEventPortLinkStatus", "bool", ("int_access_host",)),
     "enable_vpc_peer_link": ("ENABLE_VPC_PEER_LINK", "bool", ()),
     "flowcontrol_receive": ("flowcontrolReceive", "enum", ("int_access_host", "int_trunk_host")),
@@ -248,6 +259,7 @@ R2_REGISTERED_BINDINGS = {
         "int_vpc_peer_link_po",
         "int_vpc_pvlan_host",
         "int_vpc_trunk_host",
+        "int_vpc_uplink_access",
     )),
 }
 R2_WIRE_VALUES = {
@@ -265,6 +277,7 @@ R2_WIRE_VALUES = {
     ("int_l3_port_channel", "ospfBfdMode"): {'disable': 'disable', 'enable': 'enable', 'no_change': 'noChange'},
     ("int_l3_port_channel", "ospfNetworkType"): {'broadcast': 'broadcast', 'no_change': 'noChange', 'point_to_point': 'pointToPoint'},
     ("int_l3_port_channel", "ospfPassiveMode"): {'no_change': 'noChange', 'no_passive': 'noPassive', 'passive': 'passive'},
+    ("int_vpc_uplink_access", "STORM_CONTROL_ACTION"): {'default': 'no', 'shutdown': 'shutdown', 'trap': 'trap'},
 }
 
 # A registry identity a playbook can NEVER have as controller state, and why. A request for it is diagnosed, never compared.
@@ -294,6 +307,7 @@ R2_PARENT_BY_TYPE_MODE = {
     ("vpc", "access"): "int_vpc_access_host",
     ("vpc", "dot1q"): "int_vpc_dot1q_tunnel",
     ("vpc", "pvlan"): "int_vpc_pvlan_host",
+    ("vpc", "uplink_access"): "int_vpc_uplink_access",
     ("sub_int", "subint"): "int_subif",
     ("lo", "lo"): "int_loopback",
     ("lo", "fabric"): "int_fabric_loopback_11_1",
@@ -1059,6 +1073,10 @@ class DcnmInterfaceQuerySchema(BaseModel):
                 if val is None:
                     continue  # null is an omission for the module: nothing is requested
                 nvpair, kind, parents = R2_REGISTERED_BINDINGS[key]
+                if parent is not None and parent not in parents and key in interface_nvpairs_fields:
+                    # Registered on another parent and native here (the uplink storm-control keys): the legacy
+                    # mapping above carries it.
+                    continue
                 if parent is None or parent not in parents:
                     reason = R2_EXCEPTIONS.get((parent, nvpair)) or (
                         "not a registered field of the expected parent %s" % parent if parent

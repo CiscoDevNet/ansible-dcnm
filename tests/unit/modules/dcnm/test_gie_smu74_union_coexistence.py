@@ -60,8 +60,8 @@ UNION_RESET_TOTAL = 74
 # port-channel OSPF family (L3PO_OSPF_ADDITIONS, slice 0b_40), 16 resets copied from the routed rows on identical 017
 # declarations: 230 + 16 = 246. Trunk port-channel reset-skip default (RS1_ADDITIONS), reset read from
 # the 017 body: 246 + 1 = 247. Peer-link STP and QoS-statistics rows (PL1_ADDITIONS), resets read from the 017 body:
-# 247 + 2 = 249.
-CANDIDATE_RESET_TOTAL = 249
+# 247 + 2 = 249. ToR-uplink parent rows (UL1_ADDITIONS), resets read from the 017 bodies: 249 + 12 = 261.
+CANDIDATE_RESET_TOTAL = 261
 
 # The additions this candidate is allowed to carry, and nothing else: four
 # `int_routed_host` and four `int_subif` rows, plus two `int_loopback` and four
@@ -517,6 +517,26 @@ PL1_ADDITIONS = (
 )
 PL1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in PL1_ADDITIONS)
 
+# Existing ToR-uplink vPC parent, slice ul1: all twelve rows carry a reset (the child rebuilds its sub-policies from the
+# forwarded values). Read from the 017 bodies, NOT measured live.
+UL1_ADDITIONS = tuple(
+    ("int_vpc_uplink_access", nv, key, reset) for nv, key, reset in (
+        ("ENABLE_QOS", "enable_qos", "false"),
+        ("QOS_POLICY", "qos_policy", ""),
+        ("qosStatsSuppressed", "disable_qos_stats", "false"),
+        ("spanningTreePortType", "spanning_tree_port_type", "no"),
+        ("ENABLE_STORM_CONTROL", "enable_storm_control", "false"),
+        ("STORM_CONTROL_ACTION", "storm_control_action", "no"),
+        ("STORM_CONTROL_BCAST_LEVEL_PERCENT", "storm_control_broadcast_level_percent", ""),
+        ("STORM_CONTROL_MCAST_LEVEL_PERCENT", "storm_control_multicast_level_percent", ""),
+        ("STORM_CONTROL_UCAST_LEVEL_PERCENT", "storm_control_unicast_level_percent", ""),
+        ("STORM_CONTROL_BCAST_LEVEL_PPS", "storm_control_broadcast_level_pps", ""),
+        ("STORM_CONTROL_MCAST_LEVEL_PPS", "storm_control_multicast_level_pps", ""),
+        ("STORM_CONTROL_UCAST_LEVEL_PPS", "storm_control_unicast_level_pps", ""),
+    )
+)
+UL1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in UL1_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
@@ -524,13 +544,14 @@ ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + DAMPENING_EXPERIMENTAL_ADDITIONS + PIMACL_ADDITIONS
                  + VPC13_ADDITIONS + HSRP3_ADDITIONS + VPC_DOT1Q6_ADDITIONS
                  + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS + BATCH017_ADDITIONS
-                 + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS + L3PO_OSPF_ADDITIONS + RS1_ADDITIONS + PL1_ADDITIONS)
+                 + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS + L3PO_OSPF_ADDITIONS + RS1_ADDITIONS + PL1_ADDITIONS
+                 + UL1_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
                         | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
                         | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES | BATCH017_IDENTITIES
                         | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES
-                        | PL1_IDENTITIES)
+                        | PL1_IDENTITIES | UL1_IDENTITIES)
 
 
 def _rows():
@@ -692,9 +713,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # + 5 SMU 017 loopback EIGRP rows (LOEIGRP017_ADDITIONS, slice 0b_38) = 155, + 1 routed port-channel PIM BFD row
     # (L3PO017_ADDITIONS, slice 0b_39) = 156, + 16 routed port-channel OSPF rows (L3PO_OSPF_ADDITIONS, slice 0b_40) = 172,
     # + 1 trunk port-channel reset-skip row (RS1_ADDITIONS, reset read from the body) = 173, and 74 + 173 = 247.
-    # + 2 peer-link rows (PL1_ADDITIONS, resets read from the body) = 175, and 74 + 175 = 249.
-    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 175"
+    # + 2 peer-link rows (PL1_ADDITIONS, resets read from the body) = 175, + 12 uplink rows (UL1_ADDITIONS, resets read
+    # from the bodies) = 187, and 74 + 187 = 261.
+    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 187"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -806,7 +828,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               # trunk port-channel reset-skip default: reset read from the 017 body, NOT measured as a withdrawal
               ("Po reset-skip RS1/from template", set(RS1_IDENTITIES), 1),
               # existing peer-link parent: resets read from the 017 body, NOT measured as a withdrawal
-              ("peer-link PL1/from template", set(PL1_IDENTITIES), 2))
+              ("peer-link PL1/from template", set(PL1_IDENTITIES), 2),
+              # existing ToR-uplink parent: resets read from the 017 bodies, NOT measured as a withdrawal
+              ("uplink UL1/from template", set(UL1_IDENTITIES), 12))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -819,18 +843,19 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
              | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES
              | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES
              | BATCH017_IDENTITIES | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES
-             | PL1_IDENTITIES)
+             | PL1_IDENTITIES | UL1_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 175, (
+    assert len(union) == 187, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
         "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN + 11 PVLAN companions + 1 IQ1 "
         "+ 5 SMU017 batch 1 + 5 SMU017 loopback EIGRP + 1 SMU017 routed port-channel PIM BFD "
-        "+ 16 routed port-channel OSPF + 1 trunk port-channel reset-skip + 2 peer-link = 175, and 74 + 175 = 249"
+        "+ 16 routed port-channel OSPF + 1 trunk port-channel reset-skip + 2 peer-link + 12 uplink = 187, "
+        "and 74 + 187 = 261"
         % len(union))
 
 
@@ -976,10 +1001,13 @@ def test_the_published_seventy_four_are_present_unaltered_and_nothing_else_was_a
             vocab = row.get("wire_values") or {}
             choices = row.get("valid_values") or ()
             if vocab:
-                assert vocab.get("no_change") == row["reset_wire"], (
+                # The public neutral is the declared default: `no_change` for the OSPF enums, `default` for the uplink
+                # storm-control action (slice ul1), which keeps the spelling of the native storm-control key.
+                neutral = row.get("default_template")
+                assert vocab.get(neutral) == row["reset_wire"], (
                     "%s::%s declares a wire vocabulary, so its reset must be the wire form of "
-                    "the public neutral; `no_change` maps to %r, not to %r"
-                    % (parent, nvpair, vocab.get("no_change"), row["reset_wire"]))
+                    "the public neutral; %r maps to %r, not to %r"
+                    % (parent, nvpair, neutral, vocab.get(neutral), row["reset_wire"]))
                 assert row["reset_wire"] not in choices, (
                     "%s::%s wire spelling %r leaked into the public valid_values %r"
                     % (parent, nvpair, row["reset_wire"], choices))

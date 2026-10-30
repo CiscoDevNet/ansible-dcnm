@@ -302,6 +302,11 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_vlan", "ospfRetransmitInterval"),
         ("int_vlan", "ospfTransmitDelay"),
         ("int_vlan", "PIM_DR_PRIORITY"),
+        # The three ToR-uplink storm-control PPS levels (slice ul1). The leaf children of a paired ToR store them as ""
+        # when unset (measured); the parent stores none of them until a value is sent. The same exemption applies.
+        ("int_vpc_uplink_access", "STORM_CONTROL_BCAST_LEVEL_PPS"),
+        ("int_vpc_uplink_access", "STORM_CONTROL_MCAST_LEVEL_PPS"),
+        ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PPS"),
     ]), "an integer binding reached the generic carry-forward without being reviewed here"
 
     # The loopback OSPF-MD key id stays out: its parent registers no passthrough binding, so it

@@ -67,8 +67,8 @@ def test_every_engine_contribution_call_receives_the_callers_patch_version():
         n for n in ast.walk(tree)
         if isinstance(n, ast.Call) and getattr(n.func, "id", None) == "gie_contribute_nvpairs"
     ]
-    # + the port-channel and vPC PVLAN builders (7 -> 9), + the peer-link builder (10).
-    assert len(calls) == 10, len(calls)
+    # + the port-channel and vPC PVLAN builders (7 -> 9), + the peer-link builder (10), + the uplink builder (11).
+    assert len(calls) == 11, len(calls)
     for call in calls:
         assert len(call.args) == 4, ast.get_source_segment(open(dcnm_interface.__file__).read(), call)
         fourth = call.args[3]

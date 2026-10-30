@@ -710,7 +710,37 @@ options:
               C(type ENABLE_QOS) literal; on such a revision the deployment is refused before it is sent,
               and the intent change already written is reported, not rolled back. A live run therefore
               depends on verifying the installed template revision first.
-            choices: ['trunk', 'access', 'dot1q', 'pvlan']
+            - Mode 'uplink_access' (NOT LIVE TESTED) updates the existing ToR-uplink vPC of a leaf pair
+              (policy int_vpc_uplink_access). The ToR pairing creates it, with a port-channel and member
+              on each leaf, and owns every other field. The module never creates or deletes it, refuses
+              state 'deleted' with this mode, and never writes the port-channel children, the members or
+              the ToR. 'switch' must name both leaves of the vPC pair. The accepted fields are
+              'enable_qos', 'qos_policy', 'disable_qos_stats', 'spanning_tree_port_type',
+              'enable_storm_control', 'storm_control_action' and the six
+              'storm_control_<broadcast|multicast|unicast>_level_<percent|pps>' fields, each
+              explicit-only with no default; any other field is refused. The mode requires NDFC 12.6.0.267
+              or later and an approved C(patch_version). Every other stored nvPair of the parent,
+              including the neighbour, the port-channel IDs and the member lists, is sent back unchanged.
+            - In mode 'uplink_access', 'merged' sets the listed fields and keeps the others. 'replaced',
+              and an 'overridden' item that names the uplink, return each omitted field the controller
+              holds to its template default - false, an empty name or level, 'no' for
+              'spanning_tree_port_type' and 'default' for 'storm_control_action'. 'overridden' does not
+              remove an uplink vPC that the request does not name.
+            - In mode 'uplink_access', a request that names 'enable_qos' or 'qos_policy' must end with QoS
+              disabled, or enabled with a non-empty 'qos_policy' (requested, or stored under 'merged') of
+              at most 40 characters without whitespace. The module never chooses a policy, including a
+              fabric default. 'enable_qos' false sends false, and 'merged' keeps the stored name; an
+              empty 'qos_policy' sends an empty name. By the template body, the parent passes these
+              values to the port-channel of each leaf, which attaches the policy only while QoS is
+              enabled with a name.
+            - In mode 'uplink_access', 'storm_control_action' takes 'shutdown', 'trap' or 'default' (sent
+              as 'no'). A percent level is 0 to 100 with at most two decimal places, and a PPS level is 0
+              to 200000000. An explicit action or level needs 'enable_storm_control' true, requested or
+              stored. A percent and a PPS level of the same traffic type cannot be given together; under
+              'merged' a level in one unit sends an empty level for a stored level in the other unit of
+              that traffic type. 'enable_storm_control' false under 'merged' keeps the stored action and
+              levels.
+            choices: ['trunk', 'access', 'dot1q', 'pvlan', 'uplink_access']
             type: str
             required: true
           pvlan_mode:
@@ -888,12 +918,16 @@ options:
             description:
             - Enable QoS on the interface.
               This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            - In mode 'uplink_access' it is explicit-only, with no default, and needs an approved
+              C(patch_version). See 'mode' for the QoS rules of that mode.
             type: bool
             default: false
           qos_policy:
             description:
             - QoS policy name to apply to the interface. This option is only valid when 'enable_qos' is true.
               This option is applicable only for interfaces whose 'mode' is 'trunk' or 'access'
+            - In mode 'uplink_access' it is explicit-only, with no default, and needs an approved
+              C(patch_version). See 'mode' for the QoS rules of that mode.
             type: str
             default: ""
           queuing_policy:
@@ -2703,6 +2737,28 @@ EXAMPLES = """
           enable_qos: true
           qos_policy: PEER_LINK_QOS       # an existing QoS policy, at most 40 characters
 
+- name: Update the existing ToR-uplink vPC of a leaf pair (the ToR pairing keeps its members and other fields)
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    patch_version: "4.3.1.0175006017"   # required by mode uplink_access
+    config:
+      - name: vpc2                        # the uplink vPC the ToR pairing created
+        type: vpc
+        switch:                           # both leaves of the vPC pair
+          - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch2 }}"
+        deploy: true
+        profile:
+          mode: uplink_access
+          enable_qos: true
+          qos_policy: UPLINK_QOS          # an existing QoS policy, named explicitly
+          spanning_tree_port_type: normal
+          enable_storm_control: true
+          storm_control_action: trap
+          storm_control_broadcast_level_percent: "10.50"
+          storm_control_multicast_level_pps: 100000
+
 - name: Delete that port-channel (its member is released to the fabric's host interface default)
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
@@ -3071,6 +3127,25 @@ PEER_LINK_PROFILE_KEYS = frozenset(
     {"mode", "enable_qos", "qos_policy", "disable_qos_stats", "spanning_tree_port_type"}
 )
 
+# Existing ToR-uplink vPC on the leaf pair (mode 'uplink_access'). The ToR pairing creates and owns it,
+# with its port-channel children and members; the module only updates the profile keys below on the
+# parent and sends every other stored nvPair back unchanged.
+UPLINK_ACCESS_POLICY = "int_vpc_uplink_access"
+# (percent key, pps key, percent nvPair, pps nvPair) per traffic type, as in storm_control_level_pairs.
+UPLINK_STORM_LEVELS = (
+    ("storm_control_broadcast_level_percent", "storm_control_broadcast_level_pps",
+     "STORM_CONTROL_BCAST_LEVEL_PERCENT", "STORM_CONTROL_BCAST_LEVEL_PPS"),
+    ("storm_control_multicast_level_percent", "storm_control_multicast_level_pps",
+     "STORM_CONTROL_MCAST_LEVEL_PERCENT", "STORM_CONTROL_MCAST_LEVEL_PPS"),
+    ("storm_control_unicast_level_percent", "storm_control_unicast_level_pps",
+     "STORM_CONTROL_UCAST_LEVEL_PERCENT", "STORM_CONTROL_UCAST_LEVEL_PPS"),
+)
+UPLINK_ACCESS_PROFILE_KEYS = frozenset(
+    {"mode", "enable_qos", "qos_policy", "disable_qos_stats", "spanning_tree_port_type",
+     "enable_storm_control", "storm_control_action"}
+    | set(k for level in UPLINK_STORM_LEVELS for k in level[:2])
+)
+
 # Profile keys withdrawn with the fabric-loopback OSPF-auth capability.
 #
 # On a fabric loopback, OSPF authentication is UNDERLAY authentication and fabricSettings owns
@@ -3160,6 +3235,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_dependency_plan,
     gie_binding_is_owned_elsewhere,
     gie_patch_supported,
+    gie_version_supported,
     GIE_READONLY_METADATA_NVPAIRS,
     GIE_WITHDRAW_NONE,
     GIE_WITHDRAW_RESET,
@@ -4277,6 +4353,7 @@ class DcnmIntf:
                 "vpc_access": "int_vpc_access_host",
                 "vpc_dot1q": "int_vpc_dot1q_tunnel",
                 "vpc_pvlan": "int_vpc_pvlan_host",
+                "vpc_uplink_access": UPLINK_ACCESS_POLICY,
                 "svi_vlan": "int_vlan",
                 "svi_vlan_admin_state": "int_vlan_admin_state",
                 "st_fex_port_channel_st": "int_port_channel_fex",
@@ -4761,11 +4838,22 @@ class DcnmIntf:
                                 )
                             self.dcnm_intf_peer_link_check_pair(cfg, ifname)
 
+                        if pol_ind_str == "vpc_uplink_access":
+                            # One item, one request: the parent lives on the pair serial.
+                            self.dcnm_intf_uplink_check_pair(cfg, ifname)
+                            seen = self.__dict__.setdefault("uplink_vpc_seen", set())
+                            if (str(ifname).lower(), c[ck]["sno"]) in seen:
+                                continue
+                            seen.add((str(ifname).lower(), c[ck]["sno"]))
+
                         c[ck]["ifname"] = ifname
                         c[ck]["policy"] = self.pol_types[self.dcnm_version][
                             pol_ind_str
                         ]
-                        self.dcnm_intf_expand_storm_control_intent(c[ck])
+                        if pol_ind_str != "vpc_uplink_access":
+                            # The uplink keeps its omitted storm-control keys omitted; its own
+                            # admission judges the levels against the stored values.
+                            self.dcnm_intf_expand_storm_control_intent(c[ck])
                         self.pb_input.append(c[ck])
 
     def dcnm_intf_validate_interface_input(
@@ -4795,7 +4883,14 @@ class DcnmIntf:
 
         if prof_spec is not None:
 
-            if "enable_storm_control" in prof_spec:
+            # The native storm-control rules (one rate mode per interface, defaults for omitted
+            # levels) do not apply to mode 'uplink_access', which carries the same public keys as
+            # registry rows and judges them per traffic type against the stored values.
+            native_storm = (
+                "enable_storm_control" in prof_spec
+                and (config[0].get("profile") or {}).get("mode") != "uplink_access"
+            )
+            if native_storm:
                 for config_item in config:
                     for _percent_key, pps_key, _percent_nvpair, _pps_nvpair in self.storm_control_level_pairs:
                         if config_item["profile"].get(pps_key) == "":
@@ -4827,7 +4922,7 @@ class DcnmIntf:
                     )
                     self.module.fail_json(msg=mesg)
 
-                if "enable_storm_control" in prof_spec:
+                if native_storm:
                     self.dcnm_intf_validate_storm_control_profile(
                         item["profile"], config[0]["name"]
                     )
@@ -5179,6 +5274,8 @@ class DcnmIntf:
                 vpc_prof_spec_pvlan, "int_vpc_pvlan_host", cfg[0]["profile"]
             )
             self.dcnm_intf_validate_interface_input(cfg, vpc_spec, vpc_prof_spec_pvlan)
+        if "uplink_access" == mode:
+            self.dcnm_intf_validate_uplink_access_input(cfg, vpc_spec)
         if "trunk" == mode:
             self.dcnm_intf_validate_interface_input(
                 cfg, vpc_spec, vpc_prof_spec_trunk
@@ -5191,6 +5288,43 @@ class DcnmIntf:
             self.dcnm_intf_validate_interface_input(
                 cfg, vpc_spec, vpc_prof_spec_dot1q
             )
+
+    def dcnm_intf_validate_uplink_access_input(self, cfg, vpc_spec):
+        """Mode 'uplink_access': only the registered keys, each explicit-only with no default."""
+        name = cfg[0]["name"]
+        profile = cfg[0]["profile"]
+
+        def refuse(reason):
+            self.module.fail_json(
+                msg="Invalid parameters in playbook: while processing interface {0}, {1}. "
+                "No change was sent.".format(name, reason)
+            )
+
+        # Raw input first, before any coercion or read. Everything else on the uplink belongs to the
+        # ToR pairing.
+        extra = sorted(k for k in profile if k not in UPLINK_ACCESS_PROFILE_KEYS)
+        if extra:
+            refuse("mode 'uplink_access' accepts only {0}; not accepted: {1}".format(
+                ", ".join(sorted(UPLINK_ACCESS_PROFILE_KEYS - {"mode"})), ", ".join(extra)))
+        policy_name = profile.get("qos_policy")
+        if isinstance(policy_name, str) and any(ch.isspace() for ch in policy_name):
+            refuse("'qos_policy' must not contain whitespace")
+
+        prof_spec = dict(mode=dict(required=True, type="str"))
+        gie_extend_prof_spec(prof_spec, UPLINK_ACCESS_POLICY, profile)
+        self.dcnm_intf_validate_interface_input(cfg, vpc_spec, prof_spec)
+
+        # The same percent format as the native storm-control keys (the body also accepts it), and
+        # one unit per traffic type in the request. Stored values are judged at admission.
+        validated = self.intf_info[-1]["profile"]
+        for percent_key, pps_key, _percent_nvpair, _pps_nvpair in UPLINK_STORM_LEVELS:
+            percent = validated.get(percent_key)
+            if percent not in (None, ""):
+                ok = re.fullmatch(r"\d{1,3}(?:\.\d{1,2})?", str(percent))
+                if not ok or Decimal(str(percent)) > Decimal("100"):
+                    refuse("{0} must be between 0 and 100 with at most two decimal places".format(percent_key))
+                if validated.get(pps_key) is not None:
+                    refuse("{0} and {1} are mutually exclusive for one traffic type".format(percent_key, pps_key))
 
     def dcnm_intf_validate_sub_interface_input(self, cfg):
 
@@ -6183,6 +6317,12 @@ class DcnmIntf:
                         msg="Interface {0}: mode 'peer_link' does not support state 'deleted'; the "
                         "peer-link belongs to the vPC pairing. No change was sent.".format(item.get("name"))
                     )
+                if (item.get("profile") or {}).get("mode") == "uplink_access":
+                    # The ToR pairing owns the uplink vPC; this mode never deletes it.
+                    self.module.fail_json(
+                        msg="Interface {0}: mode 'uplink_access' does not support state 'deleted'; the "
+                        "uplink vPC belongs to the ToR pairing. No change was sent.".format(item.get("name"))
+                    )
                 # config for delete state is different for all interfaces. It may not have the profile
                 # construct. So validate deleted state differently
                 self.dcnm_intf_validate_delete_state_input(cfg)
@@ -6505,6 +6645,19 @@ class DcnmIntf:
             if gie_err:
                 self.module.fail_json(msg=gie_err)
             intf["interfaces"][0]["nvPairs"].update(gie_add)
+            return
+
+        if delem[profile]["mode"] == "uplink_access":
+            # The parent's own name and the explicit registered keys, nothing else: no ordinary vPC
+            # default. The comparison pass refuses a missing or foreign parent and adds every other
+            # stored nvPair from HAVE, so nothing the ToR pairing owns is reset.
+            gie_add, gie_err = gie_contribute_nvpairs(
+                intf["policy"], delem[profile], getattr(self, "ndfc_version", None),
+                getattr(self, "patch_version", None)
+            )
+            if gie_err:
+                self.module.fail_json(msg=gie_err)
+            intf["interfaces"][0]["nvPairs"] = dict(gie_add, INTF_NAME=ifname)
             return
 
         # Dynamic Peer Mapping: Determine the actual ND PEER1/PEER2 assignment
@@ -12629,6 +12782,11 @@ class DcnmIntf:
                 # Refuses a missing or foreign target and a QoS withdrawal; an admitted peer-link
                 # continues in the generic update path, which also preserves its other nvPairs.
                 self.dcnm_intf_peer_link_admit(state, want, match_have, name, sno, fabric)
+            if want.get("policy") == UPLINK_ACCESS_POLICY:
+                # Refuses a missing or foreign target and an inconsistent QoS or storm-control result;
+                # an admitted uplink continues in the generic update path, which also preserves its
+                # other nvPairs.
+                self.dcnm_intf_uplink_admit(state, want, match_have, name, sno, fabric)
             if not match_have:
                 self.dcnm_intf_require_detail_authority(name, sno)
                 # A new interface has no stored dependents: only its explicit input is judged.
@@ -12961,7 +13119,9 @@ class DcnmIntf:
                                     # a modify that omitted MEMBER_INTERFACES would rebuild the
                                     # peer-link without members. Send them back exactly as stored, in
                                     # every state, after nv_keys so they are never reported as a diff.
-                                    if want.get("policy") == PEER_LINK_POLICY:
+                                    # The ToR pairing owns the uplink parent the same way (neighbour,
+                                    # PC IDs, members, VLANs, ...).
+                                    if want.get("policy") in (PEER_LINK_POLICY, UPLINK_ACCESS_POLICY):
                                         _pl_have = next(
                                             (
                                                 intf[ik]
@@ -14190,6 +14350,135 @@ class DcnmIntf:
                         else (have_policy_name if not withdraws else ""))
         if final_qos and not str(final_policy).strip():
             refuse("'enable_qos' true needs a non-empty 'qos_policy'")
+
+    def dcnm_intf_uplink_check_pair(self, cfg, ifname):
+        """Mode 'uplink_access': one item names both leaves of the vPC pair that holds the uplink."""
+        switches = cfg.get("switch") or []
+        pairs = [self.vpc_ip_sn.get(sw) for sw in switches]
+        if (
+            len(switches) != 2
+            or len(set(switches)) != 2
+            or not pairs[0]
+            or pairs[0] != pairs[1]
+            or set(pairs[0].split("~")) != {self.ip_sn.get(sw) for sw in switches}
+        ):
+            self.module.fail_json(
+                msg="Interface {0}: mode 'uplink_access' needs exactly the two switches of the leaf vPC pair "
+                "in `switch`; the uplink parent is shared by both. No change was sent.".format(ifname)
+            )
+        if not gie_patch_supported(getattr(self, "patch_version", None)):
+            self.module.fail_json(
+                msg="Interface {0}: mode 'uplink_access' requires caller-supplied patch_version 4.3.1.0175006017 "
+                "or numeric ND 4.4.1 or later. No change was sent.".format(ifname)
+            )
+        seen = self.__dict__.setdefault("uplink_items", {})
+        if seen.setdefault((str(ifname).lower(), pairs[0]), id(cfg)) != id(cfg):
+            self.module.fail_json(
+                msg="Interface {0}: more than one item names this uplink vPC. No change was sent.".format(ifname)
+            )
+
+    def dcnm_intf_uplink_admit(self, state, want, match_have, name, sno, fabric):
+        """Refuse, before any write, an uplink item the module must not apply.
+
+        The target must be the existing ToR-uplink parent on the pair serial: one intent with policy
+        int_vpc_uplink_access, and detail rows (a paired read can repeat the row) that all show an
+        INTERFACE_VPC with one int_vpc_uplink_access underlay policy, an empty source and no mark-delete.
+        The module never creates or deletes it, and never writes the generated children.
+
+        The result is judged on the values the parent ends with: the explicit keys (in `want`, in wire
+        form), then the stored ones under 'merged', or the resets under 'replaced' and 'overridden'.
+        A request that names a QoS key must leave QoS disabled or enabled with a non-empty policy name;
+        the module never chooses one. Explicit storm-control action and levels need storm control
+        enabled. For one traffic type the body refuses a percent
+        and a PPS level together, so under 'merged' a level in one unit clears a stored level in the
+        other unit of that type.
+        """
+        def refuse(reason):
+            self.module.fail_json(
+                msg="Interface {0} on {1} (mode 'uplink_access'): {2}. No change was sent.".format(name, sno, reason)
+            )
+
+        if not gie_version_supported(getattr(self, "ndfc_version", None), "12.6.0.267"):
+            refuse("the mode requires NDFC 12.6.0.267 or later")
+        if not match_have:
+            self.dcnm_intf_require_detail_authority(name, sno)
+            refuse("no uplink vPC exists; the module updates an existing uplink only, which the ToR "
+                   "pairing creates")
+        if len(match_have) != 1 or len(match_have[0].get("interfaces") or []) != 1:
+            refuse("current state is ambiguous ({0} intent entries)".format(len(match_have)))
+        have_policy = match_have[0].get("policy")
+        if have_policy != UPLINK_ACCESS_POLICY:
+            refuse("the interface holds policy {0}, not {1}".format(have_policy, UPLINK_ACCESS_POLICY))
+        authority = self._dcnm_intf_authority_key(sno)
+        if authority not in self.have_all_cached_snos or authority in self.have_all_failed_snos:
+            self.dcnm_intf_get_have_all_with_sno(sno)
+        self.dcnm_intf_require_summary_authority(sno)
+        rows = [
+            h for h in self.have_all
+            if str(h.get("ifName", "")).lower() == name.lower()
+            and self._dcnm_intf_authority_key(h.get("serialNo", "")) == authority
+        ]
+        if not rows:
+            refuse("the interface detail holds no entry for it")
+        for row in rows:
+            owned = [
+                p for p in (row.get("underlayPolicies") or [])
+                if isinstance(p, dict) and p.get("templateName") == UPLINK_ACCESS_POLICY and p.get("source") == ""
+            ]
+            if row.get("ifType") != "INTERFACE_VPC" or len(owned) != 1:
+                refuse("the interface detail does not show a vPC with one {0} underlay policy and an empty "
+                       "source".format(UPLINK_ACCESS_POLICY))
+            if str(row.get("markDeleted")).lower() == "true":
+                refuse("the uplink vPC is marked for deletion")
+
+        have_nv = match_have[0]["interfaces"][0].get("nvPairs")
+        have_nv = have_nv if isinstance(have_nv, dict) else {}
+        want_nv = want["interfaces"][0]["nvPairs"]
+        withdraws = state in ("replaced", "overridden")
+
+        def wire(value):
+            if isinstance(value, bool):
+                return "true" if value else "false"
+            return "" if value is None else str(value).strip()
+
+        def final(nvpair, reset):
+            # Every reset here equals the template default, which also applies to an absent nvPair.
+            if nvpair in want_nv:
+                return wire(want_nv[nvpair])
+            if withdraws or nvpair not in have_nv:
+                return reset
+            return wire(have_nv[nvpair])
+
+        # Judged only when the request names a QoS key: a stored state the call does not change is
+        # sent back as it is.
+        qos_requested = "ENABLE_QOS" in want_nv or "QOS_POLICY" in want_nv
+        if qos_requested and final("ENABLE_QOS", "false").lower() == "true" and not final("QOS_POLICY", ""):
+            refuse("'enable_qos' true needs a non-empty 'qos_policy', requested or stored; the module does "
+                   "not choose a QoS policy")
+
+        storm_live = [
+            key for key, nvpair, neutral in (
+                [("storm_control_action", "STORM_CONTROL_ACTION", "no")]
+                + [(lv[i], lv[i + 2], "") for lv in UPLINK_STORM_LEVELS for i in (0, 1)]
+            )
+            if nvpair in want_nv and wire(want_nv[nvpair]) != neutral
+        ]
+        if storm_live and final("ENABLE_STORM_CONTROL", "false").lower() != "true":
+            refuse("{0} need 'enable_storm_control' true, requested or stored".format(", ".join(storm_live)))
+
+        # The cleared key is marked as managed in the playbook input, as the native storm-control
+        # expansion does, so the merged comparison sends it instead of copying HAVE back.
+        match_pb = [
+            pb for pb in self.pb_input
+            if name.lower() == pb["ifname"].lower() and sno == pb["sno"] and fabric == pb["fabric"]
+        ]
+        for percent_key, pps_key, percent_nvpair, pps_nvpair in UPLINK_STORM_LEVELS:
+            for given, other, other_key in ((percent_nvpair, pps_nvpair, pps_key),
+                                            (pps_nvpair, percent_nvpair, percent_key)):
+                if wire(want_nv.get(given)) and other not in want_nv and final(other, ""):
+                    want_nv[other] = ""
+                    for pb in match_pb:
+                        pb[other_key] = ""
 
     def dcnm_intf_is_vpc_peer_link_port_channel(self, intf):
 

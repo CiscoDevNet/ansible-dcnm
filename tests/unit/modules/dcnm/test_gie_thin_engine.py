@@ -495,6 +495,22 @@ LOEIGRP017_ROWS = {
 RS1_ROWS = {("int_port_channel_trunk_host", "linkTransmitResetSkip", "link_transmit_reset_skip")}   # slice rs1
 
 # Existing vPC peer-link parent, slice pl1.
+# Existing ToR-uplink vPC parent, slice ul1.
+UL1_ROWS = {
+    ("int_vpc_uplink_access", "ENABLE_QOS", "enable_qos"),
+    ("int_vpc_uplink_access", "QOS_POLICY", "qos_policy"),
+    ("int_vpc_uplink_access", "qosStatsSuppressed", "disable_qos_stats"),
+    ("int_vpc_uplink_access", "spanningTreePortType", "spanning_tree_port_type"),
+    ("int_vpc_uplink_access", "ENABLE_STORM_CONTROL", "enable_storm_control"),
+    ("int_vpc_uplink_access", "STORM_CONTROL_ACTION", "storm_control_action"),
+    ("int_vpc_uplink_access", "STORM_CONTROL_BCAST_LEVEL_PERCENT", "storm_control_broadcast_level_percent"),
+    ("int_vpc_uplink_access", "STORM_CONTROL_MCAST_LEVEL_PERCENT", "storm_control_multicast_level_percent"),
+    ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PERCENT", "storm_control_unicast_level_percent"),
+    ("int_vpc_uplink_access", "STORM_CONTROL_BCAST_LEVEL_PPS", "storm_control_broadcast_level_pps"),
+    ("int_vpc_uplink_access", "STORM_CONTROL_MCAST_LEVEL_PPS", "storm_control_multicast_level_pps"),
+    ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PPS", "storm_control_unicast_level_pps"),
+}
+
 PL1_ROWS = {
     ("int_vpc_peer_link_po", "ENABLE_QOS", "enable_qos"),
     ("int_vpc_peer_link_po", "QOS_POLICY", "qos_policy"),
@@ -532,14 +548,14 @@ def test_package_provenance_and_size():
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
-        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS
+        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
         for b in BINDING_TABLE
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
-    assert len(BINDING_TABLE) == len(actual_keys) == 281   # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS + RS1_ROWS + PL1_ROWS
+    assert len(BINDING_TABLE) == len(actual_keys) == 293   # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS + RS1_ROWS + PL1_ROWS + UL1_ROWS
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -614,7 +630,7 @@ def _load_generator():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 281   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_40, rs1, pl1
+    assert len(rows) == 293   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_40, rs1, pl1, ul1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -1076,6 +1092,11 @@ def test_all_registered_and_guarded_keys():
         "enable_cdp", "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
         # Slice pl1: the peer-link QoS keys, registered on int_vpc_peer_link_po and native elsewhere.
         "enable_qos", "qos_policy",
+        # Slice ul1: the ToR-uplink storm-control keys, registered on int_vpc_uplink_access and native elsewhere.
+        "enable_storm_control", "storm_control_action",
+        "storm_control_broadcast_level_percent", "storm_control_multicast_level_percent",
+        "storm_control_unicast_level_percent", "storm_control_broadcast_level_pps",
+        "storm_control_multicast_level_pps", "storm_control_unicast_level_pps",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -1166,7 +1187,7 @@ def test_all_registered_and_guarded_keys():
         # already here, from int_routed_host.
         "enable_bfd_interval", "bfd_tx_interval", "bfd_min_rx_interval", "bfd_multiplier",
         # SMU 017 slice 0b_37. enable_cdp is registered but NOT guarded: the native spec serves it on other parents.
-        # The same holds for enable_qos and qos_policy (slice pl1).
+        # The same holds for enable_qos and qos_policy (slice pl1) and the storm-control keys (slice ul1).
         "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
     }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --

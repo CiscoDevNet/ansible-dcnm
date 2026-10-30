@@ -133,7 +133,8 @@ def test_r2_coverage_the_checker_invents_no_identity():
     assert checker <= registry, sorted(checker - registry)
     # 77 = 74 + enable_cdp, enable_evpn_multisite_dci_tracking and logging_event_port_link_status (SMU 017, slice 0b_37).
     # 78 = 77 + link_transmit_reset_skip (slice rs1). 80 = 78 + enable_qos and qos_policy (slice pl1).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 80
+    # 88 = 80 + enable_storm_control, storm_control_action and the six storm-control levels (slice ul1).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 88
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():
@@ -156,6 +157,7 @@ R2_PARENT_YAML = {
     "int_port_channel_pvlan_host": ("pc", "pvlan", "po21", "Port-channel21"),
     "int_l3_port_channel": ("pc", "l3", "po21", "Port-channel21"),
     "int_vpc_peer_link_po": ("pc", "peer_link", "po1", "Port-channel1"),
+    "int_vpc_uplink_access": ("vpc", "uplink_access", "vpc21", "vPC21"),
     "int_vpc_trunk_host": ("vpc", "trunk", "vpc21", "vPC21"),
     "int_vpc_access_host": ("vpc", "access", "vpc21", "vPC21"),
     "int_vpc_dot1q_tunnel": ("vpc", "dot1q", "vpc21", "vPC21"),

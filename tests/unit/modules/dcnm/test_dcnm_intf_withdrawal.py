@@ -134,6 +134,12 @@ def test_the_fixture_matrix_covers_every_registered_reset():
     assert peer_link_registered == set(PEER_LINK_ROUTE_RESET_IDENTITIES), sorted(
         peer_link_registered ^ set(PEER_LINK_ROUTE_RESET_IDENTITIES))
     registered = registered - peer_link_registered
+    # And for the ToR-uplink parent: its twelve resets are pinned per identity in test_dcnm_intf_uplink_access.py.
+    from .test_dcnm_intf_uplink_access import UPLINK_ROUTE_RESET_IDENTITIES
+    uplink_registered = {k for k in registered if k[0] == "int_vpc_uplink_access"}
+    assert uplink_registered == set(UPLINK_ROUTE_RESET_IDENTITIES), sorted(
+        uplink_registered ^ set(UPLINK_ROUTE_RESET_IDENTITIES))
+    registered = registered - uplink_registered
     assert fixtures, "the fixture matrix collected nothing; every test below is a no-op"
     assert fixtures == registered, (
         "fixture matrix and registry disagree.\n  registered but untested: %s\n"

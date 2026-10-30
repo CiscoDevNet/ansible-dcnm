@@ -65,6 +65,9 @@ BUILDERS = {
         # gie_contribute_nvpairs sits at method level, after every mode branch.
         "int_vpc_dot1q_tunnel",
         "int_vpc_pvlan_host",   # same note as int_pvlan_host
+        # The uplink branch sends only the engine's contribution and INTF_NAME; every other nvPair comes from HAVE in
+        # the comparator.
+        "int_vpc_uplink_access",
     ),
     # The two parents wired for the OSPF work. Neither had an engine hook before; both got the
     # same two calls as the eth path -- gie_extend_prof_spec in the validator and
@@ -91,6 +94,15 @@ BUILDERS = {
     ),
 }
 
+# A parent whose builder branch returns before the hand-written block, keyed to the line that opens the branch. The
+# collision check runs on that branch alone, and the test requires the branch to end in a return placed before the
+# first hand-written assignment of the builder.
+EARLY_RETURN_BRANCHES = {
+    # The uplink branch sends INTF_NAME and the engine's contribution, then returns; the vPC builder's hand-written
+    # ENABLE_QOS and QOS_POLICY below it belong to the ordinary vPC modes.
+    "int_vpc_uplink_access": 'if delem[profile]["mode"] == "uplink_access":',
+}
+
 ASSIGN = re.compile(r'nvPairs"\]\["([A-Z0-9_]+)"\]\s*=')
 UPDATE_LITERAL = re.compile(r'nvPairs"\]\.update\(\{"([A-Z0-9_]+)"')
 
@@ -106,6 +118,16 @@ def _builder_body(source, name):
     return source[start:nxt if nxt != -1 else len(source)]
 
 
+def _early_return_branch(body, opener):
+    """The text of one `if` branch of a builder, which must end in a bare return before any hand-written nvPair."""
+    start = body.index(opener)
+    indent = len(body[:start]) - len(body[:start].rstrip(" "))
+    end = body.index("\n" + " " * (indent + 4) + "return\n", start)
+    first_hand = min(m.start() for m in ASSIGN.finditer(body))
+    assert end < first_hand, "the branch at {0!r} does not return before the hand-written block".format(opener)
+    return body[start:end]
+
+
 def _legacy_nvpairs(body):
     """nvPair names the builder writes by hand, excluding the engine's own update()."""
     return set(ASSIGN.findall(body)) | set(UPDATE_LITERAL.findall(body))
@@ -114,6 +136,11 @@ def _legacy_nvpairs(body):
 @pytest.mark.parametrize("builder,parents", sorted(BUILDERS.items()))
 def test_no_registered_nvpair_is_also_written_by_hand(builder, parents, source):
     body = _builder_body(source, builder)
+    for parent in [p for p in parents if p in EARLY_RETURN_BRANCHES]:
+        branch = _early_return_branch(body, EARLY_RETURN_BRANCHES[parent])
+        own = {b["parent_nvpair"] for b in BINDING_TABLE if b["parent_template"] == parent}
+        assert not _legacy_nvpairs(branch) & own, (builder, parent, sorted(_legacy_nvpairs(branch) & own))
+    parents = tuple(p for p in parents if p not in EARLY_RETURN_BRANCHES)
     legacy = _legacy_nvpairs(body)
     engine = {b["parent_nvpair"] for b in BINDING_TABLE if b["parent_template"] in parents}
 

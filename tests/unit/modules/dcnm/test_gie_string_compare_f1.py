@@ -56,7 +56,8 @@ def test_every_registered_string_binding_declares_a_comparison_category():
     strings = [b for b in table.BINDING_TABLE if b["type"] == "string"]
     # 51 = 45 + the two int_loopback EIGRP prefix lists of slice 0b_38 + ospfTag, OSPF_AREA_ID, OSPF_AUTH_KEY and
     # ospfAuthenticationKey on int_l3_port_channel (slice 0b_40). 52 = 51 + QOS_POLICY on int_vpc_peer_link_po (slice pl1).
-    assert len(strings) == 52
+    # 56 = 52 + QOS_POLICY and the three storm-control percent levels on int_vpc_uplink_access (slice ul1).
+    assert len(strings) == 56
     assert {b["string_compare"] for b in strings} == {"exact", "casefold", "case_irrelevant", "unverified"}
     assert not [b for b in table.BINDING_TABLE if b["type"] != "string" and "string_compare" in b]
 

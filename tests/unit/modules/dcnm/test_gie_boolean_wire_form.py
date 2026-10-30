@@ -99,10 +99,16 @@ PVLAN_ROUTED_PARENTS = frozenset(("int_pvlan_host", "int_port_channel_pvlan_host
 # the detail row, which a bare payload does not carry. Its two booleans (enable_qos, disable_qos_stats) are asserted through
 # the real main() in test_dcnm_intf_peer_link.py.
 PEER_LINK_ROUTED_PARENTS = frozenset(("int_vpc_peer_link_po",))
-BOOL_GENERIC = [t for t in BOOL_SUPPORTED if t[0] not in PVLAN_ROUTED_PARENTS | PEER_LINK_ROUTED_PARENTS]
+# The same holds for the ToR-uplink parent (dcnm_intf_uplink_admit); its three booleans (enable_qos, disable_qos_stats,
+# enable_storm_control) are asserted through the real main() in test_dcnm_intf_uplink_access.py.
+UPLINK_ROUTED_PARENTS = frozenset(("int_vpc_uplink_access",))
+BOOL_GENERIC = [t for t in BOOL_SUPPORTED
+                if t[0] not in PVLAN_ROUTED_PARENTS | PEER_LINK_ROUTED_PARENTS | UPLINK_ROUTED_PARENTS]
 BOOL_GENERIC_IDS = ["%s::%s" % (p.replace("int_", ""), k) for p, k, nvpair in BOOL_GENERIC]
-# IQ1 adds int_vpc_pvlan_host::disable_qos_stats: nine. Slice pl1 adds the two peer-link booleans: eleven.
-assert len(BOOL_SUPPORTED) - len(BOOL_GENERIC) == 11, "the nine PVLAN companion and two peer-link booleans take their own route"
+# IQ1 adds int_vpc_pvlan_host::disable_qos_stats: nine. Slice pl1 adds the two peer-link booleans: eleven. Slice ul1
+# adds the three uplink booleans: fourteen.
+assert len(BOOL_SUPPORTED) - len(BOOL_GENERIC) == 14, (
+    "the nine PVLAN companion, two peer-link and three uplink booleans take their own route")
 
 
 def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
@@ -141,6 +147,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         "link_transmit_reset_skip",
         # Peer-link QoS enable, slice pl1 (int_vpc_peer_link_po); disable_qos_stats is already listed.
         "enable_qos",
+        # ToR-uplink storm-control enable, slice ul1 (int_vpc_uplink_access); its QoS booleans are already listed.
+        "enable_storm_control",
         # EIGRP, slice 0b_22 -- eight distinct keys, each on all three overlay parents.
         "enable_eigrp_routing", "enable_eigrp_ipv6_routing", "enable_eigrp_shutdown",
         "enable_eigrp_bfd", "disable_eigrp_bfd",
@@ -208,7 +216,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 125 = 121 + ospf, ospfAuthentication, ospfMtuIgnore and ospfShutdown on int_l3_port_channel (slice 0b_40).
     # 126 = 125 + link_transmit_reset_skip on int_port_channel_trunk_host (slice rs1).
     # 128 = 126 + enable_qos and disable_qos_stats on int_vpc_peer_link_po (slice pl1).
-    assert len(BOOL_PASSTHROUGH) == 128
+    # 131 = 128 + enable_qos, disable_qos_stats and enable_storm_control on int_vpc_uplink_access (slice ul1).
+    assert len(BOOL_PASSTHROUGH) == 131
 
 
 # ------------------------------------------------------- what the engine emits --

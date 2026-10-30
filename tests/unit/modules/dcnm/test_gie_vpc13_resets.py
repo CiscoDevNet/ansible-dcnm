@@ -232,7 +232,7 @@ def test_the_previous_lot_is_untouched():
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
-    assert len(BINDING_TABLE) == 281, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_40, rs1, pl1
+    assert len(BINDING_TABLE) == 293, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_40, rs1, pl1, ul1
     # 197 integrated + 3 int_vlan rows (test_gie_hsrp3_resets.py) = 200, + the six
     # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
@@ -240,9 +240,10 @@ def test_the_previous_lot_is_untouched():
     # + the eleven PVLAN companion resets (inferred, other parents) = 218, + the vPC PVLAN qosStatsSuppressed reset = 219.
     # + 5 SMU 017 resets read from the bodies (slice 0b_37) = 224, + 5 loopback EIGRP resets (slice 0b_38) = 229,
     # + 1 routed port-channel PIM BFD reset (slice 0b_39) = 230, + 16 routed port-channel OSPF resets (slice 0b_40) = 246,
-    # + 1 trunk port-channel reset-skip reset (slice rs1) = 247, + 2 peer-link resets (slice pl1) = 249.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2, (
-        "the integrated table carries {0} resets, expected 249".format(len(with_reset)))
+    # + 1 trunk port-channel reset-skip reset (slice rs1) = 247, + 2 peer-link resets (slice pl1) = 249,
+    # + 12 uplink resets (slice ul1) = 261.
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12, (
+        "the integrated table carries {0} resets, expected 261".format(len(with_reset)))
     lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset
                 if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
     assert lot_rows == {(f[0], f[1]) for f in VPC_ROWS}

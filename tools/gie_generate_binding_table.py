@@ -707,6 +707,19 @@ COMMITTED_BINDINGS = {
     ("int_vpc_peer_link_po", "QOS_POLICY"): "qos_policy",
     ("int_vpc_peer_link_po", "qosStatsSuppressed"): "disable_qos_stats",
     ("int_vpc_peer_link_po", "spanningTreePortType"): "spanning_tree_port_type",
+    # Existing ToR-uplink vPC parent on the leaf pair (slice ul1). Read from the 017 bodies; no value change measured.
+    ("int_vpc_uplink_access", "ENABLE_QOS"): "enable_qos",
+    ("int_vpc_uplink_access", "QOS_POLICY"): "qos_policy",
+    ("int_vpc_uplink_access", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_vpc_uplink_access", "spanningTreePortType"): "spanning_tree_port_type",
+    ("int_vpc_uplink_access", "ENABLE_STORM_CONTROL"): "enable_storm_control",
+    ("int_vpc_uplink_access", "STORM_CONTROL_ACTION"): "storm_control_action",
+    ("int_vpc_uplink_access", "STORM_CONTROL_BCAST_LEVEL_PERCENT"): "storm_control_broadcast_level_percent",
+    ("int_vpc_uplink_access", "STORM_CONTROL_MCAST_LEVEL_PERCENT"): "storm_control_multicast_level_percent",
+    ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PERCENT"): "storm_control_unicast_level_percent",
+    ("int_vpc_uplink_access", "STORM_CONTROL_BCAST_LEVEL_PPS"): "storm_control_broadcast_level_pps",
+    ("int_vpc_uplink_access", "STORM_CONTROL_MCAST_LEVEL_PPS"): "storm_control_multicast_level_pps",
+    ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PPS"): "storm_control_unicast_level_pps",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the
