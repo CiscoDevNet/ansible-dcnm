@@ -735,12 +735,14 @@ options:
               values to the port-channel of each leaf, which attaches the policy only while QoS is
               enabled with a name.
             - In mode 'uplink_access', 'storm_control_action' takes 'shutdown', 'trap' or 'default' (sent
-              as 'no'). A percent level is 0 to 100 with at most two decimal places, and a PPS level is 0
-              to 200000000. An explicit action or level needs 'enable_storm_control' true, requested or
-              stored. A percent and a PPS level of the same traffic type cannot be given together; under
-              'merged' a level in one unit sends an empty level for a stored level in the other unit of
-              that traffic type. 'enable_storm_control' false under 'merged' keeps the stored action and
-              levels.
+              as 'no'). A percent level is 0 to 100 with at most two decimal places, and a PPS level is an
+              integer from 0 to 200000000. A PPS level does not accept an empty string, and 0 is a level.
+              An explicit action or level needs 'enable_storm_control' true, requested or stored. A percent
+              and a PPS level of the same traffic type cannot be given together. Under 'merged', a level in
+              one unit sends an empty level for a stored level in the other unit of that traffic type, so a
+              stored PPS level is cleared by setting the percent level of that type. 'replaced', and an
+              'overridden' item that names the uplink, clear an omitted stored level. 'enable_storm_control'
+              false under 'merged' keeps the stored action and levels.
             choices: ['trunk', 'access', 'dot1q', 'pvlan', 'uplink_access']
             type: str
             required: true

@@ -678,6 +678,12 @@ def test_a_pps_level_out_of_range_is_refused(value):
     _assert_refused(result, calls, "storm_control_broadcast_level_pps")
 
 
+def test_an_empty_pps_level_is_refused():
+    result, calls = _run(_cfg(enable_storm_control=True, storm_control_broadcast_level_pps=""), "merged",
+                         _have(ENABLE_STORM_CONTROL="true", STORM_CONTROL_BCAST_LEVEL_PPS="1000"))
+    _assert_refused(result, calls, "storm_control_broadcast_level_pps", "must be a native integer")
+
+
 def test_an_unknown_action_is_refused():
     result, calls = _run(_cfg(enable_storm_control=True, storm_control_action="no"), "merged", _have())
     _assert_refused(result, calls, "storm_control_action")
