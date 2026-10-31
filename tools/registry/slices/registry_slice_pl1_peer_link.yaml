@@ -1,4 +1,3 @@
-
 # Registry slice pl1 -- existing vPC peer-link port-channel (mode 'peer_link'). Four bindings on int_vpc_peer_link_po.
 #
 #     int_vpc_peer_link_po  ENABLE_QOS            enable_qos
