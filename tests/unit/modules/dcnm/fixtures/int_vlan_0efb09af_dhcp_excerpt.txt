@@ -1,0 +1,43 @@
+## EXCERPT of the NDFC parent template int_vlan, for tests only. Not a template: do not upload.
+## Body: 0efb09af (pre-SMU body)
+## sha256: 0efb09af7f837b30b7a5dde37e7d4e7604fdd2fc4ca92ff6338e227802fde1a3 (96865 bytes)
+## Declares dhcpServerAddr4 and DHCP_RELAY_SRC_INTF; reads them as plain variables.
+## --- source lines 266-275 (verbatim) ---
+
+@(IsMandatory=false, DisplayName="IPv4 or IPv6 DHCP server 4", Section="Advanced", Description="DHCP relay IP")
+ipAddress dhcpServerAddr4;
+
+@(IsMandatory=false, IsShow="dhcpServerAddr4!=null", DisplayName="DHCP server4 VRF", Description="VRF to reach DHCP server 4. If default VRF, enter 'default'. If left blank, this DHCP server is in the interface VRF", Section="Advanced")
+string vrfDhcp4;
+
+@(IsMandatory=false, DisplayName="DHCP relay source interface", Description="Source interface for DHCP relay. Valid interfaces: Ethernet, port-channel, or loopback", Section="Advanced")
+interface DHCP_RELAY_SRC_INTF;
+
+## --- source lines 1809-1826 (verbatim) ---
+                                                   {"INTF_NAME": intfName, "DHCP_SERVER_IP": dhcpServerAddr3, "DHCP_SERVER_VRF": dhcpVrf}))
+
+            if dhcpServerAddr4 != "":
+                if ":" not in dhcpServerAddr4:
+                    if vrfDhcp4 != "" and vrfDhcp4 != intfVrf:
+                        Util.exe(PTIWrapper.create(SERIAL_NUMBER, "INTERFACE",
+                                                   intfName, POLICY_ID,
+                                                   ConfigPriority.CONFIG_PRIO_INTF_SUB_LVL1,
+                                                   "vlan_interface_dhcp_relay_vrf_11_1",
+                                                   {"INTF_NAME": intfName, "DHCP_SERVER_IP": dhcpServerAddr4, "DHCP_SERVER_VRF": vrfDhcp4}))
+                    else:
+                        Util.exe(PTIWrapper.create(SERIAL_NUMBER, "INTERFACE",
+                                                   intfName, POLICY_ID,
+                                                   ConfigPriority.CONFIG_PRIO_INTF_SUB_LVL1,
+                                                   "vlan_interface_dhcp_relay_11_1",
+                                                   {"INTF_NAME": intfName, "DHCP_SERVER_IP": dhcpServerAddr4}))
+                else:
+                    if vrfDhcp4 != "" and vrfDhcp4 != intfVrf:
+## --- source lines 1838-1845 (verbatim) ---
+
+        if dhcpRelaySrcIntf != "":
+            Util.exe(PTIWrapper.create(SERIAL_NUMBER, "INTERFACE",
+                                       intfName, POLICY_ID,
+                                       ConfigPriority.CONFIG_PRIO_INTF_SUB_LVL1,
+                                       "vlan_interface_dhcp_relay_src_interface_11_1",
+                                       {"INTF_NAME": intfName, "DHCP_RELAY_SRC_INTF": dhcpRelaySrcIntf}))
+

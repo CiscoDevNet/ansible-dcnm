@@ -1,0 +1,274 @@
+# Registry slice 0b_19 — OSPF on int_routed_host, lot 2: the nine non-authentication fields.
+#
+# Extends slice 0b_18 (gate + three value fields, validated live on hardware).
+#
+# All nine are IsShow="ENABLE_OSPF==true" and IsMandatory=false: independent value fields behind
+# the same gate, each with its own child template, individually settable once the gate is on.
+#
+# The five authentication fields (ENABLE_OSPF_AUTH, OSPF_AUTH_KEY, OSPF_AUTHENTICATION_KEY,
+# OSPF_AUTH_KEY_ID, OSPF_AUTHENTICATION_KEY_TYPE) are excluded: they carry or gate secrets, three
+# already exist as child_pti on int_fabric_loopback_11_1 with a dedicated validator, and
+# registering them on a second parent is a per-(parent, nvpair) mechanism decision, not a copy.
+# The key value must never be printed or logged. They belong in a separate lot.
+#
+# Mechanism: passthrough for all nine. None owns a dedicated validation path in the module;
+# delegating to an NDFC child template does not change that (test_gie_mechanism_contract.py fails
+# if a child_pti binding is registered without an implementation that actually guards it).
+#
+# no_change enums: OSPF_PASSIVE_MODE, OSPF_NETWORK_TYPE and OSPF_BFD_MODE default to "no_change",
+# NDFC's sentinel for "leave the device alone". The engine only validates enum membership and
+# transports the string, as for GUARD_MODE (valid root/none/loop/no, default "no") and
+# SPANNING_TREE_PORT_TYPE. No special handling is needed or added.
+#
+# Ranges: the template declares min/max on all four integers. The generator carries them as
+# min_value/max_value; the engine enforces them on explicit input only (an out-of-range controller
+# value is carried, never rejected).
+#
+# Removal: unresolved on all nine, for the same reason as slice 0b_18: the template creates a child
+# per field and never deletes one. Withdrawal is contract A, pending verification. See the per-row
+# notes for the measured exceptions.
+
+bindings:
+  - parent_template: int_routed_host
+    parent_nvpair: ospfMtuIgnore
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_mtu_ignore
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: "false"     # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfShutdown
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_shutdown
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: "false"     # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfHelloInterval
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_hello_interval
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # Measured live (NDFC 12.6.0.267 / NX-OS 10.5(5)). The public integer rejects "" before any
+    # request is built, so the wire value was measured with a raw, preserving bulk-modify POST
+    # (1 DTO carrying all nvPairs from a fresh readback, only this field set to ""): 207
+    # Multi-Status with a single SUCCESS. The readback is the EMPTY STRING ("11" -> ""), not absent,
+    # null or a materialized default. On the device `ip ospf hello-interval 11` was removed and
+    # `ip router ospf <tag> area 0.0.0.0` survived (OSPF stayed enabled with the same tag and area);
+    # all other nvPairs identical, In-Sync. This answers the removal question for this row: although
+    # the template never calls deleteChildTemplate for OSPF, clearing the parent nvPair to "" DOES
+    # withdraw the child line.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfDeadInterval
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_dead_interval
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # Measured live, same method and result as ospfHelloInterval: readback "44" -> "",
+    # `ip ospf dead-interval 44` removed, `ip router ospf <tag> area 0.0.0.0` kept, In-Sync.
+    # Answers the removal question for this row.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfTransmitDelay
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_transmit_delay
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # Measured live, same method and result as ospfHelloInterval: readback "3" -> "",
+    # `ip ospf transmit-delay 3` removed, `ip router ospf <tag> area 0.0.0.0` kept, In-Sync.
+    # Answers the removal question for this row.
+    reset_wire: ""
+    min: 1
+    max: 450
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfPriority
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_priority
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # Measured live, same method and result as ospfHelloInterval: readback "77" -> "",
+    # `ip ospf priority 77` removed, `ip router ospf <tag> area 0.0.0.0` kept, In-Sync.
+    # Answers the removal question for this row.
+    reset_wire: ""
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfPassiveMode
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, passive: passive, no_passive: noPassive}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_passive_mode
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    valid_values: [no_change, passive, no_passive]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    reset_wire: "noChange"   # withdrawal verified by omission
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfNetworkType
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_network_type
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    valid_values: [no_change, broadcast, point_to_point]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    reset_wire: "noChange"   # withdrawal verified by omission
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfBfdMode
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, enable: enable, disable: disable}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_bfd_mode
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, enable, disable]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb

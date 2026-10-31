@@ -1,0 +1,394 @@
+# Registry slice 0b_20 — OSPF on int_subif (first bindings for this parent).
+#
+# Extracted from this template, not copied from int_routed_host. The three OSPF parents model the
+# same concepts differently (hence the (parent_template, parent_nvpair) key):
+#
+#       concept      int_routed_host        int_subif                int_vlan
+#       passive      OSPF_PASSIVE_MODE      OSPF_PASSIVE_INTERFACE   OSPF_PASSIVE_MODE
+#                    enum                   BOOLEAN                  enum
+#       bfd          OSPF_BFD_MODE          OSPF_BFD                 OSPF_BFD_MODE
+#                    enum                   BOOLEAN                  enum
+#       retransmit   absent                 OSPF_RETRANSMIT_INTERVAL OSPF_RETRANSMIT_INTERVAL
+#
+# Every type, default, range and length is read from the installed template (sha a66388c2f21c5507),
+# never inferred from a sibling parent.
+#
+# applicable_interface_type / applicable_mode are DESCRIPTIVE (resolve_binding matches on
+# parent_template alone) but use the module's vocabulary
+# (`pol_ind_str = delem["type"] + "_" + profile["mode"]` selects the policy).
+#
+# Module wiring: two calls added to dcnm_interface.py for this parent, mirroring the eth path:
+# gie_extend_prof_spec in its validator and gie_contribute_nvpairs in its builder. No
+# feature-specific key added.
+#
+# Excluded: ENABLE_OSPF_AUTH, OSPF_AUTH_KEY, OSPF_AUTHENTICATION_KEY, OSPF_AUTH_KEY_ID and
+# OSPF_AUTHENTICATION_KEY_TYPE carry or gate secrets; handled in a separate slice for all parents.
+#
+# mechanism: passthrough throughout; none owns a dedicated validation path
+# (test_gie_mechanism_contract.py fails if a child_pti binding lacks a guarding implementation).
+#
+# removal_semantics: unresolved, as on int_routed_host: the template creates a child per field and
+# never deletes one. Withdrawal is contract A, pending confirmation.
+#
+# Integer reset (rows marked "MEASURED LIVE" below): measured on int_subif Ethernet1/21.3001
+# (encapsulation dot1q 3001, no IP), NDFC 12.6.0.267 / NX-OS 10.5(5). The public integer rejects ""
+# before building a request, so the wire value was measured with a raw preserving bulk-modify POST.
+# The DTO was derived from THIS parent (56 nvPairs, envelope with `skipResourceCheck`, which
+# int_routed_host lacks): 207 Multi-Status, single SUCCESS. Readback EMPTY STRING (not absent, null
+# or a materialized default). The field's line disappeared while `ip router ospf <tag> area 0.0.0.0`
+# and `encapsulation dot1q 3001` SURVIVED (OSPF still enabled, same tag and area); other nvPairs
+# identical, In-Sync. Answers the removal question for that row on THIS parent.
+
+bindings:
+  - parent_template: int_subif
+    parent_nvpair: ospf
+    profile_key: enable_ospf
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: OSPF_AREA_ID
+    profile_key: ospf_area_id
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: case_irrelevant
+    reset_wire: '0.0.0.0'
+    default_template: 0.0.0.0
+    min_length: 1
+    max_length: 15
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfBfdMode
+    # SMU 4.3.1.0175006017 replaced the boolean ospfBfd with this enum (int_subif body 1937c6a5, read, not exercised
+    # live). The public boolean ospf_bfd stays accepted as an input alias (true -> enable, false -> no_change) and is
+    # translated before validation; see gie_normalize_ospf_aliases.
+    # Depends on OSPF: rendered only when ospf is true, and refused with a non-neutral value while ospf is false.
+    # An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, enable: enable, disable: disable}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_bfd_mode
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, enable, disable]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@1937c6a5f49d0d48
+
+  - parent_template: int_subif
+    parent_nvpair: ospfCost
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_cost
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    # MEASURED LIVE (see header): readback "42" -> ""; `ip ospf cost 42` removed.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfDeadInterval
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_dead_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    # MEASURED LIVE (see header): readback "44" -> ""; `ip ospf dead-interval 44` removed.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfHelloInterval
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_hello_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    # MEASURED LIVE (see header): readback "11" -> ""; `ip ospf hello-interval 11` removed.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfMtuIgnore
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_mtu_ignore
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    reset_wire: "false"     # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfNetworkType
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, broadcast: broadcast, point_to_point: pointToPoint}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_network_type
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, broadcast, point_to_point]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfPassiveMode
+    # SMU 4.3.1.0175006017 replaced the boolean ospfPassiveInterface with this enum (int_subif body 1937c6a5, read,
+    # not exercised live). The public boolean ospf_passive_interface stays accepted as an input alias
+    # (true -> passive, false -> no_change); see gie_normalize_ospf_aliases.
+    # Depends on OSPF: rendered only when ospf is true, and refused with a non-neutral value while ospf is false.
+    # An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    wire_values: {no_change: noChange, passive: passive, no_passive: noPassive}   # SMU enum vocabulary; public valid_values unchanged
+    profile_key: ospf_passive_mode
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    reset_wire: 'noChange'
+    valid_values: [no_change, passive, no_passive]
+    default_template: no_change
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@1937c6a5f49d0d48
+
+  - parent_template: int_subif
+    parent_nvpair: ospfPriority
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_priority
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    # MEASURED LIVE (see header): readback "77" -> ""; `ip ospf priority 77` removed.
+    reset_wire: ""
+    min: 0
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfRetransmitInterval
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_retransmit_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    # MEASURED LIVE (see header): readback "9" -> ""; `ip ospf retransmit-interval 9` removed.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfShutdown
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_shutdown
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    reset_wire: "false"     # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfTag
+    profile_key: ospf_tag
+    # Inert while OSPF is disabled (read from the int_subif body e9f9bd9c, not measured): ospfTag is
+    # validated and rendered only under `ospf == true`, and with OSPF off the template neither checks it nor
+    # creates the OSPF child. A stored tag with ospf "false" is therefore not a configured withdrawal target.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      required: true
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: unverified
+    min_length: 1
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: ospfTransmitDelay
+    # Depends on OSPF (int_subif body e9f9bd9c, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_transmit_delay
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    # MEASURED LIVE (see header): readback "3" -> ""; `ip ospf transmit-delay 3` removed.
+    reset_wire: ""
+    min: 1
+    max: 450
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507

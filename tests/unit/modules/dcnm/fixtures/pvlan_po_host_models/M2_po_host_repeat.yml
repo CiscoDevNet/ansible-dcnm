@@ -1,0 +1,25 @@
+# M2 -- NOT RUN. NOT LIVE TESTED. The IDENTICAL model of M1, to be run after a verified M1.
+# Acceptance is NOT "changed is false": it is the REAL number of writes (module log with LOG_PATH
+# configured; len(response) counts recorded answers, not HTTP attempts) plus the unchanged parent and
+# child intent and an unchanged device CLI. Same preconditions as M1.
+- name: M2 PVLAN host port-channel, identical repetition
+  hosts: ndfc
+  gather_facts: false
+  vars_files: [vars_po_host_e1.yml]
+  tasks:
+    - name: M2 repeat the M1 model unchanged
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ po_fabric }}"
+        state: replaced
+        config:
+          - name: "{{ po_name }}"
+            type: pc
+            switch: ["{{ po_switch }}"]
+            deploy: true
+            profile:
+              mode: pvlan
+              pvlan_mode: host
+              members: ["{{ po_member }}"]
+              pc_mode: active
+              admin_state: false
+              pvlan_association: [{primary_vlan: 2210, secondary_vlan: 2212}]  # CANDIDATE pair, not validated

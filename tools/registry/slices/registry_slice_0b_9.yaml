@@ -1,0 +1,110 @@
+# Registry slice 0b_9 — aclFilter (acl_filter) on five Ethernet/port-channel parents.
+# Status: validated against a snapshot; revalidate before integration. No DSL dependency.
+#
+# aclFilter has NO IsShow condition on any of the five parents (verified in the DSL); string, length 1-64.
+# The DSL declares NO defaultValue on any of them, so `default_template` is absent (it cannot be invented;
+# an absent user value is never emitted anyway, emit_when: explicit_only).
+# The vPC parents (int_vpc_access_host / int_vpc_trunk_host) are excluded here. Their template hands the
+# value to a child, but `mechanism` records who owns validation, the invalid-parent guard, generic
+# prof_spec, carry-forward and wire-form conversion; vPC owns none of these, so they are `passthrough`
+# (see registry_slice_0b_15.yaml, validated live there).
+
+- parent_template: int_access_host
+  parent_nvpair: aclFilter
+  profile_key: acl_filter
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: string
+  string_compare: exact
+  reset_wire: ""          # measured live
+  min_length: 1                    # decl int_access_host.template#L205
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_access_host.template#L650"
+
+- parent_template: int_trunk_host
+  parent_nvpair: aclFilter
+  profile_key: acl_filter
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: string
+  string_compare: exact
+  reset_wire: ""          # measured live
+  min_length: 1                    # decl int_trunk_host.template#L220
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_trunk_host.template#L719"
+
+- parent_template: int_port_channel_access_host
+  parent_nvpair: aclFilter
+  reset_wire: ""   # measured live: apply+clear on Port-channel301
+  profile_key: acl_filter
+  applicable_interface_type: pc
+  applicable_mode: access
+  type: string
+  string_compare: exact
+  min_length: 1                    # decl int_port_channel_access_host.template#L195
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_port_channel_access_host.template#L713"
+
+- parent_template: int_port_channel_trunk_host
+  parent_nvpair: aclFilter
+  reset_wire: ""   # measured live: apply+clear on Port-channel302
+  profile_key: acl_filter
+  applicable_interface_type: pc
+  applicable_mode: trunk
+  type: string
+  string_compare: exact
+  min_length: 1                    # decl int_port_channel_trunk_host.template#L206
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_port_channel_trunk_host.template#L715"
+
+- parent_template: int_port_channel_dot1q_tunnel_host
+  parent_nvpair: aclFilter
+  reset_wire: ""   # measured live: apply+clear on Port-channel303
+  profile_key: acl_filter
+  applicable_interface_type: pc
+  applicable_mode: dot1q
+  type: string
+  string_compare: exact
+  min_length: 1                    # decl int_port_channel_dot1q_tunnel_host.template#L195
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  effect_rules: []
+  evidence_ref: "int_port_channel_dot1q_tunnel_host.template#L719"

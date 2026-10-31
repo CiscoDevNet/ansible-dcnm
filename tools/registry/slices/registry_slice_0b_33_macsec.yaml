@@ -1,0 +1,173 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): the parent now instantiates interface_macsec, or
+# interface_macsec_fallback when a fallback key chain is set, instead of macsec_fallback_interface with its two branches. Parent nvPairs and
+# the parent-to-child name translation below are unchanged. Removing only the fallback now selects the other child; NOT LIVE TESTED
+# (no MACsec hardware in the lab).
+#
+# Registry slice 0b_33 — MACsec: four bindings on int_routed_host (the only parent that declares them).
+#
+#     ENABLE_MACSEC_INTERFACE_POLICY   boolean, defaultValue=false
+#     MACSEC_KEY_CHAIN_NAME            string 1..64   IsShow + IsMandatory ==true
+#     MACSEC_POLICY_NAME               string 1..64   IsShow + IsMandatory ==true
+#     MACSEC_FALLBACK_KEY_CHAIN_NAME   string 1..64   IsShow ==true, IsMandatory=false
+#
+# Read from the template bodies installed on the controller:
+#     int_routed_host.template@65426107b3d1cdcf
+#     macsec_fallback_interface.template@8dd97793d5056594   (child)
+#
+# All four are names (pointers to a keychain and policy on the switch), not secrets: `no_log: false`
+# (same reasoning as OSPF_AUTH_KEY_ID, see slice 0b_21). Key material lives in the keychain, which this
+# module does not create.
+#
+# The child has two branches; one run exercises only one:
+#     if ($$FALLBACK_KEY_CHAIN_NAME$$ != "") {
+#       macsec keychain $$KEY_CHAIN_NAME$$ policy $$POLICY_NAME$$ fallback-keychain $$FALLBACK...$$
+#     } else {
+#       macsec keychain $$KEY_CHAIN_NAME$$ policy $$POLICY_NAME$$
+#     }
+#
+# Parent and child names differ (like IPv6_LINK_LOCAL); the parent translates (int_routed_host:1217-1225):
+#     parent  MACSEC_KEY_CHAIN_NAME           ->  child  KEY_CHAIN_NAME
+#     parent  MACSEC_POLICY_NAME              ->  child  POLICY_NAME
+#     parent  MACSEC_FALLBACK_KEY_CHAIN_NAME  ->  child  FALLBACK_KEY_CHAIN_NAME
+# These rows use the parent names, where the module writes.
+#
+# Template rule (int_routed_host:928-934, fires on enableMacsecInterfacePolicy=="true" with empty
+# keychain or policy): "MACsec keychain and policy are required when MACsec interface policy is enabled."
+# Same shape as HSRP: one enabler plus fields hanging from it by IsShow.
+#
+# Measured live on NX-OS nxos64-cs.10.6.2.F:
+#   - `feature macsec` was already enabled (`macsec 1 enabled`); on another image it reads `disabled`.
+#   - The CLI exists and works: `macsec keychain <nonexistent-keychain> policy system-default-macsec-policy`
+#     landed on the interface.
+#   - The policy need not be created (`show macsec policy` lists `system-default-macsec-policy`,
+#     GCM-AES-XPN-256); the switch had zero keychains (counted with
+#     `show running-config | include "^key chain" | count`, so no key line is printed).
+#   - Asymmetry: NX-OS validates the policy but not the keychain. A nonexistent keychain is accepted and
+#     applied (dangling reference, no warning); a nonexistent policy fails the deploy with 500
+#     ("ERROR: internal error: Failed to find policy <name>").
+#   So all four bindings can be validated end-to-end without key material. NOT validated: MACsec session
+#   establishment (operational state, not transport).
+#
+# Not native: the four profile keys and the four nvPair spellings have 0 uses in dcnm_interface.py.
+# Types: boolean and string only; no type decision needed.
+# Removal: measured live, not predicted (no parent calls deleteChildTemplate for this child, which is known
+# not to predict residue).
+#
+# Clear behaviour, measured live:
+#   - The public path can express the clear despite `min_length: 1`: `gie_validate_binding_value` returns
+#     early for `""` on a plain string binding (no `valid_values`) in both directions, before the length
+#     check (exemption at `gie_engine.py:380`, precedent ACL_FILTER). Verified offline against the
+#     installed engine and then live.
+#   - The coupling is imposed by the product (measured, not read from the template). With the gate on and
+#     keychain/policy set, keychain -> "" and policy -> "" are each rejected by the controller
+#     ("Template [int_routed_host] - Validation failed for following fields: [macsecKeyChainName]" /
+#     [macsecPolicyName]), HTTP 207 per item, `changed=false`, fresh readback identical: rejected without
+#     mutation. So gate + keychain + policy removal is coordinated (one request).
+#   - The only independent removal is the fallback (IsShow but not IsMandatory); measured alone, and it also
+#     exercises the child's else-branch.
+#   - NOT measured, so not claimed: separate removal of keychain or policy. Coverage is coordinated for
+#     those two and the gate, independent only for the fallback.
+#   - Nothing is claimed about the operational plane (MACsec session, MKA, encrypted traffic); with no
+#     keychain there is almost certainly no session. Measured scope is configuration and removal.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_routed_host
+    parent_nvpair: macsecInterfacePolicy
+    profile_key: enable_macsec_interface_policy
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # Measured live: explicit clear via the public path, native `false`. Readback `true` -> `false`; the
+    # child's `macsec keychain ... policy ...` line removed; base context intact (`no switchport`,
+    # `mtu 9216`, `ip address <lab-ip>/24`, `no shutdown`), no unexplained lines. Rerun: changed=false,
+    # no mutations or pending. Coordinated, not independent: sent in the same request as keychain and
+    # policy, which the template requires while the gate is on (product constraint, see header).
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1217"
+
+  - parent_template: int_routed_host
+    parent_nvpair: macsecKeyChainName
+    profile_key: macsec_key_chain_name
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # Measured live: explicit clear via the public path (`""` accepted despite `min_length: 1`, see
+    # `gie_engine.py:380`). Readback `MACSEC64KC` -> `""`; child line removed; base context intact. Rerun:
+    # no mutations or pending. Coordinated: rejected by name with the gate on ("Validation failed for
+    # following fields: [macsecKeyChainName]"), no mutation. Independent removal NOT claimed.
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L107"
+
+  - parent_template: int_routed_host
+    parent_nvpair: macsecPolicyName
+    profile_key: macsec_policy_name
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # Measured live: explicit clear via the public path (same `""` exemption). Readback `MACSEC64POL` ->
+    # `""`; child line removed; base context intact. Rerun: no mutations or pending. Coordinated: rejected
+    # by name with the gate on ("Validation failed for following fields: [macsecPolicyName]"), no mutation.
+    # Independent removal NOT claimed. NX-OS validates the policy (nonexistent -> deploy 500), not the keychain.
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L113"
+
+  - parent_template: int_routed_host
+    parent_nvpair: macsecFallbackKeyChainName
+    profile_key: macsec_fallback_key_chain_name
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # Measured live: independent removal, the only one of the four (IsShow but not IsMandatory), with the
+    # gate on and keychain/policy untouched. Readback `MACSEC64FBKC` -> `""`. The child switched branch:
+    #     macsec keychain MACSEC64KC policy MACSEC64POL fallback-keychain MACSEC64FBKC
+    # became
+    #     macsec keychain MACSEC64KC policy MACSEC64POL
+    # (an exact prefix of the old line, so compare whole lines, never substrings). Rerun: changed=false,
+    # no mutations or pending.
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L119"

@@ -1,0 +1,44 @@
+# Registry slice 0b_24 — interface BFD. ONE new binding, not nine.
+#
+# The other eight BFD rows live in registry_slice_0b_4.yaml (int_subif) and
+#   registry_slice_0b_5.yaml (int_vlan); registering them here again fails the generator with
+#   `ValueError: duplicate committed binding ('int_subif', 'ENABLE_BFD_INTERVAL')`. Rows whose
+#   (parent, nvpair) is not in the generator's COMMITTED_BINDINGS allowlist are SKIPPED silently,
+#   by design, which is why those eight showed as pending. Their type, minimum and maximum were
+#   checked against the bodies the controller runs (eight for eight) before allowlisting.
+#
+# New here: int_vlan DISABLE_BFD_ECHO. The public key `disable_bfd_echo` already exists on
+#   int_routed_host, so this adds a (parent, nvpair) pair, not a new public field. It has its own
+#   child and line, `no bfd echo`.
+#
+# THREE FIELDS, ONE LINE (unique in this registry): the interval child renders all three values
+#   into a single line, so transport is proven by reading the three VALUES, not by "one line
+#   changed":
+#       interface_bfd_interval_11_1  ->  bfd interval $TX min_rx $MIN_RX multiplier $MULT
+#
+# THE TEMPLATE ENFORCES THE GATE, SO NOTHING HERE DOES (int_subif:650, int_vlan:1119, installed
+#   bodies):
+#       "BFD TX interval, minimum RX interval, and multiplier are required when interface BFD
+#        interval is enabled."
+#   The three intervals also carry IsShow="ENABLE_BFD_INTERVAL==true". Same decision as EIGRP's
+#   process tag: a module rule requiring all three in every profile would break a valid partial
+#   update whose other two values come from HAVE.
+
+bindings:
+  - parent_template: int_vlan
+    parent_nvpair: bfdEcho
+    profile_key: disable_bfd_echo
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30

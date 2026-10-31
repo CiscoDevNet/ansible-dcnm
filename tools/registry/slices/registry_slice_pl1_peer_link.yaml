@@ -1,0 +1,98 @@
+# Registry slice pl1 -- existing vPC peer-link port-channel (mode 'peer_link'). Four bindings on int_vpc_peer_link_po.
+#
+#     int_vpc_peer_link_po  ENABLE_QOS            enable_qos
+#     int_vpc_peer_link_po  QOS_POLICY            qos_policy
+#     int_vpc_peer_link_po  qosStatsSuppressed    disable_qos_stats
+#     int_vpc_peer_link_po  spanningTreePortType  spanning_tree_port_type
+#
+# Source: the int_vpc_peer_link_po body exported from a controller with SMU 4.3.1.0175006017 (template REST API, read
+# only), sha256 of `content` 771f9f6dc7b10ed51e9ee4027d7870f926fcf5cef77b12b4a1bd70ce70b7bce3.
+#
+# NOTHING HERE IS MEASURED LIVE. The values, defaults and effects are read from the body.
+#
+# The vPC pairing creates the parent per peer and owns every other nvPair. The module updates an existing parent only and
+# sends the other stored nvPairs back unchanged (see PEER_LINK_POLICY in dcnm_interface.py).
+#
+# QoS. getPeerLinkQosPolicy (L100-114) attaches interface_qos_service_policy, or interface_qos_service_policy_no_stats
+# when qosStatsSuppressed is true, with QOS_POLICY as the class map; the name is required, at most 40 characters and
+# without whitespace while ENABLE_QOS is true. syncPeerLinkQos (L116-142) keeps one attachment and mark-deletes the others,
+# but returns without change when ENABLE_QOS is not true ("Retain saved attachments during parent rebuilds until
+# unpairing"), and delete(force=True) (L357-370) keeps the QoS children. By the body, false does not detach the policy;
+# no controller has confirmed it. ENABLE_QOS and QOS_POLICY therefore carry no reset_wire, and the module refuses false,
+# "" and omission while QoS is stored on.
+#
+# STP. The parent copies spanningTreePortType into every member child (int_vpc_peer_link_po_member_11_1, L299-332),
+# which renders `spanning-tree port type <value>` unless the value is `no`.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_vpc_peer_link_po
+    parent_nvpair: ENABLE_QOS
+    profile_key: enable_qos
+    applicable_interface_type: pc
+    applicable_mode: peer_link
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_peer_link_po.template@771f9f6d#L59,L101,L120"
+
+  - parent_template: int_vpc_peer_link_po
+    parent_nvpair: QOS_POLICY
+    profile_key: qos_policy
+    applicable_interface_type: pc
+    applicable_mode: peer_link
+    type: string
+    max_length: 40
+    string_compare: unverified
+    default_template: ""
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_peer_link_po.template@771f9f6d#L64,L103-108"
+
+  - parent_template: int_vpc_peer_link_po
+    parent_nvpair: qosStatsSuppressed
+    profile_key: disable_qos_stats
+    applicable_interface_type: pc
+    applicable_mode: peer_link
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_peer_link_po.template@771f9f6d#L67,L109-113"
+
+  - parent_template: int_vpc_peer_link_po
+    parent_nvpair: spanningTreePortType
+    profile_key: spanning_tree_port_type
+    applicable_interface_type: pc
+    applicable_mode: peer_link
+    type: enum
+    valid_values: ["no", "network", "normal"]
+    reset_wire: "no"
+    default_template: "no"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_peer_link_po.template@771f9f6d#L72,L299-332"

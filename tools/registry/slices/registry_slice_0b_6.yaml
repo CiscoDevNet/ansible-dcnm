@@ -1,0 +1,153 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): the child interface_dampening cited below no
+# longer declares the six DAMPENING_* parameters. int_routed_host now instantiates one of interface_dampening_half_life, _full,
+# _restart or _restart_penalty (or the bare interface_dampening) according to which values are set. The parent nvPairs, the
+# bounds and the conditional rules below are parent-level and unchanged, so the module's transport is unaffected; the child-level
+# evidence references (#L55-67, installed body :1186-1196) describe the earlier SMU. Partial combinations (half-life only, restart
+# without a penalty) now select different children: mapped offline, NOT LIVE TESTED (the dampening CLI is absent on the lab images).
+#
+# Registry slice 0b_6 — dampening on int_routed_host (conditional-composition canary).
+#
+# Format B: one shared effect + conditional_requirements; designed offline (no engine, no live run).
+# Unlike BFD, gate=true with no values is valid (required_when_gate: []). The finer rules (verified
+# in child interface_dampening.template#L55-67 + IsShow/IsMandatory) are expressed as
+# conditional_requirements. Ranges from the catalog. removal_semantics: unresolved.
+shared_effects:
+  - effect_id: dampening@int_routed_host
+    parent_template: int_routed_host
+    child_template: interface_dampening
+    gate_nvpair: ENABLE_DAMPENING
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate: []          # none unconditionally required (ENABLE alone is valid)
+    value_bindings:
+      - {source_parent_nvpair: dampeningHalfLife,     target_child_nvpair: DAMPENING_HALF_LIFE,     transform: identity}
+      - {source_parent_nvpair: dampeningReuse,         target_child_nvpair: DAMPENING_REUSE,         transform: identity}
+      - {source_parent_nvpair: dampeningSuppress,      target_child_nvpair: DAMPENING_SUPPRESS,      transform: identity}
+      - {source_parent_nvpair: dampeningMaxSuppress,  target_child_nvpair: DAMPENING_MAX_SUPPRESS,  transform: identity}
+      - {source_parent_nvpair: dampeningRestart,       target_child_nvpair: DAMPENING_RESTART,       transform: identity}
+      - {source_parent_nvpair: dampeningRestartPenalty, target_child_nvpair: DAMPENING_RESTART_PENALTY, transform: identity}
+    conditional_eval: explicit_intent   # conditions evaluate over EXPLICIT intent, before defaults/HAVE
+    conditional_requirements:
+      # 6: any explicit dampening value requires the gate (avoids silent no-op)
+      - kind: requires_gate
+        params: [DAMPENING_HALF_LIFE, DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS, DAMPENING_RESTART, DAMPENING_RESTART_PENALTY]
+        evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L790"
+      # 3a: reuse/suppress/max_suppress are all-or-none
+      - kind: all_or_none
+        params: [DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS]
+        evidence_ref: "interface_dampening.template#L28"
+      # 3b: that group requires half_life
+      - kind: requires
+        if_present: [DAMPENING_REUSE]
+        then_required: [DAMPENING_HALF_LIFE]
+        evidence_ref: "interface_dampening.template#L22"
+      # 4: restart=true requires the full group + half_life
+      - kind: if_true_requires
+        if_true: DAMPENING_RESTART
+        then_required: [DAMPENING_HALF_LIFE, DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS]
+        evidence_ref: "interface_dampening.template#L55"
+      # 5: restart_penalty requires restart=true
+      - kind: requires_true
+        if_present: [DAMPENING_RESTART_PENALTY]
+        then_true: DAMPENING_RESTART
+        evidence_ref: "interface_dampening.template#L45"
+    evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L794"
+
+bindings:
+  - {parent_template: int_routed_host, parent_nvpair: dampening, profile_key: enable_dampening,
+     applicable_interface_type: eth, applicable_mode: routed, type: boolean, default_template: false,
+     reset_wire: 'false',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: gate, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L790"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningHalfLife, profile_key: dampening_half_life,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 30,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L796"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningReuse, profile_key: dampening_reuse,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L797"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningSuppress, profile_key: dampening_suppress,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L798"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningMaxSuppress, profile_key: dampening_max_suppress,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 255,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L799"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningRestart, profile_key: dampening_restart,
+     applicable_interface_type: eth, applicable_mode: routed, type: boolean, default_template: false,
+     reset_wire: 'false',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L800"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningRestartPenalty, profile_key: dampening_restart_penalty,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L801"}
+
+# -------------------------------------------------------------------------------------
+# Mechanism for all seven rows: passthrough (not child_pti)
+# -------------------------------------------------------------------------------------
+# The module writes the values into the PARENT's nvPairs; the int_routed_host DSL instantiates
+# `interface_dampening` from them (installed body :1186-1196). The module does not build the
+# child. Same reasoning as the BFD rows (slices 0b_4/0b_5), which were confirmed live by measuring
+# the device line. Note: the generator silently skips any row not listed in COMMITTED_BINDINGS.
+#
+# That live confirmation is NOT possible here: the `dampening` CLI does not exist on either lab
+# image. Probed through NDFC with the command the child produces, `dampening 10 1500 3000 60`:
+#     nxos64-cs-lite.10.5.5.M  -> CLI command is invalid
+#     nxos64-cs.10.6.2.F       -> CLI command is invalid
+# The full image rejects it too, so the cause is not the lite image: the command is absent from
+# the C9300v NX-OS.
+#
+# Validation scope: device layer IMPOSSIBLE (no value of these seven produces a line here).
+# Controller layer possible: the POST evaluates the template before deploy, so the four dependency
+# rules are exercised and the read-back can be read.
+#
+# Dependency chain (four levels, the deepest in the registry):
+#     ENABLE_DAMPENING                 boolean, defaultValue=false
+#       DAMPENING_HALF_LIFE            1..30      IsShow ENABLE==true
+#         DAMPENING_REUSE              1..20000   IsShow ENABLE && HALF_LIFE!=''
+#         DAMPENING_SUPPRESS           1..20000   same
+#         DAMPENING_MAX_SUPPRESS       1..255     same
+#         DAMPENING_RESTART            boolean    IsShow ENABLE && REUSE!=''
+#           DAMPENING_RESTART_PENALTY  1..20000   IsShow ENABLE && RESTART==true
+#
+# Four template rules, enforced by NDFC on POST (none are ours):
+#     "Dampening half-life is required when reuse, suppress, or max suppress is configured."
+#     "Dampening reuse, suppress, and max suppress must be configured together."
+#     "Dampening restart can only be configured with half-life, reuse, suppress, and max
+#      suppress values."
+#     "Dampening restart penalty requires dampening restart to be enabled."
+# The second ties THREE registered fields together (the first such rule in the registry).
+#
+# Six fields render one line, in five variants (installed child interface_dampening):
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart $RESTART_PENALTY
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS
+#     dampening $HALF_LIFE
+#     dampening
+# Even on hardware that supports it, counting lines would prove nothing.
+#
+# Only int_routed_host declares dampening; int_subif, int_vlan and int_loopback declare none of the 7.

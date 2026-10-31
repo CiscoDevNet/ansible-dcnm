@@ -1,0 +1,234 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): int_routed_host now calls deleteChildTemplate on
+# pim_bfd_instance_interface when pimBfdInstance is false, which the 'no deleteChildTemplate for PIM' remark below did not have. The
+# removal path of enable_pim_bfd_instance=false therefore needs revalidation; the new branch is not a confirmed fix. int_subif and
+# int_l3_port_channel declare pimBfdInstance too and are not registered here.
+#
+# Registry slice 0b_31 — PIM. Eight bindings: three fields spread unevenly over four parents.
+#
+#     ENABLE_PIM_SPARSE        4   int_loopback, int_routed_host, int_subif, int_vlan
+#     PIM_DR_PRIORITY          3   int_routed_host, int_subif, int_vlan
+#     ENABLE_PIM_BFD_INSTANCE  1   int_routed_host
+#
+#   PIM_DR_PRIORITY is absent from int_loopback by design (a loopback takes no part in DR
+#   election); verified that the int_loopback body does not declare it.
+#
+# Sources: the bodies the controller runs, downloaded before any attribute was read:
+#     int_loopback.template@27cd9ce7e671b5f3
+#     int_routed_host.template@65426107b3d1cdcf
+#     int_subif.template@a66388c2f21c5507
+#     int_vlan.template@0efb09af7f837b30
+#     pim_interface.template@27d7ff34de4b9047                (child of sparse)
+#     interface_pim_dr_priority.template@83247cad0c81163f    (child of dr-priority)
+#     pim_bfd_instance_interface.template@463bffbfe4eaa10f    (child of bfd-instance)
+#   All three children are INSTALLED; their content was read, not assumed:
+#       pim_interface                 ->  ip pim sparse-mode
+#       interface_pim_dr_priority     ->  ip pim dr-priority $$PIM_DR_PRIORITY$$
+#       pim_bfd_instance_interface    ->  ip pim bfd-instance
+#   One line per field (unlike BFD, HSRP, dampening), so "exactly one line changed" is meaningful.
+#
+# TRAP: VALUE 1 EMITS NO LINE, AND 1 IS THE RANGE MINIMUM. All three declaring parents gate on
+#       if pimDrPriority != "" and pimDrPriority != "1":
+#           createOrUpdate(... "interface_pim_dr_priority" ...)
+#   and the read's `except` defaults to "1" (int_routed_host:563, int_subif:411, int_vlan:857).
+#   With `min = 1`, the lower bound is also the silent value and the defaultValue. A lower-bound
+#   test sees no line: expected DSL behavior, not a defect. Validation separates "send 1, expect
+#   no line" from "send 0, expect the engine to reject it on the bound".
+#
+# PIM_DR_PRIORITY IS `long` IN THE TEMPLATE AND REGISTERED AS `integer`:
+#       long PIM_DR_PRIORITY { min = 1; max = 4294967295; defaultValue = 1; }
+#   The registry `type` is a key of _TYPE_TO_VALIDATOR (boolean/enum/string/integer), not the
+#   literal template type; `long` would make gie_validator_type raise GieBindingError (fail
+#   closed, binding unreachable). `integer` validates identically (Python 3 int is unbounded;
+#   4294967295 fits), so no engine alias was added. First registry field whose declared type is
+#   not in the engine map; deliberate.
+#
+# THE THREE FIELDS ARE INDEPENDENT: no IsShow and no addErrorReport relating them in any of the
+#   four parents. The gates are standalone `if`s:
+#       if enablePimSparse == "true":                          (int_routed_host:1246)
+#       if pimDrPriority != "" and pimDrPriority != "1":        (int_routed_host:1253)
+#       if enablePimBfdInstance == "true":                      (int_routed_host:1260)
+#   No template negatives; negative tests target the REGISTRY bounds (as for ARP_TIMEOUT).
+#   ENABLE_PIM_SPARSE is NOT a DSL precondition of PIM_DR_PRIORITY: the template can emit
+#   `dr-priority` without `sparse-mode`. Whether NX-OS refuses that is an open device question
+#   the template does not answer.
+#
+# NO deleteChildTemplate FOR PIM IN ANY PARENT. As for ARP_TIMEOUT, this does NOT predict residue
+#   after `deleted` (deleting the interface removes the policy and its children). Not yet
+#   measured: keeping the interface managed with the boolean OFF (the case that left residue for
+#   EIGRP); enable_pim_sparse: false does not instantiate the child, but does not request removal
+#   of an existing one either. Hence removal_semantics: unresolved on all eight.
+#
+# NOT NATIVE MODULE ARGS: the three public keys and three nvPairs have 0 matches in
+#   dcnm_interface.py.
+#
+# DEVICE SUPPORT: the operator confirms PIM and PIM6 are supported; `show feature` lists them as
+#   `disabled`, so `feature pim` must be enabled by an NDFC policy (as for eigrp, bfd, hsrp). Not
+#   taken as measured: if the CLI turns out not to exist, that is documented as a limit without
+#   retiring the registration.
+#
+# MECHANISM: passthrough on all eight. The module writes the PARENT nvPairs; the DSL instantiates
+#   the three children (same reasoning as BFD, dampening and ARP_TIMEOUT).
+
+shared_effects: []
+
+bindings:
+
+  # ======================================================= ENABLE_PIM_SPARSE, all four parents
+  - parent_template: int_loopback
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_loopback.template@27cd9ce7e671b5f3#ENABLE_PIM_SPARSE"
+
+  - parent_template: int_routed_host
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1246"
+
+  - parent_template: int_subif
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@a66388c2f21c5507#ENABLE_PIM_SPARSE"
+
+  - parent_template: int_vlan
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#ENABLE_PIM_SPARSE"
+
+  # ================================================== PIM_DR_PRIORITY, no loopback (no DR election)
+  #
+  # min: 1 is both the declared bound and the value the DSL suppresses (see the trap note in the
+  # header). The bound-rejection message must name the range; this is the first family to
+  # exercise that fix.
+  - parent_template: int_routed_host
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1253"
+
+  - parent_template: int_subif
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@a66388c2f21c5507#L870"
+
+  - parent_template: int_vlan
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#L1423"
+
+  # ============================================ ENABLE_PIM_BFD_INSTANCE, int_routed_host only
+  #
+  # The only parent that declares it. The current body (65426107b3d1cdcf) is the int_routed_host
+  # version that kept the dhcpServers fix; same hash as the ARP_TIMEOUT rows.
+  - parent_template: int_routed_host
+    parent_nvpair: pimBfdInstance
+    profile_key: enable_pim_bfd_instance
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1260"

@@ -1,0 +1,104 @@
+# Registry slice 0b_5 — BFD interval on int_vlan (second composition canary).
+#
+# Format B; designed offline (no engine, no live run). Distinct effect_id: bfd_interval@int_vlan.
+# Same shape as int_subif (slice 0b_4); ranges and mandatory-when-gate confirmed against the
+# catalog. Mechanism is passthrough for all four rows, for the reason given in slice 0b_4.
+shared_effects:
+  - effect_id: bfd_interval@int_vlan
+    parent_template: int_vlan
+    child_template: interface_bfd_interval_11_1
+    gate_nvpair: ENABLE_BFD_INTERVAL
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate: [BFD_TX_INTERVAL, BFD_MIN_RX_INTERVAL, BFD_MULTIPLIER]
+    value_bindings:
+      - {source_parent_nvpair: bfdTxInterval,     target_child_nvpair: BFD_TX_INTERVAL,     transform: identity}
+      - {source_parent_nvpair: bfdMinRxInterval, target_child_nvpair: BFD_MIN_RX_INTERVAL, transform: identity}
+      - {source_parent_nvpair: bfdMultiplier,      target_child_nvpair: BFD_MULTIPLIER,      transform: identity}
+    evidence_ref: "int_vlan.template#L1050"
+
+bindings:
+  - parent_template: int_vlan
+    parent_nvpair: bfdInterval
+    profile_key: enable_bfd_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_vlan
+    effect_role: gate
+    evidence_ref: "int_vlan.template#L1046"
+
+  - parent_template: int_vlan
+    parent_nvpair: bfdTxInterval
+    profile_key: bfd_tx_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    reset_wire: ''
+    min: 50
+    max: 999
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_vlan
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_vlan.template#L1052"
+
+  - parent_template: int_vlan
+    parent_nvpair: bfdMinRxInterval
+    profile_key: bfd_min_rx_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    reset_wire: ''
+    min: 50
+    max: 999
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_vlan
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_vlan.template#L1053"
+
+  - parent_template: int_vlan
+    parent_nvpair: bfdMultiplier
+    profile_key: bfd_multiplier
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 50
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_vlan
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_vlan.template#L1054"

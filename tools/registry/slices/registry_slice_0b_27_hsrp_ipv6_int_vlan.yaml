@@ -1,0 +1,67 @@
+# Registry slice 0b_27 — HSRP IPv6 on int_vlan (SVI): HSRP_VIPv6 and HSRP_GROUPv6.
+#
+# Dependency chain (checked against the installed int_vlan.template@0efb09af7f837b30): the whole IPv6
+# block sits behind `if ipv6_vip:` (ipv6_vip = HSRP_VIPv6), and HSRP_GROUPv6 falls back to HSRP_GROUP
+# when omitted. Before that, the DSL computes `hostMask = 0xFFFF... >> int(ipv6_prefix_len)`; a bare
+# `except:` clears ipv6_address/ipv6_prefix_len/ipv6_vip/ipv6_hsrp_group. So without PREFIXv6 the IPv6
+# block silently does nothing (no rejection). HSRP IPv6 needs IPv6 + PREFIXv6 + HSRP_VIPv6.
+#
+# IPv6 and PREFIXv6 are deliberately NOT registered. Registering ("int_vlan", "IPv6") -> "ipv6_addr"
+# made the engine guard claim that public key globally and reject it on int_subif, where the native
+# arg spec supports it ("'ipv6_addr' is not supported on this interface (type 'sub_int', mode
+# 'subint')"); caught by two subinterface tests in test_dcnm_intf.py. Bindings are per (parent, nvpair)
+# but the guard's rejection path is not, so a profile_key already served natively on other parents
+# cannot be registered for one parent. test_gie_legacy_and_engine_never_collide does not cover this
+# (it only checks the registered parent's builder). SVI IPv6 addressing belongs in svi_prof_spec, as for
+# int_subif/int_loopback, with a PREFIXv6 <-> IPv6_PREFIX name mapping; that is a module change outside
+# the engine.
+#
+# Validation limit: without SVI IPv6 addressing these two rows cannot produce IPv6 lines live (no
+# PREFIXv6, the VIP is swallowed). They are registered and tested OFFLINE only; the live cycle waits for
+# the native change. Do not count them as validated on hardware.
+#
+# HSRP_VIPv6 is ipV6Address in the template; the engine has no address type, so it is `string` (first
+# address field in the table). The module no longer validates the format; NDFC still does ("HSRP IPv6
+# address ...: host address part cannot be all 0s", "Cannot enable HSRP without HSRP IPv4 or IPv6
+# address"). This does not resolve DHCP_RELAY_SRC_INTF (`interface`) or HSRP_SECONDARY_VIPS (struct,
+# list of 16), which remain untyped.
+# A live test must send HSRP_GROUPv6 different from the IPv4 group; otherwise the fallback hides it.
+
+bindings:
+
+
+  - parent_template: int_vlan
+    parent_nvpair: HSRP_VIPv6
+    profile_key: hsrp_vipv6
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: casefold
+    max_length: 45
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: HSRP_GROUPv6
+    profile_key: hsrp_groupv6
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    min: 0
+    max: 4095
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30

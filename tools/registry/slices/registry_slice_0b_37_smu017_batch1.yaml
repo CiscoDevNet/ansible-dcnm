@@ -1,0 +1,171 @@
+# Registry slice 0b_37 -- SMU 4.3.1.0175006017 new interface fields, first increment. Five bindings.
+#
+#     int_routed_host  CDP_ENABLE                  enable_cdp
+#     int_routed_host  evpnMultisiteDciTracking    enable_evpn_multisite_dci_tracking
+#     int_routed_host  ospfRetransmitInterval      ospf_retransmit_interval
+#     int_access_host  loggingEventPortLinkStatus  logging_event_port_link_status
+#     int_subif        pimBfdInstance              enable_pim_bfd_instance
+#
+# Sources: the bodies exported from a controller with SMU 4.3.1.0175006017 (template REST API, read only), sha256 of
+# `content`:
+#     int_routed_host                          b5345584749288411fa44c5270b204fdffcb04941d70fb4e2daa2d1057b68918
+#     int_access_host                          103fc249900c...
+#     int_subif                                1937c6a5f49d...
+#     cdp_disable_interface_11_1               0c5891e62c22...   ->  no cdp enable
+#     evpn_multisite_interface                 83814189f859...   ->  evpn multisite $$EVPN_MS_INTF_MODE$$
+#     ospf_interface_retransmit_interval_11_1  4ee152e3daaf...   ->  ip ospf retransmit-interval $$OSPF_RETRANSMIT_INTERVAL$$
+#     pim_bfd_instance_interface               58a88c0b4bb8...   ->  ip pim bfd-instance
+# None of the five nvPairs is declared by the SMU 011 bodies. The module admits only SMU 017 or a numeric ND release
+# >= 4.4.1 for registered fields; the 4.4.1 bodies were not read, so their support for these nvPairs is unverified.
+#
+# NOTHING HERE IS MEASURED LIVE. The reset wires are the template defaults read from the bodies, and the removal paths are
+# read from the bodies (child deleted or never created, inline line not rendered); removal_semantics stays unresolved on
+# all five until a controller and a device confirm them.
+#
+# PUBLIC NAMES. enable_cdp and enable_pim_bfd_instance reuse existing public keys with the same meaning (enable_cdp is the
+# native key of the access, trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles; enable_pim_bfd_instance is the
+# int_routed_host row of slice 0b_31). ospf_retransmit_interval reuses the int_loopback/int_subif/int_vlan rows. The two
+# fields new to the module take names that state the CLI they enable.
+#
+# MECHANISM: passthrough on all five. The module writes the parent nvPair; the template creates, deletes or renders the line.
+
+shared_effects: []
+
+bindings:
+
+  # ============================================================== int_routed_host CDP_ENABLE
+  #
+  # int_routed_host b5345584:
+  #     boolean CDP_ENABLE { defaultValue=true; }                                   (L102)
+  #     interfaceOptions["CDP_ENABLE"] = normalize(scope.get("CDP_ENABLE", scope.get("cdp", "true")))   (L492)
+  #     if cdpEnable == "false": createOrUpdate(... "cdp_disable_interface_11_1" ...)                  (L1198)
+  #     else: deleteChildTemplate(INTF_NAME, INTF_NAME, "cdp_disable_interface_11_1")                 (L1205)
+  # CDP is on unless the field is false. "true" is both the template default and the value whose branch deletes the
+  # `no cdp enable` child, so it is the reset wire.
+  - parent_template: int_routed_host
+    parent_nvpair: CDP_ENABLE
+    profile_key: enable_cdp
+    reset_wire: 'true'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L1198"
+
+  # ============================================================== int_routed_host evpnMultisiteDciTracking
+  #
+  # int_routed_host b5345584:
+  #     boolean evpnMultisiteDciTracking { defaultValue=false; }                    (L147)
+  #     if evpnMultisiteDciTracking == "true": createOrUpdate(... "evpn_multisite_interface",
+  #                                                           {"EVPN_MS_INTF_MODE": "dci-tracking"})  (L1268)
+  #     else: deleteChildTemplate(INTF_NAME, INTF_NAME, "evpn_multisite_interface")                    (L1276)
+  # No template dependency on the switch role. Whether NX-OS accepts `evpn multisite dci-tracking` on a switch that is
+  # not a multisite border gateway is a device question the template does not answer.
+  - parent_template: int_routed_host
+    parent_nvpair: evpnMultisiteDciTracking
+    profile_key: enable_evpn_multisite_dci_tracking
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L1268"
+
+  # ============================================================== int_routed_host ospfRetransmitInterval
+  #
+  # int_routed_host b5345584:
+  #     integer ospfRetransmitInterval { min = 1; max = 65535; }  IsShow="ospf==true"  (L321)
+  #     if ospfRetransmitInterval == "5": ospfRetransmitInterval = ""   (5 is the NX-OS default, emits nothing)  (L762)
+  #     refused with "Enable OSPF on routed interface before configuring OSPF interface options" while ospf is
+  #     false and the value is not ""                                                                       (L910)
+  #     inside `if enableOspf == "true"`: if ospfRetransmitInterval != "": createOrUpdate(
+  #         ... "ospf_interface_retransmit_interval_11_1" ...)                                                (L1423)
+  # Same shape as ospfCost on this parent and as ospfRetransmitInterval on int_subif, whose "" reset was measured there.
+  - parent_template: int_routed_host
+    parent_nvpair: ospfRetransmitInterval
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_retransmit_interval
+    reset_wire: ""
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L1423"
+
+  # ============================================================== int_access_host loggingEventPortLinkStatus
+  #
+  # int_access_host 103fc249:
+  #     boolean loggingEventPortLinkStatus { defaultValue=false; }                  (L213)
+  #     if loggingEventPortLinkStatus == "true":
+  #         config_builder.add_config('logging event port link-status', ...)        (L576)
+  # Inline (setGeneratedConfig), no child policy: with false the line is not part of the expected stanza and NDFC
+  # compliance negates it, as for the other inline access fields. int_trunk_host does not declare this nvPair. A leaf
+  # reset of an access port holding true to int_trunk_host was measured to remove the line in one policy change (NDFC
+  # 12.6.0.267), so the generator declares that transition for this field (POLICY_CHANGE_CLEARS_INLINE_FIELDS).
+  - parent_template: int_access_host
+    parent_nvpair: loggingEventPortLinkStatus
+    profile_key: logging_event_port_link_status
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host.template@103fc249#L576"
+
+  # ============================================================== int_subif pimBfdInstance
+  #
+  # int_subif 1937c6a5:
+  #     boolean pimBfdInstance { defaultValue=false; }                               (L105)
+  #     interfaceOptions["pimBfdInstance"] = normalize(scope.get("pimBfdInstance",
+  #                                          scope.get("ENABLE_PIM_BFD_INSTANCE", "false"))).lower()   (L382)
+  #     if pimBfdInstance == "true": createOrUpdate(... "pim_bfd_instance_interface" ...)               (L840)
+  #     else: deleteChildTemplate(INTF_NAME, INTF_NAME, "pim_bfd_instance_interface")                    (L847)
+  # Independent of ENABLE_PIM_SPARSE in the template, as on int_routed_host.
+  - parent_template: int_subif
+    parent_nvpair: pimBfdInstance
+    profile_key: enable_pim_bfd_instance
+    reset_wire: 'false'
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@1937c6a5#L840"

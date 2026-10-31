@@ -1,0 +1,88 @@
+{
+ "_source": "NaC PR895 6c7a6c1b offline render (validate + dtc.common, synthetic credentials, no controller) of the customer base model plus a minimal PVLAN overlay; resource_data.interface_all create list (create phase, state replaced) entries with mode pvlan.",
+ "create_pvlan": [
+  {
+   "deploy": false,
+   "name": "po581",
+   "profile": {
+    "admin_state": false,
+    "bpdu_guard": true,
+    "copy_description": false,
+    "description": "NetAsCode PVLAN Port-Channel Interface",
+    "disable_lacp_suspend_individual": false,
+    "duplex": "auto",
+    "enable_cdp": true,
+    "lacp_port_priority": 32768,
+    "lacp_rate": "normal",
+    "members": [
+     "Ethernet1/9",
+     "Ethernet1/10"
+    ],
+    "mode": "pvlan",
+    "mtu": "jumbo",
+    "pc_mode": "active",
+    "port_type_fast": true,
+    "pvlan_association": [
+     {
+      "primary_vlan": 2210,
+      "secondary_vlan": 2212
+     }
+    ],
+    "pvlan_mode": "host",
+    "speed": "auto"
+   },
+   "switch": [
+    "192.168.1.102"
+   ],
+   "type": "pc"
+  },
+  {
+   "deploy": false,
+   "name": "vpc583",
+   "profile": {
+    "admin_state": false,
+    "bpdu_guard": true,
+    "copy_description": false,
+    "disable_lacp_suspend_individual": false,
+    "duplex": "auto",
+    "enable_cdp": true,
+    "enable_lacp_vpc_convergence": false,
+    "enable_pfc": false,
+    "enable_qos": false,
+    "lacp_port_priority": 32768,
+    "lacp_rate": "normal",
+    "mode": "pvlan",
+    "mtu": "jumbo",
+    "pc_mode": "active",
+    "peer1_cmds": "",
+    "peer1_description": "NetAsCode PVLAN Port-Channel Interface",
+    "peer1_members": [
+     "Ethernet1/9",
+     "Ethernet1/10"
+    ],
+    "peer1_pcid": 583,
+    "peer2_cmds": "",
+    "peer2_description": "NetAsCode PVLAN Port-Channel Interface",
+    "peer2_members": [
+     "Ethernet1/9",
+     "Ethernet1/10"
+    ],
+    "peer2_pcid": 583,
+    "port_type_fast": true,
+    "pvlan_association": [
+     {
+      "primary_vlan": 2210,
+      "secondary_vlan": 2212
+     }
+    ],
+    "pvlan_mode": "host",
+    "speed": "auto"
+   },
+   "switch": [
+    "192.168.1.103",
+    "192.168.1.104"
+   ],
+   "type": "vpc"
+  }
+ ]
+}

@@ -1,0 +1,172 @@
+# Registry slice 0b_13 — DISABLE_QOS_STATS and DISABLE_QUEUING_STATS on host Ethernet.
+#
+# Catalog: WP98_TEMPLATE_PARAMETER_CATALOG.csv marks both as dcnm_interface_gap_vs_nd43 = TRUE,
+# family "L2/QoS controls", on both parents. They close the 16 confirmed catalog gaps for
+# int_access_host / int_trunk_host.
+#
+# Declaration:
+#   int_trunk_host:201 / int_access_host:186   boolean DISABLE_QOS_STATS     { false }
+#   int_trunk_host:209 / int_access_host:194   boolean DISABLE_QUEUING_STATS { false }
+#
+# Neither emits its own CLI line; each is a SUFFIX of the line its dependency emits:
+#   service-policy type qos input <policy> no-stats
+#   service-policy type queuing output <policy> no-stats
+# Without the dependency the field is a SILENT NO-OP: accepted, stored in the nvPair, no
+# observable change on the switch. A test without the dependency in place "passes" without
+# measuring anything.
+#
+# Dependencies (template IsShow):
+#   DISABLE_QOS_STATS      IsShow="ENABLE_QOS==true"
+#   DISABLE_QUEUING_STATS  IsShow="QUEUING_POLICY!=''"
+# The QoS one is stricter than its IsShow (int_trunk_host:689-699): it needs ENABLE_QOS==true AND
+# a resolvable qosPolicyName, i.e. non-empty QOS_POLICY or the fabric AI/ML option
+# (configAIML == "true" -> "QOS_CLASSIFICATION"). ENABLE_QOS true with empty QOS_POLICY and no
+# AI/ML emits nothing.
+#
+# Asymmetry (read from the template):
+#   DISABLE_QOS_STATS is read through a local with a default (int_trunk_host:401-403,
+#   `except: disableQosStats = "false"`).
+#   DISABLE_QUEUING_STATS is read directly from the nvPair inside `try: ... except: pass`
+#   (int_trunk_host:704-706). If that nvPair were missing, the NameError would drop the WHOLE
+#   queuing line, not just the suffix.
+# NDFC always sends the template's full nvPair set, so absence should not occur; it is one more
+# reason the engine must NEVER omit an nvPair already in HAVE (passthrough carry-forward covers it).
+#
+# On default_template: the template default is false on both, but registering it would turn
+# omission into "set false" instead of "preserve". As passthrough fields they are carried
+# forward, and preserving is the correct behaviour (measured for flowcontrol and disable_lldp).
+
+# ---------------------------------------------------------------- DISABLE_QOS_STATS ---
+- parent_template: int_trunk_host
+  parent_nvpair: qosStatsSuppressed
+  reset_wire: "false"
+  profile_key: disable_qos_stats
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: boolean
+  default_template: false  # int_trunk_host.template declares defaultValue = false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_trunk_host.template#L201
+  catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_trunk_host/DISABLE_QOS_STATS
+  effect_rules:
+    - predicate: value_true_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      cli: service-policy type qos input <policy> no-stats
+      phase: current
+      evidence_ref: int_trunk_host.template#L699
+    - predicate: value_false_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      cli: service-policy type qos input <policy>
+      phase: current
+      # The suffix disappears; the service-policy line remains.
+      evidence_ref: int_trunk_host.template#L699
+    - predicate: enable_qos_false_or_policy_unresolvable
+      ndfc_effect: silent_noop
+      phase: current
+      # Accepted and stored in the nvPair, but there is no line to suffix.
+      evidence_ref: int_trunk_host.template#L689
+
+- parent_template: int_access_host
+  parent_nvpair: qosStatsSuppressed
+  profile_key: disable_qos_stats
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: boolean
+  reset_wire: "false"          # measured live with a real QoS policy
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_access_host.template#L186
+  catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_access_host/DISABLE_QOS_STATS
+  effect_rules:
+    - predicate: value_true_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      cli: service-policy type qos input <policy> no-stats
+      phase: current
+      evidence_ref: int_access_host.template#L630
+    - predicate: value_false_and_qos_policy_resolvable
+      ndfc_effect: inline_config
+      cli: service-policy type qos input <policy>
+      phase: current
+      evidence_ref: int_access_host.template#L630
+    - predicate: enable_qos_false_or_policy_unresolvable
+      ndfc_effect: silent_noop
+      phase: current
+      evidence_ref: int_access_host.template#L620
+
+# ------------------------------------------------------------ DISABLE_QUEUING_STATS ---
+- parent_template: int_trunk_host
+  parent_nvpair: queuingStats
+  reset_wire: "false"
+  profile_key: disable_queuing_stats
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: boolean
+  default_template: false  # int_trunk_host.template declares defaultValue = false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_trunk_host.template#L209
+  catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_trunk_host/DISABLE_QUEUING_STATS
+  effect_rules:
+    - predicate: value_true_and_queuing_policy_set
+      ndfc_effect: inline_config
+      cli: service-policy type queuing output <policy> no-stats
+      phase: current
+      evidence_ref: int_trunk_host.template#L706
+    - predicate: value_false_and_queuing_policy_set
+      ndfc_effect: inline_config
+      cli: service-policy type queuing output <policy>
+      phase: current
+      evidence_ref: int_trunk_host.template#L706
+    - predicate: queuing_policy_empty
+      ndfc_effect: silent_noop
+      phase: current
+      evidence_ref: int_trunk_host.template#L704
+
+- parent_template: int_access_host
+  parent_nvpair: queuingStats
+  reset_wire: "false"
+  profile_key: disable_queuing_stats
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: boolean
+  default_template: false  # int_access_host.template declares defaultValue = false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  validated_on: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_access_host.template#L194
+  catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_access_host/DISABLE_QUEUING_STATS
+  effect_rules:
+    - predicate: value_true_and_queuing_policy_set
+      ndfc_effect: inline_config
+      cli: service-policy type queuing output <policy> no-stats
+      phase: current
+      evidence_ref: int_access_host.template#L637
+    - predicate: value_false_and_queuing_policy_set
+      ndfc_effect: inline_config
+      cli: service-policy type queuing output <policy>
+      phase: current
+      evidence_ref: int_access_host.template#L637
+    - predicate: queuing_policy_empty
+      ndfc_effect: silent_noop
+      phase: current
+      evidence_ref: int_access_host.template#L635

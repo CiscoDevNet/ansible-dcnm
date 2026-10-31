@@ -1,0 +1,459 @@
+# NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): int_port_channel_trunk_host now reads the member
+# policies with PTIWrapper.get, drops deleted policies and prefers the current int_port_channel_trunk_member_11_1 child, and passes a new
+# linkTransmitResetSkip (member value first, then the parent's). The registered LLDP, QoS and STP bindings are unchanged. Preservation of
+# admin state, freeform and FEC of the members is not exercised: follow-up.
+#
+# Registry slice 0b_17 — DISABLE_LLDP split into DISABLE_LLDP_TRANSMIT and DISABLE_LLDP_RECEIVE
+# (16 bindings: 2 fields x 8 parents).
+#
+# The engineering template update removed DISABLE_LLDP from the eight parents that declared it and
+# replaced it with:
+#     DISABLE_LLDP_TRANSMIT   ->  no lldp transmit
+#     DISABLE_LLDP_RECEIVE    ->  no lldp receive
+# Not a rename: the old field disabled both directions; the new ones allow disabling one. Hence two
+# bindings, not one renamed.
+#
+# The eight earlier disable_lldp bindings are RETIRED: the nvPair no longer exists in any template.
+# Registering it would still look correct via API (a PTI accepts undeclared nvPairs) but would never
+# produce CLI — the failure mode this registry exists to prevent.
+#
+# Parent code (read from the template, not assumed):
+#   before:  if disableLldp == "true":          -> both lines together
+#   now:     if disableLldpTransmit == "true":  -> 'no lldp transmit'
+#            if disableLldpReceive == "true":   -> 'no lldp receive'
+# The conditions are independent: one true and the other false must produce ONE line. That is the
+# live check that distinguishes a real split from a rename.
+#
+# mechanism: passthrough on all sixteen (see slices 0b_15/0b_16). On port-channel and vPC parents
+# the value is delegated to a member template; that does not decide the mechanism, which records
+# ownership of validation, invalid-parent guard, generic prof_spec, carry-forward and wire-form
+# conversion. None of the eight parents has its own machinery for those.
+#
+# Member templates changed too: int_port_channel_*_member_11_1 and int_vpc_*_po_member_11_1 now
+# declare both fields instead of DISABLE_LLDP. Patching only the _host leaves the nvPair propagating
+# with no CLI and the switch In-Sync (see slice 0b_12). Members were verified updated on the
+# controller before registering.
+#
+# Known defect in the same template update (patched in the lab only): the seventeen templates that
+# received this change call normalize() on the two new values, but none of them defines it
+# (normalize() exists in thirty-two other templates). Measured effect: NameError during template
+# execution, config-save 500 "An unexpected error occurred during template execution", without
+# naming the field. Lab fix: add the four-line definition copied verbatim from int_routed_host.
+# Without that fix these bindings cannot be exercised.
+#
+# Removal: MEASURED LIVE. removal_semantics: preserves_on_absent (new vocabulary value; neither
+# "unknown" nor "omission deletes" described the result). Two distinct behaviours:
+#   value set to its inert form (false / "")  ->  CLI IS REMOVED from the device
+#   field OMITTED from the payload            ->  value SURVIVES intact
+# removal_semantics describes the second; `deletes_on_absent` would be FALSE. This confirms on the
+# device the emit_when: explicit_only contract. The first has no field of its own: the template has
+# no `else` branch deleting the child, yet NDFC reconciles and removes what the new pass does not
+# create. Verified on the switch, not on the controller.
+#
+# Limits: evidence_ref points to the template declaration (proves the fields exist and where).
+# Independence of the two directions and per-direction CLI rest on the live run, which was recorded
+# as pending when this note was written.
+
+# ---------------------------------------------------------------- eth · access
+- parent_template: int_access_host
+  parent_nvpair: lldpTransmit
+  profile_key: disable_lldp_transmit
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: boolean
+  reset_wire: "false"          # measured live
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_access_host.template#L86
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: inline_config
+      cli: "no lldp transmit"
+      phase: current
+      evidence_ref: int_access_host.template#L568
+
+- parent_template: int_access_host
+  parent_nvpair: lldpReceive
+  reset_wire: "false"
+  profile_key: disable_lldp_receive
+  applicable_interface_type: eth
+  applicable_mode: access
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_access_host.template#L91
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: inline_config
+      cli: "no lldp receive"
+      phase: current
+      evidence_ref: int_access_host.template#L571
+
+# ----------------------------------------------------------------- eth · trunk
+- parent_template: int_trunk_host
+  parent_nvpair: lldpTransmit
+  reset_wire: "false"
+  profile_key: disable_lldp_transmit
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_trunk_host.template#L101
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: inline_config
+      cli: "no lldp transmit"
+      phase: current
+      evidence_ref: int_trunk_host.template#L636
+
+- parent_template: int_trunk_host
+  parent_nvpair: lldpReceive
+  reset_wire: "false"
+  profile_key: disable_lldp_receive
+  applicable_interface_type: eth
+  applicable_mode: trunk
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_trunk_host.template#L106
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: inline_config
+      cli: "no lldp receive"
+      phase: current
+      evidence_ref: int_trunk_host.template#L639
+
+# ---------------------------------------------------------------- eth · routed
+- parent_template: int_routed_host
+  parent_nvpair: lldpTransmit
+  profile_key: disable_lldp_transmit
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: boolean
+  reset_wire: "false"         # measured live
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_routed_host.template#L88
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: interface_lldp_disable
+      cli: "no lldp transmit"
+      phase: current
+      evidence_ref: int_routed_host.template#L1195
+
+- parent_template: int_routed_host
+  parent_nvpair: lldpReceive
+  profile_key: disable_lldp_receive
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: boolean
+  reset_wire: "false"         # measured live
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_routed_host.template#L93
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: interface_lldp_disable
+      cli: "no lldp receive"
+      phase: current
+      evidence_ref: int_routed_host.template#L1196
+
+# ------------------------------------------------------------- pc · access
+- parent_template: int_port_channel_access_host
+  parent_nvpair: lldpTransmit
+  reset_wire: "false"   # measured live: apply+clear on Port-channel301
+  profile_key: disable_lldp_transmit
+  applicable_interface_type: pc
+  applicable_mode: access
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_port_channel_access_host.template#L100
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_access_member_11_1
+      cli: "no lldp transmit"
+      phase: current
+      evidence_ref: int_port_channel_access_host.template#L667
+
+- parent_template: int_port_channel_access_host
+  parent_nvpair: lldpReceive
+  reset_wire: "false"   # measured live: apply+clear on Port-channel301
+  profile_key: disable_lldp_receive
+  applicable_interface_type: pc
+  applicable_mode: access
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_port_channel_access_host.template#L105
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_access_member_11_1
+      cli: "no lldp receive"
+      phase: current
+      evidence_ref: int_port_channel_access_host.template#L668
+
+# -------------------------------------------------------------- pc · trunk
+- parent_template: int_port_channel_trunk_host
+  parent_nvpair: lldpTransmit
+  reset_wire: "false"   # measured live: apply+clear on Port-channel302
+  profile_key: disable_lldp_transmit
+  applicable_interface_type: pc
+  applicable_mode: trunk
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_port_channel_trunk_host.template#L111
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_trunk_member_11_1
+      cli: "no lldp transmit"
+      phase: current
+      evidence_ref: int_port_channel_trunk_host.template#L811
+
+- parent_template: int_port_channel_trunk_host
+  parent_nvpair: lldpReceive
+  reset_wire: "false"   # measured live: apply+clear on Port-channel302
+  profile_key: disable_lldp_receive
+  applicable_interface_type: pc
+  applicable_mode: trunk
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_port_channel_trunk_host.template#L116
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_trunk_member_11_1
+      cli: "no lldp receive"
+      phase: current
+      evidence_ref: int_port_channel_trunk_host.template#L812
+
+# -------------------------------------------------------------- pc · dot1q
+- parent_template: int_port_channel_dot1q_tunnel_host
+  parent_nvpair: lldpTransmit
+  reset_wire: "false"   # measured live: apply+clear on Port-channel303
+  profile_key: disable_lldp_transmit
+  applicable_interface_type: pc
+  applicable_mode: dot1q
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_port_channel_dot1q_tunnel_host.template#L100
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_dot1q_tunnel_member_11_1
+      cli: "no lldp transmit"
+      phase: current
+      evidence_ref: int_port_channel_dot1q_tunnel_host.template#L673
+
+- parent_template: int_port_channel_dot1q_tunnel_host
+  parent_nvpair: lldpReceive
+  reset_wire: "false"   # measured live: apply+clear on Port-channel303
+  profile_key: disable_lldp_receive
+  applicable_interface_type: pc
+  applicable_mode: dot1q
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_port_channel_dot1q_tunnel_host.template#L105
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_dot1q_tunnel_member_11_1
+      cli: "no lldp receive"
+      phase: current
+      evidence_ref: int_port_channel_dot1q_tunnel_host.template#L674
+
+# ------------------------------------------------------------- vpc · access
+- parent_template: int_vpc_access_host
+  parent_nvpair: lldpTransmit
+  profile_key: disable_lldp_transmit
+  reset_wire: 'false'
+  applicable_interface_type: vpc
+  applicable_mode: access
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_vpc_access_host.template#L132
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_vpc_access_po_member_11_1
+      cli: "no lldp transmit"
+      phase: current
+      evidence_ref: int_vpc_access_host.template#L824
+
+- parent_template: int_vpc_access_host
+  parent_nvpair: lldpReceive
+  profile_key: disable_lldp_receive
+  reset_wire: 'false'
+  applicable_interface_type: vpc
+  applicable_mode: access
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_vpc_access_host.template#L137
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_vpc_access_po_member_11_1
+      cli: "no lldp receive"
+      phase: current
+      evidence_ref: int_vpc_access_host.template#L825
+
+# -------------------------------------------------------------- vpc · trunk
+- parent_template: int_vpc_trunk_host
+  parent_nvpair: lldpTransmit
+  profile_key: disable_lldp_transmit
+  reset_wire: 'false'
+  applicable_interface_type: vpc
+  applicable_mode: trunk
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_vpc_trunk_host.template#L148
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_vpc_trunk_po_member_11_1
+      cli: "no lldp transmit"
+      phase: current
+      evidence_ref: int_vpc_trunk_host.template#L969
+
+- parent_template: int_vpc_trunk_host
+  parent_nvpair: lldpReceive
+  profile_key: disable_lldp_receive
+  reset_wire: 'false'
+  applicable_interface_type: vpc
+  applicable_mode: trunk
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  parent_resolution: desired_parent
+  removal_semantics: preserves_on_absent
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  evidence_ref: int_vpc_trunk_host.template#L153
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_vpc_trunk_po_member_11_1
+      cli: "no lldp receive"
+      phase: current
+      evidence_ref: int_vpc_trunk_host.template#L970

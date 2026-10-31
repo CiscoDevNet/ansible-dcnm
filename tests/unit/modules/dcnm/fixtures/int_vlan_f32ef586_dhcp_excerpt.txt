@@ -1,0 +1,37 @@
+## EXCERPT of the NDFC parent template int_vlan, for tests only. Not a template: do not upload.
+## Body: f32ef586 (installed with SMU 4.3.1.0175006011)
+## sha256: f32ef5863d8757759154f5992eba9f009ecdf68425f8be9d58e5a0bb416313e4 (98006 bytes)
+## Declares dhcpServerAddress4 and dhcpRelaySourceInterface; reads them with scope.get.
+## --- source lines 266-275 (verbatim) ---
+
+@(IsMandatory=false, DisplayName="IPv4 or IPv6 DHCP server 4", Section="Services", Description="DHCP relay IP")
+ipAddress dhcpServerAddress4;
+
+@(IsMandatory=false, IsShow="dhcpServerAddress4!=null", DisplayName="DHCP server4 VRF", Description="VRF to reach DHCP server 4. If default VRF, enter 'default'. If left blank, this DHCP server is in the interface VRF", Section="Services")
+string vrfDhcp4;
+
+@(IsMandatory=false, DisplayName="DHCP relay source interface", Description="Source interface for DHCP relay. Valid interfaces: Ethernet, port-channel, or loopback", Section="Services")
+interface dhcpRelaySourceInterface;
+
+## --- source lines 463-468 (verbatim) ---
+    interfaceOptions["hsrpSecondaryVips"] = normalize(scope.get("hsrpSecondaryVips", ""))
+    interfaceOptions["secondaryGws"] = normalize(scope.get("secondaryGws", ""))
+    interfaceOptions["dhcpServerAddress4"] = normalize(scope.get("dhcpServerAddress4", ""))
+    interfaceOptions["vrfDhcp4"] = normalize(scope.get("vrfDhcp4", ""))
+    interfaceOptions["dhcpRelaySourceInterface"] = normalize(scope.get("dhcpRelaySourceInterface", ""))
+    interfaceOptions["ipv4Redirects"] = normalize(scope.get("ipv4Redirects", ""))
+## --- source lines 1728-1732 (verbatim) ---
+                                                   {"INTF_NAME": intfName, "DHCP_SERVER_IP": dhcpServerAddr3, "DHCP_SERVER_VRF": dhcpVrf}))
+
+            if dhcpServerAddress4 != "":
+                if ":" not in dhcpServerAddress4:
+                    if vrfDhcp4 != "" and vrfDhcp4 != intfVrf:
+## --- source lines 1757-1764 (verbatim) ---
+
+        if dhcpRelaySrcIntf != "":
+            Util.exe(PTIWrapper.create(SERIAL_NUMBER, "INTERFACE",
+                                       intfName, POLICY_ID,
+                                       ConfigPriority.CONFIG_PRIO_INTF_SUB_LVL1,
+                                       "vlan_interface_dhcp_relay_src_interface_11_1",
+                                       {"INTF_NAME": intfName, "DHCP_RELAY_SRC_INTF": dhcpRelaySrcIntf}))
+

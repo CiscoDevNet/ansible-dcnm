@@ -1,0 +1,33 @@
+# Registry slice iq1 — qosStatsSuppressed (disable_qos_stats) on the vPC PVLAN parent.
+# Same key, type, reset and mechanism as the sibling vPC parents (passthrough, reset 'false',
+# min 12.6.0.267) and the vPC PVLAN rows in registry_slice_c1_pvlan_companions.yaml.
+# Source: templates installed on the test ND (sha256):
+#   int_vpc_pvlan_host  106ac645fae9ae2151e97e3267e08e6c457afbea1e932cf4a7cd2e78ffaaf5c6  (declaration L167-170, interfaceOptions L251)
+#   int_vpc_pvlan_po    3c9991a26958f5dc1ceed99eae9687b1dcd835bff1f3b809ba0eabb13d73fa79  (declaration L100-103, use L305-309)
+# reset_wire is INFERRED from the siblings, NOT measured on a PVLAN parent; no `validated_on`.
+# The child adds ' no-stats' only to `service-policy type qos input <QOS_POLICY>` (ENABLE_QOS true plus a
+# QOS_POLICY). The installed child line is the defective literal `type ENABLE_QOS input`, and the parent
+# never passes ENABLE_QOS/QOS_POLICY down. The binding only carries qosStatsSuppressed (passed down via
+# interfaceOptions); the PVLAN helper models the corrected child and refuses controller state that differs.
+
+- parent_template: int_vpc_pvlan_host
+  parent_nvpair: qosStatsSuppressed
+  profile_key: disable_qos_stats
+  reset_wire: 'false'   # inferred from the sibling parents; NOT measured on a PVLAN parent
+  applicable_interface_type: vpc
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_pvlan_host@106ac645#L167,L251,L655,L685; int_vpc_pvlan_po@3c9991a2#L100,L305-309
+  effect_rules:
+    - predicate: value_true_with_enabled_qos_policy
+      ndfc_effect: child_policy
+      child_template: int_vpc_pvlan_po
+      cli: service-policy type qos input <policy> no-stats
+      phase: current

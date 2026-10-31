@@ -1,0 +1,104 @@
+# Registry slice 0b_32 — IPv6_LINK_LOCAL: one field on three overlay parents.
+#
+# int_loopback does not declare it (3 of 4 parents, like ARP_TIMEOUT).
+#
+# Attributes read from the bodies installed on the controller:
+#     int_routed_host.template@65426107b3d1cdcf
+#     int_subif.template@a66388c2f21c5507
+#     int_vlan.template@0efb09af7f837b30
+#     interface_ipv6_link_local_address_11_1.template@06189db540f73b04   (child)
+# The child is installed and renders:
+#     ipv6 link-local $$IPV6_LINK_LOCAL$$
+#
+# Name trap: parent and child spell the nvPair differently.
+#     parent:  ipV6Address IPv6_LINK_LOCAL;      <- lower-case "v"
+#     child:   ipV6Address IPV6_LINK_LOCAL;      <- all upper-case
+# The parent translates it, identically in all three:
+#     ipv6LinkLocal = normalize(IPv6_LINK_LOCAL)              (routed:607, subif:437, vlan:767)
+#     {"INTF_NAME": INTF_NAME, "IPV6_LINK_LOCAL": ipv6LinkLocal}
+# The binding targets the PARENT form, `IPv6_LINK_LOCAL`, because the module writes the parent's
+# nvPairs. The child form (the one visible in the CLI) is wrong here: NDFC accepts unknown nvPairs
+# silently, so the module would report success, the controller would store a key nobody reads and
+# the device would get no line -- a silent failure at all four layers (the same failure was
+# measured with four port-channel bindings). Same pattern as PREFIXv6 (int_vlan) vs IPv6_PREFIX
+# (int_subif, int_routed_host).
+#
+# Type: `ipV6Address` in the template, `string` here. _TYPE_TO_VALIDATOR knows only
+# boolean/enum/string/integer, and gie_validator_type raises GieBindingError on an unknown type
+# (fail-closed), which would make the binding unreachable (as `long` would have for
+# PIM_DR_PRIORITY). Precedent: HSRP_VIPv6 is `ipV6Address` in the template and is registered
+# `type: string, max_length: 45`; same treatment and same 45 here. NDFC validates the format and
+# fails loudly; the engine transports.
+#
+# Independent: zero IsShow and no defaultValue on all three parents; the emission gate is a plain
+# `if ipv6LinkLocal != ""`. No template refusals (like PIM and ARP_TIMEOUT).
+#
+# Not native: `ipv6_link_local` and both nvPair spellings have 0 uses in dcnm_interface.py. By
+# contrast `ipv6_addr` (24 uses) and `ipv6_mask_len` (13) came in through the native SVI arg spec;
+# registering those would break int_subif and int_routed_host through the global guard, as
+# happened with ipv6_addr.
+#
+# Removal: unresolved. No parent calls deleteChildTemplate for this child, but that does NOT
+# predict residue: ARP_TIMEOUT and PIM measured the line being withdrawn (on interface delete for
+# ARP, on field clear for PIM). No residue prediction is made here; it has to be measured.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_routed_host
+    parent_nvpair: ipv6LinkLocal
+    profile_key: ipv6_link_local
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: casefold
+    reset_wire: ""          # measured live
+    max_length: 45
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1123"
+
+  - parent_template: int_subif
+    parent_nvpair: ipv6LinkLocal
+    profile_key: ipv6_link_local
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: casefold
+    reset_wire: ""          # measured live
+    max_length: 45
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@a66388c2f21c5507#L813"
+
+  - parent_template: int_vlan
+    parent_nvpair: ipv6LinkLocal
+    profile_key: ipv6_link_local
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: casefold
+    reset_wire: ""          # measured live
+    max_length: 45
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#L1340"

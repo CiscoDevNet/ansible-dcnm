@@ -1,0 +1,17 @@
+## EXCERPT of the NDFC parent template int_vlan, for tests only. Not a template: do not upload.
+## Body: 4d043f65 (older body: no server 4 at all)
+## sha256: 4d043f650a0011f634e93fb93cb9ff1ec1028757670d881b238ae34dbffcb9d8 (70148 bytes)
+## Declares no fourth server; the relay source keeps the legacy name DHCP_RELAY_SRC_INTF.
+## --- source lines 158-162 (verbatim) ---
+
+@(IsMandatory=false, DisplayName="DHCP relay source interface", Description="Source interface for DHCP relay. Valid interfaces: Ethernet, port-channel, or loopback", Section="Advanced")
+interface DHCP_RELAY_SRC_INTF;
+
+@(IsMandatory=false, DisplayName="Enable OSPF on SVI", Description="Configure OSPF under the VLAN interface", Section="Advanced")
+## --- source lines 605-610 (verbatim) ---
+
+        try:
+            dhcpRelaySrcIntf = normalize(DHCP_RELAY_SRC_INTF)
+        except:
+            dhcpRelaySrcIntf = ""
+

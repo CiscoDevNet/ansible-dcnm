@@ -1,0 +1,260 @@
+# Registry slice ul1 -- existing ToR-uplink vPC on the leaf pair (mode 'uplink_access'). Twelve bindings on
+# int_vpc_uplink_access.
+#
+#     int_vpc_uplink_access  ENABLE_QOS                         enable_qos
+#     int_vpc_uplink_access  QOS_POLICY                         qos_policy
+#     int_vpc_uplink_access  qosStatsSuppressed                 disable_qos_stats
+#     int_vpc_uplink_access  spanningTreePortType               spanning_tree_port_type
+#     int_vpc_uplink_access  ENABLE_STORM_CONTROL               enable_storm_control
+#     int_vpc_uplink_access  STORM_CONTROL_ACTION               storm_control_action
+#     int_vpc_uplink_access  STORM_CONTROL_{B,M,U}CAST_LEVEL_PERCENT  storm_control_{broadcast,multicast,unicast}_level_percent
+#     int_vpc_uplink_access  STORM_CONTROL_{B,M,U}CAST_LEVEL_PPS      storm_control_{broadcast,multicast,unicast}_level_pps
+#
+# Source: the int_vpc_uplink_access body exported from a controller with the patched templates (template REST API,
+# read only), sha256 of `content` 03e4fd18c5dd5142f6f982cce2c5b2b1234fec3bc28ae9086531d60d513bec7f, and its port-channel child
+# int_vpc_uplink_access_po, 28914942bee6bc6229483188d646225837625bc2adbe6a42b7b4cfb4f1166c60. A controller with a paired
+# ToR was measured to hold these exact bodies.
+#
+# Measured on that controller: the ToR pairing creates the parent on the vPC pair serial without any of the twelve
+# nvPairs, and each peer's child stores all twelve at the defaults below. NO VALUE CHANGE HAS BEEN MEASURED: the effects
+# and resets are read from the bodies.
+#
+# The ToR pairing creates the parent and owns every other nvPair. The module updates an existing parent only and sends the
+# other stored nvPairs back unchanged (see UPLINK_ACCESS_POLICY in dcnm_interface.py).
+#
+# Forwarding. On modify the parent rebuilds both children (delete(True), L467) with the twelve values in
+# forwardedPoFields (L518-533); an unset value falls back to the default below. The child deletes its own sub-policies
+# and recreates them from those values (int_vpc_uplink_access_po delete L452, add L191), so a value returned to its
+# default leaves no sub-policy.
+#
+# QoS. The child attaches interface_qos_service_policy, or interface_qos_service_policy_no_stats when qosStatsSuppressed
+# is true, only when ENABLE_QOS is "true" and QOS_POLICY is non-empty (child L325). The module requires a non-empty name
+# for an effective enable and never supplies a fabric policy. QOS_POLICY carries the 40-character bound of the same public
+# key on the peer-link parent; this body declares no bound.
+#
+# STP and storm control. getUplinkStpStormOptions (parent L212, child L143) renders `spanning-tree port type <value>`
+# unless the value is `no`, and the storm-control action and levels only while ENABLE_STORM_CONTROL is true. Percent and
+# PPS for the same traffic type are mutually exclusive; a percent level of 100 is the switch default and renders nothing.
+# STORM_CONTROL_ACTION keeps the public spelling of the native storm-control keys: `default` is sent as `no`.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: ENABLE_QOS
+    profile_key: enable_qos
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L138,L518-533; int_vpc_uplink_access_po.template@28914942#L325"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: QOS_POLICY
+    profile_key: qos_policy
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: string
+    max_length: 40
+    string_compare: unverified
+    reset_wire: ""
+    default_template: ""
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L143,L518-533; int_vpc_uplink_access_po.template@28914942#L325-335"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: qosStatsSuppressed
+    profile_key: disable_qos_stats
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L146,L518-533; int_vpc_uplink_access_po.template@28914942#L326-329"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: spanningTreePortType
+    profile_key: spanning_tree_port_type
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: enum
+    valid_values: ["no", "network", "normal"]
+    reset_wire: "no"
+    default_template: "no"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L151,L212-226; int_vpc_uplink_access_po.template@28914942#L341-347"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: ENABLE_STORM_CONTROL
+    profile_key: enable_storm_control
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L157,L227; int_vpc_uplink_access_po.template@28914942#L395"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: STORM_CONTROL_ACTION
+    profile_key: storm_control_action
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: enum
+    valid_values: ["shutdown", "trap", "default"]
+    wire_values: {shutdown: shutdown, trap: trap, default: "no"}   # the native public spelling; the body says `no`
+    reset_wire: "no"
+    default_template: "default"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L162,L228-232; int_vpc_uplink_access_po.template@28914942#L396-402"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: STORM_CONTROL_BCAST_LEVEL_PERCENT
+    profile_key: storm_control_broadcast_level_percent
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: string
+    string_compare: unverified
+    reset_wire: ""
+    default_template: ""
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L168,L233-244"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: STORM_CONTROL_MCAST_LEVEL_PERCENT
+    profile_key: storm_control_multicast_level_percent
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: string
+    string_compare: unverified
+    reset_wire: ""
+    default_template: ""
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L173,L233-244"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: STORM_CONTROL_UCAST_LEVEL_PERCENT
+    profile_key: storm_control_unicast_level_percent
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: string
+    string_compare: unverified
+    reset_wire: ""
+    default_template: ""
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L178,L233-244"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: STORM_CONTROL_BCAST_LEVEL_PPS
+    profile_key: storm_control_broadcast_level_pps
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: integer
+    min: 0
+    max: 200000000
+    reset_wire: ""
+    default_template: ""
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L183,L245-249"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: STORM_CONTROL_MCAST_LEVEL_PPS
+    profile_key: storm_control_multicast_level_pps
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: integer
+    min: 0
+    max: 200000000
+    reset_wire: ""
+    default_template: ""
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L189,L245-249"
+
+  - parent_template: int_vpc_uplink_access
+    parent_nvpair: STORM_CONTROL_UCAST_LEVEL_PPS
+    profile_key: storm_control_unicast_level_pps
+    applicable_interface_type: vpc
+    applicable_mode: uplink_access
+    type: integer
+    min: 0
+    max: 200000000
+    reset_wire: ""
+    default_template: ""
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L195,L245-249"

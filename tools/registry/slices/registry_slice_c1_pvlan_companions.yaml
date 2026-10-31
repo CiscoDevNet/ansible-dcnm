@@ -1,0 +1,260 @@
+# Registry slice c1 — companion bindings of the three PVLAN parents.
+#
+# Source of truth: the templates installed on the controller (NDFC 12.6.0.267, SMU 4.3.1.0175006011),
+# content sha256 (byte-identical to earlier captures; line numbers refer to those captures):
+#   int_pvlan_host               5c227412569ff80d53b830d1e509a9fb1a68feb8683dfabfa2087d9bdb1eace3
+#   int_port_channel_pvlan_host  9d10f924c61e1eae5e1e573c6928e7b0d42f7f5d0290406e385632d6abb99463
+#   int_port_channel_pvlan_member 858c1bddfdb745edc86b0aac99762235408443f875c8115d646f920482464dd2
+#   int_vpc_pvlan_host           106ac645fae9ae2151e97e3267e08e6c457afbea1e932cf4a7cd2e78ffaaf5c6
+#   int_vpc_pvlan_po             3c9991a26958f5dc1ceed99eae9687b1dcd835bff1f3b809ba0eabb13d73fa79
+#
+# Same public keys, types and reset forms as the sibling host parents (int_access_host,
+# int_port_channel_*_host, int_vpc_*_host, int_vpc_dot1q_tunnel). reset_wire is the explicit neutral
+# of the declared default; on these PVLAN parents it is INFERRED from the siblings and NOT measured
+# live (no non-default value has been sent on a PVLAN parent). No `validated_on`: nothing here has
+# been validated on a controller. default_template is the PVLAN template's own declaration.
+# A PVLAN parent hands lldp to its member and stp/queuingStats/aclFilter to its child; the PVLAN
+# helper (interface_pvlan.py) owns the CLI model of those children and wires these bindings into the
+# PVLAN routes.
+
+- parent_template: int_pvlan_host
+  parent_nvpair: lldpTransmit
+  profile_key: disable_lldp_transmit
+  reset_wire: 'false'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: eth
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_pvlan_host.template@5c227412#L61,L382
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: parent_cli
+      cli: "no lldp transmit"
+      phase: current
+
+- parent_template: int_pvlan_host
+  parent_nvpair: lldpReceive
+  profile_key: disable_lldp_receive
+  reset_wire: 'false'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: eth
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_pvlan_host.template@5c227412#L66,L385
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: parent_cli
+      cli: "no lldp receive"
+      phase: current
+
+- parent_template: int_port_channel_pvlan_host
+  parent_nvpair: lldpTransmit
+  profile_key: disable_lldp_transmit
+  reset_wire: 'false'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: pc
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_pvlan_host@9d10f924#L81,L545; member@858c1bdd#L178
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_pvlan_member
+      cli: "no lldp transmit (on the member)"
+      phase: current
+
+- parent_template: int_port_channel_pvlan_host
+  parent_nvpair: lldpReceive
+  profile_key: disable_lldp_receive
+  reset_wire: 'false'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: pc
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_pvlan_host@9d10f924#L86,L546; member@858c1bdd#L181
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_pvlan_member
+      cli: "no lldp receive (on the member)"
+      phase: current
+
+- parent_template: int_port_channel_pvlan_host
+  parent_nvpair: spanningTreePortType
+  profile_key: spanning_tree_port_type
+  reset_wire: 'no'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: pc
+  applicable_mode: pvlan
+  type: enum
+  valid_values: ["no", "network", "normal"]
+  default_template: "no"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_pvlan_host@9d10f924#L47,L479
+  effect_rules:
+    - predicate: value_network_or_normal
+      ndfc_effect: parent_cli
+      cli: "spanning-tree port type <value> (refused with port_type_fast true)"
+      phase: current
+
+- parent_template: int_port_channel_pvlan_host
+  parent_nvpair: queuingStats
+  profile_key: disable_queuing_stats
+  reset_wire: 'false'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: pc
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_port_channel_pvlan_host@9d10f924#L124,L497
+  effect_rules:
+    - predicate: value_true_with_queuing_policy
+      ndfc_effect: parent_cli
+      cli: "service-policy type queuing output <policy> no-stats"
+      phase: current
+
+- parent_template: int_vpc_pvlan_host
+  parent_nvpair: lldpTransmit
+  profile_key: disable_lldp_transmit
+  reset_wire: 'false'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: vpc
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_pvlan_host@106ac645#L107,L765,L855
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_pvlan_member
+      cli: "no lldp transmit (on each member)"
+      phase: current
+
+- parent_template: int_vpc_pvlan_host
+  parent_nvpair: lldpReceive
+  profile_key: disable_lldp_receive
+  reset_wire: 'false'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: vpc
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_pvlan_host@106ac645#L112,L766,L856
+  effect_rules:
+    - predicate: value_true
+      ndfc_effect: child_policy
+      child_template: int_port_channel_pvlan_member
+      cli: "no lldp receive (on each member)"
+      phase: current
+
+- parent_template: int_vpc_pvlan_host
+  parent_nvpair: spanningTreePortType
+  profile_key: spanning_tree_port_type
+  reset_wire: 'no'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: vpc
+  applicable_mode: pvlan
+  type: enum
+  valid_values: ["no", "network", "normal"]
+  default_template: "no"
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_pvlan_host@106ac645#L67,L638,L668; int_vpc_pvlan_po@3c9991a2#L279
+  effect_rules:
+    - predicate: value_network_or_normal
+      ndfc_effect: child_policy
+      child_template: int_vpc_pvlan_po
+      cli: "spanning-tree port type <value> (refused with port_type_fast true)"
+      phase: current
+
+- parent_template: int_vpc_pvlan_host
+  parent_nvpair: queuingStats
+  profile_key: disable_queuing_stats
+  reset_wire: 'false'   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: vpc
+  applicable_mode: pvlan
+  type: boolean
+  default_template: false
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_pvlan_host@106ac645#L176,L656,L686; int_vpc_pvlan_po@3c9991a2#L313
+  effect_rules:
+    - predicate: value_true_with_queuing_policy
+      ndfc_effect: child_policy
+      child_template: int_vpc_pvlan_po
+      cli: "service-policy type queuing output <policy> no-stats"
+      phase: current
+
+- parent_template: int_vpc_pvlan_host
+  parent_nvpair: aclFilter
+  profile_key: acl_filter
+  reset_wire: ''   # inferred from siblings; NOT measured on a PVLAN parent
+  applicable_interface_type: vpc
+  applicable_mode: pvlan
+  type: string
+  string_compare: exact
+  min_length: 1
+  max_length: 64
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: 12.6.0.267
+  parent_resolution: desired_parent
+  evidence_ref: int_vpc_pvlan_host@106ac645#L182,L658,L688; int_vpc_pvlan_po@3c9991a2#L321
+  effect_rules:
+    - predicate: value_nonempty
+      ndfc_effect: child_policy
+      child_template: int_vpc_pvlan_po
+      cli: "ip port access-group <value> in"
+      phase: current

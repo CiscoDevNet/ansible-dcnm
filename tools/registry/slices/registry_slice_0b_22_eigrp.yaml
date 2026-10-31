@@ -1,0 +1,827 @@
+# Registry slice 0b_22 — the thirteen EIGRP fields on the three overlay parents
+# (int_routed_host, int_subif, int_vlan).
+#
+# One slice for three parents because the thirteen fields are identical across them (type,
+# default, bounds, valid values). Measured against the template bodies running on the
+# controller, not assumed from the on-disk template batch. Uniformity is checked per family,
+# never assumed: the OSPF scalars needed one slice per parent (passive/bfd are enums on routed
+# and vlan but booleans on subif; retransmit_interval does not exist on routed).
+#
+# Source: template bodies fetched from the controller. Three of the
+# four parents on the controller differ from the local template batch, and the installed
+# int_loopback has no EIGRP at all; a slice authored from the batch would describe templates
+# nobody runs. evidence_ref pins the controller body.
+#
+# Gate: EIGRP_PROCESS_TAG. The parent DSL wraps the whole EIGRP block in
+# `if eigrpProcessTag != "":`; the tag has no default and all eleven booleans default to false
+# with IsShow="EIGRP_PROCESS_TAG!=''". Nothing fires by default (unlike int_vlan's
+# DISABLE_IP_REDIRECTS, which defaults to true and instantiates a child), so this family needed
+# no template upload.
+#
+# The template itself rejects the tagless case. All three parents (and the new int_loopback)
+# carry, above the creation block:
+#
+#       if eigrpOptionSelected and eigrpProcessTag == "":
+#           errMsg = "EIGRP process tag is required when EIGRP interface options are enabled."
+#           respObj.setFailureRetCode()
+#           return respObj
+#
+#   (int_routed_host:897, int_subif:679, int_vlan:939 in the captured controller bodies.)
+#
+# Read from the bodies. A former claim that NDFC accepts a tagless config, instantiates nothing
+# and reports success was an unmeasured inference and is contradicted by these bodies.
+#
+# These rows therefore do not enforce the gate: NDFC implements it. The engine validates
+# membership and transports the string. The module must not demand the tag in every profile: a
+# valid partial update may omit it while HAVE carries it, and the comparator preserves it.
+#
+# Two more template-enforced rules (all three parents; not duplicated here):
+#
+#       "EIGRP IPv4 passive-interface enable and disable cannot both be selected."
+#       "EIGRP BFD enable and disable cannot both be selected."
+#
+#   i.e. (eigrp_ipv4_passive, eigrp_no_ipv4_passive) and (enable_eigrp_bfd, disable_eigrp_bfd)
+#   are mutually exclusive. Carry-forward can trip them without the operator sending both: send
+#   disable_eigrp_bfd while HAVE holds enable_eigrp_bfd and the preserved value arrives beside
+#   the new one. That interaction needs a live check; it is not assumed.
+#
+# Template asymmetry, not a typo: IPv4 has EIGRP_IPV4_PASSIVE and EIGRP_NO_IPV4_PASSIVE; IPv6
+# has only EIGRP_NO_IPV6_PASSIVE. Children match: eigrp_interface_ip_passive_11_1,
+# eigrp_interface_no_ip_passive_11_1 and eigrp_interface_no_ipv6_passive_11_1 exist; no
+# ipv6-passive child exists.
+#
+# The distribute-list directions are enums gated by their prefix list, not by the tag:
+# EIGRP_IPV4_DISTRIBUTE_LIST_DIRECTION is IsShow-gated on EIGRP_IPV4_DISTRIBUTE_LIST_PREFIX_LIST
+# being non-empty. Valid values are quoted: enums map to the `str` validator because nvPairs
+# are string-valued and NDFC returns "out".
+#
+# All ten children are installed: verified against the controller by reading the parents' DSL
+# (not by name search); zero absent children on the three parents.
+
+bindings:
+  # ---------------------------------------------------------------- int_routed_host
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpProcessTag
+    profile_key: eigrp_process_tag
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: unverified
+    # Measured live on four lab interfaces that never carried a `passive` option.
+    # Coordinated transition, not an independent removal: the parent's first validator
+    # rejects the request if any option stays enabled with an empty tag, so
+    # `enable_eigrp_routing` was cleared in the same request (a product constraint).
+    # Readback: eigrpProcessTag `<tag>` -> `""`. Device: zero EIGRP lines, no inverse
+    # command and no residue (unlike interfaces that had carried `passive`). Identical
+    # rerun: 0 mutations, no pending config on these interfaces.
+    # LIMIT: a grouped gate close does not validate each subordinate field's removal;
+    # those were measured one by one (see the per-field notes).
+    reset_wire: ''
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpRouting
+    profile_key: enable_eigrp_routing
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # Measured live (four lab interfaces): explicit clear of this field, tag kept. CLI
+    # line present before, absent after; context intact; In-Sync, no pending config.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv6Routing
+    profile_key: enable_eigrp_ipv6_routing
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # Measured live (four lab interfaces): explicit clear of this field, tag kept. CLI
+    # line present before, absent after; context intact; In-Sync, no pending config.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv4Passive
+    profile_key: eigrp_ipv4_passive
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpNoIpv4Passive
+    profile_key: eigrp_no_ipv4_passive
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpNoIpv6Passive
+    profile_key: eigrp_no_ipv6_passive
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpShutdown
+    profile_key: enable_eigrp_shutdown
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # Measured live (four lab interfaces): explicit clear of this field, tag kept. CLI
+    # line present before, absent after; context intact; In-Sync, no pending config.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpBfd
+    profile_key: enable_eigrp_bfd
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # Measured live on four lab interfaces (alternate profile), `feature bfd` enabled
+    # by NDFC policy: `ip eigrp <tag> bfd` present after apply, absent after explicit
+    # clear; identical reapply gave 0 mutations. Cannot coexist with disable_eigrp_bfd
+    # (the parent rejects both true), so it was measured separately.
+    # NO claim about BFD OPERATIONAL behaviour: the evidence is configuration only.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpBfdDisable
+    profile_key: disable_eigrp_bfd
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # Measured live on four lab interfaces (alternate profile): `ip eigrp <tag> bfd
+    # disable` present after apply, absent after clear, without leaving
+    # `ip eigrp <tag> bfd` behind (compared by full line; one is a prefix of the
+    # other). Mutually exclusive with enable_eigrp_bfd.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv4DistributeListPrefixList
+    profile_key: eigrp_ipv4_distribute_list_prefix_list
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # Measured live (four lab interfaces): explicit clear of this field, tag kept. CLI
+    # line present before, absent after; context intact; In-Sync, no pending config.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv4DistributeListDirection
+    profile_key: eigrp_ipv4_distribute_list_direction
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    # Measured live: targeted reset of the direction, keeping prefix-list, tag and
+    # context. Fragment effect, not a line effect:
+    # `ip[v6] distribute-list eigrp <tag> prefix-list <pl> in` -> `... out`, with the
+    # prefix-list binding retained. Identical reapply: 0 mutations, In-Sync.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv6DistributeListPrefixList
+    profile_key: eigrp_ipv6_distribute_list_prefix_list
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    # Measured live (four lab interfaces): explicit clear of this field, tag kept. CLI
+    # line present before, absent after; context intact; In-Sync, no pending config.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  - parent_template: int_routed_host
+    parent_nvpair: eigrpIpv6DistributeListDirection
+    profile_key: eigrp_ipv6_distribute_list_direction
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: enum
+    # Measured live: targeted reset of the direction, keeping prefix-list, tag and
+    # context. Fragment effect, not a line effect:
+    # `ip[v6] distribute-list eigrp <tag> prefix-list <pl> in` -> `... out`, with the
+    # prefix-list binding retained. Identical reapply: 0 mutations, In-Sync.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template@b9b50077cf49f8cb
+
+  # ---------------------------------------------------------------- int_subif
+  - parent_template: int_subif
+    parent_nvpair: eigrpProcessTag
+    profile_key: eigrp_process_tag
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: unverified
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: ''
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpRouting
+    profile_key: enable_eigrp_routing
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv6Routing
+    profile_key: enable_eigrp_ipv6_routing
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv4Passive
+    profile_key: eigrp_ipv4_passive
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpNoIpv4Passive
+    profile_key: eigrp_no_ipv4_passive
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpNoIpv6Passive
+    profile_key: eigrp_no_ipv6_passive
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpShutdown
+    profile_key: enable_eigrp_shutdown
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpBfd
+    profile_key: enable_eigrp_bfd
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpBfdDisable
+    profile_key: disable_eigrp_bfd
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv4DistributeListPrefixList
+    profile_key: eigrp_ipv4_distribute_list_prefix_list
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: exact
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv4DistributeListDirection
+    profile_key: eigrp_ipv4_distribute_list_direction
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv6DistributeListPrefixList
+    profile_key: eigrp_ipv6_distribute_list_prefix_list
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: exact
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  - parent_template: int_subif
+    parent_nvpair: eigrpIpv6DistributeListDirection
+    profile_key: eigrp_ipv6_distribute_list_direction
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: enum
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_subif.template@a66388c2f21c5507
+
+  # ---------------------------------------------------------------- int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: eigrpProcessTag
+    profile_key: eigrp_process_tag
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: unverified
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: ''
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpRouting
+    profile_key: enable_eigrp_routing
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv6Routing
+    profile_key: enable_eigrp_ipv6_routing
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv4Passive
+    profile_key: eigrp_ipv4_passive
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpNoIpv4Passive
+    profile_key: eigrp_no_ipv4_passive
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpNoIpv6Passive
+    profile_key: eigrp_no_ipv6_passive
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpShutdown
+    profile_key: enable_eigrp_shutdown
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpBfd
+    profile_key: enable_eigrp_bfd
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpBfdDisable
+    profile_key: disable_eigrp_bfd
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv4DistributeListPrefixList
+    profile_key: eigrp_ipv4_distribute_list_prefix_list
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv4DistributeListDirection
+    profile_key: eigrp_ipv4_distribute_list_direction
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv6DistributeListPrefixList
+    profile_key: eigrp_ipv6_distribute_list_prefix_list
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: ""
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  - parent_template: int_vlan
+    parent_nvpair: eigrpIpv6DistributeListDirection
+    profile_key: eigrp_ipv6_distribute_list_direction
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: enum
+    # Measured live; same note as the matching int_routed_host row.
+    reset_wire: "out"
+    valid_values: ["in", "out"]
+    default_template: "out"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30

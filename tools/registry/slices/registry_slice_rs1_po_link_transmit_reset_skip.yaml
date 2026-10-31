@@ -1,0 +1,49 @@
+# Registry slice rs1 -- the trunk port-channel reset-skip default. One binding on int_port_channel_trunk_host.
+#
+#     linkTransmitResetSkip   link_transmit_reset_skip   reset "false"
+#
+# Source: the int_port_channel_trunk_host body of a controller with SMU 4.3.1.0175006017 (template REST API, read only),
+# sha256 of `content` 25f2582dcc5af275...
+#     L124-127  boolean linkTransmitResetSkip { defaultValue=false; }   no IsShow, no IsMandatory
+#     L453      parentResetSkip = linkTransmitResetSkip
+#     L601      memberResetSkipDict[interface] = nvPairs.get("linkTransmitResetSkip", "")   (the member's own stored value)
+#     L812      "linkTransmitResetSkip": memberResetSkip   (the value handed to the member child)
+#
+# WHAT THE OPTION MEANS. It is the DEFAULT a member takes when it JOINS the port-channel: a member added while the parent
+# holds true stores true; a member that already existed keeps its stored value when the parent is raised or lowered;
+# lowering the parent does not reset a member that stored true.
+# The option is therefore not a synchronised setting of every member and the module does not write the member children.
+#
+# WHY IT MUST BE REGISTERED. A description-only `merged` call on the unmodified module omits the key from the modify
+# payload, and the controller then stores the template default, so a stored parent true becomes false.
+# A registered passthrough row carries the stored parent value into a `merged` update when the option is omitted.
+#
+# RESET. Under `replaced` and for a retained port-channel under `overridden`, an omitted option is sent as the template
+# default "false". That resets the PARENT default only; existing members keep their stored values, so it is not a
+# member-command withdrawal. `deleted` and an omitted `overridden` port-channel use the existing aggregate removal and
+# member release; nothing special is added for this field.
+#
+# DEVICE. This row covers the controller policy only; it says nothing about device convergence.
+#
+# The module admits the row with SMU 4.3.1.0175006017 or a numeric ND release >= 4.4.1 (the 4.4.1 bodies were not read).
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: linkTransmitResetSkip
+    profile_key: link_transmit_reset_skip
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host.template@25f2582dcc5af275#L124"

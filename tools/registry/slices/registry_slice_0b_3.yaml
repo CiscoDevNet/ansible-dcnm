@@ -1,0 +1,165 @@
+# Registry slice 0b_3 — ARP_TIMEOUT (nvPair arpTimeout): 3 bindings, one field on three parents.
+# Keyed by (parent_template, parent_nvpair). applicable_interface_type/mode from module
+# pol_types[12]: int_routed_host=eth/routed, int_subif=sub_int/subint, int_vlan=svi/vlan.
+# int_loopback does NOT declare ARP_TIMEOUT.
+#
+# Registration: the generator silently skips any row not in COMMITTED_BINDINGS. Audit of all
+# slices: the rows still unregistered are intentional — int_fabric_loopback_11_1
+# ENABLE_OSPF_AUTH_MESSAGE_DIGEST (capability retired; a test asserts it is not registered) and
+# DISABLE_LLDP on eight parents (nvPair absent from current bodies, replaced by the registered
+# DISABLE_LLDP_TRANSMIT/RECEIVE).
+#
+# mechanism: passthrough (not child_pti). The module writes ARP_TIMEOUT into the PARENT nvPairs;
+# the parent DSL instantiates `interface_ip_arp_timeout_11_1`. The module does not build the
+# child (same reasoning as BFD and dampening). effect_rules describe the template's effect, which
+# is still accurate, not the module's mechanism.
+#
+# Range min 60 / max 28800: taken from the declaration, which changed. The earlier body had an
+# unbounded `integer ARP_TIMEOUT;` (so the old `min: 1` mirrored the DSL check); the current body
+# has `integer ARP_TIMEOUT { min = 60; max = 28800; }`. Measured by comparing bodies: ARP_TIMEOUT
+# is the only pre-existing declaration that changed (other 53 of 54 identical), so no other row
+# is affected. This is why evidence_ref carries the body hash.
+#   Limits now live in three layers with two thresholds:
+#     parent declaration  min=60 max=28800
+#     child declaration   min=60 max=28800
+#     DSL block           only `int(arpTimeout) <= 0` -> "ARP timeout must be a positive integer."
+#   The registry follows the declaration (the published input contract). Consequence: the DSL
+#   rule is unreachable from the module; record it as a skipped stage with reason, not PASS.
+#   NOT MEASURED: whether the NDFC POST enforces 60..28800 or only the GUI does. If not, the
+#   registry is the only defense (check: send 30 via the module, must reject, and via the API).
+#
+# Measured against the bodies the controller runs, downloaded before reading any attribute:
+#     int_routed_host.template@65426107b3d1cdcf
+#     int_subif.template@a66388c2f21c5507
+#     int_vlan.template@0efb09af7f837b30
+#     interface_ip_arp_timeout_11_1.template@7272fb1b587be658
+#   Earlier slices cite int_routed_host@b9b50077cf49f8cb; the difference (PIM BFD templates) does
+#   not touch any ARP line (empty diff over `grep -i arp`).
+#
+# Declaration identical on all three parents, with no defaultValue and no IsShow:
+#   * no IsShow -> always visible, no gate to open to observe it.
+#   * no defaultValue -> NDFC returns "" when never set. No engine change needed: exemption (3) of
+#     gie_validate_binding_value already accepts "" for an integer read from HAVE (same path as
+#     OSPF_COST); verified by reading the code before registering.
+# Simplest case in the registry: one field, one child, one line (`ip arp timeout $$ARP_TIMEOUT$$`),
+# no boolean gate, no cross-field dependency.
+#
+# Not native: `arp_timeout` and `ARP_TIMEOUT` have 0 uses in dcnm_interface.py.
+#
+# Device support: MEASURED, positive — `ip arp timeout 300` sent through NDFC landed on the
+# interface. `show running-config all` does NOT expand the documented default `ip arp timeout 1500`,
+# so absence of the line there proves nothing; presence with our value does.
+#
+# Removal, from the template read: the only deleteChildTemplate calls in the three bodies are the
+# two for redirects; this child is never explicitly removed, and the emit gate is
+# `if arpTimeout != ""` (the negative-form residue mechanism). Omission preserves by
+# the explicit_only contract; an EXPLICIT "" is a separate question, so removal_semantics stays
+# `unresolved`. The per-binding live measurements below show an explicit "" removes the line.
+- parent_template: int_routed_host
+  parent_nvpair: arpTimeout
+  profile_key: arp_timeout
+  applicable_interface_type: eth
+  applicable_mode: routed
+  type: integer
+  # MEASURED LIVE on Ethernet1/22, NDFC 12.6.0.267 / NX-OS 10.5(5). First integer reset in the
+  # registry: an EXPLICIT "" REMOVES. The public integer rejects "" before building a request
+  # ("must be a native integer (range 60..28800), given a string"), so the wire value could not be
+  # measured through a module clear; it was measured with a raw preserving bulk-modify POST (one
+  # DTO, 70 nvPairs from a fresh readback, only ARP_TIMEOUT -> ""): 207 Multi-Status, single
+  # SUCCESS. Readback is EMPTY STRING (not absent, null or a materialized default; all four
+  # distinguished). Other nvPairs identical (84 <-> 84), `ip arp timeout 900` removed, normalized
+  # config equal to baseline, In-Sync.
+  reset_wire: ""
+  min: 60
+  max: 28800
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  removal_semantics: unresolved
+  evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1467"
+  effect_rules:
+    - predicate: value_present
+      ndfc_effect: create_or_update
+      child_template: interface_ip_arp_timeout_11_1
+      value_bindings:
+        - source_parent_nvpair: arpTimeout
+          target_child_nvpair: ARP_TIMEOUT
+          transform: identity
+      relationship: base
+      phase: current
+      evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1467"
+
+- parent_template: int_subif
+  parent_nvpair: arpTimeout
+  profile_key: arp_timeout
+  applicable_interface_type: sub_int
+  applicable_mode: subint
+  type: integer
+  # MEASURED LIVE on int_subif Ethernet1/21.3001, in a context WITHOUT OSPF (subinterface deleted
+  # and recreated, no inherited residue). DTO derived from this parent (56 nvPairs, envelope with
+  # `skipResourceCheck`): 207 Multi-Status, single SUCCESS. Readback EMPTY STRING ("900" -> "").
+  # `ip arp timeout 900` removed, `encapsulation dot1q 3001` kept, no OSPF line appeared, other
+  # nvPairs identical, In-Sync.
+  reset_wire: ""
+  min: 60
+  max: 28800
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  removal_semantics: unresolved
+  evidence_ref: "int_subif.template@a66388c2f21c5507#L953"
+  effect_rules:
+    - predicate: value_present
+      ndfc_effect: create_or_update
+      child_template: interface_ip_arp_timeout_11_1
+      value_bindings:
+        - source_parent_nvpair: arpTimeout
+          target_child_nvpair: ARP_TIMEOUT
+          transform: identity
+      relationship: base
+      phase: current
+      evidence_ref: "int_subif.template@a66388c2f21c5507#L953"
+
+- parent_template: int_vlan
+  parent_nvpair: arpTimeout
+  profile_key: arp_timeout
+  applicable_interface_type: svi
+  applicable_mode: vlan
+  # MEASURED LIVE on Vlan3784 (int_vlan, SVI without address, VRF default, mtu 9216,
+  # advSubnetInUnderlay 'false'), context WITHOUT OSPF (ENABLE_OSPF 'false'). Raw preserving clear:
+  # only ARP_TIMEOUT -> "". Update 207 with single SUCCESS; deploy 200. Readback MEASURED as EMPTY
+  # STRING ("900" -> ""), not predetermined by the proposal. `ip arp timeout 900` removed; absent
+  # address, mtu and other nvPairs kept. Re-applying restored the configured value (1 update +
+  # 1 deploy, In-Sync). Answers the removal question for this row on THIS parent.
+  reset_wire: ""
+  type: integer
+  min: 60
+  max: 28800
+  presence_model: two_axis
+  emit_when: explicit_only
+  mechanism: passthrough
+  no_log: false
+  min_ndfc_version: "12.6.0.267"
+  validated_on: "12.6.0.267"
+  parent_resolution: desired_parent
+  removal_semantics: unresolved
+  evidence_ref: "int_vlan.template@0efb09af7f837b30#L1629"
+  effect_rules:
+    - predicate: value_present
+      ndfc_effect: create_or_update
+      child_template: interface_ip_arp_timeout_11_1
+      value_bindings:
+        - source_parent_nvpair: arpTimeout
+          target_child_nvpair: ARP_TIMEOUT
+          transform: identity
+      relationship: base
+      phase: current
+      evidence_ref: "int_vlan.template@0efb09af7f837b30#L1629"

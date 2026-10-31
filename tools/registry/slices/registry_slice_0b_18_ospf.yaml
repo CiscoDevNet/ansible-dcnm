@@ -1,0 +1,162 @@
+# Registry slice 0b_18 — OSPF on int_routed_host: four bindings (gate, tag, area, cost).
+#
+# Every OSPF field here is gated IsShow="ENABLE_OSPF==true", so the smallest set that produces CLI is
+# the gate, the process tag, the area and one value field. OSPF_COST is that field: integer, clear CLI
+# (`ip ospf cost N`), no secret, no dependency on an adjacency forming.
+#
+# Removal: the template creates one child per field and never deletes one (`deleteChildTemplate` is
+# called only for ip-redirects); only delete() clears an OSPF child, and it drops every PTI on the
+# interface. A template read says what setting creates, not what clearing does, so `removal_semantics`
+# is "unresolved" on all four on purpose (see the measured result on ospfCost below).
+#
+# OSPF_TAG and OSPF_AREA_ID carry IsMandatory="ENABLE_OSPF==true" (template declaration, hence
+# required_when_gate). Both feed the same base child (ospf_interface_11_1), so they form a shared effect
+# with the gate. The `== true` gate form does not suffer the "absent reads as non-empty" failure of
+# `!= ""` mandatory rules.
+#
+# Mechanism is passthrough, not child_pti: delegating to a child template inside NDFC is not what
+# child_pti marks (test_delegation_to_a_child_template_does_not_make_it_child_pti). child_pti is for
+# bindings with a dedicated compat path (the fabric-loopback OSPF-MD trio). gie_guarded_keys collects
+# only passthrough keys, so a mislabelled binding would bypass the invalid-parent guard. Other routed
+# bindings (DISABLE_LLDP, DISABLE_BFD_ECHO, ...) also delegate and are passthrough.
+#
+# OSPF_TAG must not be the fabric underlay process (e.g. 'UNDERLAY'): a routed host port peering with an
+# external neighbour must not join it. The lab uses a dedicated tag.
+
+shared_effects:
+  - effect_id: ospf_base@int_routed_host
+    parent_template: int_routed_host
+    child_template: ospf_interface_11_1
+    gate_nvpair: ENABLE_OSPF
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate:
+      - OSPF_TAG
+      - OSPF_AREA_ID
+    value_bindings:
+      - source_parent_nvpair: ospfTag
+        target_child_nvpair: OSPF_TAG
+        transform: identity
+      - source_parent_nvpair: OSPF_AREA_ID
+        target_child_nvpair: OSPF_AREA_ID
+        transform: identity
+    evidence_ref: int_routed_host.template#L1454
+
+bindings:
+  - parent_template: int_routed_host
+    parent_nvpair: ospf
+    profile_key: enable_ospf
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template#L220
+    effect_id: ospf_base@int_routed_host
+    effect_role: gate
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfTag
+    profile_key: ospf_tag
+    # Inert while OSPF is disabled (read from the int_routed_host body 6d37ea6a, not measured): ospfTag is
+    # validated and rendered only under `ospf == true`, and with OSPF off the template neither checks it nor
+    # creates the OSPF child. A stored tag with ospf "false" is therefore not a configured withdrawal target.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      required: true
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: unverified
+    min_length: 1
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template#L225
+    effect_id: ospf_base@int_routed_host
+    effect_role: value_source
+    required_when_gate: true
+
+  - parent_template: int_routed_host
+    parent_nvpair: OSPF_AREA_ID
+    profile_key: ospf_area_id
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: case_irrelevant
+    reset_wire: '0.0.0.0'
+    min_length: 1
+    max_length: 15
+    default_template: 0.0.0.0
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template#L231
+    effect_id: ospf_base@int_routed_host
+    effect_role: value_source
+    required_when_gate: true
+
+  - parent_template: int_routed_host
+    parent_nvpair: ospfCost
+    # Depends on OSPF (int_routed_host body 6d37ea6a, not measured): rendered only when ospf is true, and refused with a
+    # non-neutral value while ospf is false. An explicit disable sends its reset.
+    inert_when:
+      nvpair: ospf
+      value: 'false'
+      strict: true
+    profile_key: ospf_cost
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # Measured live (Ethernet1/20, NDFC 12.6.0.267 / NX-OS 10.5(5)). The public integer rejects "" before
+    # building a request, so the wire value was measured with a raw preserving bulk modify POST (one DTO,
+    # all nvPairs from a fresh readback, only this field set to ""): 207 Multi-Status, single SUCCESS.
+    # Readback shows empty string ("42" -> ""), not absent/null/default. On the device `ip ospf cost 42`
+    # was removed and `ip router ospf <tag> area 0.0.0.0` survived (OSPF stayed enabled); all other
+    # nvPairs identical, In-Sync. So, measured: clearing the parent nvPair to "" does remove the child line.
+    reset_wire: ""
+    min: 1
+    max: 65535
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_routed_host.template#L273
+    effect_rules:
+      - predicate: value_present
+        ndfc_effect: create_or_update
+        child_template: ospf_interface_cost_11_1
+        value_bindings:
+          - source_parent_nvpair: ospfCost
+            target_child_nvpair: OSPF_COST
+            transform: identity
+        relationship: base
+        phase: current
+        evidence_ref: int_routed_host.template#L1363
