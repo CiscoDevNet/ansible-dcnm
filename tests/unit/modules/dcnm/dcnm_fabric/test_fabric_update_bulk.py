@@ -96,6 +96,10 @@ def test_remove_nd4x_problematic_keys_normalizes_boolean_previous_values(fabric_
         "MPLS_ISIS_AREA_NUM_PREV": "",
         "securityGroupTagMacSegmentation": "",
         "securityGroupTagMacSegmentation_PREV": input_value,
+        "perVrfUniqueLoopbackAutoProvisionPrev": input_value,
+        "perVrfUniqueLoopbackAutoProvisionV6Prev": input_value,
+        "PER_VRF_LOOPBACK_AUTO_PROVISION_PREV": input_value,
+        "PER_VRF_LOOPBACK_AUTO_PROVISION_V6_PREV": input_value,
     }
 
     fabric_update_bulk._remove_nd4x_problematic_keys(payload)
@@ -105,6 +109,10 @@ def test_remove_nd4x_problematic_keys_normalizes_boolean_previous_values(fabric_
     assert payload["MPLS_ISIS_AREA_NUM_PREV"] == ""
     assert payload["securityGroupTagMacSegmentation"] == ""
     assert payload["securityGroupTagMacSegmentation_PREV"] == expected_value
+    assert payload["perVrfUniqueLoopbackAutoProvisionPrev"] == expected_value
+    assert payload["perVrfUniqueLoopbackAutoProvisionV6Prev"] == expected_value
+    assert payload["PER_VRF_LOOPBACK_AUTO_PROVISION_PREV"] == expected_value
+    assert payload["PER_VRF_LOOPBACK_AUTO_PROVISION_V6_PREV"] == expected_value
 
 
 def test_remove_nd4x_problematic_keys_does_not_add_absent_previous_values(fabric_update_bulk) -> None:

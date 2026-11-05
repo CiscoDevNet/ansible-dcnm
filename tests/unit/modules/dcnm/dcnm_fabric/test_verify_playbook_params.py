@@ -467,6 +467,95 @@ def test_verify_playbook_params_00100() -> None:
         instance.commit()
 
 
+def test_verify_playbook_params_00110() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - verify_parameter() off/empty-value exemption
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify exception is NOT raised when a dependency-gated parameter is
+        set to an empty value (a clear), even though its IsShow dependency is
+        not satisfied.
+    -   User parameter: PER_VRF_LOOPBACK_IP_RANGE == "" (cleared)
+    -   Unsatisfied dependency: PER_VRF_LOOPBACK_AUTO_PROVISION == true
+        (playbook sets it to false)
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_00120() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - verify_parameter() off/empty-value exemption
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify exception is NOT raised when a dependency-gated boolean
+        parameter is set to false (a disable), even though its IsShow
+        dependency is not satisfied.
+    -   User parameter: USE_LINK_LOCAL == false (disabled)
+    -   Unsatisfied dependency: UNDERLAY_IS_V6 == true (playbook sets it
+        to false)
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_00130() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - verify_parameter() off/empty-value exemption (negative)
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify the exemption does not over-reach: enabling a gated parameter
+        (value true) while its IsShow dependency is not satisfied still raises.
+    -   User parameter: USE_LINK_LOCAL == true (enabled)
+    -   Unsatisfied dependency: UNDERLAY_IS_V6 == true (playbook sets it
+        to false)
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+    match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
+    match += r"and need to be reviewed: Fabric: f1,\s+USE_LINK_LOCAL"
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
 def test_verify_playbook_params_00200() -> None:
     """
     Classes and Methods
