@@ -28,8 +28,10 @@ PAIRS = ((V.SN1, V.SN2), ("FDO00000003", "FDO00000004"))
 IPS = {V.SN1: V.IP1, V.SN2: V.IP2, "FDO00000003": "10.0.0.3", "FDO00000004": "10.0.0.4"}
 
 
-def subst(lines, k):
-    return [x.replace("port-channel10", "port-channel%d" % k).replace("vpc 10", "vpc %d" % k).replace("channel-group 10", "channel-group %d" % k)
+def subst(lines, k, pcid=None):
+    """The harness stanzas for vPC id `k`; `pcid` is the peer's own port-channel number when it differs from the vPC id."""
+    pcid = k if pcid is None else pcid
+    return [x.replace("port-channel10", "port-channel%d" % pcid).replace("vpc 10", "vpc %d" % k).replace("channel-group 10", "channel-group %d" % pcid)
             for x in lines]
 
 
@@ -45,6 +47,7 @@ class MultiVpc(V.VpcController):
         for attr in ("vpc_previews", "policies_extra", "summary_extra"):
             setattr(self, attr, dict((s, []) for s in serials))
         self.plan = {}
+        self.pcids = {}  # (pair serial, name) -> (peer1 pcid, peer2 pcid) when they differ from the vPC id
         self.deployed_vpcs, self.deleted_vpcs = set(), set()
         self.ready_round = {}     # (serial, ifName) -> waits after which the summary says In-Sync (None = never)
         self.sleep_log = []
@@ -77,6 +80,7 @@ class MultiVpc(V.VpcController):
                             "peer2_pcid": k, "admin_state": False,
                             "pvlan_association": [{"primary_vlan": V.PRIMARY, "secondary_vlan": V.SECONDARY}]}}
         item["profile"].update(profile)
+        self.pcids[(self.psn(pair), "vPC%d" % k)] = (item["profile"]["peer1_pcid"], item["profile"]["peer2_pcid"])
         return item
 
     def del_item(self, k, pair_index=0):
@@ -158,18 +162,19 @@ class MultiVpc(V.VpcController):
             if serial not in pair:
                 continue
             ports = m1 if serial == pair[0] else m2
+            pcid = self.pcids.get(key, (k, k))[0 if serial == pair[0] else 1]
             # the child carries ITS pair's peer description (PEERn_PO_DESC of the parent stored under this pair identity)
             desc = (self.parents.get(key, {}).get("nvPairs") or {}).get("PEER%d_PO_DESC" % (1 if serial == pair[0] else 2)) or None
-            po = subst(V.po_stanza(desc=desc), k)
-            after = po + [x for p in ports for x in subst(V.member_after(p), k)]
+            po = subst(V.po_stanza(desc=desc), k, pcid)
+            after = po + [x for p in ports for x in subst(V.member_after(p), k, pcid)]
             base = [x for p in ports for x in V.member_running_baseline(p)]
             if key in self.deleted_vpcs and key not in self.deployed_vpcs:
-                withdrawn = [x for p in ports for x in subst(V.delete_preview(serial, p)["DATA"][0]["pendingConfig"][1:], k)]
-                pending += ["no interface port-channel%d" % k] + withdrawn
+                withdrawn = [x for p in ports for x in subst(V.delete_preview(serial, p)["DATA"][0]["pendingConfig"][1:], k, pcid)]
+                pending += ["no interface port-channel%d" % pcid] + withdrawn
                 running += after
                 expected += base
             elif key in self.parents and key not in self.deployed_vpcs:
-                pending += po + [x for p in ports for x in subst(V.create_pending(p, desc=desc), k)[len(po):]]
+                pending += po + [x for p in ports for x in subst(V.create_pending(p, desc=desc), k, pcid)[len(po):]]
                 running += base
                 expected += after
             elif key in self.parents:
@@ -180,6 +185,18 @@ class MultiVpc(V.VpcController):
                 expected += base
         pending += self.extra_pending.get(serial, [])
         return V.preview(pending, serial=serial, running=running, expected=expected)
+
+    def _deploy_completed(self, data):
+        """A deploy completes the deletion of the vPCs it names, on THEIR pair only: the marked-for-deletion listings of another pair stay."""
+        for item in json.loads(data):
+            if "~" not in str(item.get("serialNumber")):
+                continue
+            source = str(item["ifName"]).lower()
+            for serial in self.pair_of(item["serialNumber"].split("~")[0]):
+                self.summary_extra[serial] = [e for e in self.summary_extra[serial] if not (
+                    str(e.get("markDeleted")) == "True" and any(str(u.get("source")).lower() == source for u in e.get("underlayPolicies") or []))]
+                self.policies_extra[serial] = [p_ for p_ in self.policies_extra[serial] if not (
+                    p_.get("templateName") == "interface_delete" and str(p_.get("source")).lower() == source)]
 
     def __call__(self, mod, method, path, data=None):
         if "vpcpair_serial_number" in path:
@@ -202,8 +219,8 @@ class MultiVpc(V.VpcController):
             body = json.loads(data)
             if resp.get("RETURN_CODE") in (200, 207):
                 for payload in body if isinstance(body, list) else [body]:
-                    assert payload["policy"] == V.VPC_HOST, payload["policy"]
-                    for intf in payload["interfaces"]:
+                    assert payload["policy"] in (V.VPC_HOST, "int_loopback"), payload["policy"]  # a loopback keeps an overridden request non-empty
+                    for intf in payload["interfaces"] if payload["policy"] == V.VPC_HOST else []:
                         self._store_parent(intf, self.children_on_save)
             return resp
         if method == "POST" and path.endswith(V.MODIFY):

@@ -379,11 +379,15 @@ class VpcController(FakeController):
             )
         self.calls.pop()  # the parent harness records the call itself
         resp = super(VpcController, self).__call__(mod, method, path, data)
-        if method == "POST" and path.endswith(DEPLOY):  # the deploy completes the deletion: the marked-for-deletion listings go away
-            for serial in (SN1, SN2):
-                self.summary_extra[serial] = [e for e in self.summary_extra[serial] if str(e.get("markDeleted")) != "True"]
-                self.policies_extra[serial] = [p_ for p_ in self.policies_extra[serial] if p_.get("templateName") != "interface_delete"]
+        if method == "POST" and path.endswith(DEPLOY):
+            self._deploy_completed(data)
         return resp
+
+    def _deploy_completed(self, data):
+        """The deploy completes the deletion: the marked-for-deletion listings go away (every listing of the one default pair)."""
+        for serial in (SN1, SN2):
+            self.summary_extra[serial] = [e for e in self.summary_extra[serial] if str(e.get("markDeleted")) != "True"]
+            self.policies_extra[serial] = [p_ for p_ in self.policies_extra[serial] if p_.get("templateName") != "interface_delete"]
 
     # ---- peer views
     def _peer_policies(self, serial):
