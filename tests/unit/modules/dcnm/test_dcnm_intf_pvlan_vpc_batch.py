@@ -248,8 +248,8 @@ class MultiVpc(V.VpcController):
                 self.parents = saved
         if method == "POST" and path.endswith(V.DEPLOY):
             for d in json.loads(data):
-                if "~" in str(d.get("serialNumber")):
-                    self.deployed_vpcs.add(self.key(d["serialNumber"], d["ifName"]))
+                if "~" in str(d.get("serialNumber")) and any(k[0] == d["serialNumber"] and k[1].lower() == str(d["ifName"]).lower() for k in self.plan):
+                    self.deployed_vpcs.add(self.key(d["serialNumber"], d["ifName"]))  # a vPC outside the plan is a seeded conventional one
         return super(MultiVpc, self).__call__(mod, method, path, data)
 
 

@@ -659,7 +659,9 @@ options:
               C(deploy) false the removal or the deletion is saved and completed later as for a regular
               port-channel - a saved deletion is recognised only when BOTH peers list the vPC's children
               marked for deletion, a saved member removal only when the device still joins the port to the
-              peer's port-channel, the vPC intent no longer lists it and it is already released). Both
+              peer's port-channel, the vPC intent no longer lists it and it is already released). A saved
+              deletion belongs to its switch pair, so the same vPC name saved on two pairs is two deletions,
+              each with its own C(deploy) choice, and one vPC requested with both choices is refused. Both
               peers are validated before anything is deployed and the vPC is reported
               successful only when EVERY peer is. Before the deployment, each released member is proven on
               its own peer against the explicit contract (a direct C(int_trunk_host), or C(int_routed_host)
@@ -9616,30 +9618,62 @@ class DcnmIntf:
                 and re.match(r"^port-channel[0-9]+$", str(h.get("ifName", "")).lower())
                 and not pvlan_po_marked_deleted_problem(h, h.get("ifName", ""), parent=vpc_lname)]
 
+    def _dcnm_intf_vpc_pair_of(self, sno):
+        """The controller's vPC pair serial (``S1~S2``) of the physical switch ``sno``, else ``None``."""
+        ips = [ip for ip, sn in self.ip_sn.items() if str(sn).casefold() == str(sno).casefold()]
+        if len(ips) != 1:
+            return None
+        pair = self.vpc_ip_sn.get(ips[0])
+        if pair is None:
+            pair = self.dcnm_intf_get_vpc_serial_number(ips[0]) or None
+        return pair
+
+    @classmethod
+    def _dcnm_intf_vpc_pair_identity(cls, pair, sno=None):
+        """Order-free identity of a switch pair, so a vPC found from either peer, or named with the pair, lands in one group. A value that
+        is not a two-serial pair stands for itself and is refused later with the missing-pair diagnosis."""
+        parts = cls._dcnm_intf_serial_parts(pair or "")
+        if parts and len(parts) == 2:
+            return tuple(sorted(part.casefold() for part in parts))
+        return (str(pair or sno).casefold(),)
+
     def dcnm_intf_pvlan_vpc_register_resumes(self):
         """The continuation of a SAVED PVLAN vPC deletion. MEASURED: after the vPC's mark-delete the parent is no
         longer listed and each peer's child port-channel stays listed, marked for deletion, with ONE interface_delete policy whose source is
         the vPC (lower case) until the deploy. The continuation is recognised only from that state on BOTH peers of the controller's pair,
         plus each peer's running configuration (fresh forced preview) still holding the child in a PVLAN mode with its members joined, each
         member holding its released policy. One peer marked and the other not (a vPC applied on one peer only) is refused with that
-        diagnosis; nothing is written. deploy false again: reported as still pending."""
+        diagnosis; nothing is written. deploy false again: reported as still pending.
+
+        A vPC number belongs to its switch pair, so two pairs may hold a saved deletion of the same vPC name. Every saved deletion is
+        therefore one group keyed by (the controller's pair, the vPC name): its peers, children, deploy choice and report are the
+        pair's own and never merge with another pair's."""
         groups = {}
+        pairs = {}
+
+        def pair_of(sno):
+            if sno not in pairs:
+                pairs[sno] = self._dcnm_intf_vpc_pair_of(sno)
+            return pairs[sno]
+
         for (sno, _lname), req in sorted(self.marked_delete_requests.items(), key=str):
             entry = req.get("entry") or {}
             state, value = pvlan_summary_policy(entry, entry.get("ifName", ""))
             source = str(value.get("source", "")).lower() if state == PVLAN_SUMMARY_KNOWN else ""
             if not VPC_NAME.match(source) or pvlan_po_marked_deleted_problem(entry, entry.get("ifName", ""), parent=source):
                 continue
-            group = groups.setdefault(source, {"deploy": req.get("deploy"), "name": None, "peers": {}})
+            group = groups.setdefault((self._dcnm_intf_vpc_pair_identity(pair_of(sno), sno), source), {"deploys": set(), "name": None, "peers": {}})
+            group["deploys"].add(bool(req.get("deploy")))
             group["peers"][sno] = entry
         for (pair, lname), req in sorted((getattr(self, "vpc_named_resume_requests", None) or {}).items(), key=str):
             # The child of each peer is found by its RELATION to the vPC (the marked-for-deletion `interface_delete` policy whose source is the
             # vPC), never by a name derived from the vPC id: the port-channel number may differ from the vPC id (and between the peers).
-            # Only a vPC with the marking already visible in what this run read (the pair's first serial) can be a saved PVLAN deletion;
-            # any other absent vPC keeps the generic no-op, without further reads.
-            if not self._dcnm_intf_vpc_marked_children(lname):
+            # Only a vPC with the marking already visible in what this run read for ITS pair can be a saved PVLAN deletion; any other absent
+            # vPC keeps the generic no-op, without further reads. Another pair's marked vPC of the same name is not this pair's marking.
+            if not any(self._dcnm_intf_vpc_marked_children(lname, part) for part in self._dcnm_intf_serial_parts(pair) or ()):
                 continue
-            group = groups.setdefault(lname, {"deploy": req.get("deploy"), "name": req.get("name"), "peers": {}})
+            group = groups.setdefault((self._dcnm_intf_vpc_pair_identity(pair), lname), {"deploys": set(), "name": None, "peers": {}})
+            group["deploys"].add(bool(req.get("deploy")))
             group["name"] = req.get("name")
             for part in self._dcnm_intf_serial_parts(pair) or ():
                 # Each peer's OWN summary is read: the named deletion read only the pair's first serial, and a child listed only on the
@@ -9652,7 +9686,7 @@ class DcnmIntf:
                     group["ambiguous"] = (part, sorted(str(h.get("ifName", "")) for h in found))
                 elif found:
                     group["peers"][part] = found[0]
-        for source, group in sorted(groups.items()):
+        for (_identity, source), group in sorted(groups.items()):
             vid = vpc_id(source)
             if not group["peers"] or not vid:
                 continue
@@ -9665,11 +9699,15 @@ class DcnmIntf:
                                            "{1} marked for deletion with the vPC as source".format(group["ambiguous"][0], ", ".join(group["ambiguous"][1])))
                 continue
             some = sorted(group["peers"])[0]
-            ips = [ip for ip, sn in self.ip_sn.items() if str(sn).casefold() == some.casefold()]
-            pair = self.vpc_ip_sn.get(ips[0]) if len(ips) == 1 else None
-            if pair is None and len(ips) == 1:
-                pair = self.dcnm_intf_get_vpc_serial_number(ips[0]) or None
+            pair = pair_of(some)
             name = group["name"] or "vPC" + vid
+            if len(group["deploys"]) > 1:
+                # Requests for the same pair and vPC that disagree on deployment (for example the vPC named with deploy false and its child
+                # port-channel named with deploy true): neither choice is taken for the other.
+                self.dcnm_intf_pvlan_block(name, pair or some, "the saved vPC deletion is requested both with and without deployment: "
+                                           "request one deploy choice for it")
+                continue
+            deploy = group["deploys"].pop()
             parts = self._dcnm_intf_serial_parts(pair or "") or ()
             key = (pair, name.lower())
             if key in self.pvlan_targets:
@@ -9733,7 +9771,7 @@ class DcnmIntf:
                 # Not a PVLAN saved deletion -- BOTH peers hold a conventional child, so the PVLAN-only checks above do
                 # not apply. Kept (with the fresh previews) for dcnm_intf_pvlan_register_conventional_resumes; otherwise the generic path.
                 pvlan_lifecycle_note(self, "pvlan_conventional_vpc_saved", key, {
-                    "name": name, "parts": list(parts), "pcids": dict(pcids), "deploy": group["deploy"], "previews": conventional})
+                    "name": name, "parts": list(parts), "pcids": dict(pcids), "deploy": deploy, "previews": conventional})
                 continue
             if conventional:
                 problems.append("the device holds {0} as a conventional port-channel on peer(s) {1} only: the peers are not the same saved "
@@ -9743,7 +9781,7 @@ class DcnmIntf:
                     self.dcnm_intf_pvlan_block(name, pair, reason)
                 continue
             record = {"vpc": name, "serial": pair, "members": ["{0} on {1}".format(l["member"], l["serial"]) for l in legs]}
-            if not group["deploy"]:
+            if not deploy:
                 self.result.setdefault("pvlan_saved", []).append(dict(
                     record, operation="delete", state="saved, awaiting deployment (nothing written by this run)"))
                 continue
