@@ -27,5 +27,15 @@
         "BGP_AS": "65001",
         "FABRIC_NAME": "f1",
         "V6_SUBNET_RANGE": "fd00::a04:0/112"
+    },
+    "test_verify_playbook_params_01040a": {
+        "TEST_NOTES": [
+            "The controller config has NTP servers and an NTP VRF."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "10.1.1.1,10.1.1.2",
+        "NTP_SERVER_VRF": "management"
     }
 }

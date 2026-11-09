@@ -9985,5 +9985,91 @@
                 "optional": false
             }
         ]
+    },
+    "test_verify_playbook_params_01010a": {
+        "TEST_NOTES": [
+            "Easy_Fabric NTP_SERVER_IP_LIST and NTP_SERVER_VRF parameters.",
+            "Only change: NTP_SERVER_VRF IsMandatory is true instead of the NTP_SERVER_IP_LIST!=null condition."
+        ],
+        "name": "test_verify_playbook_params_01010a",
+        "userDefined": true,
+        "parameters": [
+            {
+                "name": "NTP_SERVER_IP_LIST",
+                "description": null,
+                "parameterType": "ipAddressList",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "NTP Server IPs",
+                    "Description": "Comma separated list of IP Addresses(v4/v6)",
+                    "IsMandatory": "false",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NTP_SERVER_VRF",
+                "description": null,
+                "parameterType": "string[]",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "NTP Server VRFs",
+                    "IsShow": "\"NTP_SERVER_IP_LIST!=null\"",
+                    "Description": "One VRF for all NTP servers or a comma separated<br />list of VRFs, one per NTP server",
+                    "IsMandatory": "true",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            }
+        ]
+    },
+    "test_verify_playbook_params_01090a": {
+        "TEST_NOTES": [
+            "Easy_Fabric NTP_SERVER_IP_LIST and NTP_SERVER_VRF parameters, unchanged.",
+            "Tests 01090 to 01125 change NTP_SERVER_VRF values before use."
+        ],
+        "name": "test_verify_playbook_params_01090a",
+        "userDefined": true,
+        "parameters": [
+            {
+                "name": "NTP_SERVER_IP_LIST",
+                "description": null,
+                "parameterType": "ipAddressList",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "NTP Server IPs",
+                    "Description": "Comma separated list of IP Addresses(v4/v6)",
+                    "IsMandatory": "false",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            },
+            {
+                "name": "NTP_SERVER_VRF",
+                "description": null,
+                "parameterType": "string[]",
+                "metaProperties": {},
+                "annotations": {
+                    "DisplayName": "NTP Server VRFs",
+                    "IsShow": "\"NTP_SERVER_IP_LIST!=null\"",
+                    "Description": "One VRF for all NTP servers or a comma separated<br />list of VRFs, one per NTP server",
+                    "IsMandatory": "\"NTP_SERVER_IP_LIST!=null\"",
+                    "Section": "\"Manageability\""
+                },
+                "structureParameters": {},
+                "parameterTypeStructure": false,
+                "defaultValue": null,
+                "optional": true
+            }
+        ]
     }
 }

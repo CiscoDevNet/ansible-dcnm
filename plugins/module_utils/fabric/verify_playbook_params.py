@@ -925,6 +925,76 @@ class VerifyPlaybookParams:
             else:
                 self.params_are_valid.add(True)
 
+    def _is_explicit_dependency_cleanup(self) -> bool:
+        """
+        # Summary
+
+        Return True if the playbook clears self.parameter together with
+        the single parameter it depends on.  For example, the playbook sets
+        both NTP_SERVER_VRF and NTP_SERVER_IP_LIST to "", and the rule for
+        NTP_SERVER_VRF is:
+
+        {"terms": {"na": [
+            {"parameter": "NTP_SERVER_IP_LIST", "operator": "!=", "value": "null"}
+        ]}}
+
+        Return True only when all of the following hold:
+
+        -   The playbook value of self.parameter is exactly "".
+        -   The rule has a single "na" term with operator "!=" and
+            value "null".
+        -   The dependency in that term is a different parameter whose
+            playbook value is also exactly "".
+        -   The template type of self.parameter is "string" or "string[]".
+        -   The template IsMandatory annotation of self.parameter is "false",
+            or is the quoted rule condition, e.g. "NTP_SERVER_IP_LIST!=null".
+
+        Return False in all other cases, including compound rules ("and",
+        "or"), a missing IsMandatory annotation, and values such as None,
+        False, 0, " ", or "null".
+
+        When this returns True, verify_parameter() skips the dependency
+        check for self.parameter.  Its value check has already run.
+        """
+        param_rule: dict[str, Any] = self._ruleset.ruleset.get(self.parameter, {})
+        param_rule_terms: dict[str, Any] = param_rule.get("terms", {})
+        parameter_value: Any = self.config_playbook.get(self.parameter)
+
+        if parameter_value != "":
+            return False
+        if len(param_rule_terms.keys()) != 1 or "na" not in param_rule_terms.keys():
+            return False
+        if len(param_rule_terms["na"]) != 1:
+            return False
+        term: dict[str, Any] = param_rule_terms["na"][0]
+        if term.get("operator") != "!=":
+            return False
+        if term.get("value") != "null":
+            return False
+        dependency: str = term.get("parameter")
+        if self.parameter == dependency:
+            return False
+        if self.config_playbook.get(dependency) != "":
+            return False
+        try:
+            param_info: dict[str, Any] = self._param_info.parameter(self.parameter)
+        except KeyError:
+            return False
+        if param_info["type"] not in ["string", "string[]"]:
+            return False
+        annotations: dict[str, Any] = {}
+        for template_parameter in self.template.get("parameters", []):
+            if template_parameter.get("name") == self.parameter:
+                annotations = self._ruleset.annotations(template_parameter)
+                break
+        is_mandatory: Any = annotations.get("IsMandatory", "")
+        rule_operator: str = term.get("operator")
+        rule_value: str = term.get("value")
+        if is_mandatory not in ["false", f'"{dependency}{rule_operator}{rule_value}"']:
+            return False
+
+        return True
+
     def verify_parameter(self) -> None:
         """
         # Summary
@@ -956,6 +1026,12 @@ class VerifyPlaybookParams:
         if self.parameter not in self._ruleset.ruleset:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"SKIP {self.parameter}: Not in ruleset."
+            self.log.debug(msg)
+            return
+
+        if self._is_explicit_dependency_cleanup():
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"SKIP {self.parameter}: Explicit dependency cleanup."
             self.log.debug(msg)
             return
 

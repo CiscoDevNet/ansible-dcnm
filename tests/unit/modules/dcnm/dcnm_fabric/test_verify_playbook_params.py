@@ -1041,3 +1041,676 @@ def test_verify_playbook_params_00910(key) -> None:
         instance.config_playbook = payloads_verify_playbook_params(key)
         instance.config_controller = None
         instance.commit()
+
+
+def test_verify_playbook_params_01000() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify Exception is not raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_VRF and the parameter it
+            depends on, NTP_SERVER_IP_LIST, in the same request.
+    - User parameter: (NTP_SERVER_VRF == ""): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01010() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   test_verify_playbook_params_01010a: the Easy_Fabric
+        NTP_SERVER_IP_LIST and NTP_SERVER_VRF parameters, with
+        NTP_SERVER_VRF IsMandatory set to "true".
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify ``ValueError`` is raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_VRF and NTP_SERVER_IP_LIST in
+            the same request, and the template marks NTP_SERVER_VRF as
+            always mandatory.
+        -   The cleanup is not accepted, so the existing rule check
+            rejects the empty NTP_SERVER_IP_LIST.
+    - User parameter: (NTP_SERVER_VRF == ""): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = key
+    with pytest.raises(ValueError, match="not found in parameter NTP_SERVER_IP_LIST rule:"):
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01020() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify ``ValueError`` is raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_IP_LIST but keeps a value in
+            NTP_SERVER_VRF, which depends on it.
+    - User parameter: (NTP_SERVER_VRF == "default"): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with pytest.raises(ValueError, match="not found in parameter NTP_SERVER_IP_LIST rule:"):
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01030() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify Exception is not raised for "!=" rule, when:
+        -   The playbook clears SYSLOG_SERVER_VRF, SYSLOG_SEV and the
+            parameter they depend on, SYSLOG_SERVER_IP_LIST, in the same
+            request.
+    - User parameters:
+        - (SYSLOG_SERVER_VRF == ""): SYSLOG_SERVER_IP_LIST!=null
+        - (SYSLOG_SEV == ""): SYSLOG_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - SYSLOG_SERVER_IP_LIST == ""
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01040() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify Exception is not raised for "!=" rule, when:
+        -   The controller config has NTP servers and an NTP VRF.
+        -   The playbook clears NTP_SERVER_VRF and the parameter it
+            depends on, NTP_SERVER_IP_LIST, in the same request.
+    - User parameter: (NTP_SERVER_VRF == ""): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    - Controller config:
+        - NTP_SERVER_IP_LIST == "10.1.1.1,10.1.1.2"
+        - NTP_SERVER_VRF == "management"
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = nv_pairs_verify_playbook_params(key)
+        instance.commit()
+
+
+@pytest.mark.parametrize(
+    "value",
+    [None, " ", "null", False, 0, []],
+)
+def test_verify_playbook_params_01050(value) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify ``ValueError`` is raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_IP_LIST with "".
+        -   NTP_SERVER_VRF is a value that is not exactly "", so the
+            cleanup is not accepted and the existing rule check rejects
+            the empty NTP_SERVER_IP_LIST.
+    - User parameter: (NTP_SERVER_VRF == value): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with pytest.raises(ValueError, match="not found in parameter NTP_SERVER_IP_LIST rule:"):
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        playbook = payloads_verify_playbook_params(key)
+        playbook["NTP_SERVER_VRF"] = value
+        instance.config_playbook = playbook
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01060() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify Exception is not raised for "!=" rule, when:
+        -   The playbook configures NTP and syslog servers with their
+            VRFs and severity.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01070() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - verify_parameter_value()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    - Verify ``ValueError`` is raised when:
+        -   The playbook clears NTP_SERVER_VRF and NTP_SERVER_IP_LIST in
+            the same request.
+        -   REPLICATION_MODE is not one of its valid choices.
+    - The accepted NTP cleanup does not hide the invalid
+      REPLICATION_MODE.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    match = r"Parameter: REPLICATION_MODE, Invalid value: \(Bogus\)"
+    with pytest.raises(ValueError, match=match):
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+@pytest.mark.parametrize("value", [None, "null"])
+def test_verify_playbook_params_01080(value) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify ``ValueError`` is raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_VRF with "".
+        -   NTP_SERVER_IP_LIST is None or "null", not "", so the cleanup
+            is not accepted.
+    - User parameter: (NTP_SERVER_VRF == ""): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == value
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with pytest.raises(ValueError, match="not found in parameter NTP_SERVER_IP_LIST rule:"):
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        playbook = payloads_verify_playbook_params(key)
+        playbook["NTP_SERVER_IP_LIST"] = value
+        instance.config_playbook = playbook
+        instance.config_controller = None
+        instance.commit()
+
+
+@pytest.mark.parametrize(
+    "is_mandatory",
+    [None, '"SYSLOG_SERVER_IP_LIST!=null"', "NTP_SERVER_IP_LIST!=null", "False"],
+)
+def test_verify_playbook_params_01090(is_mandatory) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   test_verify_playbook_params_01090a: the Easy_Fabric
+        NTP_SERVER_IP_LIST and NTP_SERVER_VRF parameters.  The test
+        removes the NTP_SERVER_VRF IsMandatory annotation (None) or
+        replaces it with a value the helper does not recognize.
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify ``ValueError`` is raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_VRF and NTP_SERVER_IP_LIST in
+            the same request.
+        -   IsMandatory is missing, names another parameter, is not
+            quoted, or is not the lowercase "false" used by the
+            templates.
+    - User parameter: (NTP_SERVER_VRF == ""): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template = templates_verify_playbook_params(key)
+    ntp_server_vrf = template["parameters"][1]
+    if is_mandatory is None:
+        ntp_server_vrf["annotations"].pop("IsMandatory")
+    else:
+        ntp_server_vrf["annotations"]["IsMandatory"] = is_mandatory
+    with pytest.raises(ValueError, match="not found in parameter NTP_SERVER_IP_LIST rule:"):
+        instance = VerifyPlaybookParams()
+        instance.template = template
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01100() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   test_verify_playbook_params_01090a, with NTP_SERVER_VRF
+        IsMandatory set to "false".
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify Exception is not raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_VRF and NTP_SERVER_IP_LIST in
+            the same request.
+        -   The template marks NTP_SERVER_VRF as not mandatory.
+    - User parameter: (NTP_SERVER_VRF == ""): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    """
+    key = "test_verify_playbook_params_01090a"
+    template = templates_verify_playbook_params(key)
+    ntp_server_vrf = template["parameters"][1]
+    ntp_server_vrf["annotations"]["IsMandatory"] = "false"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = template
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01110() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   test_verify_playbook_params_01090a, with NTP_SERVER_VRF
+        parameterType set to "ipAddressList".
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify ``ValueError`` is raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_VRF and NTP_SERVER_IP_LIST in
+            the same request.
+        -   NTP_SERVER_VRF is not a string or string[] parameter.
+    - User parameter: (NTP_SERVER_VRF == ""): NTP_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    """
+    key = "test_verify_playbook_params_01090a"
+    template = templates_verify_playbook_params(key)
+    ntp_server_vrf = template["parameters"][1]
+    ntp_server_vrf["parameterType"] = "ipAddressList"
+    with pytest.raises(ValueError, match="not found in parameter NTP_SERVER_IP_LIST rule:"):
+        instance = VerifyPlaybookParams()
+        instance.template = template
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01120() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   test_verify_playbook_params_01090a, with the NTP_SERVER_VRF
+        IsShow and IsMandatory conditions pointing to NTP_SERVER_VRF
+        itself.
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify ``ValueError`` is raised for "!=" rule, when:
+        -   The playbook clears NTP_SERVER_VRF and NTP_SERVER_IP_LIST in
+            the same request.
+        -   The NTP_SERVER_VRF rule depends on NTP_SERVER_VRF itself.
+    - User parameter: (NTP_SERVER_VRF == ""): NTP_SERVER_VRF!=null
+    """
+    key = "test_verify_playbook_params_01090a"
+    template = templates_verify_playbook_params(key)
+    ntp_server_vrf = template["parameters"][1]
+    ntp_server_vrf["annotations"]["IsShow"] = '"NTP_SERVER_VRF!=null"'
+    ntp_server_vrf["annotations"]["IsMandatory"] = '"NTP_SERVER_VRF!=null"'
+    with pytest.raises(ValueError, match="not found in parameter NTP_SERVER_VRF rule:"):
+        instance = VerifyPlaybookParams()
+        instance.template = template
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+@pytest.mark.parametrize(
+    "condition",
+    ['"NTP_SERVER_IP_LIST==null"', '"NTP_SERVER_IP_LIST!=10.1.1.1"'],
+)
+def test_verify_playbook_params_01125(condition) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   test_verify_playbook_params_01090a, with the NTP_SERVER_VRF
+        IsShow and IsMandatory conditions set to ``condition``.
+
+    Rule type
+    -   == or !=
+
+    Summary
+    - Verify ``ValueError`` is raised when:
+        -   The playbook clears NTP_SERVER_VRF and NTP_SERVER_IP_LIST in
+            the same request.
+        -   The NTP_SERVER_VRF rule does not have the form
+            "NTP_SERVER_IP_LIST!=null": the operator is "==", or the
+            value is not "null".
+    - User parameter: (NTP_SERVER_VRF == ""): condition
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+    """
+    key = "test_verify_playbook_params_01090a"
+    template = templates_verify_playbook_params(key)
+    ntp_server_vrf = template["parameters"][1]
+    ntp_server_vrf["annotations"]["IsShow"] = condition
+    ntp_server_vrf["annotations"]["IsMandatory"] = condition
+    with pytest.raises(ValueError, match="not found in parameter NTP_SERVER_IP_LIST rule:"):
+        instance = VerifyPlaybookParams()
+        instance.template = template
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01130() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   and
+
+    Summary
+    - Verify ``ValueError`` is raised for "and" rule, when:
+        -   The playbook clears BOOTSTRAP_MULTISUBNET, a string parameter
+            whose rule has more than one term.
+    - User parameter: (BOOTSTRAP_MULTISUBNET == ""):
+      DHCP_ENABLE==true and BOOTSTRAP_ENABLE==true
+    - Dependent parameters:
+        - DHCP_ENABLE == False
+        - BOOTSTRAP_ENABLE == False
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    match = r"BOOTSTRAP_MULTISUBNET\(\) requires DHCP_ENABLE == True"
+    with pytest.raises(ValueError, match=match):
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01140() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric_eBGP
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify Exception is not raised for "!=" rule, when:
+        -   The playbook clears the NTP and syslog settings together
+            with the Easy_Fabric_eBGP template.
+    - User parameters:
+        - (NTP_SERVER_VRF == ""): NTP_SERVER_IP_LIST!=null
+        - (SYSLOG_SERVER_VRF == ""): SYSLOG_SERVER_IP_LIST!=null
+        - (SYSLOG_SEV == ""): SYSLOG_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - NTP_SERVER_IP_LIST == ""
+        - SYSLOG_SERVER_IP_LIST == ""
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric_ebgp"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()
+
+
+def test_verify_playbook_params_01150() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - template.setter
+        - config_playbook.setter
+        - config_controller.setter
+        - verify_parameter()
+        - _is_explicit_dependency_cleanup()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Rule type
+    -   !=
+
+    Summary
+    - Verify Exception is not raised for "!=" rule, when:
+        -   The playbook clears DNS_SERVER_VRF and the parameter it
+            depends on, DNS_SERVER_IP_LIST, in the same request.
+    - User parameter: (DNS_SERVER_VRF == ""): DNS_SERVER_IP_LIST!=null
+    - Dependent parameters:
+        - DNS_SERVER_IP_LIST == ""
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+    template_key = "easy_fabric"
+    with does_not_raise():
+        instance = VerifyPlaybookParams()
+        instance.template = templates_verify_playbook_params(template_key)
+        instance.config_playbook = payloads_verify_playbook_params(key)
+        instance.config_controller = None
+        instance.commit()

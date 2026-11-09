@@ -199,5 +199,185 @@
         "L3VNI_MCAST_GROUP": "239.1.1.1",
         "ENABLE_TRMv6": "false",
         "UNDERLAY_IS_V6": "true"
+    },
+    "test_verify_playbook_params_01000a": {
+        "TEST_NOTES": [
+            "Clear NTP_SERVER_IP_LIST and NTP_SERVER_VRF together.",
+            "RULE (NTP_SERVER_VRF): NTP_SERVER_IP_LIST!=null",
+            "Expect: accepted."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01010a": {
+        "TEST_NOTES": [
+            "Clear NTP_SERVER_IP_LIST and NTP_SERVER_VRF together.",
+            "RULE (NTP_SERVER_VRF): NTP_SERVER_IP_LIST!=null",
+            "Used with a template where NTP_SERVER_VRF IsMandatory is true.",
+            "Expect: ValueError for the empty NTP_SERVER_IP_LIST."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01020a": {
+        "TEST_NOTES": [
+            "Clear NTP_SERVER_IP_LIST but keep a value in NTP_SERVER_VRF.",
+            "RULE (NTP_SERVER_VRF): NTP_SERVER_IP_LIST!=null",
+            "Expect: ValueError for the empty NTP_SERVER_IP_LIST."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "default",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01030a": {
+        "TEST_NOTES": [
+            "Clear SYSLOG_SERVER_IP_LIST, SYSLOG_SERVER_VRF and SYSLOG_SEV together.",
+            "RULE (SYSLOG_SERVER_VRF and SYSLOG_SEV): SYSLOG_SERVER_IP_LIST!=null",
+            "Expect: accepted."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "SYSLOG_SERVER_IP_LIST": "",
+        "SYSLOG_SERVER_VRF": "",
+        "SYSLOG_SEV": "",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01040a": {
+        "TEST_NOTES": [
+            "Clear NTP_SERVER_IP_LIST and NTP_SERVER_VRF together.",
+            "RULE (NTP_SERVER_VRF): NTP_SERVER_IP_LIST!=null",
+            "Controller config: NTP_SERVER_IP_LIST 10.1.1.1,10.1.1.2, NTP_SERVER_VRF management.",
+            "Expect: accepted."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01050a": {
+        "TEST_NOTES": [
+            "Clear NTP_SERVER_IP_LIST and NTP_SERVER_VRF together.",
+            "RULE (NTP_SERVER_VRF): NTP_SERVER_IP_LIST!=null",
+            "The test replaces NTP_SERVER_VRF with None, ' ', 'null', False, 0 or [].",
+            "Expect: ValueError for the empty NTP_SERVER_IP_LIST."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01060a": {
+        "TEST_NOTES": [
+            "Configure NTP and syslog servers with their VRFs and severity.",
+            "Expect: accepted."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "10.1.1.1,10.1.1.2",
+        "NTP_SERVER_VRF": "management",
+        "SYSLOG_SERVER_IP_LIST": "10.1.1.3",
+        "SYSLOG_SERVER_VRF": "management",
+        "SYSLOG_SEV": "5",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01070a": {
+        "TEST_NOTES": [
+            "Clear NTP_SERVER_IP_LIST and NTP_SERVER_VRF together.",
+            "REPLICATION_MODE is not one of its valid choices.",
+            "Expect: ValueError for REPLICATION_MODE."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "",
+        "REPLICATION_MODE": "Bogus",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01080a": {
+        "TEST_NOTES": [
+            "Clear NTP_SERVER_VRF.",
+            "RULE (NTP_SERVER_VRF): NTP_SERVER_IP_LIST!=null",
+            "The test replaces NTP_SERVER_IP_LIST with None or 'null'.",
+            "Expect: ValueError for NTP_SERVER_IP_LIST."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01090a": {
+        "TEST_NOTES": [
+            "Clear NTP_SERVER_IP_LIST and NTP_SERVER_VRF together.",
+            "Used with the test_verify_playbook_params_01090a template,",
+            "which each test modifies in one place."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01130a": {
+        "TEST_NOTES": [
+            "Clear BOOTSTRAP_MULTISUBNET.",
+            "RULE (BOOTSTRAP_MULTISUBNET): DHCP_ENABLE==true and BOOTSTRAP_ENABLE==true",
+            "Expect: ValueError for BOOTSTRAP_MULTISUBNET."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "BOOTSTRAP_MULTISUBNET": "",
+        "DHCP_ENABLE": false,
+        "BOOTSTRAP_ENABLE": false,
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01140a": {
+        "TEST_NOTES": [
+            "Clear NTP and syslog settings with the Easy_Fabric_eBGP template.",
+            "Expect: accepted."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "NTP_SERVER_IP_LIST": "",
+        "NTP_SERVER_VRF": "",
+        "SYSLOG_SERVER_IP_LIST": "",
+        "SYSLOG_SERVER_VRF": "",
+        "SYSLOG_SEV": "",
+        "DEPLOY": true
+    },
+    "test_verify_playbook_params_01150a": {
+        "TEST_NOTES": [
+            "Clear DNS_SERVER_IP_LIST and DNS_SERVER_VRF together.",
+            "RULE (DNS_SERVER_VRF): DNS_SERVER_IP_LIST!=null",
+            "Expect: accepted."
+        ],
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "BGP_AS": "65001",
+        "DNS_SERVER_IP_LIST": "",
+        "DNS_SERVER_VRF": "",
+        "DEPLOY": true
     }
 }
