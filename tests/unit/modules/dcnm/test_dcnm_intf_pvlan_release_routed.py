@@ -512,7 +512,7 @@ def test_a_true_cdp_renders_no_command_on_the_measured_release():
 
 
 def test_the_cdp_release_with_its_default_cdp_is_a_safe_released_member():
-    """FAIL-BEFORE: CDP_ENABLE='true' is outside the released routed form (the V22 refusal)."""
+    """FAIL-BEFORE: CDP_ENABLE='true' is outside the released routed form."""
     assert cdp_problems() == []
     assert P.released_member_safety_problems(ROUTED, dict(RELEASED_ROUTED, ADMIN_STATE="false")) == [], "the Q56 body (no CDP key) is unchanged"
 
