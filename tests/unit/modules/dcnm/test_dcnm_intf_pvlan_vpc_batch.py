@@ -156,6 +156,11 @@ class MultiVpc(V.VpcController):
                 out.append({"policy": d["policy"], "interfaces": [{"serialNumber": key[0], "ifName": key[1], "nvPairs": self._parent_nv(key, d)}]})
         return out
 
+    def _released(self, serial, port, k, pcid):
+        """(pending lines after `no interface port-channelN`, expected lines) of a member the mark-delete released; the default is the
+        trunk release of the vPC harness."""
+        return subst(V.delete_preview(serial, port)["DATA"][0]["pendingConfig"][1:], k, pcid), V.member_running_baseline(port)
+
     def _preview_for(self, serial):
         pending, running, expected = [], [], []
         for key, (k, pair, m1, m2) in sorted(self.plan.items(), key=lambda x: x[1][0]):
@@ -169,10 +174,10 @@ class MultiVpc(V.VpcController):
             after = po + [x for p in ports for x in subst(V.member_after(p), k, pcid)]
             base = [x for p in ports for x in V.member_running_baseline(p)]
             if key in self.deleted_vpcs and key not in self.deployed_vpcs:
-                withdrawn = [x for p in ports for x in subst(V.delete_preview(serial, p)["DATA"][0]["pendingConfig"][1:], k, pcid)]
-                pending += ["no interface port-channel%d" % pcid] + withdrawn
+                released = [self._released(serial, p, k, pcid) for p in ports]
+                pending += ["no interface port-channel%d" % pcid] + [x for withdrawn, _expected in released for x in withdrawn]
                 running += after
-                expected += base
+                expected += [x for _withdrawn, member_expected in released for x in member_expected]
             elif key in self.parents and key not in self.deployed_vpcs:
                 pending += po + [x for p in ports for x in subst(V.create_pending(p, desc=desc), k, pcid)[len(po):]]
                 running += base
@@ -280,7 +285,7 @@ def serial_of(path):
 
 def run(ctrl, config, state="merged"):
     inv = dict((IPS[sn], {"logicalName": "sw-%s" % sn[-1], "serialNumber": sn, "isVpcConfigured": "True", "vpcDomain": 10 + i // 2,
-                          "switchRole": "leaf", "managable": "True"}) for i, sn in enumerate(sorted(ctrl.nodes)))
+                          "switchRole": getattr(ctrl, "roles", {}).get(sn, "leaf"), "managable": "True"}) for i, sn in enumerate(sorted(ctrl.nodes)))
     args = {"state": state, "fabric": V.FABRIC, "config": config, "check_deploy": False}
     patches = [
         patch.object(basic.AnsibleModule, "exit_json", exit_json),
