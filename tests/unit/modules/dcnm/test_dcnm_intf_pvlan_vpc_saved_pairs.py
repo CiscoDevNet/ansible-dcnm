@@ -13,11 +13,13 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import copy
 import json
 from unittest.mock import patch
 
 import pytest
 
+from . import test_dcnm_intf_pvlan_release_routed as R
 from . import test_dcnm_intf_pvlan_vpc_batch as B
 from . import test_dcnm_intf_pvlan_vpc_harness as V
 from .test_dcnm_intf_pvlan_po_vpc_reconcile import lo
@@ -47,14 +49,62 @@ class PairCtrl(B.MultiVpc):
         return super(PairCtrl, self).__call__(mod, method, path, data)
 
 
+class RoutedPairCtrl(PairCtrl):
+    """PairCtrl whose mark-delete releases the listed members as the MEASURED routed form of the installed template (86 nvPairs, with
+    their own children), the way the border ports of a pair do. A SUCCESS modify that sets a routed member down turns its own
+    no_shut_interface into shut_interface (measured). `routed_nv` is the released body."""
+
+    def __init__(self, routed, npairs=2, routed_nv=None):
+        super(RoutedPairCtrl, self).__init__(npairs)
+        self.routed = frozenset(routed)
+        self.routed_nv = R.RELEASED_ROUTED_CDP if routed_nv is None else routed_nv
+        self.roles = dict((serial, "border") for serial, _port in self.routed)  # a border port releases routed; an overridden sweep keeps it
+
+    def _released(self, serial, port, k, pcid):
+        if (serial, port) not in self.routed:
+            return super(RoutedPairCtrl, self)._released(serial, port, k, pcid)
+        pending, _running, expected = R.routed_release_preview(port=port, po_number=str(pcid), pair=(V.PRIMARY, V.SECONDARY))
+        return pending[1:], expected
+
+    def __call__(self, mod, method, path, data=None):
+        resp = super(RoutedPairCtrl, self).__call__(mod, method, path, data)
+        if method == "DELETE" and path.endswith(V.MARKDELETE):
+            item = json.loads(data)[0]
+            _k, pair, first, second = self.plan[self.key(item["serialNumber"], item["ifName"])]
+            for serial, ports in zip(pair, (first, second)):
+                for port in ports:
+                    if (serial, port) in self.routed:
+                        nv = copy.deepcopy(self.routed_nv)
+                        nv["INTF_NAME"] = port
+                        self.nodes[serial][port] = {"policy": R.ROUTED, "nvPairs": nv}
+                        self.policies_extra[serial] += R.child_policies(port, R.CHILDREN_UP, serial)
+        if method == "POST" and path.endswith(V.MODIFY):
+            for payload in json.loads(data):
+                for intf in payload["interfaces"]:
+                    if payload["policy"] == R.ROUTED and intf["nvPairs"].get("ADMIN_STATE") == "false":
+                        for p_ in self.policies_extra[intf["serialNumber"]]:
+                            if p_["entityName"] == intf["ifName"] and p_["templateName"] == "no_shut_interface":
+                                p_["templateName"], p_["priority"] = "shut_interface", 458
+        return resp
+
+
+# Pair A releases trunk members; the two border peers of pair B release routed ones (vPC id 10: Ethernet1/10 and Ethernet2/10).
+BORDER_B = ((SN3, "Ethernet1/10"), (SN4, "Ethernet2/10"))
+
+
+def border_pair(**kwargs):
+    return RoutedPairCtrl(BORDER_B, **kwargs)
+
+
 def vpc_kwargs(pcids):
     return dict((key, value) for key, value in (("peer1_pcid", pcids[0]), ("peer2_pcid", pcids[1])) if value is not None)
 
 
-def saved_pairs(ks=(10, 10), pcids=NO_PCIDS, npairs=2):
+def saved_pairs(ks=(10, 10), pcids=NO_PCIDS, npairs=2, ctrl=None):
     """vPC k0 on pair A and vPC k1 on pair B created and deployed, then BOTH deletions saved with deploy false (invocation 2).
-    The controller keeps the children marked for deletion, with the vPC as source, until a deploy names that vPC."""
-    ctrl = PairCtrl(npairs)
+    The controller keeps the children marked for deletion, with the vPC as source, until a deploy names that vPC. `ctrl.saved_calls` keeps
+    the requests of the saving run."""
+    ctrl = ctrl or PairCtrl(npairs)
     config = [ctrl.add_vpc(ks[i], i, **vpc_kwargs(pcids[i])) for i in range(npairs)]
     assert B.run(ctrl, config)[0] == "exit"
     ctrl.next_invocation()
@@ -66,6 +116,8 @@ def saved_pairs(ks=(10, 10), pcids=NO_PCIDS, npairs=2):
     assert len(ctrl.markdeletes()) == npairs and ctrl.deploys() == []
     for i in range(npairs):
         assert marked(ctrl)[B.PAIRS[i][0]] and marked(ctrl)[B.PAIRS[i][1]], "the saved deletion is pending on both peers"
+    ctrl.saved_calls = list(ctrl.calls)
+    ctrl.saved_result = result
     ctrl.next_invocation()
     ctrl.calls = []
     return ctrl
@@ -471,3 +523,107 @@ def test_a_pair_whose_saved_conventional_vpc_is_not_requested_with_deployment_ke
     assert "vPC10 on %s: peer" % PA not in result["msg"], "pair A's conventional vPC is owned by this request"
     assert deployed(ctrl) == [] and ctrl.deployed_vpcs == set() and ctrl.conv_done == set()
     assert len(marked(ctrl)[V.SN1]) == 2 and len(marked(ctrl)[SN3]) == 2, "nothing was completed on either pair"
+
+
+# ============================================================ the released routed member of a border pair (installed template)
+# Pair A releases int_trunk_host; both peers of pair B release int_routed_host with CDP_ENABLE "true" (MEASURED). The first measured routed
+# body had no CDP key and is covered with the Po and vPC tests of test_dcnm_intf_pvlan_release_routed.
+def member_modifies(ctrl, calls):
+    """{(serial, ifName): (policy, nvPairs)} of the released-member modifies in `calls` (the vPC parent modify is left out)."""
+    out = {}
+    for method, path, data in calls:
+        if method == "POST" and path.endswith(V.MODIFY):
+            for payload in json.loads(data):
+                for intf in payload["interfaces"]:
+                    if intf["serialNumber"] in ctrl.nodes:
+                        out[(intf["serialNumber"], intf["ifName"])] = (payload["policy"], intf["nvPairs"])
+    return out
+
+
+def test_a_border_pair_saved_deletion_releases_routed_members_corrected_and_pending():
+    """FAIL-BEFORE: the module refuses pair B after both mark-deletes with CDP_ENABLE='true' is outside the released routed form."""
+    ctrl = saved_pairs(ctrl=border_pair())
+    written = member_modifies(ctrl, ctrl.saved_calls)
+    assert sorted(written) == [(V.SN1, "Ethernet1/10"), (V.SN2, "Ethernet2/10"), (SN3, "Ethernet1/10"), (SN4, "Ethernet2/10")]
+    for key, (policy, nv) in written.items():
+        assert nv["ADMIN_STATE"] == "false"
+        if key in BORDER_B:
+            assert policy == R.ROUTED and nv["CDP_ENABLE"] == "true", "the controller value is carried"
+            assert ctrl.nodes[key[0]][key[1]]["policy"] == R.ROUTED
+        else:
+            assert policy == V.TRUNK
+    released = dict(((r["serial"], r["member"]), r["released_policy"]) for r in ctrl.saved_result["pvlan_vpc_release"])
+    assert released == dict((key, written[key][0]) for key in written), "each member keeps ITS released policy"
+    assert ctrl.deploys() == [] and ctrl.saved_result["changed"] is True
+    assert sorted((r["serial"], r["state"].split(":")[0]) for r in ctrl.saved_result["pvlan_saved"]) == [(PA, "saved"), (PB, "saved")]
+
+
+@pytest.mark.parametrize("route", ROUTES)
+def test_a_border_pair_is_continued_with_the_trunk_pair_and_both_are_deployed_once(route):
+    ctrl = saved_pairs(ctrl=border_pair())
+    status, result = resume(ctrl, route, (True, True))
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert deployed(ctrl) == [sent(PA), sent(PB)]
+    assert [w for w in vpc_writes(ctrl) if w[1] != "globalInterface/deploy"] == [], "no member is written again"
+    assert reports(result) == [(PA, "vPC10", SAVED, members(0)), (PB, "vPC10", SAVED, members(1))]
+    judged(result, (0, 1))
+    assert ctrl.deployed_vpcs == {(PA, "vPC10"), (PB, "vPC10")} and marked(ctrl) == dict((s, []) for s in ALL)
+    for serial, port in BORDER_B:
+        assert ctrl.nodes[serial][port]["policy"] == R.ROUTED and ctrl.nodes[serial][port]["nvPairs"]["CDP_ENABLE"] == "true"
+    ctrl.next_invocation()
+    ctrl.calls = []
+    status, result = resume(ctrl, route, (True, True))
+    assert status == "exit", result.get("msg")
+    if route == "named":
+        assert result["changed"] is False
+    nothing_written(ctrl)
+
+
+@pytest.mark.parametrize("deploys", [(True, False), (False, True)])
+def test_a_border_pair_keeps_its_own_deploy_choice(deploys):
+    ctrl = saved_pairs(ctrl=border_pair())
+    status, result = resume(ctrl, "named", deploys)
+    assert status == "exit", result.get("msg")
+    done, kept = (0, 1) if deploys[0] else (1, 0)
+    pairs = (PA, PB)
+    assert deployed(ctrl) == [sent(pairs[done])]
+    assert reports(result) == sorted([(pairs[done], "vPC10", SAVED, members(done)), (pairs[kept], "vPC10", AWAITING, members(kept))])
+    for serial in B.PAIRS[kept]:
+        assert len(marked(ctrl)[serial]) == 1 and len(policies_marked(ctrl)[serial]) == 1
+
+
+def test_a_border_pair_with_both_deploy_false_stays_saved_and_is_reported_for_both_pairs():
+    ctrl = saved_pairs(ctrl=border_pair())
+    status, result = resume(ctrl, "named", (False, False))
+    assert status == "exit", result.get("msg")
+    nothing_written(ctrl)
+    assert reports(result) == [(PA, "vPC10", AWAITING, members(0)), (PB, "vPC10", AWAITING, members(1))]
+
+
+def test_a_border_pair_saved_with_deploy_true_is_deployed_in_one_run():
+    """The deployed deletion (no saved stage) of the same two pairs."""
+    ctrl = border_pair()
+    config = [ctrl.add_vpc(10, i) for i in range(2)]
+    assert B.run(ctrl, config)[0] == "exit"
+    ctrl.next_invocation()
+    ctrl.calls = []
+    status, result = B.run(ctrl, [ctrl.del_item(10, 0), ctrl.del_item(10, 1)], state="deleted")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert sorted((d["serialNumber"], d["ifName"]) for call in ctrl.deploys() for d in json.loads(call[2])) == [(PA, "vPC10"), (PB, "vPC10")]
+    judged(result, (0, 1))
+    written = member_modifies(ctrl, ctrl.calls)
+    assert all(written[key][0] == R.ROUTED and written[key][1]["CDP_ENABLE"] == "true" for key in BORDER_B)
+
+
+@pytest.mark.parametrize("value", ["false", ""])
+def test_a_non_default_cdp_on_the_border_pair_is_refused_naming_that_pair_and_writing_no_member_there(value):
+    ctrl = border_pair(routed_nv=dict(R.RELEASED_ROUTED_CDP, CDP_ENABLE=value))
+    config = [ctrl.add_vpc(10, i) for i in range(2)]
+    assert B.run(ctrl, config)[0] == "exit"
+    ctrl.next_invocation()
+    ctrl.calls = []
+    items = [dict(ctrl.del_item(10, i), deploy=False) for i in range(2)]
+    status, result = B.run(ctrl, items, state="deleted")
+    assert status == "fail" and PB in result["msg"] and "CDP_ENABLE=" in result["msg"], result.get("msg")
+    assert ctrl.deploys() == []
+    assert not [key for key in member_modifies(ctrl, ctrl.calls) if key in BORDER_B], "no member write on the refused pair"

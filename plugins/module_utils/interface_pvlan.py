@@ -2589,7 +2589,10 @@ def po_routed_member_self_children(nv):
 # the keys rendered by _render_routed_released (ADMIN_STATE, MTU, SPEED, DESC, CONF) and the metadata. A released routed member is modeled
 # only while every one of these holds its neutral value; any other value -- an address, VRF, routing protocol, ACL, QoS, freeform -- is
 # configuration this contract does not model, and the run stops before the deploy.
+# CDP_ENABLE is absent from the first measured body and "true" in the one of a template that declares it (default true). "true" renders no
+# command; "false" renders `no cdp enable` through a child policy, so it is refused here like any other configuration.
 _ROUTED_RELEASE_NEUTRAL = {
+    "CDP_ENABLE": "true",
     "DISABLE_IP_REDIRECTS": "false", "ENABLE_NETFLOW": "false", "ENABLE_PFC": "false", "ENABLE_PIM_SPARSE": "false", "ENABLE_QOS": "false",
     "FEC": "auto", "GF": "", "INTF_VRF": "", "IP": "", "IPv6": "", "IPv6_PREFIX": "", "NETFLOW_MONITOR": "", "NETFLOW_SAMPLER": "",
     "OSPF_AREA_ID": "0.0.0.0", "OSPF_AUTH_KEY": "", "OSPF_AUTH_KEY_ID": "1", "PIM_DR_PRIORITY": "1", "PREFIX": "", "PTP": "false",

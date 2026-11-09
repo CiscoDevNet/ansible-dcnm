@@ -312,8 +312,8 @@ options:
               converts a member. 'state=deleted' removes the port-channel and releases its member to the
               fabric's host interface default before the deployment, on the policy the controller releases it
               to (read afresh, never converted) - C(int_trunk_host), or C(int_routed_host) only in the
-              measured neutral form (no address, VRF, routing, QoS or freeform commands, MTU 9216,
-              speed Auto); any other release stops before the deployment.
+              measured neutral form (no address, VRF, routing, QoS or freeform commands, CDP enabled,
+              MTU 9216, speed Auto); any other release stops before the deployment.
             - Companion fields of mode 'pvlan' on a port-channel (NOT LIVE TESTED). Native, no
               C(patch_version) needed - 'bpdu_guard', 'port_type_fast', 'mtu', 'copy_description',
               'enable_cdp', 'orphan_port', 'duplex', 'queuing_policy', 'disable_lacp_suspend_individual',

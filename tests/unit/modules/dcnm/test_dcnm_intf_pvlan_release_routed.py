@@ -33,8 +33,10 @@ from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController
 from . import test_dcnm_intf_pvlan_po_host as H
 
 Q56 = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_release_routed_q56_measured.json")))
+CDP_RELEASE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_release_routed_cdp_measured.json")))
 ROUTED = "int_routed_host"
 RELEASED_ROUTED = dict(Q56["released_routed_nvpairs"])  # MEASURED, ADMIN_STATE "true"
+RELEASED_ROUTED_CDP = dict(CDP_RELEASE["released_routed_nvpairs"])  # MEASURED on NDFC 12.6.0.267: the Q56 keys plus CDP_ENABLE and two inactive keys
 CHILDREN_UP = [(c["templateName"], c["priority"]) for c in Q56["released_children"]]  # MEASURED own children
 MEM, PO_NAME = G4.MEM, G4.PO_NAME
 
@@ -296,12 +298,13 @@ class RoutedVpc(V.VpcController):
 
     routed_ports = frozenset()
     released_down = False
+    routed_nv = RELEASED_ROUTED
 
     def __call__(self, mod, method, path, data=None):
         resp = super(RoutedVpc, self).__call__(mod, method, path, data)
         if method == "DELETE" and path.endswith(V.MARKDELETE):
             for serial, port in self.routed_ports:
-                nv = copy.deepcopy(RELEASED_ROUTED)
+                nv = copy.deepcopy(self.routed_nv)
                 nv["INTF_NAME"] = port
                 if self.released_down:
                     nv["ADMIN_STATE"] = "false"
@@ -324,7 +327,7 @@ def routed_vpc_delete_preview(serial, port, pair=(V.PRIMARY, V.SECONDARY)):
                      expected=expected)
 
 
-def seeded_vpc(routed, released_down=False, ports=None):
+def seeded_vpc(routed, released_down=False, ports=None, released=None):
     ports = ports or VPC_PORTS
     ctrl = V.VpcController()
     for serial, plist in ports.items():
@@ -341,6 +344,7 @@ def seeded_vpc(routed, released_down=False, ports=None):
     ctrl.__class__ = RoutedVpc
     ctrl.routed_ports = frozenset(routed)
     ctrl.released_down = released_down
+    ctrl.routed_nv = RELEASED_ROUTED if released is None else released
     for serial, plist in ports.items():
         ctrl.vpc_previews[serial].append(_combine(serial, plist, routed))
     return ctrl
@@ -477,3 +481,159 @@ def test_po_with_two_members_and_a_later_unsafe_routed_release_writes_no_member_
     assert status == "fail" and "IP='192.0.2.1'" in result["msg"], result.get("msg")
     assert "member release failed while proving the released member before any member write" in result["msg"]
     assert len(ctrl.markdeletes()) == 1 and ctrl.bulk_bodies() == [] and ctrl.deploys() == []
+
+
+# ------------------------------------------------------------------ CDP_ENABLE on the installed template
+# MEASURED (fixtures/pvlan_release_routed_cdp_measured.json): the border port released by the mark-delete of a deployed vPC carries three keys
+# the Q56 body lacks, CDP_ENABLE "true", evpnMultisiteDciTracking "false" and ospfRetransmitInterval "". The installed int_routed_host declares
+# CDP_ENABLE as a boolean with defaultValue true, and creates the child cdp_disable_interface_11_1 (`no cdp enable`) only for "false": "true"
+# renders no command, which the release preview of the same port confirms. The Q56 body (no CDP key) stays the compatibility control.
+def cdp_problems(**changes):
+    return P.released_member_safety_problems(ROUTED, dict(dict(RELEASED_ROUTED_CDP, ADMIN_STATE="false"), **changes))
+
+
+def test_the_cdp_fixture_is_the_q56_body_plus_three_keys():
+    q56 = Q56["released_routed_nvpairs"]
+    assert len(q56) == 83 and "CDP_ENABLE" not in q56, "the Q56 compatibility control is unchanged"
+    assert len(RELEASED_ROUTED_CDP) == 86
+    assert CDP_RELEASE["added_keys_vs_q56"] == {"CDP_ENABLE": "true", "evpnMultisiteDciTracking": "false", "ospfRetransmitInterval": ""}
+    assert dict((k, v) for k, v in RELEASED_ROUTED_CDP.items() if k in q56 and k != "INTF_NAME") == dict((k, v) for k, v in q56.items() if k != "INTF_NAME")
+    assert set(RELEASED_ROUTED_CDP) - set(q56) == set(CDP_RELEASE["added_keys_vs_q56"])
+    assert [(c["templateName"], c["priority"]) for c in CDP_RELEASE["released_children"]] == sorted(CHILDREN_UP)
+
+
+def test_a_true_cdp_renders_no_command_on_the_measured_release():
+    """CDP true adds nothing to the release preview of the same port: the member lines are the Q56 ones."""
+    q56_member = [x.strip() for x in Q56["preview_release_admin_up"]["pendingConfig"] if x.strip() in ("no switchport", "mtu 9216", "no shutdown")]
+    assert sorted(CDP_RELEASE["release_member_pending"]) == sorted(q56_member) == ["mtu 9216", "no shutdown", "no switchport"]
+    assert not any("cdp" in x.lower() for x in CDP_RELEASE["release_member_pending"])
+    assert P.render(ROUTED, RELEASED_ROUTED_CDP).scalars == P.render(ROUTED, RELEASED_ROUTED).scalars == {"no switchport", "mtu 9216", "no shutdown"}
+    assert P.render(ROUTED, RELEASED_ROUTED_CDP).modeled
+
+
+def test_the_cdp_release_with_its_default_cdp_is_a_safe_released_member():
+    """FAIL-BEFORE: CDP_ENABLE='true' is outside the released routed form (the V22 refusal)."""
+    assert cdp_problems() == []
+    assert P.released_member_safety_problems(ROUTED, dict(RELEASED_ROUTED, ADMIN_STATE="false")) == [], "the Q56 body (no CDP key) is unchanged"
+
+
+@pytest.mark.parametrize("value", ["true", "True", "TRUE", " true ", True])
+def test_the_cdp_default_is_recognised_in_every_boolean_spelling(value):
+    assert cdp_problems(CDP_ENABLE=value) == []
+
+
+@pytest.mark.parametrize("value", ["false", "False", " FALSE", False])
+def test_a_disabled_cdp_is_refused_because_it_renders_a_command_the_form_does_not_model(value):
+    """`no cdp enable` (child cdp_disable_interface_11_1) is configuration of the member, not the released default."""
+    problems = cdp_problems(CDP_ENABLE=value)
+    assert len(problems) == 1 and problems[0].startswith("CDP_ENABLE=") and "models only 'true'" in problems[0], problems
+    assert not P.render(ROUTED, dict(RELEASED_ROUTED_CDP, CDP_ENABLE=value)).modeled
+
+
+@pytest.mark.parametrize("value", ["", "1", "yes", "on", "enabled", "maybe", "0"])
+def test_a_cdp_value_that_is_not_a_boolean_is_refused(value):
+    problems = cdp_problems(CDP_ENABLE=value)
+    assert len(problems) == 1 and problems[0].startswith("CDP_ENABLE="), problems
+
+
+def test_an_absent_or_null_cdp_is_the_old_form():
+    nv = dict(RELEASED_ROUTED_CDP, ADMIN_STATE="false")
+    del nv["CDP_ENABLE"]
+    assert P.released_member_safety_problems(ROUTED, nv) == []
+    assert P.released_member_safety_problems(ROUTED, dict(nv, CDP_ENABLE=None)) == []
+
+
+def test_the_other_added_keys_stay_inactive_only_and_an_unrelated_unknown_true_is_still_refused():
+    assert cdp_problems(evpnMultisiteDciTracking="false", ospfRetransmitInterval="") == []
+    for key, value in (("evpnMultisiteDciTracking", "true"), ("ospfRetransmitInterval", "5"), ("SOME_NEW_FIELD", "true"), ("SOME_NEW_FIELD", "on")):
+        problems = cdp_problems(**{key: value})
+        assert len(problems) == 1 and problems[0].startswith("%s=" % key), (key, problems)
+    for key, value in (("IP", "192.0.2.1"), ("INTF_VRF", "red"), ("ospf", "true"), ("CONF", "ip x"), ("MTU", "1500"), ("DESC", "x"), ("SPEED", "10G")):
+        assert cdp_problems(**{key: value}), key
+    assert cdp_problems(PO_ID="port-channel9") and cdp_problems(ADMIN_STATE="true"), "membership residue and the admin state keep their own checks"
+
+
+def test_the_member_modify_preserves_the_controller_cdp_value_and_the_contract_judges_it_after_the_deploy():
+    payload = P.released_member_payload(ROUTED, dict(RELEASED_ROUTED_CDP, POLICY_ID="POLICY-1"), MEM, "S", "F")
+    sent = payload["interfaces"][0]["nvPairs"]
+    assert sent["CDP_ENABLE"] == "true" and sent["evpnMultisiteDciTracking"] == "false" and sent["ospfRetransmitInterval"] == ""
+    assert sent == dict(((k, v) for k, v in RELEASED_ROUTED_CDP.items() if k not in P.PO_RELEASE_METADATA), ADMIN_STATE="false")
+    assert P.released_member_contract(ROUTED, RELEASED_ROUTED_CDP)["CDP_ENABLE"] == "true"
+    assert "CDP_ENABLE" not in P.released_member_contract(ROUTED, RELEASED_ROUTED), "an old release is judged on the keys it holds"
+
+
+# ------------------------------------------------------------------ Po (same helper): the CDP release through the real main
+def test_po_cdp_release_is_corrected_before_the_deploy_in_order():
+    ctrl = routed_ctrl(released_nv=copy.deepcopy(RELEASED_ROUTED_CDP))
+    status, result = delete(ctrl)
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert ctrl.write_kinds() == ["markdelete", "modify", "deploy"]
+    sent = ctrl.modify_bodies()[0][0]["interfaces"][0]["nvPairs"]
+    assert sent["CDP_ENABLE"] == "true" and sent["ADMIN_STATE"] == "false", "the controller value is carried, only the admin state changes"
+    assert ctrl.detail[MEM]["policy"] == ROUTED and ctrl.detail[MEM]["nvPairs"]["CDP_ENABLE"] == "true"
+    record = [r for r in result["pvlan_po_release"] if r.get("member") == MEM][0]
+    assert record["released_policy"] == ROUTED and "ADMIN_STATE true -> false" in record["member_modify"] and record["restoration_delta"] == {}
+
+
+def test_po_cdp_release_repeats_without_a_write():
+    ctrl = routed_ctrl(released_nv=copy.deepcopy(RELEASED_ROUTED_CDP))
+    assert delete(ctrl)[0] == "exit"
+    ctrl.calls = []
+    status, result = delete(ctrl)
+    assert status == "exit" and result["changed"] is False and ctrl.writes() == []
+
+
+def test_po_cdp_release_saved_with_deploy_false_corrects_the_member_and_deploys_nothing():
+    ctrl = routed_ctrl(released_nv=copy.deepcopy(RELEASED_ROUTED_CDP))
+    status, result = G4.run(ctrl, [{"name": "po502", "switch": [G4.SWITCH_IP], "deploy": False}], state="deleted")
+    assert status == "exit" and result["changed"] is True, result.get("msg")
+    assert ctrl.write_kinds() == ["markdelete", "modify"] and ctrl.deploys() == []
+    assert ctrl.modify_bodies()[0][0]["interfaces"][0]["nvPairs"]["CDP_ENABLE"] == "true"
+    assert [r["state"].split(":")[0] for r in result["pvlan_saved"]] == ["saved"]
+
+
+@pytest.mark.parametrize("value", ["false", ""])
+def test_po_refuses_a_non_default_cdp_after_the_markdelete_and_writes_no_member(value):
+    ctrl = routed_ctrl(released_nv=dict(RELEASED_ROUTED_CDP, CDP_ENABLE=value))
+    status, result = delete(ctrl)
+    assert status == "fail" and "CDP_ENABLE=" in result["msg"], result.get("msg")
+    assert ctrl.write_kinds() == ["markdelete"] and ctrl.deploys() == []
+
+
+def test_po_refuses_an_unrelated_unknown_true_beside_the_default_cdp():
+    ctrl = routed_ctrl(released_nv=dict(RELEASED_ROUTED_CDP, SOME_NEW_FIELD="true"))
+    status, result = delete(ctrl)
+    assert status == "fail" and "SOME_NEW_FIELD='true' is outside the released routed form" in result["msg"] and "CDP_ENABLE" not in result["msg"]
+    assert ctrl.write_kinds() == ["markdelete"]
+
+
+# ------------------------------------------------------------------ vPC: the CDP release through the real main
+def test_vpc_cdp_mixed_trunk_and_routed_release_is_corrected_per_member_and_verified():
+    routed = {(V.SN1, "Ethernet1/9"), (V.SN2, V.M2)}
+    ctrl = seeded_vpc(routed, released=RELEASED_ROUTED_CDP)
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item()], state="deleted")
+    assert status == "exit", result.get("msg")
+    assert len(ctrl.markdeletes()) == 1 and len(ctrl.modifies()) == 3 and len(ctrl.deploys()) == 1
+    for call in ctrl.modifies():
+        for payload in json.loads(call[2]):
+            for intf in payload["interfaces"]:
+                if payload["policy"] == ROUTED:
+                    assert intf["nvPairs"]["CDP_ENABLE"] == "true" and intf["nvPairs"]["ADMIN_STATE"] == "false"
+    assert result["pvlan_verification"][V.VPC]["state"] == "verified"
+
+
+def test_vpc_cdp_release_on_every_peer_with_routed_members_only():
+    routed = {(V.SN1, V.M1), (V.SN1, "Ethernet1/9"), (V.SN2, V.M2)}
+    ctrl = seeded_vpc(routed, released=RELEASED_ROUTED_CDP)
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item()], state="deleted")
+    assert status == "exit", result.get("msg")
+    assert len(ctrl.modifies()) == 3 and len(ctrl.deploys()) == 1
+
+
+@pytest.mark.parametrize("value", ["false", ""])
+def test_vpc_refuses_a_non_default_cdp_on_one_peer_before_any_member_write(value):
+    routed = {(V.SN1, V.M1), (V.SN1, "Ethernet1/9"), (V.SN2, V.M2)}
+    ctrl = seeded_vpc(routed, released=dict(RELEASED_ROUTED_CDP, CDP_ENABLE=value))
+    status, result = V.run_vpc(ctrl, [V.vpc_del_item()], state="deleted")
+    assert status == "fail" and "CDP_ENABLE=" in result["msg"] and "before any member write" in result["msg"], result.get("msg")
+    assert len(ctrl.markdeletes()) == 1 and ctrl.modifies() == [] and ctrl.deploys() == []
