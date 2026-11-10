@@ -68,6 +68,10 @@ class FabricUpdateCommon(FabricCommon):
         -   Normalize boolean previous-value fields to "false" if empty:
             - INBAND_MGMT_PREV
             - securityGroupTagMacSegmentation_PREV
+            - perVrfUniqueLoopbackAutoProvisionPrev
+            - perVrfUniqueLoopbackAutoProvisionV6Prev
+            - PER_VRF_LOOPBACK_AUTO_PROVISION_PREV
+            - PER_VRF_LOOPBACK_AUTO_PROVISION_V6_PREV
 
         Args:
             payload: Dictionary containing fabric parameters
@@ -84,6 +88,10 @@ class FabricUpdateCommon(FabricCommon):
         boolean_previous_value_keys = [
             "INBAND_MGMT_PREV",
             "securityGroupTagMacSegmentation_PREV",
+            "perVrfUniqueLoopbackAutoProvisionPrev",
+            "perVrfUniqueLoopbackAutoProvisionV6Prev",
+            "PER_VRF_LOOPBACK_AUTO_PROVISION_PREV",
+            "PER_VRF_LOOPBACK_AUTO_PROVISION_V6_PREV",
         ]
         for key in boolean_previous_value_keys:
             if payload.get(key) == "":

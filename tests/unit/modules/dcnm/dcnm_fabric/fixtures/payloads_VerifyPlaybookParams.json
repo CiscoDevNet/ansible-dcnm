@@ -199,5 +199,38 @@
         "L3VNI_MCAST_GROUP": "239.1.1.1",
         "ENABLE_TRMv6": "false",
         "UNDERLAY_IS_V6": "true"
+    },
+    "test_verify_playbook_params_00110a": {
+        "TEST_NOTES": [
+            "Empty value for a gated parameter is exempt from IsShow (clear).",
+            "RULE: PER_VRF_LOOPBACK_IP_RANGE requires PER_VRF_LOOPBACK_AUTO_PROVISION == true"
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "PER_VRF_LOOPBACK_AUTO_PROVISION": false,
+        "PER_VRF_LOOPBACK_IP_RANGE": ""
+    },
+    "test_verify_playbook_params_00120a": {
+        "TEST_NOTES": [
+            "Boolean false for a gated parameter is exempt from IsShow (disable).",
+            "RULE: USE_LINK_LOCAL requires UNDERLAY_IS_V6 == true"
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "UNDERLAY_IS_V6": false,
+        "USE_LINK_LOCAL": false
+    },
+    "test_verify_playbook_params_00130a": {
+        "TEST_NOTES": [
+            "Enabling a gated parameter (true) with unsatisfied IsShow still fails.",
+            "RULE: USE_LINK_LOCAL requires UNDERLAY_IS_V6 == true"
+        ],
+        "BGP_AS": "65001",
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN",
+        "UNDERLAY_IS_V6": false,
+        "USE_LINK_LOCAL": true
     }
 }

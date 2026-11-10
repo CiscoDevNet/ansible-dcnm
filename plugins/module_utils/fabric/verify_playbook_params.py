@@ -959,6 +959,17 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return
 
+        # A parameter set to its "off" value (empty/None or boolean false) is
+        # being cleared or left disabled. That is always valid regardless of
+        # IsShow dependencies -- IsShow only gates *enabling* the feature.
+        # Skip rule evaluation so disabling/clearing isn't rejected.
+        value = self.conversion.make_none(self.conversion.make_boolean(self.config_playbook.get(self.parameter)))
+        if value is None or value is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"SKIP {self.parameter}: off/empty value (clear or disable)."
+            self.log.debug(msg)
+            return
+
         msg = f"{self.class_name}.{method_name}: "
         msg += "self.parameter: "
         msg += f"{self.parameter}, "
