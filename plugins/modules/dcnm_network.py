@@ -6251,14 +6251,20 @@ class DcnmNetwork:
         # The overridden-style rollback below cannot tell implicit PVLAN
         # attachments from explicit ones, so it is not attempted for any network
         # of the request. Report the controller response and the current state
-        # of the requested networks instead.
+        # of the requested networks instead: the writes the controller
+        # acknowledged and, separately, the state read after the failure.
         if getattr(self, "pvlan_request", False):
             self.failed_to_rollback = True
             res = copy.deepcopy(resp)
             if not isinstance(res, dict):
                 res = {"DATA": res}
-            res.update({"ROLLBACK_RESULT": "NOT ATTEMPTED - the request contains PVLAN networks"})
-            self.module.fail_json(msg=res, pvlan_state=self.pvlan_read_state(), response=self.result["response"])
+            res.update({"ROLLBACK_RESULT": "NOT ATTEMPTED - the request contains PVLAN networks; acknowledged writes remain applied"})
+            self.module.fail_json(
+                msg=res,
+                acknowledged_writes=self.pvlan_acknowledged_writes(),
+                pvlan_state=self.pvlan_read_state(),
+                response=self.result["response"],
+            )
             return
 
         # Implementing a per task rollback logic here so that we rollback ND to the have state
@@ -7284,11 +7290,19 @@ class DcnmNetwork:
                 self.failure(resp)
 
     def pvlan_read_state(self):
-        """Read the current networks and attachments touched by a failed PVLAN request, regular ones included."""
+        """
+        Read the networks touched by a failed PVLAN request, regular ones
+        included, and their attachments.
+
+        Only a successful read with a list body sets a section. When a read
+        fails, that section and the ones after it stay None (unknown) and
+        read_error says why; a network is reported absent only from a
+        successful network list read.
+        """
         names = set(getattr(self, "pvlan_eff", {})) | set(getattr(self, "pvlan_delete_names", set()))
         names |= {net["networkName"] for net in self.want_create} | set(self.diff_delete)
         names = sorted(names)
-        state = {"networks": {}, "attachments": {}}
+        state = {"networks": None, "attachments": None}
 
         def read(path):
             resp = dcnm_send(self.module, "GET", path)
@@ -7298,25 +7312,50 @@ class DcnmNetwork:
             return resp["DATA"]
 
         try:
-            found = {net.get("networkName"): net for net in read(self.paths["GET_NET"].format(self.fabric)) if isinstance(net, dict)}
+            found = {}
+            for net in read(self.paths["GET_NET"].format(self.fabric)):
+                found[net["networkName"]] = net
+            networks = {}
             for name in names:
                 net = found.get(name)
-                state["networks"][name] = "absent" if net is None else {
+                networks[name] = "absent" if net is None else {
                     key: net.get(key) for key in ("networkId", "type", "primaryNetworkId", "networkStatus")
                 }
+            state["networks"] = networks
             present = [name for name in names if name in found]
+            attachments = {}
             if present:
                 for entry in read(self.paths["GET_NET_ATTACH"].format(self.fabric, ",".join(present))):
                     for row in entry.get("lanAttachList") or []:
                         if not row.get("isLanAttached") and row.get("lanAttachState") in (None, "", "NA"):
                             continue
-                        state["attachments"].setdefault(entry.get("networkName"), []).append(
+                        attachments.setdefault(entry["networkName"], []).append(
                             {key: row.get(key) for key in ("switchSerialNo", "isLanAttached", "lanAttachState", "portNames")}
                         )
+            state["attachments"] = attachments
         except Exception as exc:  # pylint: disable=broad-except
             state["read_error"] = str(exc)
         return state
 
+    def pvlan_acknowledged_writes(self):
+        """
+        Return the writes the controller acknowledged before a failure, in
+        order. An acknowledgement is not proof of the resulting state; for
+        attachment POSTs the refused items are listed separately.
+        """
+        writes = []
+        for resp in self.result.get("response") or []:
+            if not isinstance(resp, dict) or str(resp.get("METHOD", "")).upper() not in ("POST", "PUT", "DELETE"):
+                continue
+            code = resp.get("RETURN_CODE")
+            if not isinstance(code, int) or not 200 <= code < 300:
+                continue
+            write = {"method": resp.get("METHOD"), "path": resp.get("REQUEST_PATH"), "return_code": code}
+            failed = self.pvlan_failed_items(resp) if str(resp.get("REQUEST_PATH", "")).endswith("/attachments") else []
+            if failed:
+                write["refused_items"] = failed
+            writes.append(write)
+        return writes
 
 def main():
     """main entry point for module execution"""

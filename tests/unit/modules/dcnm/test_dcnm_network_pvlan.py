@@ -1064,10 +1064,16 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         result = self.run_module("merged", config, failed=True)
         self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
         self.assertEqual(result["msg"]["DATA"], {"message": "simulated controller error"})
-        self.assertEqual([response["RETURN_CODE"] for response in result["response"]], [200, 200, 400], "applied writes are reported")
+        self.assertEqual([response["RETURN_CODE"] for response in result["response"]], [200, 200, 400])
+        self.assertEqual(
+            [(write["method"], write["path"]) for write in result["acknowledged_writes"]],
+            [("POST", REST + "/top-down/bulk-create/networks"), ("POST", NETS)],
+        )
+        self.assertIn("acknowledged writes remain applied", result["msg"]["ROLLBACK_RESULT"])
         state = result["pvlan_state"]["networks"]
         self.assertEqual((state["reg-l2"]["type"], state["pv-primary"]["type"]), ("Normal", "Primary"))
-        self.assertEqual((state["pv-isolated"], state["pv-community"]), ("absent", "absent"))
+        self.assertEqual((state["pv-isolated"], state["pv-community"]), ("absent", "absent"), "absent from a valid read")
+        self.assertNotIn("read_error", result["pvlan_state"])
         self.assertEqual(result["pvlan_state"]["attachments"], {})
         self.assertEqual(
             [(method, path.rsplit("/", 1)[1], body["networkName"] if method == "POST" and path == NETS else None)
@@ -1151,31 +1157,64 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
                          ("PENDING", "DEPLOYED"))
 
     def test_failure_state_read_errors(self):
-        """A failed diagnostic read is reported as such; existing networks are not reported as absent."""
+        """A failed or malformed state read leaves that part unknown and is reported apart from the original
+        failure; no network is reported absent without a valid network list read."""
         refusal = "Invalid Interfaces (simulated)"
         config = self.family(isolated_attach=("leaf11",), community_attach=("leaf12",))
+        attach_read = ATTACH + "?network-names=pv-community,pv-isolated,pv-primary"
         cases = (
-            ("GET", NETS, bad("GET", NETS, "simulated read error"), 1),
-            ("GET", ATTACH + "?network-names=pv-community,pv-isolated,pv-primary", bad("GET", ATTACH, "simulated read error")),
+            # (injected read, networks known), the first network list read belongs to the request itself
+            (("GET", NETS, bad("GET", NETS, "simulated read error"), 1), False),
+            (("GET", NETS, ok("GET", NETS, {"message": "unexpected shape"}), 1), False),
+            (("GET", attach_read, bad("GET", ATTACH, "simulated read error")), True),
+            (("GET", attach_read, ok("GET", ATTACH, {"message": "unexpected shape"})), True),
         )
-        for index, inject in enumerate(cases):
+        expected_networks = {
+            "pv-primary": {"networkId": 30010, "type": "Primary", "primaryNetworkId": -1, "networkStatus": "OUT-OF-SYNC"},
+            "pv-isolated": {"networkId": 30011, "type": "Isolated", "primaryNetworkId": 30010, "networkStatus": "OUT-OF-SYNC"},
+            "pv-community": {"networkId": 30012, "type": "Community", "primaryNetworkId": 30010, "networkStatus": "NA"},
+        }
+        for index, (inject, networks_known) in enumerate(cases):
             with self.subTest(read=index):
                 self.ndfc.networks.clear()
                 self.ndfc.rows.clear()
                 self.ndfc.refuse[("pv-community", SN["leaf12"])] = refusal
                 self.ndfc.inject.append(inject)
                 result = self.run_module("merged", config, failed=True)
-                state = result["pvlan_state"]
-                self.assertIn("RETURN_CODE 400", state["read_error"])
-                self.assertEqual(state["networks"], {} if index == 0 else {
-                    name: {"networkId": net_id, "type": net_type, "primaryNetworkId": primary_id, "networkStatus": "OUT-OF-SYNC" if name != "pv-community" else "NA"}
-                    for name, net_id, net_type, primary_id in (
-                        ("pv-primary", 30010, "Primary", -1), ("pv-isolated", 30011, "Isolated", 30010), ("pv-community", 30012, "Community", 30010))
-                })
-                self.assertEqual(state["attachments"], {})
                 self.assertEqual(self.ndfc.inject, [], "the injected read was consumed by the state read")
-                self.assertEqual([response["RETURN_CODE"] for response in result["response"]], [200, 200, 200, 200])
-                self.assertEqual(result["response"][-1]["DATA"]["pv-community-[PVL0000012/leaf-12]"], refusal)
+                self.assertEqual(result["msg"]["FAILED_ITEMS"], [{"pv-community-[PVL0000012/leaf-12]": refusal}], "original failure kept")
+                state = result["pvlan_state"]
+                self.assertIn("RETURN_CODE", state["read_error"])
+                self.assertEqual(state["networks"], expected_networks if networks_known else None)
+                self.assertIsNone(state["attachments"])
+                self.assertEqual(result["acknowledged_writes"][-1]["refused_items"], [{"pv-community-[PVL0000012/leaf-12]": refusal}])
+                self.assertEqual([write["method"] for write in result["acknowledged_writes"]], ["POST", "POST", "POST", "POST"])
+
+    def test_failure_mixed_destructive_partial(self):
+        """Mixed delete, one PVLAN DELETE refused: the regular deletion already sent is reported as an
+        acknowledged write, the state read shows what remains, nothing is restored, and the next identical
+        run removes the rest."""
+        self.ndfc.seed("regular", "reg-old", 30101, 2101)
+        self.seed_family()
+        self.ndfc.fail_network[("DELETE", "pv-community")] = bad("DELETE", NETS + "/pv-community", "simulated controller error")
+        config = [{"net_name": "reg-old"}, {"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}]
+        result = self.run_module("deleted", config, failed=True)
+        self.assertIn("acknowledged writes remain applied", result["msg"]["ROLLBACK_RESULT"])
+        self.assertEqual(
+            [(write["method"], write["path"]) for write in result["acknowledged_writes"]],
+            [("DELETE", REST + "/top-down/fabrics/" + FABRIC + "/bulk-delete/networks?network-names=reg-old"), ("DELETE", NETS + "/pv-isolated")],
+        )
+        state = result["pvlan_state"]
+        self.assertNotIn("read_error", state)
+        self.assertEqual((state["networks"]["reg-old"], state["networks"]["pv-isolated"]), ("absent", "absent"))
+        self.assertEqual((state["networks"]["pv-community"]["type"], state["networks"]["pv-primary"]["type"]), ("Community", "Primary"))
+        self.assertEqual(sorted(self.ndfc.networks), ["pv-community", "pv-primary"])
+        self.assertFalse([request for request in self.ndfc.writes() if request[0] in ("POST", "PUT")], "nothing is restored")
+
+        result = self.run_module("deleted", config)
+        self.assertTrue(result["changed"])
+        self.assertEqual([path for method, path, body in self.ndfc.writes()], [NETS + "/pv-community", NETS + "/pv-primary"])
+        self.assertFalse(self.run_module("deleted", config)["changed"])
 
     def test_delete_attachments_not_ready_fails(self):
         """A delete whose attachments never become ready fails and deletes nothing, instead of reporting success."""
