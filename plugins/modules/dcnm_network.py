@@ -7357,6 +7357,7 @@ class DcnmNetwork:
             writes.append(write)
         return writes
 
+
 def main():
     """main entry point for module execution"""
 
