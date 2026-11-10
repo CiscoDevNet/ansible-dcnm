@@ -4470,46 +4470,51 @@ class DcnmNetwork:
 
         if self.config:
             query = []
-            if self.have_create or self.have_attach:
-                for want_c in self.want_create:
-                    # Query the Network
-                    item = {"parent": {}, "attach": []}
-                    path = self.paths["GET_NET_NAME"].format(self.fabric, want_c["networkName"])
-                    network = dcnm_send(self.module, method, path)
+            # The inventory read above lists VRF-scoped networks only. When it found
+            # none, Layer 2 only networks are still looked up by name, but only
+            # PVLAN networks are returned, so a regular query keeps its result.
+            pvlan_only = not (self.have_create or self.have_attach)
+            for want_c in self.want_create:
+                # Query the Network
+                item = {"parent": {}, "attach": []}
+                path = self.paths["GET_NET_NAME"].format(self.fabric, want_c["networkName"])
+                network = dcnm_send(self.module, method, path)
 
-                    if not network["DATA"]:
-                        continue
-                    missing_network, not_ok = self.handle_response(network, "query_dcnm")
-                    if missing_network or not_ok:
-                        continue
+                if not network["DATA"]:
+                    continue
+                missing_network, not_ok = self.handle_response(network, "query_dcnm")
+                if missing_network or not_ok:
+                    continue
 
-                    net = network["DATA"]
-                    if want_c["networkName"] == net["networkName"]:
-                        item["parent"] = net
-                        item["parent"]["networkTemplateConfig"] = json.loads(net["networkTemplateConfig"])
+                net = network["DATA"]
+                if pvlan_only and not self.pvlan_type_of(net):
+                    continue
+                if want_c["networkName"] == net["networkName"]:
+                    item["parent"] = net
+                    item["parent"]["networkTemplateConfig"] = json.loads(net["networkTemplateConfig"])
 
-                        # Query the Attachment for the found Networks
-                        path = self.paths["GET_NET_ATTACH"].format(self.fabric, want_c["networkName"])
-                        net_attach_objects = dcnm_send(self.module, method, path)
+                    # Query the Attachment for the found Networks
+                    path = self.paths["GET_NET_ATTACH"].format(self.fabric, want_c["networkName"])
+                    net_attach_objects = dcnm_send(self.module, method, path)
 
-                        if not net_attach_objects["DATA"]:
-                            return
+                    if not net_attach_objects["DATA"]:
+                        return
 
-                        if self.fabric_type == "multicluster_parent":
-                            net_attach_objects["DATA"] = sanitize_lan_attach_list(
-                                net_attach_objects.get("DATA")
-                            )
+                    if self.fabric_type == "multicluster_parent":
+                        net_attach_objects["DATA"] = sanitize_lan_attach_list(
+                            net_attach_objects.get("DATA")
+                        )
 
-                        for net_attach in net_attach_objects["DATA"]:
-                            if want_c["networkName"] == net_attach["networkName"]:
-                                if not net_attach.get("lanAttachList"):
-                                    continue
-                                attach_list = net_attach["lanAttachList"]
+                    for net_attach in net_attach_objects["DATA"]:
+                        if want_c["networkName"] == net_attach["networkName"]:
+                            if not net_attach.get("lanAttachList"):
+                                continue
+                            attach_list = net_attach["lanAttachList"]
 
-                                for attach in attach_list:
-                                    # append the attach network details
-                                    item["attach"].append(attach)
-                                query.append(item)
+                            for attach in attach_list:
+                                # append the attach network details
+                                item["attach"].append(attach)
+                            query.append(item)
 
         else:
             query = []
@@ -5345,6 +5350,15 @@ class DcnmNetwork:
             networks_ready = self.wait_for_network_del_ready()
         else:
             networks_ready = False
+
+        # Below, attachments that never become ready skip the deletion without
+        # an error. Report it for PVLAN requests instead of a successful run.
+        if self.diff_delete and not attachments_ready and not is_rollback and getattr(self, "pvlan_request", False):
+            not_ready = sorted(net for net, state in self.diff_delete.items() if state == "TIMEOUT")
+            self.failure(
+                "Attachments of networks {0} did not reach a state ready for deletion; "
+                "no network was deleted".format(",".join(not_ready))
+            )
 
         if self.diff_delete and networks_ready:
             resp = ""
@@ -6235,9 +6249,9 @@ class DcnmNetwork:
             return
 
         # The overridden-style rollback below cannot tell implicit PVLAN
-        # attachments from explicit ones, so it is not attempted. Report the
-        # controller response and the current state instead; rerunning the
-        # task converges from that state.
+        # attachments from explicit ones, so it is not attempted for any network
+        # of the request. Report the controller response and the current state
+        # of the requested networks instead.
         if getattr(self, "pvlan_request", False):
             self.failed_to_rollback = True
             res = copy.deepcopy(resp)
@@ -7270,8 +7284,10 @@ class DcnmNetwork:
                 self.failure(resp)
 
     def pvlan_read_state(self):
-        """Read the current networks and attachments touched by a failed PVLAN request."""
-        names = sorted(set(getattr(self, "pvlan_eff", {})) | set(getattr(self, "pvlan_delete_names", set())))
+        """Read the current networks and attachments touched by a failed PVLAN request, regular ones included."""
+        names = set(getattr(self, "pvlan_eff", {})) | set(getattr(self, "pvlan_delete_names", set()))
+        names |= {net["networkName"] for net in self.want_create} | set(self.diff_delete)
+        names = sorted(names)
         state = {"networks": {}, "attachments": {}}
         try:
             resp = dcnm_send(self.module, "GET", self.paths["GET_NET"].format(self.fabric))

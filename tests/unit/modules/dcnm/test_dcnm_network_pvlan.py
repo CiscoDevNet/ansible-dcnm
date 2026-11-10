@@ -73,6 +73,14 @@ class FakeNdfc(object):
         self.policies = {}
         self.requests = []
         self.inject = []
+        # (method, network name) -> error response, returned once instead of the create or delete.
+        self.fail_network = {}
+        # (network name, serial) -> item text. The item is refused and not applied; the other items of
+        # the same POST are applied (assumption: items are independent, as the per-item response suggests).
+        # The refusal stays until removed from this table.
+        self.refuse = {}
+        # (network name, serial) rows that a deploy leaves unchanged.
+        self.stuck = set()
         self.next_l2vni = 30900
 
     # ----- seeding -----------------------------------------------------------
@@ -259,6 +267,8 @@ class FakeNdfc(object):
 
     def create(self, method, path, body):
         name = body["networkName"]
+        if ("POST", name) in self.fail_network:
+            return self.fail_network.pop(("POST", name))
         net_type = body.get("type") or "Normal"
         primary_id = body.get("primaryNetworkId", -1)
         if net_type in ("Isolated", "Community"):
@@ -313,6 +323,8 @@ class FakeNdfc(object):
         net = self.networks.get(name)
         if net is None:
             return bad(method, path, "Invalid network name")
+        if ("DELETE", name) in self.fail_network:
+            return self.fail_network.pop(("DELETE", name))
         if net["type"] == "Primary" and self.secondaries(name):
             return bad(method, path, "Primary network cannot be deleted if a secondary network is associated with it.")
         del self.networks[name]
@@ -329,6 +341,8 @@ class FakeNdfc(object):
                 key = "{0}-[{1}/{2}]".format(name, serial, self.switch_name(serial))
                 if name not in self.networks:
                     data[key] = "Invalid network " + name
+                elif (name, serial) in self.refuse:
+                    data[key] = self.refuse[(name, serial)]
                 elif item.get("deployment"):
                     data[key] = self.attach_item(name, serial, item)
                 else:
@@ -380,7 +394,7 @@ class FakeNdfc(object):
     def deploy(self, keys):
         for key in keys:
             row = self.rows.get(key)
-            if row is None:
+            if row is None or key in self.stuck:
                 continue
             if row["attached"]:
                 row["state"] = "DEPLOYED"
@@ -1037,6 +1051,111 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         self.assertEqual([body["networkName"] for body in self.bodies("POST", NETS)], ["pv-isolated"])
         self.assertFalse(self.run_module("merged", config)["changed"])
 
+    def test_failure_mixed_partial_create(self):
+        """Mixed request, secondary create refused: nothing is rolled back, the failure lists every requested
+        network, the next identical run creates only the missing secondaries, and the run after is a no-op."""
+        self.ndfc.fail_network[("POST", "pv-isolated")] = bad("POST", NETS, "simulated controller error")
+        config = [{"net_name": "reg-l2", "net_id": 30101, "vlan_id": 2101, "is_l2only": True,
+                   "attach": [{"ip_address": IP["leaf12"]}]}] + self.family(isolated_attach=("leaf11",))
+        result = self.run_module("merged", config, failed=True)
+        self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
+        self.assertEqual(result["msg"]["DATA"], {"message": "simulated controller error"})
+        state = result["pvlan_state"]["networks"]
+        self.assertEqual((state["reg-l2"]["type"], state["pv-primary"]["type"]), ("Normal", "Primary"))
+        self.assertEqual((state["pv-isolated"], state["pv-community"]), ("absent", "absent"))
+        self.assertEqual(result["pvlan_state"]["attachments"], {})
+        self.assertEqual(
+            [(method, path.rsplit("/", 1)[1], body["networkName"] if method == "POST" and path == NETS else None)
+             for method, path, body in self.ndfc.writes()],
+            [("POST", "networks", None), ("POST", "networks", "pv-primary"), ("POST", "networks", "pv-isolated")],
+        )
+        self.assertEqual(sorted(self.ndfc.networks), ["pv-primary", "reg-l2"])
+        self.assertEqual(self.ndfc.rows, {})
+
+        result = self.run_module("merged", config)
+        self.assertTrue(result["changed"])
+        self.assertEqual([body["networkName"] for body in self.bodies("POST", NETS)], ["pv-isolated", "pv-community"])
+        self.assertEqual(self.bodies("POST", REST + "/top-down/bulk-create/networks"), [])
+        self.assertEqual([request for request in self.ndfc.writes() if request[0] == "PUT"], [])
+        self.assertEqual(sorted(self.attach_items()), [("pv-isolated", SN["leaf11"], True), ("reg-l2", SN["leaf12"], True)])
+        self.assertFalse(self.run_module("merged", config)["changed"])
+
+    def test_failure_attach_refusal_mixed_rerun(self):
+        """One item refused inside HTTP 200 in a mixed request: the other items stay saved and undeployed, the
+        identical rerun resends only the refused item and fails again while the refusal lasts, then converges."""
+        refusal = "Invalid Interfaces in leaf-12. The following interfaces are not in a valid host or secondary trunk mode: Ethernet1/9"
+        self.ndfc.refuse[("pv-community", SN["leaf12"])] = refusal
+        config = [{"net_name": "reg-l2", "net_id": 30101, "vlan_id": 2101, "is_l2only": True,
+                   "attach": [{"ip_address": IP["leaf13"]}, {"ip_address": IP["leaf14"]}]}]
+        config += self.family(isolated_attach=("leaf11",), community_attach=("leaf12",))
+        for attempt in (1, 2):
+            with self.subTest(attempt=attempt):
+                result = self.run_module("merged", config, failed=True)
+                self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
+                self.assertEqual(result["msg"]["FAILED_ITEMS"], [{"pv-community-[PVL0000012/leaf-12]": refusal}])
+                self.assertFalse([path for method, path, body in self.ndfc.writes() if "deploy" in path], "no deploy after a refusal")
+                self.assertEqual(self.ndfc.writes()[-1][1], ATTACH, "the refused POST is the last write")
+                attachments = result["pvlan_state"]["attachments"]
+                self.assertEqual(
+                    sorted((name, row["switchSerialNo"], row["lanAttachState"]) for name, rows in attachments.items() for row in rows),
+                    [("pv-isolated", SN["leaf11"], "OUT-OF-SYNC"), ("pv-primary", SN["leaf11"], "OUT-OF-SYNC"),
+                     ("reg-l2", SN["leaf13"], "OUT-OF-SYNC"), ("reg-l2", SN["leaf14"], "OUT-OF-SYNC")],
+                )
+                self.assertEqual(self.ndfc.status("pv-community"), "NA")
+        self.assertEqual(self.attach_items(), [("pv-community", SN["leaf12"], True)], "the rerun sends only the refused item")
+
+        del self.ndfc.refuse[("pv-community", SN["leaf12"])]
+        result = self.run_module("merged", config)
+        self.assertTrue(result["changed"])
+        self.assertEqual(self.attach_items(), [("pv-community", SN["leaf12"], True)])
+        for name in ("reg-l2", "pv-isolated", "pv-community", "pv-primary"):
+            self.assertNotIn(self.ndfc.status(name), ("OUT-OF-SYNC", "PENDING"), name)
+        self.assertFalse(self.run_module("merged", config)["changed"])
+
+    def test_failure_delete_rerun(self):
+        """A refused DELETE stops the removal before the primary; the identical rerun removes the rest
+        (fake deploy model)."""
+        self.seed_family(isolated_on=("leaf11",), community_on=("leaf12",))
+        self.ndfc.fail_network[("DELETE", "pv-community")] = bad("DELETE", NETS + "/pv-community", "simulated controller error")
+        config = [{"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}]
+        result = self.run_module("deleted", config, failed=True)
+        self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
+        self.assertEqual(result["pvlan_state"]["networks"]["pv-isolated"], "absent")
+        self.assertEqual(result["pvlan_state"]["attachments"], {})
+        self.assertEqual(sorted(self.ndfc.networks), ["pv-community", "pv-primary"])
+        self.assertNotIn(NETS + "/pv-primary", [path for method, path, body in self.ndfc.writes() if method == "DELETE"])
+
+        result = self.run_module("deleted", config)
+        self.assertTrue(result["changed"])
+        self.assertEqual([path for method, path, body in self.ndfc.writes()], [NETS + "/pv-community", NETS + "/pv-primary"])
+        self.assertEqual(self.ndfc.networks, {})
+        self.assertFalse(self.run_module("deleted", config)["changed"])
+
+    def test_failure_detach_refusal_during_delete(self):
+        """A detach refused inside HTTP 200 stops the delete before any deploy or DELETE; the other detach of
+        the same POST stays saved."""
+        self.seed_family(isolated_on=("leaf11",), community_on=("leaf12",))
+        self.ndfc.refuse[("pv-community", SN["leaf12"])] = "Detach is not allowed (simulated)"
+        config = [{"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}]
+        result = self.run_module("deleted", config, failed=True)
+        self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
+        self.assertEqual(result["msg"]["FAILED_ITEMS"], [{"pv-community-[PVL0000012/leaf-12]": "Detach is not allowed (simulated)"}])
+        self.assertEqual([method for method, path, body in self.ndfc.writes()], ["POST"])
+        self.assertEqual(sorted(self.ndfc.networks), ["pv-community", "pv-isolated", "pv-primary"])
+        self.assertEqual((self.ndfc.rows[("pv-isolated", SN["leaf11"])]["state"], self.ndfc.rows[("pv-community", SN["leaf12"])]["state"]),
+                         ("PENDING", "DEPLOYED"))
+
+    def test_delete_attachments_not_ready_fails(self):
+        """A delete whose attachments never become ready fails and deletes nothing, instead of reporting success."""
+        self.seed_family(isolated_on=("leaf11",))
+        self.ndfc.stuck.add(("pv-isolated", SN["leaf11"]))
+        result = self.run_module("deleted", [{"net_name": "pv-isolated"}], failed=True)
+        self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
+        self.assertIn("networks pv-isolated did not reach a state ready for deletion", result["msg"]["DATA"])
+        self.assertEqual([path for method, path, body in self.ndfc.writes() if method == "DELETE"], [])
+        self.assertEqual(sorted(self.ndfc.networks), ["pv-community", "pv-isolated", "pv-primary"])
+        self.assertEqual(result["pvlan_state"]["attachments"]["pv-isolated"][0]["lanAttachState"], "PENDING")
+
     # ----- deploy and saved state --------------------------------------------
 
     def test_saved_then_deploy(self):
@@ -1100,6 +1219,25 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         result = self.run_module("query", [{"net_name": "pv-isolated"}])
         parent = result["response"][0]["parent"]
         self.assertEqual((parent["type"], parent["primaryNetworkId"]), ("Isolated", 30010))
+
+    def test_query_layer2_family_without_routed_network(self):
+        """Without any VRF-scoped network, query still returns the PVLAN networks it names. A regular Layer 2
+        only network keeps the existing result in that case (not returned); with a routed network present,
+        every named network is returned as before."""
+        self.seed_family(isolated_on=("leaf11",))
+        self.ndfc.seed("regular", "reg-l2", 30101, 2101)
+        names = [{"net_name": name} for name in ("pv-primary", "pv-isolated", "pv-community", "reg-l2", "missing")]
+        result = self.run_module("query", names)
+        returned = {item["parent"]["networkName"]: item for item in result["response"]}
+        self.assertEqual(sorted(returned), ["pv-community", "pv-isolated", "pv-primary"])
+        self.assertEqual((returned["pv-isolated"]["parent"]["type"], returned["pv-isolated"]["parent"]["primaryNetworkId"]), ("Isolated", 30010))
+        self.assertEqual([row["switchSerialNo"] for row in returned["pv-primary"]["attach"] if row["isLanAttached"]], [SN["leaf11"]])
+        self.assert_no_writes()
+
+        self.ndfc.seed("regular", "reg-routed", 30100, 2100, vrf="VRF_A", isLayer2Only="false")
+        result = self.run_module("query", names)
+        self.assertEqual(sorted(item["parent"]["networkName"] for item in result["response"]),
+                         ["pv-community", "pv-isolated", "pv-primary", "reg-l2"])
 
     def test_action_plugin_path(self):
         """The action plugin forwards the PVLAN keys and its default deploy flag."""
