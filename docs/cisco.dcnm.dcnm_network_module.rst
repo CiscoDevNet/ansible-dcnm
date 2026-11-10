@@ -1282,6 +1282,52 @@ Parameters
                         <div>In <code>state=merged</code>, omitting this option preserves the value returned by the controller.</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>primary</li>
+                                    <li>isolated</li>
+                                    <li>community</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Private VLAN role of the network.</div>
+                        <div><code>primary</code> uses the templates of a regular network. <code>isolated</code> and <code>community</code> use the <code>Pvlan_Secondary_Network</code> template and are Layer 2 only.</div>
+                        <div>Supported on standalone fabrics with <code>ENABLE_PVLAN</code> enabled.</div>
+                        <div>A new private VLAN network requires <code>config[].net_id</code> and <code>config[].vlan_id</code>.</div>
+                        <div>The type of an existing network cannot be changed. When this option is omitted, the type returned by the controller is kept in every state.</div>
+                        <div>Private VLAN networks support switch attachments only; <code>config[].attach[].ports</code> and <code>config[].attach[].tor_ports</code> are rejected, and so is a request that would remove existing port attachments of a private VLAN network.</div>
+                        <div>The controller attaches a primary network to every switch where one of its secondary networks is attached, and an attached secondary network to every switch where its primary is attached later. <code>replaced</code> and <code>overridden</code> keep those attachments.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_primary</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the primary network for an isolated or community network. Required when the network is created.</div>
+                        <div>The primary can be defined in the same task or already exist in the fabric. The module sends its network ID to the controller.</div>
+                        <div>A primary network can have one isolated network and any number of community networks.</div>
+                        <div>The primary of an existing network cannot be changed.</div>
+                </td>
+            </tr>
 
             <tr>
                 <td colspan="4">
@@ -1481,6 +1527,29 @@ Examples
           - net_name: ansible-acl-net
             vrf_name: Tenant-1
             ipv4_acl_in: TENANT-1-IN
+
+    - name: Create a private VLAN family and attach the isolated network to a switch
+      cisco.dcnm.dcnm_network:
+        fabric: vxlan-fabric
+        state: merged
+        config:
+          - net_name: ansible-pvlan-primary
+            net_id: 30010
+            vlan_id: 2431
+            is_l2only: true
+            pvlan_type: primary
+          - net_name: ansible-pvlan-isolated
+            net_id: 30011
+            vlan_id: 2432
+            pvlan_type: isolated
+            pvlan_primary: ansible-pvlan-primary
+            attach:
+              - ip_address: 192.168.1.224
+          - net_name: ansible-pvlan-community
+            net_id: 30012
+            vlan_id: 2433
+            pvlan_type: community
+            pvlan_primary: ansible-pvlan-primary
 
     # ---------------------------------------------------------------------------
     # STATE: REPLACED - Replace Network Configuration
