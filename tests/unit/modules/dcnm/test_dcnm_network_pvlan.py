@@ -169,10 +169,14 @@ class FakeNdfc(object):
     def send(self, module, method, path, data=None):
         body = json.loads(data) if isinstance(data, str) and data else data
         self.requests.append((method, path, copy.deepcopy(body)))
-        for index, (inject_method, suffix, response) in enumerate(self.inject):
-            if inject_method == method and path.endswith(suffix):
+        # inject entries: (method, path suffix, response[, matching calls to let through first])
+        for index, entry in enumerate(self.inject):
+            if entry[0] == method and path.endswith(entry[1]):
+                if len(entry) > 3 and entry[3] > 0:
+                    self.inject[index] = entry[:3] + (entry[3] - 1,)
+                    break
                 self.inject.pop(index)
-                return response
+                return entry[2]
 
         if method == "GET":
             return self.get(path)
@@ -1060,6 +1064,7 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         result = self.run_module("merged", config, failed=True)
         self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
         self.assertEqual(result["msg"]["DATA"], {"message": "simulated controller error"})
+        self.assertEqual([response["RETURN_CODE"] for response in result["response"]], [200, 200, 400], "applied writes are reported")
         state = result["pvlan_state"]["networks"]
         self.assertEqual((state["reg-l2"]["type"], state["pv-primary"]["type"]), ("Normal", "Primary"))
         self.assertEqual((state["pv-isolated"], state["pv-community"]), ("absent", "absent"))
@@ -1144,6 +1149,33 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         self.assertEqual(sorted(self.ndfc.networks), ["pv-community", "pv-isolated", "pv-primary"])
         self.assertEqual((self.ndfc.rows[("pv-isolated", SN["leaf11"])]["state"], self.ndfc.rows[("pv-community", SN["leaf12"])]["state"]),
                          ("PENDING", "DEPLOYED"))
+
+    def test_failure_state_read_errors(self):
+        """A failed diagnostic read is reported as such; existing networks are not reported as absent."""
+        refusal = "Invalid Interfaces (simulated)"
+        config = self.family(isolated_attach=("leaf11",), community_attach=("leaf12",))
+        cases = (
+            ("GET", NETS, bad("GET", NETS, "simulated read error"), 1),
+            ("GET", ATTACH + "?network-names=pv-community,pv-isolated,pv-primary", bad("GET", ATTACH, "simulated read error")),
+        )
+        for index, inject in enumerate(cases):
+            with self.subTest(read=index):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                self.ndfc.refuse[("pv-community", SN["leaf12"])] = refusal
+                self.ndfc.inject.append(inject)
+                result = self.run_module("merged", config, failed=True)
+                state = result["pvlan_state"]
+                self.assertIn("RETURN_CODE 400", state["read_error"])
+                self.assertEqual(state["networks"], {} if index == 0 else {
+                    name: {"networkId": net_id, "type": net_type, "primaryNetworkId": primary_id, "networkStatus": "OUT-OF-SYNC" if name != "pv-community" else "NA"}
+                    for name, net_id, net_type, primary_id in (
+                        ("pv-primary", 30010, "Primary", -1), ("pv-isolated", 30011, "Isolated", 30010), ("pv-community", 30012, "Community", 30010))
+                })
+                self.assertEqual(state["attachments"], {})
+                self.assertEqual(self.ndfc.inject, [], "the injected read was consumed by the state read")
+                self.assertEqual([response["RETURN_CODE"] for response in result["response"]], [200, 200, 200, 200])
+                self.assertEqual(result["response"][-1]["DATA"]["pv-community-[PVL0000012/leaf-12]"], refusal)
 
     def test_delete_attachments_not_ready_fails(self):
         """A delete whose attachments never become ready fails and deletes nothing, instead of reporting success."""

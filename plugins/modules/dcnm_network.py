@@ -6258,7 +6258,7 @@ class DcnmNetwork:
             if not isinstance(res, dict):
                 res = {"DATA": res}
             res.update({"ROLLBACK_RESULT": "NOT ATTEMPTED - the request contains PVLAN networks"})
-            self.module.fail_json(msg=res, pvlan_state=self.pvlan_read_state())
+            self.module.fail_json(msg=res, pvlan_state=self.pvlan_read_state(), response=self.result["response"])
             return
 
         # Implementing a per task rollback logic here so that we rollback ND to the have state
@@ -7289,9 +7289,16 @@ class DcnmNetwork:
         names |= {net["networkName"] for net in self.want_create} | set(self.diff_delete)
         names = sorted(names)
         state = {"networks": {}, "attachments": {}}
+
+        def read(path):
+            resp = dcnm_send(self.module, "GET", path)
+            if not isinstance(resp, dict) or resp.get("RETURN_CODE") != 200 or not isinstance(resp.get("DATA"), list):
+                code = resp.get("RETURN_CODE") if isinstance(resp, dict) else None
+                raise ValueError("read of {0} failed, RETURN_CODE {1}".format(path, code))
+            return resp["DATA"]
+
         try:
-            resp = dcnm_send(self.module, "GET", self.paths["GET_NET"].format(self.fabric))
-            found = {net.get("networkName"): net for net in (resp.get("DATA") or []) if isinstance(net, dict)}
+            found = {net.get("networkName"): net for net in read(self.paths["GET_NET"].format(self.fabric)) if isinstance(net, dict)}
             for name in names:
                 net = found.get(name)
                 state["networks"][name] = "absent" if net is None else {
@@ -7299,8 +7306,7 @@ class DcnmNetwork:
                 }
             present = [name for name in names if name in found]
             if present:
-                resp = dcnm_send(self.module, "GET", self.paths["GET_NET_ATTACH"].format(self.fabric, ",".join(present)))
-                for entry in resp.get("DATA") or []:
+                for entry in read(self.paths["GET_NET_ATTACH"].format(self.fabric, ",".join(present))):
                     for row in entry.get("lanAttachList") or []:
                         if not row.get("isLanAttached") and row.get("lanAttachState") in (None, "", "NA"):
                             continue
