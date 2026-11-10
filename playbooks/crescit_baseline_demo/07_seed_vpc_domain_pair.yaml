@@ -1,0 +1,35 @@
+---
+# Seed vPC peer baseline to model link/state dependencies for brownfield migrations.
+
+- hosts: ndfc
+  gather_facts: false
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    fabric_name: cisco_test_fabric1
+    deploy_changes: false
+    leaf1_ip: 192.168.10.211
+    leaf2_ip: 192.168.10.212
+
+  tasks:
+    - name: Seed vPC pair baseline profile
+      cisco.dcnm.dcnm_vpc_pair:
+        src_fabric: "{{ fabric_name }}"
+        state: merged
+        deploy: "{{ deploy_changes }}"
+        config:
+          - peerOneId: "{{ leaf1_ip }}"
+            peerTwoId: "{{ leaf2_ip }}"
+            templateName: "vpc_pair"
+            profile:
+              ADMIN_STATE: true
+              ALLOWED_VLANS: "100-200,300,3902-3904"
+              DOMAIN_ID: 1000
+              FABRIC_NAME: "{{ fabric_name }}"
+              KEEP_ALIVE_HOLD_TIMEOUT: 5
+              KEEP_ALIVE_VRF: management
+              PC_MODE: active
+              PEER1_MEMBER_INTERFACES: e1/20
+              PEER1_PCID: 101
+              PEER2_MEMBER_INTERFACES: e1/20
+              PEER2_PCID: 102
