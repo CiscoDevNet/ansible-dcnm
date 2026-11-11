@@ -1312,6 +1312,17 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
             "refused_items": [{"pv-community-[PVL0000012/leaf-12]": "Invalid Interfaces (simulated)"}],
         }])
 
+        # 200 OK with an error text in a string DATA: the module fails the run, and the entry says failed.
+        self.ndfc.refuse.clear()
+        self.ndfc.inject.append(("POST", ATTACH, {"RETURN_CODE": 200, "METHOD": "POST", "MESSAGE": "OK", "REQUEST_PATH": ATTACH,
+                                                  "DATA": "Invalid interfaces supplied"}))
+        result = self.run_module("merged", [{"net_name": "pv-community", "is_l2only": True, "attach": [{"ip_address": IP["leaf12"]}]}], failed=True)
+        self.assertEqual(result["msg"]["DATA"], "Invalid interfaces supplied")
+        self.assertEqual(result["acknowledged_writes"], [
+            {"method": "POST", "path": ATTACH, "return_code": 200, "outcome": "failed", "error": "Invalid interfaces supplied"},
+        ])
+        self.assertEqual([method for method, path, body in self.ndfc.writes()], ["POST"], "no write after the failure")
+
     def test_delete_attachments_not_ready_fails(self):
         """A delete whose attachments never become ready fails and deletes nothing, instead of reporting success."""
         self.seed_family(isolated_on=("leaf11",))
@@ -1498,6 +1509,19 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
                     self.assertEqual(self.deploys(), [[SN["leaf11"], SN["leaf12"]]])
                 self.assertNotIn("pv-community", self.ndfc.networks)
                 self.assertEqual(self.ndfc.rows, {})
+
+    def test_delete_detached_row_in_other_state_is_not_ready(self):
+        """A detached row in a state that is neither NA nor a saved removal (here IN PROGRESS) is not ready for
+        deletion: the run waits, fails without a DELETE and does not deploy it."""
+        self.seed_family(isolated_on=("leaf11",))
+        key = ("pv-isolated", SN["leaf11"])
+        self.ndfc.rows[key].update({"attached": False, "state": "IN PROGRESS", "explicit": False})
+        self.ndfc.stuck.add(key)
+        result = self.run_module("deleted", [{"net_name": "pv-isolated"}], failed=True)
+        self.assertIn("did not reach a state ready for deletion", result["msg"]["DATA"])
+        self.assertEqual([request for request in self.ndfc.writes() if request[0] == "DELETE"], [])
+        self.assertEqual(self.deploys(), [])
+        self.assertIn("pv-isolated", self.ndfc.networks)
 
     def test_delete_primary_histories(self):
         """Deleting a deployed family: an explicit primary is detached after its secondaries, an implicit one is

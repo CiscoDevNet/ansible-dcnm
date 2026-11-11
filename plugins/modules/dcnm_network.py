@@ -7604,9 +7604,10 @@ class DcnmNetwork:
 
         outcome is "acknowledged" when the module found no error in the
         response, "items_refused" when an attachment POST refused items (listed
-        in refused_items), and "failed" when the module judged the response a
-        failure, for example an ERROR key or a MESSAGE other than OK; error
-        keeps that text. A failed write may or may not have changed anything.
+        in refused_items), and "failed" when handle_response() judged the
+        response a failure for another reason, for example an ERROR key, a
+        MESSAGE other than OK or an error text in a string DATA; error keeps
+        that text. A failed write may or may not have changed anything.
         """
         writes = []
         for resp in self.result.get("response") or []:
@@ -7615,12 +7616,24 @@ class DcnmNetwork:
             code = resp.get("RETURN_CODE")
             if not isinstance(code, int) or not 200 <= code < 300:
                 continue
+            path = str(resp.get("REQUEST_PATH", ""))
+            if path.endswith("/attachments"):
+                op = "attach"
+            elif "/config-deploy/" in path or path.endswith("/deploy") or path.endswith("/deployments"):
+                op = "deploy"
+            elif str(resp.get("METHOD")).upper() == "DELETE":
+                op = "delete"
+            else:
+                op = "create"
+            judged_failed = self.handle_response(resp, op)[0]
             write = {"method": resp.get("METHOD"), "path": resp.get("REQUEST_PATH"), "return_code": code, "outcome": "acknowledged"}
-            failed = self.pvlan_failed_items(resp) if str(resp.get("REQUEST_PATH", "")).endswith("/attachments") else []
+            failed = self.pvlan_failed_items(resp) if op == "attach" else []
             if failed:
                 write.update({"outcome": "items_refused", "refused_items": failed})
-            if resp.get("ERROR") or resp.get("MESSAGE") not in ("OK", "Multi-Status"):
-                write.update({"outcome": "failed", "error": resp.get("ERROR") or resp.get("MESSAGE")})
+            if resp.get("ERROR") or resp.get("MESSAGE") not in ("OK", "Multi-Status") or (judged_failed and not failed):
+                data = resp.get("DATA")
+                error = resp.get("ERROR") or (data if isinstance(data, str) and judged_failed else None) or resp.get("MESSAGE")
+                write.update({"outcome": "failed", "error": error})
             writes.append(write)
         return writes
 
