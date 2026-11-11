@@ -217,7 +217,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 126 = 125 + link_transmit_reset_skip on int_port_channel_trunk_host (slice rs1).
     # 128 = 126 + enable_qos and disable_qos_stats on int_vpc_peer_link_po (slice pl1).
     # 131 = 128 + enable_qos, disable_qos_stats and enable_storm_control on int_vpc_uplink_access (slice ul1).
-    assert len(BOOL_PASSTHROUGH) == 131
+    # 132 = 131 + enable_pim_sparse on int_l3_port_channel (slice 0b_41).
+    assert len(BOOL_PASSTHROUGH) == 132
 
 
 # ------------------------------------------------------- what the engine emits --

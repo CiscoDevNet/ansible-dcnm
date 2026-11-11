@@ -868,8 +868,12 @@ PILOT = {
     (ACCESS, "loggingEventPortLinkStatus"): ("logging_event_port_link_status", True, "false", {}),
     (SUBIF, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", dict(PIM_ON)),
     # SMU 017 routed port-channel (slice 0b_39). Read from the 017 body, not measured live. The body does not gate the
-    # field on sparse mode, which is not registered on this parent.
+    # field on sparse mode.
     (PC_L3, "pimBfdInstance"): ("enable_pim_bfd_instance", True, "false", {}),
+    # Routed port-channel PIM sparse mode and DR priority (slice 0b_41), the routed applied values. The body does not
+    # relate the two fields, so neither needs the other as context. Read from the body, not measured live.
+    (PC_L3, "ENABLE_PIM_SPARSE"): ("enable_pim_sparse", True, "false", {}),
+    (PC_L3, "PIM_DR_PRIORITY"): ("pim_dr_priority", 77, "1", {}),
     # The routed port-channel OSPF family (slice 0b_40): the sixteen int_routed_host rows with a reset, with the same
     # applied values and contexts, on the identical 017 declarations. Read from the body, not measured live.
     (PC_L3, "ospf"): ("enable_ospf", True, "false", dict(OSPF_CTX, ospf_tag="PILOT-OSPF")),

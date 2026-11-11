@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = f8b3ed32baa066a597ad055614066ca9dd9ef88e8cd56315fd7e87c9f8001f5a
+# provenance_sha256 = e71748972f93babc31c7cab16a583f5df8797e806ef4f91830148facd5b36af1
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "f8b3ed32baa066a597ad055614066ca9dd9ef88e8cd56315fd7e87c9f8001f5a"
+PROVENANCE_SHA256 = "e71748972f93babc31c7cab16a583f5df8797e806ef4f91830148facd5b36af1"
 
 BINDING_TABLE = (
     {
@@ -141,6 +141,19 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'ENABLE_PIM_SPARSE',
+        'profile_key': 'enable_pim_sparse',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
         'parent_nvpair': 'OSPF_AREA_ID',
         'profile_key': 'ospf_area_id',
         'applicable_interface_type': 'pc',
@@ -183,6 +196,21 @@ BINDING_TABLE = (
         'max_value': 255,
         'no_log': False,
         'inert_when': {'nvpair': 'ospfAuthentication', 'value': 'false'},
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'PIM_DR_PRIORITY',
+        'profile_key': 'pim_dr_priority',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'integer',
+        'default_template': 1,
+        'reset_wire': '1',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 4294967295,
+        'no_log': False,
     },
     {
         'parent_template': 'int_l3_port_channel',

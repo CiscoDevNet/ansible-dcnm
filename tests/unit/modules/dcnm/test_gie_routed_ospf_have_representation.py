@@ -254,6 +254,8 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         # The routed port-channel OSPF family (slice 0b_40): the seven OSPF integers of int_routed_host on identical
         # 017 declarations. NDFC returns them as strings ("" when unset) on that parent; the same exemption applies.
         ("int_l3_port_channel", "OSPF_AUTH_KEY_ID"),
+        # Slice 0b_41: the int_routed_host PIM_DR_PRIORITY contract on an identical declaration; same exemption.
+        ("int_l3_port_channel", "PIM_DR_PRIORITY"),
         ("int_l3_port_channel", "ospfCost"),
         ("int_l3_port_channel", "ospfDeadInterval"),
         ("int_l3_port_channel", "ospfHelloInterval"),

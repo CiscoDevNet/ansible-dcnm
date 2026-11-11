@@ -4,7 +4,8 @@
 
 `type: pc`, `mode: l3` selects int_l3_port_channel (pol_types "pc_l3"). The 017 body declares pimBfdInstance
 (L156), creates pim_bfd_instance_interface when it is "true" (L1215) and has no else branch: every add() first deletes
-all PTIs of the port-channel (L1015), so "false" leaves no line. The body does not gate the field on PIM sparse mode.
+all PTIs of the port-channel (L1015), so "false" leaves no line. The body does not gate the field on PIM sparse mode,
+which slice 0b_41 registers on the same parent.
 
 ospfRetransmitInterval is not registered on this parent. The body refuses it unless `ospf` is true with a tag and an
 area, and no public key reaches those nvPairs on a routed port-channel; the last tests pin that refusal.
@@ -102,11 +103,12 @@ def test_the_public_key_and_reset_match_the_routed_and_subinterface_rows():
         assert other["parent_nvpair"] == NVPAIR and other["reset_wire"] == "false", parent
 
 
-def test_pim_bfd_is_the_only_pim_row_on_the_parent():
-    """pimBfdInstance is the only PIM row; sparse mode stays unregistered. The OSPF family on this parent is slice
-    0b_40 (test_gie_smu017_l3po_ospf.py)."""
-    assert resolve_binding(L3PO, "enable_pim_sparse") is None
-    assert resolve_binding(L3PO, "pim_dr_priority") is None
+def test_pim_bfd_has_no_dependency_on_the_other_pim_rows():
+    """Sparse mode and DR priority are registered by slice 0b_41 (test_gie_l3po_pim_sparse_dr_priority.py) and the
+    OSPF family by slice 0b_40 (test_gie_smu017_l3po_ospf.py). None of them gates pimBfdInstance."""
+    assert resolve_binding(L3PO, "enable_pim_sparse") is not None
+    assert resolve_binding(L3PO, "pim_dr_priority") is not None
+    assert "inert_when" not in resolve_binding(L3PO, KEY)
 
 
 # ------------------------------------------------------------------ merged

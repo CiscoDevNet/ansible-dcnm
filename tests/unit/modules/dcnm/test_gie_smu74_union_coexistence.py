@@ -61,7 +61,9 @@ UNION_RESET_TOTAL = 74
 # declarations: 230 + 16 = 246. Trunk port-channel reset-skip default (RS1_ADDITIONS), reset read from
 # the 017 body: 246 + 1 = 247. Peer-link STP and QoS-statistics rows (PL1_ADDITIONS), resets read from the 017 body:
 # 247 + 2 = 249. ToR-uplink parent rows (UL1_ADDITIONS), resets read from the template bodies: 249 + 12 = 261.
-CANDIDATE_RESET_TOTAL = 261
+# Routed port-channel PIM sparse mode and DR priority (L3PO_PIM_ADDITIONS, slice 0b_41), the routed resets on
+# identical declarations, not measured on this parent: 261 + 2 = 263.
+CANDIDATE_RESET_TOTAL = 263
 
 # The additions this candidate is allowed to carry, and nothing else: four
 # `int_routed_host` and four `int_subif` rows, plus two `int_loopback` and four
@@ -537,6 +539,14 @@ UL1_ADDITIONS = tuple(
 )
 UL1_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in UL1_ADDITIONS)
 
+# PIM sparse mode and DR priority on the routed port-channel, slice 0b_41: the routed resets on identical declarations.
+# Read from the template body, NOT measured live.
+L3PO_PIM_ADDITIONS = (
+    ("int_l3_port_channel", "ENABLE_PIM_SPARSE", "enable_pim_sparse", "false"),
+    ("int_l3_port_channel", "PIM_DR_PRIORITY", "pim_dr_priority", "1"),
+)
+L3PO_PIM_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in L3PO_PIM_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
@@ -545,13 +555,13 @@ ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + VPC13_ADDITIONS + HSRP3_ADDITIONS + VPC_DOT1Q6_ADDITIONS
                  + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS + BATCH017_ADDITIONS
                  + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS + L3PO_OSPF_ADDITIONS + RS1_ADDITIONS + PL1_ADDITIONS
-                 + UL1_ADDITIONS)
+                 + UL1_ADDITIONS + L3PO_PIM_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
                         | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
                         | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES | BATCH017_IDENTITIES
                         | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES
-                        | PL1_IDENTITIES | UL1_IDENTITIES)
+                        | PL1_IDENTITIES | UL1_IDENTITIES | L3PO_PIM_IDENTITIES)
 
 
 def _rows():
@@ -714,9 +724,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # (L3PO017_ADDITIONS, slice 0b_39) = 156, + 16 routed port-channel OSPF rows (L3PO_OSPF_ADDITIONS, slice 0b_40) = 172,
     # + 1 trunk port-channel reset-skip row (RS1_ADDITIONS, reset read from the body) = 173, and 74 + 173 = 247.
     # + 2 peer-link rows (PL1_ADDITIONS, resets read from the body) = 175, + 12 uplink rows (UL1_ADDITIONS, resets read
-    # from the bodies) = 187, and 74 + 187 = 261.
-    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 187"
+    # from the bodies) = 187, and 74 + 187 = 261. + 2 routed port-channel PIM rows (L3PO_PIM_ADDITIONS, slice 0b_41)
+    # = 189, and 74 + 189 = 263.
+    assert len(ALL_ADDED_IDENTITIES) == 54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 189"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -830,7 +841,9 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               # existing peer-link parent: resets read from the 017 body, NOT measured as a withdrawal
               ("peer-link PL1/from template", set(PL1_IDENTITIES), 2),
               # existing ToR-uplink parent: resets read from the template bodies, NOT measured as a withdrawal
-              ("uplink UL1/from template", set(UL1_IDENTITIES), 12))
+              ("uplink UL1/from template", set(UL1_IDENTITIES), 12),
+              # routed port-channel PIM, slice 0b_41: routed resets on identical declarations, NOT measured live
+              ("routed port-channel PIM/from template", set(L3PO_PIM_IDENTITIES), 2))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -843,19 +856,19 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
              | PIMACL_IDENTITIES | VPC13_IDENTITIES | HSRP3_IDENTITIES
              | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES
              | BATCH017_IDENTITIES | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES
-             | PL1_IDENTITIES | UL1_IDENTITIES)
+             | PL1_IDENTITIES | UL1_IDENTITIES | L3PO_PIM_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 187, (
+    assert len(union) == 189, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
         "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN + 11 PVLAN companions + 1 IQ1 "
         "+ 5 SMU017 batch 1 + 5 SMU017 loopback EIGRP + 1 SMU017 routed port-channel PIM BFD "
-        "+ 16 routed port-channel OSPF + 1 trunk port-channel reset-skip + 2 peer-link + 12 uplink = 187, "
-        "and 74 + 187 = 261"
+        "+ 16 routed port-channel OSPF + 1 trunk port-channel reset-skip + 2 peer-link + 12 uplink "
+        "+ 2 routed port-channel PIM = 189, and 74 + 189 = 263"
         % len(union))
 
 

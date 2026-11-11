@@ -192,7 +192,7 @@ R2_REGISTERED_BINDINGS = {
     "enable_ospf": ("ospf", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_ospf_auth": ("ospfAuthentication", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_pim_bfd_instance": ("pimBfdInstance", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif")),
-    "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "bool", ("int_loopback", "int_routed_host", "int_subif", "int_vlan")),
+    "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     # SMU 017 first increment (registry slice 0b_37). enable_cdp is registered on the routed parent only; it is native
     # on R2_NATIVE_CDP_PARENTS.
     "enable_cdp": ("CDP_ENABLE", "bool", ("int_routed_host",)),
@@ -246,7 +246,7 @@ R2_REGISTERED_BINDINGS = {
     "ospf_shutdown": ("ospfShutdown", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "ospf_tag": ("ospfTag", "str_fold", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "ospf_transmit_delay": ("ospfTransmitDelay", "int", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
-    "pim_dr_priority": ("PIM_DR_PRIORITY", "int", ("int_routed_host", "int_subif", "int_vlan")),
+    "pim_dr_priority": ("PIM_DR_PRIORITY", "int", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
     "private_vlan_mapping": ("privateVlanMapping", "str_fold", ("int_vlan",)),
     "spanning_tree_port_type": ("spanningTreePortType", "enum", (
         "int_access_host",

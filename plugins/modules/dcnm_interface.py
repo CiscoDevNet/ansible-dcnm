@@ -131,9 +131,12 @@ options:
       C(replaced) and C(overridden) an omitted value is reset to the template default (C(false), an empty list, C(out));
       under C(merged) it is preserved.
     - On a routed port-channel (C(type) C(pc), C(mode) C(l3)), the C(4.3.1.0175006017) template also declares
-      C(enable_pim_bfd_instance) (bool; renders C(ip pim bfd-instance); NOT LIVE TESTED, read from the installed
-      template body). The template does not require PIM sparse mode, which this profile does not accept. Under
-      C(replaced) and C(overridden) an omitted value is reset to false; under C(merged) it is preserved.
+      C(enable_pim_bfd_instance) (bool; renders C(ip pim bfd-instance)), C(enable_pim_sparse) (bool; renders
+      C(ip pim sparse-mode)) and C(pim_dr_priority) (1-4294967295; renders C(ip pim dr-priority); C(1), the default,
+      renders nothing). NOT LIVE TESTED, read from the installed template body. The template handles the three
+      independently; none requires another. Under C(replaced) and C(overridden) an omitted value is reset to the
+      template default (false or C(1)); under C(merged) it is preserved. Whether the device line is removed after a
+      reset depends on the template rebuilding the port-channel configuration and is not measured.
     - The routed port-channel also accepts the OSPF keys of the routed Ethernet profile, with the same meaning and
       dependencies (the C(4.3.1.0175006017) declarations are identical) - C(enable_ospf),
       C(ospf_tag), C(ospf_area_id), C(enable_ospf_auth), C(ospf_auth_key_id), C(ospf_auth_key),
@@ -3101,6 +3104,8 @@ EXAMPLES = """
           ipv4_addr: 192.0.2.13
           ipv4_mask_len: 30
           enable_pim_bfd_instance: true               # "ip pim bfd-instance" on the routed port-channel
+          enable_pim_sparse: true                     # "ip pim sparse-mode"
+          pim_dr_priority: 200                        # "ip pim dr-priority 200"
           enable_ospf: true                           # OSPF on the routed port-channel: gate, tag and area first
           ospf_tag: "100"
           ospf_area_id: 0.0.0.0

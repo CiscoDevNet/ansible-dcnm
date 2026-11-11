@@ -314,10 +314,10 @@ class TestPV09InventoryInvariants:
 
     def test_234_identities_and_207_reset_values_unchanged(self):
         # The eleven PVLAN companion rows, each with an inferred reset: 234 + 11, 207 + 11; plus one vPC PVLAN row.
-        # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1, + 4: pl1, + 12: ul1
-        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12
-        # + 0b_37 to 0b_40, rs1, pl1, ul1
-        assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == 207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12
+        # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1, + 4: pl1, + 12: ul1, + 2: 0b_41
+        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2
+        # + 0b_37 to 0b_41, rs1, pl1, ul1
+        assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == 207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -354,8 +354,9 @@ class TestPV09InventoryInvariants:
         # 39 slices: those 38 and slice rs1 (was b77a881f... and b460471a...).
         # 40 slices: those 39 and the peer-link rows of slice pl1 (was 7db4bd8a...).
         # 41 slices: those 40 and the ToR-uplink rows of slice ul1 (was 1b7d7b01...).
+        # 42 slices: those 41 and the routed port-channel PIM rows of slice 0b_41 (was f8b3ed32...).
         assert PROVENANCE_SHA256 == (
-            "f8b3ed32baa066a597ad055614066ca9dd9ef88e8cd56315fd7e87c9f8001f5a"
+            "e71748972f93babc31c7cab16a583f5df8797e806ef4f91830148facd5b36af1"
         )
 
 

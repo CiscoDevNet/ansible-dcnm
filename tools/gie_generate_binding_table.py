@@ -700,6 +700,10 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "ospfPriority"): "ospf_priority",
     ("int_l3_port_channel", "ospfNetworkType"): "ospf_network_type",
     ("int_l3_port_channel", "ospfBfdMode"): "ospf_bfd_mode",
+    # PIM sparse mode and DR priority on the routed port-channel (slice 0b_41), the int_routed_host contracts. Read from
+    # the 017 body; not measured live.
+    ("int_l3_port_channel", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
+    ("int_l3_port_channel", "PIM_DR_PRIORITY"): "pim_dr_priority",
     # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
     ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
     # Existing vPC peer-link parent (slice pl1). Read from the 017 body; not measured live.

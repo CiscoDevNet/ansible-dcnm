@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 import pytest
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import BINDING_TABLE, resolve_binding
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import BINDING_TABLE
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_gie_smu017_l3po_pim_bfd as B
 
@@ -102,10 +102,10 @@ def test_the_slice_cites_the_l3_port_channel_body_for_every_row():
     assert all(r["evidence_ref"].startswith("int_l3_port_channel.template@81c9392e#L") for r in rows)
 
 
-def test_the_parent_carries_exactly_the_ospf_family_and_pim_bfd():
+def test_the_parent_carries_exactly_the_ospf_family_and_the_pim_rows():
+    """PIM sparse mode and DR priority are slice 0b_41 (test_gie_l3po_pim_sparse_dr_priority.py)."""
     nvpairs = sorted(r["parent_nvpair"] for r in BINDING_TABLE if r["parent_template"] == L3PO)
-    assert nvpairs == sorted(OSPF19 + ["pimBfdInstance"])
-    assert resolve_binding(L3PO, "enable_pim_sparse") is None
+    assert nvpairs == sorted(OSPF19 + ["pimBfdInstance", "ENABLE_PIM_SPARSE", "PIM_DR_PRIORITY"])
 
 
 # ------------------------------------------------------------------ merged
