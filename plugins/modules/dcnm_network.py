@@ -5172,8 +5172,6 @@ class DcnmNetwork:
         # This ensures maps contain only switches affected by current operation
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
             self.populate_sn_maps_from_diffs()
-            if getattr(self, "pvlan_request", False):
-                self.pvlan_bound_undeploy_targets()
 
         path = self.paths["GET_NET"].format(self.fabric)
 
@@ -5297,10 +5295,7 @@ class DcnmNetwork:
         delete_ready = False
         if self.diff_undeploy:
             if getattr(self, "pvlan_request", False) and self.fabric_type == "standalone":
-                self.pvlan_deploy({
-                    (name, serial) for name in payload["networkNames"].split(",")
-                    for serial in self.network_sn_detach_map.get(name, set())
-                })
+                self.pvlan_deploy(self.pvlan_undeploy_keys(payload))
             elif self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
                 # Use switch-level deploy (undeploy operation)
                 self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
@@ -7326,19 +7321,26 @@ class DcnmNetwork:
                 for name, serial in sorted(plan)
             ]
 
-    def pvlan_bound_undeploy_targets(self):
+    def pvlan_undeploy_keys(self, payload):
         """
-        Keep, as undeploy switches of a PVLAN network, only those where its row
-        is attached or holds a saved removal. When every row is PENDING, the
-        inherited map takes every switch the network can attach to.
+        Return the (networkName, serial) pairs to undeploy before a delete.
+
+        Regular networks keep the inherited switches. A PVLAN network to delete
+        is undeployed only where its row is attached or holds a saved removal:
+        the inherited map has only the attached rows, or every switch of the
+        attachment list when every row is PENDING.
         """
-        for name, serials in self.network_sn_detach_map.items():
+        keys = set()
+        for name in payload["networkNames"].split(","):
+            if not self.pvlan_kind(name):
+                keys |= {(name, serial) for serial in self.network_sn_detach_map.get(name, set())}
+        for name in self.diff_delete:
             if self.pvlan_kind(name):
-                self.network_sn_detach_map[name] = {
-                    serial for serial in serials
-                    if (self.have_attach_state.get((name, serial)) or (False, ""))[0]
-                    or self.pvlan_saved_removal(self.have_attach_state.get((name, serial)))
+                keys |= {
+                    key for key, state in self.have_attach_state.items()
+                    if key[0] == name and (state[0] or self.pvlan_saved_removal(state))
                 }
+        return keys
 
     def pvlan_close_family(self, mapping):
         """

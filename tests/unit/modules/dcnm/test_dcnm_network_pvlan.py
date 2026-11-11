@@ -1310,6 +1310,19 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
                         self.assertEqual(check["pvlan_deploy_plan"], result["pvlan_deploy_plan"])
                         self.assertFalse(self.run_module(state, [dict(entry, deploy=True) for entry in config], deploy_mode=mode)["changed"])
 
+    def test_saved_removal_plan_names_family(self):
+        """Check mode for a saved removal of a secondary also lists the primary that was withdrawn with it, when
+        the request does not name the primary; the run then removes both rows with one deploy."""
+        config = self.saved_isolated_removal()
+        isolated = [dict(entry, deploy=True) for entry in config if entry["net_name"] == "pv-isolated"]
+        check = self.run_module("merged", isolated, check_mode=True)
+        self.assert_no_writes()
+        self.assertEqual([(entry["net_name"], entry["lanAttachState"]) for entry in check["pvlan_deploy_plan"]],
+                         [("pv-isolated", "PENDING"), ("pv-primary", "PENDING")])
+        self.assertTrue(self.run_module("merged", isolated, deploy_mode="resource")["changed"])
+        self.assertEqual(self.deploys(), [{SN["leaf11"]: ["pv-isolated", "pv-primary"]}])
+        self.assertEqual(sorted(self.ndfc.rows), [("pv-community", SN["leaf12"]), ("pv-primary", SN["leaf12"])])
+
     def test_removal_deployed_in_same_run(self):
         """replaced with deploy true deploys the switch it detaches a PVLAN network from, not only the
         switches that stay attached; the primary withdrawn with the secondary is named in resource mode."""
@@ -1382,6 +1395,25 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
                 self.assertEqual(sorted(self.ndfc.networks), ["pw-isolated", "pw-primary"])
                 self.assertEqual(self.ndfc.rows[("pw-isolated", SN["leaf12"])]["state"], "DEPLOYED")
                 self.assertFalse(self.run_module("deleted", config, deploy_mode=mode)["changed"])
+
+    def test_delete_attached_and_saved_rows_one_deploy(self):
+        """A PVLAN network attached on one switch and holding a saved removal on another is undeployed on both
+        with one deploy before the delete; the switches with NA rows are not deployed."""
+        for mode in (None, "resource"):
+            with self.subTest(mode=mode):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                self.seed_family(community_on=("leaf11", "leaf12"))
+                self.ndfc.rows[("pv-community", SN["leaf12"])].update({"attached": False, "state": "PENDING"})
+                self.ndfc.rows[("pv-primary", SN["leaf12"])].update({"attached": False, "state": "PENDING"})
+                self.assertTrue(self.run_module("deleted", [{"net_name": "pv-community"}], deploy_mode=mode)["changed"])
+                self.assertEqual(self.attach_items(), [("pv-community", SN["leaf11"], False)])
+                if mode:
+                    self.assertEqual(self.deploys(), [{SN["leaf11"]: ["pv-community", "pv-primary"], SN["leaf12"]: ["pv-community", "pv-primary"]}])
+                else:
+                    self.assertEqual(self.deploys(), [[SN["leaf11"], SN["leaf12"]]])
+                self.assertNotIn("pv-community", self.ndfc.networks)
+                self.assertEqual(self.ndfc.rows, {})
 
     def test_delete_primary_histories(self):
         """Deleting a deployed family: an explicit primary is detached after its secondaries, an implicit one is
