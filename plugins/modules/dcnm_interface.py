@@ -1203,9 +1203,12 @@ options:
             description:
             - IPV6 address of the interface. This object is applicable only if the 'mode' is
               'routed' or 'epl_routed'
-            - With C(mode=routed), an empty value removes the IPv6 address and its prefix length.
+            - With C(mode=routed), an empty value clears C(IPv6) and C(IPv6_PREFIX) in the interface intent.
             - With C(mode=routed), the IPv6 address and prefix length are sent only when I(ipv6_addr) or
               I(ipv6_mask_len) is set, or when the interface intent on the controller already has them.
+            - With C(mode=routed), the controller's C(int_routed_host) template must declare and render
+              C(IPv6) and C(IPv6_PREFIX). Some template versions do not declare them, and the module does
+              not check the template.
             type: str
             default: ""
           ipv6_mask_len:
@@ -2655,7 +2658,7 @@ EXAMPLES = """
           ipv6_addr: 2001:db8:117::1
           ipv6_mask_len: 64                 # choose from [min:1, max:127]
 
-- name: Remove the IPv6 address and keep IPv4 (replaced withdraws omitted fields)
+- name: Withdraw the IPv6 address and keep IPv4 (replaced clears omitted fields)
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
     state: replaced

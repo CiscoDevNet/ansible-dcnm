@@ -892,8 +892,9 @@ Parameters
                 </td>
                 <td>
                         <div>IPV6 address of the interface. This object is applicable only if the &#x27;mode&#x27; is &#x27;routed&#x27; or &#x27;epl_routed&#x27;</div>
-                        <div>With <code>mode=routed</code>, an empty value removes the IPv6 address and its prefix length.</div>
+                        <div>With <code>mode=routed</code>, an empty value clears <code>IPv6</code> and <code>IPv6_PREFIX</code> in the interface intent.</div>
                         <div>With <code>mode=routed</code>, the IPv6 address and prefix length are sent only when <em>ipv6_addr</em> or <em>ipv6_mask_len</em> is set, or when the interface intent on the controller already has them.</div>
+                        <div>With <code>mode=routed</code>, the controller&#x27;s <code>int_routed_host</code> template must declare and render <code>IPv6</code> and <code>IPv6_PREFIX</code>. Some template versions do not declare them, and the module does not check the template.</div>
                 </td>
             </tr>
             <tr>
@@ -4917,7 +4918,7 @@ Examples
               ipv6_addr: 2001:db8:117::1
               ipv6_mask_len: 64                 # choose from [min:1, max:127]
 
-    - name: Remove the IPv6 address and keep IPv4 (replaced withdraws omitted fields)
+    - name: Withdraw the IPv6 address and keep IPv4 (replaced clears omitted fields)
       cisco.dcnm.dcnm_interface:
         fabric: "{{ ansible_fabric }}"
         state: replaced
