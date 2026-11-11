@@ -1307,6 +1307,7 @@ Parameters
                         <div>The type of an existing network cannot be changed. When this option is omitted, the type returned by the controller is kept in every state.</div>
                         <div>Private VLAN networks support switch attachments only; <code>config[].attach[].ports</code> and <code>config[].attach[].tor_ports</code> are rejected, and so is a request that would remove existing port attachments of a private VLAN network.</div>
                         <div>The controller attaches a primary network to every switch where one of its secondary networks is attached, and an attached secondary network to every switch where its primary is attached later. <code>replaced</code> and <code>overridden</code> keep those attachments.</div>
+                        <div>When <code>config[].deploy</code> is true, the module also deploys the removal of a private VLAN network attachment on the switch that holds it, including a removal saved by an earlier run with <code>config[].deploy=false</code>. With <code>deploy_mode=resource</code>, the deploy also names the networks of the same private VLAN family that have saved changes on that switch.</div>
                 </td>
             </tr>
             <tr>

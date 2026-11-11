@@ -376,6 +376,12 @@ options:
           of its secondary networks is attached, and an attached secondary
           network to every switch where its primary is attached later.
           C(replaced) and C(overridden) keep those attachments.
+        - When O(config[].deploy) is true, the module also deploys the removal
+          of a private VLAN network attachment on the switch that holds it,
+          including a removal saved by an earlier run with
+          O(config[].deploy=false). With O(deploy_mode=resource), the deploy
+          also names the networks of the same private VLAN family that have
+          saved changes on that switch.
         type: str
         choices: [primary, isolated, community]
         required: false
@@ -1151,6 +1157,10 @@ class DcnmNetwork:
     PVLAN_TYPES = {"primary": "Primary", "isolated": "Isolated", "community": "Community"}
     PVLAN_SECONDARY_TEMPLATE = "Pvlan_Secondary_Network"
     PVLAN_INPUT_KEYS = ("pvlan_type", "pvlan_primary")
+    # States of a row with isLanAttached false whose removal is saved but not
+    # deployed. Such a row keeps its configuration on the switch, also after a
+    # config-preview turns PENDING into OUT-OF-SYNC.
+    PVLAN_SAVED_REMOVAL_STATES = ("PENDING", "OUT-OF-SYNC", "FAILED")
     # Playbook keys that Pvlan_Secondary_Network does not declare. Omitted,
     # null, "" and false all mean "not set".
     PVLAN_SECONDARY_FORBIDDEN_KEYS = (
@@ -1362,6 +1372,11 @@ class DcnmNetwork:
         self.pvlan_have_raw = {}
         self.pvlan_keep = {}
         self.pvlan_want_serials = {}
+        self.pvlan_removals = {}
+        self.pvlan_deployed = set()
+        self.pvlan_redetached = set()
+        # (networkName, serial) -> (isLanAttached, lanAttachState) as read by get_have().
+        self.have_attach_state = {}
 
     def get_no_deploy_net_names(self):
         """Return names whose first playbook entry sets deploy: false."""
@@ -3358,6 +3373,7 @@ class DcnmNetwork:
 
                 sn = attach["switchSerialNo"]
                 vlan = attach.get("vlanId")
+                self.have_attach_state[(attach["networkName"], sn)] = (attach_state, attach["lanAttachState"])
 
                 ports = ""
                 if attach["portNames"]:
@@ -4695,8 +4711,11 @@ class DcnmNetwork:
                 msg = f"network: {net}, networkStatus: {network_status}"
                 self.log.debug(msg)
 
-                # Check if network is in a terminal state ready for deletion
-                if network_status.upper() in ("OUT-OF-SYNC", "FAILED"):
+                # Check if network is in a terminal state ready for deletion.
+                # For a PVLAN network only NA is: OUT-OF-SYNC can still hold
+                # deployed configuration.
+                pvlan_net = getattr(self, "pvlan_request", False) and self.pvlan_kind(net)
+                if network_status.upper() in ("OUT-OF-SYNC", "FAILED") and not pvlan_net:
                     self.diff_delete.update({net: "OUT-OF-SYNC"})
                     networks_to_remove.append(net)
                 elif network_status.upper() == "NA" or network_status == "":
@@ -4723,6 +4742,8 @@ class DcnmNetwork:
             msg = "Timeout waiting for networks to be ready for deletion. "
             msg += f"Pending networks: {pending_networks}, "
             msg += f"States: {[(net, self.diff_delete.get(net)) for net in pending_networks]}"
+            if getattr(self, "pvlan_request", False):
+                self.failure(msg)
             self.module.fail_json(msg=msg)
 
         msg = "All networks reached terminal state. Ready for deletion."
@@ -4821,6 +4842,8 @@ class DcnmNetwork:
             batch_detach_payload = []
             batch_deploy_payload = {}
             networks_needing_deploy = []
+            pvlan_detach = []
+            pvlan_deploy = set()
 
             for net in pending_networks:
                 net_data = networks_by_name.get(net)
@@ -4829,6 +4852,14 @@ class DcnmNetwork:
                     # Network not found in response, mark as ready
                     self.diff_delete.update({net: "NA"})
                     networks_to_remove.append(net)
+                    continue
+
+                if getattr(self, "pvlan_request", False) and self.pvlan_kind(net):
+                    if self.pvlan_removal_settled(net, net_data.get("lanAttachList") or [], pvlan_detach, pvlan_deploy):
+                        self.diff_delete.update({net: "NA"})
+                        networks_to_remove.append(net)
+                    else:
+                        self.diff_delete.update({net: "DEPLOYED"})
                     continue
 
                 attach_list = net_data.get("lanAttachList", [])
@@ -4888,6 +4919,8 @@ class DcnmNetwork:
                     networks_to_remove.append(net)
                 else:
                     self.diff_delete.update({net: "DEPLOYED"})
+
+            self.pvlan_settle_removals(pvlan_detach, pvlan_deploy)
 
             # Execute batched detach operation once for all networks
             if batch_detach_payload:
@@ -5139,6 +5172,8 @@ class DcnmNetwork:
         # This ensures maps contain only switches affected by current operation
         if self.fabric_type not in ["multisite_child", "multicluster_child"]:
             self.populate_sn_maps_from_diffs()
+            if getattr(self, "pvlan_request", False):
+                self.pvlan_bound_undeploy_targets()
 
         path = self.paths["GET_NET"].format(self.fabric)
 
@@ -5261,7 +5296,12 @@ class DcnmNetwork:
         payload = copy.deepcopy(self.diff_undeploy)
         delete_ready = False
         if self.diff_undeploy:
-            if self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
+            if getattr(self, "pvlan_request", False) and self.fabric_type == "standalone":
+                self.pvlan_deploy({
+                    (name, serial) for name in payload["networkNames"].split(",")
+                    for serial in self.network_sn_detach_map.get(name, set())
+                })
+            elif self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
                 # Use switch-level deploy (undeploy operation)
                 self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
             elif self.dcnm_version >= 12:
@@ -5535,6 +5575,15 @@ class DcnmNetwork:
                 self.failure(resp)
 
         method = "POST"
+        if getattr(self, "pvlan_request", False) and self.fabric_type == "standalone":
+            # The saved removals of the run go with the deploy of the diff, and
+            # only the attach map of each deployed network is taken.
+            keys = {(name, serial) for name, serials in self.pvlan_removals.items() for serial in serials}
+            for name in (self.diff_deploy or {}).get("networkNames", "").split(","):
+                keys |= {(name.strip(), serial) for serial in self.network_sn_attach_map.get(name.strip(), set())}
+            self.pvlan_deploy(keys)
+            return
+
         if self.diff_deploy:
             # For multicluster_parent and multisite_parent, prepare payload for action plugin
             if self.fabric_type == "multicluster_parent" or self.fabric_type == "multisite_parent":
@@ -7186,6 +7235,207 @@ class DcnmNetwork:
             kept.append((entry, item))
         return kept
 
+    def pvlan_family(self, name):
+        """Return the primary of a PVLAN network and every secondary of that primary."""
+        primary = name if self.pvlan_kind(name) == "Primary" else self.pvlan_primary_name(name)
+        if not primary:
+            return {name}
+        primary_id = (self.pvlan_eff.get(primary) or self.pvlan_index.get(primary) or {}).get("networkId")
+        family = {primary, name}
+        for table in (self.pvlan_index, self.pvlan_eff):
+            for other, info in table.items():
+                if info.get("type") in ("Isolated", "Community") and primary_id is not None and info.get("primaryNetworkId") == primary_id:
+                    family.add(other)
+        return family
+
+    def pvlan_saved_removal(self, state):
+        """True for a row whose detach is saved but not deployed."""
+        return bool(state) and not state[0] and str(state[1] or "").upper() in self.PVLAN_SAVED_REMOVAL_STATES
+
+    def pvlan_row_pending(self, state):
+        """True for a row with saved work that a deploy of its network on that switch would push."""
+        if not state:
+            return False
+        if state[0]:
+            return str(state[1] or "").upper() not in ("DEPLOYED", "IN-SYNC", "NA", "")
+        return self.pvlan_saved_removal(state)
+
+    def pvlan_row_states(self, names, during_prepare=False):
+        """Read the attachment rows of these networks as {(networkName, serial): (isLanAttached, lanAttachState)}."""
+        rows = self.pvlan_read_attachment_rows(sorted(names), during_prepare=during_prepare)
+        return {key: (bool(row.get("isLanAttached")), row.get("lanAttachState")) for key, row in rows.items()}
+
+    def pvlan_plan_removal_deploys(self):
+        """
+        # Summary
+
+        Plan the deploy of removals of the PVLAN networks in a merged, replaced
+        or overridden request.
+
+        A detach leaves the row isLanAttached false and PENDING (OUT-OF-SYNC
+        after a config-preview) with its configuration still on the switch
+        until the network is deployed there. The diff does not see that row,
+        so the deploy of the run would not include it. For every requested
+        PVLAN network with deploy true, plan the switches where this run
+        detaches it and the switches where a saved removal is outstanding, and
+        on those switches the saved removals of the same family.
+        """
+        if not getattr(self, "pvlan_request", False):
+            return
+        no_deploy = self.get_no_deploy_net_names()
+        removals = {}
+        for entry in self.diff_attach:
+            if entry["networkName"] not in self.pvlan_eff or entry["networkName"] in no_deploy:
+                continue
+            for item in entry["lanAttachList"]:
+                if not item.get("deployment"):
+                    removals.setdefault(entry["networkName"], set()).add(item["serialNumber"])
+        for (name, serial), state in self.have_attach_state.items():
+            if name not in self.pvlan_eff or name in no_deploy or serial in self.pvlan_want_serials.get(name, set()):
+                continue
+            if self.pvlan_saved_removal(state):
+                removals.setdefault(name, set()).add(serial)
+
+        family = {name: self.pvlan_family(name) for name in removals}
+        known = {name for name, serial in self.have_attach_state}
+        unread = {other for members in family.values() for other in members if other not in known and other in self.pvlan_index}
+        if unread:
+            self.have_attach_state.update(self.pvlan_row_states(unread))
+        for name, serials in list(removals.items()):
+            for other in family[name] - {name}:
+                if other in no_deploy:
+                    continue
+                for serial in serials:
+                    if self.pvlan_saved_removal(self.have_attach_state.get((other, serial))):
+                        removals.setdefault(other, set()).add(serial)
+        self.pvlan_removals = removals
+
+    def pvlan_report_deploy_plan(self):
+        """Report the planned removal deploys and the undeploy switches of removed PVLAN networks."""
+        if not getattr(self, "pvlan_request", False):
+            return
+        plan = set()
+        for name, serials in self.pvlan_removals.items():
+            plan |= {(name, serial) for serial in serials}
+        for name in self.diff_delete or {}:
+            if self.pvlan_kind(name):
+                plan |= {key for key, state in self.have_attach_state.items() if key[0] == name and (state[0] or self.pvlan_saved_removal(state))}
+        if plan:
+            self.result["pvlan_deploy_plan"] = [
+                {"net_name": name, "switch": self.pvlan_switch_label(serial), "lanAttachState": (self.have_attach_state.get((name, serial)) or (None, "NA"))[1]}
+                for name, serial in sorted(plan)
+            ]
+
+    def pvlan_bound_undeploy_targets(self):
+        """
+        Keep, as undeploy switches of a PVLAN network, only those where its row
+        is attached or holds a saved removal. When every row is PENDING, the
+        inherited map takes every switch the network can attach to.
+        """
+        for name, serials in self.network_sn_detach_map.items():
+            if self.pvlan_kind(name):
+                self.network_sn_detach_map[name] = {
+                    serial for serial in serials
+                    if (self.have_attach_state.get((name, serial)) or (False, ""))[0]
+                    or self.pvlan_saved_removal(self.have_attach_state.get((name, serial)))
+                }
+
+    def pvlan_close_family(self, mapping):
+        """
+        Add to a per-switch network deploy the members of the same PVLAN family
+        that hold saved work on that switch, such as a primary that NDFC added
+        or withdrew with its secondaries. A network deploy changes only the
+        networks it names.
+        """
+        names = set()
+        for networks in mapping.values():
+            for name in networks:
+                if self.pvlan_kind(name):
+                    names |= self.pvlan_family(name)
+        if not names:
+            return mapping
+        names = {name for name in names if name in self.pvlan_eff or name in self.pvlan_index}
+        states = self.pvlan_row_states(names)
+        no_deploy = self.get_no_deploy_net_names()
+        closed = {}
+        for serial, networks in mapping.items():
+            closed[serial] = list(networks)
+            for name in networks:
+                if not self.pvlan_kind(name):
+                    continue
+                for other in sorted(self.pvlan_family(name)):
+                    if other not in closed[serial] and other not in no_deploy and self.pvlan_row_pending(states.get((other, serial))):
+                        closed[serial].append(other)
+        return closed
+
+    def pvlan_deploy(self, keys):
+        """
+        # Summary
+
+        Deploy (networkName, serial) pairs of a PVLAN request and nothing else.
+
+        switch mode: one config-deploy of these switches, which also pushes
+        any other saved work on them. resource mode: one network deploy that
+        names these networks per switch, closed over their PVLAN family.
+        """
+        if not keys:
+            return
+        if self.deploy_mode == "switch":
+            serials = sorted({serial for name, serial in keys})
+            path = self.paths["GET_NET_SWITCH_CONFIG_DEPLOY"].format(self.fabric, ",".join(serials))
+            resp = dcnm_send(self.module, "POST", path)
+            self.pvlan_deployed |= set(keys)
+        else:
+            mapping = {}
+            for name, serial in sorted(keys):
+                mapping.setdefault(serial, []).append(name)
+            mapping = self.pvlan_close_family(mapping)
+            path = self.paths["GET_NET"].format(self.fabric).replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+            resp = dcnm_send(self.module, "POST", path, json.dumps({serial: ",".join(names) for serial, names in mapping.items()}))
+            self.pvlan_deployed |= {(name, serial) for serial, names in mapping.items() for name in names}
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+        if fail:
+            self.failure(resp)
+
+    def pvlan_removal_settled(self, name, rows, detach, deploy):
+        """
+        Return True when every row of a PVLAN network being deleted is NA.
+
+        A row still attached is queued once for an ordered detach; a saved
+        removal is queued once for a deploy of that row. OUT-OF-SYNC and
+        FAILED are not terminal: after a config-preview they still hold the
+        configuration on the switch.
+        """
+        settled = True
+        for row in rows:
+            key = (name, row.get("switchSerialNo"))
+            state = (bool(row.get("isLanAttached")), row.get("lanAttachState"))
+            if state[0]:
+                settled = False
+                if key not in self.pvlan_redetached:
+                    detach.append(key)
+            elif self.pvlan_saved_removal(state):
+                settled = False
+                if key not in self.pvlan_deployed:
+                    deploy.add(key)
+            elif str(state[1] or "").upper() not in ("NA", ""):
+                settled = False
+        return settled
+
+    def pvlan_settle_removals(self, detach, deploy):
+        """Send the queued detaches through the ordered PVLAN path, then deploy the queued rows."""
+        if detach:
+            self.pvlan_redetached |= set(detach)
+            # The detach saves a new removal that the earlier deploy did not push.
+            self.pvlan_deployed -= set(detach)
+            entries = []
+            for name in dict.fromkeys(name for name, serial in detach):
+                items = [{"serialNumber": serial, "networkName": name, "fabric": self.fabric, "deployment": False} for other, serial in detach if other == name]
+                entries.append({"networkName": name, "lanAttachList": items})
+            self.pvlan_push_attachments(entries, detach_step=True)
+        self.pvlan_deploy(deploy)
+
     def pvlan_create_payload(self, net):
         """Return the create body for a PVLAN network."""
         net_type = self.pvlan_type_of(net)
@@ -7435,6 +7685,9 @@ def main():
     if module.params["state"] in ("replaced", "overridden"):
         dcnm_net.pvlan_plan_pins()
 
+    if module.params["state"] in ("merged", "replaced", "overridden"):
+        dcnm_net.pvlan_plan_removal_deploys()
+
     if module.params["state"] == "deleted":
         dcnm_net.get_diff_delete()
 
@@ -7442,6 +7695,7 @@ def main():
         dcnm_net.get_diff_query()
         dcnm_net.result["response"] = dcnm_net.query
 
+    dcnm_net.pvlan_report_deploy_plan()
     dcnm_net.result["warnings"].append(warn_msg) if warn_msg else []
 
     if (
@@ -7453,6 +7707,7 @@ def main():
         or dcnm_net.diff_create_update
         or dcnm_net.diff_detach
         or dcnm_net.diff_undeploy
+        or dcnm_net.pvlan_removals
     ):
         dcnm_net.result["changed"] = True
     else:

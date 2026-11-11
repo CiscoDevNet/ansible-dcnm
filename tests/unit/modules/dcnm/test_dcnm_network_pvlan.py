@@ -58,10 +58,15 @@ class FakeNdfc(object):
       refused per item inside HTTP 200;
     - after a secondary detach an implicit primary row reads isLanAttached
       false / PENDING;
+    - a detach of an implicit primary row is refused per item inside HTTP 200,
+      also after the row was withdrawn with its last secondary;
     - a PUT replaces the stored template config.
 
-    Deploy handling (attached rows become DEPLOYED, PENDING detaches are
-    removed) is a model assumption, not an observed transition.
+    Deploy handling: a deploy makes the named attached rows DEPLOYED and
+    removes the named rows that are detached (PENDING or OUT-OF-SYNC), as
+    measured for a network deploy that named every family member. A network
+    deploy changes only the rows it names; whether NDFC also deploys an
+    unnamed implicit primary is not measured.
     """
 
     def __init__(self, fixtures, inventory):
@@ -81,6 +86,8 @@ class FakeNdfc(object):
         self.refuse = {}
         # (network name, serial) rows that a deploy leaves unchanged.
         self.stuck = set()
+        # network name -> networkStatus returned by the network list instead of the one derived from the rows.
+        self.status_override = {}
         self.next_l2vni = 30900
 
     # ----- seeding -----------------------------------------------------------
@@ -218,7 +225,7 @@ class FakeNdfc(object):
         if path == REST + "/top-down/fabrics/" + FABRIC + "/vrfs":
             return ok("GET", path, [{"vrfName": vrf} for vrf in self.vrfs])
         if path == NETS:
-            return ok("GET", path, [dict(net, networkStatus=self.status(name)) for name, net in self.networks.items()])
+            return ok("GET", path, [dict(net, networkStatus=self.status_override.get(name) or self.status(name)) for name, net in self.networks.items()])
         if path.startswith(NETS + "?vrf-name="):
             vrf = path.split("=", 1)[1]
             return ok("GET", path, [copy.deepcopy(net) for net in self.networks.values() if net["vrf"] == vrf])
@@ -381,6 +388,11 @@ class FakeNdfc(object):
                 return (
                     "The following Secondary networks[{0}] have explicit attachment on switch[{1}] hence detach on "
                     "primary is not allowed".format(",".join(explicit), serial)
+                )
+            if row and not row["explicit"]:
+                return (
+                    "Network Attachment[{0}] is implicit attached on switch[{1}] and implicit attachments are not "
+                    "allowed to be detached".format(name, serial)
                 )
             for secondary in self.secondaries(name):
                 if self.rows.get((secondary, serial), {}).get("attached"):
@@ -1227,6 +1239,250 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         self.assertEqual(sorted(self.ndfc.networks), ["pv-community", "pv-isolated", "pv-primary"])
         self.assertEqual(result["pvlan_state"]["attachments"]["pv-isolated"][0]["lanAttachState"], "PENDING")
 
+    # ----- removal lifecycle -------------------------------------------------
+
+    CONFIG_DEPLOY = REST + "/control/fabrics/" + FABRIC + "/config-deploy/"
+    NETWORK_DEPLOY = REST + "/top-down/networks/deploy"
+
+    def deploys(self):
+        """Return the deploy requests sent: switch lists for config-deploy, bodies for network deploys."""
+        sent = []
+        for method, path, body in self.ndfc.writes():
+            if path.startswith(self.CONFIG_DEPLOY):
+                sent.append(sorted(path[len(self.CONFIG_DEPLOY):].split("?", 1)[0].split(",")))
+            elif path == self.NETWORK_DEPLOY:
+                sent.append({serial: sorted(names.split(",")) for serial, names in body.items()})
+        return sent
+
+    def saved_isolated_removal(self, preview=False):
+        """Family deployed (isolated on leaf11, community on leaf12); replaced with deploy false saves the
+        removal of the isolated attachment, which also withdraws the implicit primary on leaf11."""
+        self.seed_family(isolated_on=("leaf11",), community_on=("leaf12",))
+        mcast = json.loads(self.ndfc.networks["pv-primary"]["networkTemplateConfig"])["mcastGroup"]
+        config = [
+            {"net_name": "pv-isolated", "vlan_id": 2432, "is_l2only": True, "multicast_group_address": mcast, "attach": []},
+            {"net_name": "pv-community", "vlan_id": 2433, "is_l2only": True, "multicast_group_address": mcast,
+             "attach": [{"ip_address": IP["leaf12"]}]},
+            {"net_name": "pv-primary", "vlan_id": 2431, "is_l2only": True, "multicast_group_address": mcast, "attach": []},
+        ]
+        self.assertTrue(self.run_module("replaced", [dict(entry, deploy=False) for entry in config])["changed"])
+        self.assertEqual(self.deploys(), [])
+        for key in (("pv-isolated", SN["leaf11"]), ("pv-primary", SN["leaf11"])):
+            self.assertEqual((self.ndfc.rows[key]["attached"], self.ndfc.rows[key]["state"]), (False, "PENDING"))
+            if preview:
+                self.ndfc.rows[key]["state"] = "OUT-OF-SYNC"
+        return config
+
+    def test_saved_removal_deployed_by_later_run(self):
+        """A removal saved with deploy false is deployed by the next run with deploy true, in merged, replaced
+        and overridden, with the rows PENDING or OUT-OF-SYNC. Only that switch is deployed; the primary that
+        NDFC withdrew with the secondary is named in resource mode. A run with deploy false sends nothing, and
+        the run after the deploy is a no-op."""
+        for state in ("merged", "replaced", "overridden"):
+            for preview in (False, True):
+                for mode in (None, "resource"):
+                    with self.subTest(state=state, preview=preview, mode=mode):
+                        self.ndfc.networks.clear()
+                        self.ndfc.rows.clear()
+                        config = self.saved_isolated_removal(preview)
+                        result = self.run_module(state, [dict(entry, deploy=False) for entry in config], deploy_mode=mode)
+                        self.assertFalse(result["changed"], result)
+                        self.assert_no_writes()
+
+                        check = self.run_module(state, [dict(entry, deploy=True) for entry in config], deploy_mode=mode, check_mode=True)
+                        self.assertTrue(check["changed"])
+                        self.assert_no_writes()
+
+                        result = self.run_module(state, [dict(entry, deploy=True) for entry in config], deploy_mode=mode)
+                        self.assertTrue(result["changed"])
+                        self.assertEqual([method for method, path, body in self.ndfc.writes()], ["POST"], "a deploy only, no detach")
+                        if mode:
+                            self.assertEqual(self.deploys(), [{SN["leaf11"]: ["pv-isolated", "pv-primary"]}])
+                        else:
+                            self.assertEqual(self.deploys(), [[SN["leaf11"]]])
+                        self.assertNotIn(("pv-isolated", SN["leaf11"]), self.ndfc.rows)
+                        self.assertNotIn(("pv-primary", SN["leaf11"]), self.ndfc.rows)
+                        self.assertEqual(
+                            [(entry["net_name"], entry["switch"], entry["lanAttachState"]) for entry in result["pvlan_deploy_plan"]],
+                            [(name, IP["leaf11"] + " (" + SN["leaf11"] + ")", "OUT-OF-SYNC" if preview else "PENDING")
+                             for name in ("pv-isolated", "pv-primary")],
+                        )
+                        self.assertEqual(check["pvlan_deploy_plan"], result["pvlan_deploy_plan"])
+                        self.assertFalse(self.run_module(state, [dict(entry, deploy=True) for entry in config], deploy_mode=mode)["changed"])
+
+    def test_removal_deployed_in_same_run(self):
+        """replaced with deploy true deploys the switch it detaches a PVLAN network from, not only the
+        switches that stay attached; the primary withdrawn with the secondary is named in resource mode."""
+        for mode in (None, "resource"):
+            with self.subTest(mode=mode):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                self.seed_family(isolated_on=("leaf11",), community_on=("leaf12",))
+                mcast = json.loads(self.ndfc.networks["pv-primary"]["networkTemplateConfig"])["mcastGroup"]
+                config = [{"net_name": "pv-isolated", "vlan_id": 2432, "is_l2only": True, "multicast_group_address": mcast, "attach": []}]
+                self.assertTrue(self.run_module("replaced", config, deploy_mode=mode)["changed"])
+                self.assertEqual(self.attach_items(), [("pv-isolated", SN["leaf11"], False)])
+                self.assertEqual(self.deploys(), [{SN["leaf11"]: ["pv-isolated", "pv-primary"]}] if mode else [[SN["leaf11"]]])
+                self.assertEqual(sorted(self.ndfc.rows), [("pv-community", SN["leaf12"]), ("pv-primary", SN["leaf12"])])
+                self.assertFalse(self.run_module("replaced", config, deploy_mode=mode)["changed"])
+
+    def test_mixed_replaced_removal_regular_unchanged(self):
+        """replaced removing a regular attachment and a PVLAN attachment in one run: only the PVLAN removal is
+        deployed by the module; the regular network keeps the inherited targets (none when no switch stays
+        attached) and its rows stay saved."""
+        for mode in (None, "resource"):
+            with self.subTest(mode=mode):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                self.seed_family(isolated_on=("leaf11",))
+                self.ndfc.seed("regular", "reg-l2", 30101, 2101)
+                self.ndfc.attach("reg-l2", "leaf13")
+                self.ndfc.attach("reg-l2", "leaf14")
+                mcast = json.loads(self.ndfc.networks["pv-primary"]["networkTemplateConfig"])["mcastGroup"]
+                reg_mcast = json.loads(self.ndfc.networks["reg-l2"]["networkTemplateConfig"])["mcastGroup"]
+                config = [
+                    {"net_name": "reg-l2", "vlan_id": 2101, "is_l2only": True, "multicast_group_address": reg_mcast, "attach": []},
+                    {"net_name": "pv-isolated", "vlan_id": 2432, "is_l2only": True, "multicast_group_address": mcast, "attach": []},
+                ]
+                self.assertTrue(self.run_module("replaced", config, deploy_mode=mode)["changed"])
+                self.assertEqual(sorted(self.attach_items()), sorted([("pv-isolated", SN["leaf11"], False), ("reg-l2", SN["leaf13"], False),
+                                                                      ("reg-l2", SN["leaf14"], False)]))
+                self.assertEqual(self.deploys(), [{SN["leaf11"]: ["pv-isolated", "pv-primary"]}] if mode else [[SN["leaf11"]]])
+                self.assertEqual({self.ndfc.rows[("reg-l2", SN[name])]["state"] for name in ("leaf13", "leaf14")}, {"PENDING"})
+
+    def two_families_saved_removal(self):
+        """Family pv saved for removal on leaf11 (all rows PENDING), family pw deployed on leaf12, NA rows on
+        leaf13 and leaf14."""
+        self.seed_family(isolated_on=("leaf11",), community_on=("leaf11",))
+        self.ndfc.seed("primary_l2", "pw-primary", 30020, 2441)
+        self.ndfc.seed("isolated", "pw-isolated", 30021, 2442, primary="pw-primary")
+        self.ndfc.attach("pw-isolated", "leaf12")
+        for key in [key for key in self.ndfc.rows if key[0].startswith("pv-")]:
+            self.ndfc.rows[key].update({"attached": False, "state": "PENDING", "explicit": False})
+        return [{"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}]
+
+    def test_delete_saved_removal_targets(self):
+        """deleted after a saved removal deploys only the switch that holds it: no other family's switch and no
+        switch with only NA rows. No detach is resent for rows already detached (the implicit primary's would be
+        refused). The other family is untouched; check mode reports the same rows."""
+        for mode in (None, "resource"):
+            with self.subTest(mode=mode):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                config = self.two_families_saved_removal()
+                check = self.run_module("deleted", config, check_mode=True, deploy_mode=mode)
+                self.assert_no_writes()
+                self.assertEqual(sorted((entry["net_name"], entry["lanAttachState"]) for entry in check["pvlan_deploy_plan"]),
+                                 [("pv-community", "PENDING"), ("pv-isolated", "PENDING"), ("pv-primary", "PENDING")])
+                self.assertEqual({entry["switch"] for entry in check["pvlan_deploy_plan"]}, {IP["leaf11"] + " (" + SN["leaf11"] + ")"})
+
+                self.assertTrue(self.run_module("deleted", config, deploy_mode=mode)["changed"])
+                self.assertEqual(self.attach_items(), [])
+                self.assertEqual(self.deploys(), [{SN["leaf11"]: ["pv-community", "pv-isolated", "pv-primary"]}] if mode else [[SN["leaf11"]]])
+                self.assertEqual(sorted(self.ndfc.networks), ["pw-isolated", "pw-primary"])
+                self.assertEqual(self.ndfc.rows[("pw-isolated", SN["leaf12"])]["state"], "DEPLOYED")
+                self.assertFalse(self.run_module("deleted", config, deploy_mode=mode)["changed"])
+
+    def test_delete_primary_histories(self):
+        """Deleting a deployed family: an explicit primary is detached after its secondaries, an implicit one is
+        not (it follows its last secondary). Both histories deploy the same switch and delete in the same order."""
+        for explicit in (True, False):
+            with self.subTest(explicit=explicit):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                self.history(explicit)
+                self.ndfc.deploy(set(self.ndfc.rows))
+                config = [{"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}]
+                result = self.run_module("deleted", config)
+                self.assertTrue(result["changed"])
+                expected = [("pv-isolated", SN["leaf11"], False)] + ([("pv-primary", SN["leaf11"], False)] if explicit else [])
+                self.assertEqual(self.attach_items(), expected)
+                self.assertEqual(self.deploys(), [[SN["leaf11"]]])
+                self.assertEqual([path.rsplit("/", 1)[1] for method, path, body in self.ndfc.writes() if method == "DELETE"],
+                                 ["pv-isolated", "pv-community", "pv-primary"])
+                self.assertEqual(self.ndfc.networks, {})
+
+    def test_delete_out_of_sync_is_not_ready(self):
+        """Rows OUT-OF-SYNC after a preview still hold configuration: deleted deploys them and deletes only when
+        every row is NA. When the deploy does not settle them, the run fails without a DELETE, and the identical
+        run after they settle deploys once more and deletes."""
+        self.seed_family(isolated_on=("leaf11",), community_on=("leaf11",))
+        for key in list(self.ndfc.rows):
+            self.ndfc.rows[key].update({"attached": False, "state": "OUT-OF-SYNC", "explicit": False})
+            self.ndfc.stuck.add(key)
+        config = [{"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}]
+        result = self.run_module("deleted", config, failed=True)
+        self.assertIn("did not reach a state ready for deletion", result["msg"]["DATA"])
+        self.assertEqual(self.deploys(), [[SN["leaf11"]]], "one deploy per row and run")
+        self.assertEqual([request for request in self.ndfc.writes() if request[0] == "DELETE"], [])
+        self.assertEqual({row["lanAttachState"] for rows in result["pvlan_state"]["attachments"].values() for row in rows
+                          if row["switchSerialNo"] == SN["leaf11"]}, {"OUT-OF-SYNC"})
+
+        self.ndfc.stuck.clear()
+        self.assertTrue(self.run_module("deleted", config)["changed"])
+        self.assertEqual(self.deploys(), [[SN["leaf11"]]])
+        self.assertEqual(self.ndfc.networks, {})
+
+    def test_delete_network_status_out_of_sync_is_not_ready(self):
+        """When every attachment is NA but the network still reads OUT-OF-SYNC, a PVLAN network is not deleted."""
+        self.seed_family()
+        self.ndfc.status_override["pv-community"] = "OUT-OF-SYNC"
+        result = self.run_module("deleted", [{"net_name": "pv-community"}], failed=True)
+        self.assertIn("Timeout waiting for networks to be ready for deletion", result["msg"]["DATA"])
+        self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
+        self.assertEqual(self.ndfc.writes(), [])
+        self.assertIn("pv-community", self.ndfc.networks)
+
+    def test_delete_retry_detach_ordered_and_checked(self):
+        """A row still attached after the detach step is detached again through the ordered, item-checked path,
+        and the removal that detach saves is deployed again. A refusal of that retry fails the run without a
+        DELETE."""
+        for refused in (False, True):
+            with self.subTest(refused=refused):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                self.ndfc.refuse.clear()
+                self.seed_family(isolated_on=("leaf11",), community_on=("leaf12",))
+                # The first detach POST is acknowledged without effect.
+                self.ndfc.inject.append(("POST", ATTACH, ok("POST", ATTACH, {"pv-isolated-[PVL0000011/leaf-11]": "SUCCESS"})))
+                if refused:
+                    self.ndfc.refuse[("pv-isolated", SN["leaf11"])] = "Detach is not allowed (simulated)"
+                result = self.run_module("deleted", [{"net_name": "pv-isolated"}], failed=refused)
+                self.assertEqual(self.attach_items(), [("pv-isolated", SN["leaf11"], False)] * 2)
+                if refused:
+                    self.assertEqual(result["msg"]["FAILED_ITEMS"], [{"pv-isolated-[PVL0000011/leaf-11]": "Detach is not allowed (simulated)"}])
+                    self.assertEqual(self.deploys(), [[SN["leaf11"]]])
+                    self.assertEqual([request for request in self.ndfc.writes() if request[0] == "DELETE"], [])
+                    self.assertIn("pv-isolated", self.ndfc.networks)
+                else:
+                    self.assertTrue(result["changed"])
+                    self.assertEqual(self.deploys(), [[SN["leaf11"]], [SN["leaf11"]]])
+                    self.assertNotIn("pv-isolated", self.ndfc.networks)
+                    self.assertEqual(sorted(self.ndfc.rows), [("pv-community", SN["leaf12"]), ("pv-primary", SN["leaf12"])])
+
+    def test_mixed_delete_regular_targets_unchanged(self):
+        """Mixed delete after saved removals: the regular network keeps the inherited deploy targets, the PVLAN
+        family is deployed only where it holds a saved removal, and both are deleted."""
+        for mode in (None, "resource"):
+            with self.subTest(mode=mode):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                config = self.two_families_saved_removal()
+                self.ndfc.seed("regular", "reg-l2", 30101, 2101)
+                self.ndfc.attach("reg-l2", "leaf13")
+                self.ndfc.attach("reg-l2", "leaf14")
+                for serial in (SN["leaf13"], SN["leaf14"]):
+                    self.ndfc.rows[("reg-l2", serial)].update({"attached": False, "state": "PENDING"})
+                self.assertTrue(self.run_module("deleted", config + [{"net_name": "reg-l2"}], deploy_mode=mode)["changed"])
+                regular_detach = [item for item in self.attach_items() if item[0] == "reg-l2"]
+                self.assertEqual(regular_detach, [("reg-l2", SN["leaf13"], False), ("reg-l2", SN["leaf14"], False)], "inherited re-detach")
+                if mode:
+                    self.assertEqual(self.deploys(), [{SN["leaf11"]: ["pv-community", "pv-isolated", "pv-primary"]},
+                                                      {SN["leaf13"]: ["reg-l2"], SN["leaf14"]: ["reg-l2"]}])
+                else:
+                    self.assertEqual(self.deploys(), [[SN["leaf11"]], sorted(SN.values())], "regular keeps every switch (inherited)")
+                self.assertEqual(sorted(self.ndfc.networks), ["pw-isolated", "pw-primary"])
+
     # ----- deploy and saved state --------------------------------------------
 
     def test_saved_then_deploy(self):
@@ -1261,11 +1517,17 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         self.assertEqual(deploys, [REST + "/control/fabrics/" + FABRIC + "/config-deploy/" + SN["leaf11"] + "?forceShowRun=false"])
 
     def test_deploy_mode_resource_visible(self):
-        """Resource mode names the family networks; whether NDFC also deploys the implicit primary is open."""
+        """Resource mode names the attached secondary and the primary that NDFC added with it on that switch,
+        because a network deploy changes only the networks it names. A family member already deployed there
+        is not added."""
         self.assertTrue(self.run_module("merged", self.family(isolated_attach=("leaf11",)), deploy_mode="resource")["changed"])
         deploy = self.bodies("POST", REST + "/top-down/networks/deploy")
         self.assertEqual(len(deploy), 1)
-        self.assertEqual(sorted(deploy[0][SN["leaf11"]].split(",")), ["pv-isolated"])
+        self.assertEqual(deploy[0][SN["leaf11"]].split(","), ["pv-isolated", "pv-primary"])
+        self.assertEqual(self.ndfc.rows[("pv-primary", SN["leaf11"])]["state"], "DEPLOYED")
+
+        self.assertTrue(self.run_module("merged", self.family(isolated_attach=("leaf11",), community_attach=("leaf11",)), deploy_mode="resource")["changed"])
+        self.assertEqual(self.bodies("POST", REST + "/top-down/networks/deploy"), [{SN["leaf11"]: "pv-community"}])
 
     def test_check_mode_zero_writes(self):
         """Check mode sends no write and reports the PVLAN options in the diff."""
