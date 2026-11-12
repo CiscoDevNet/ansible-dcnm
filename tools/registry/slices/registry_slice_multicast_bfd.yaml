@@ -1,0 +1,682 @@
+# Registry source: PIM and BFD on the routed, subinterface, SVI, loopback and routed port-channel parents.
+#
+# Compiled by tools/gie_generate_binding_table.py with the other registry_slice_*.yaml files; see
+# tools/registry/README.md. Each section below is one original source lot. Its header is the original
+# text. A lot whose rows span several families keeps its header in the family that holds most of them
+# and is cross-referenced from the others.
+
+shared_effects:
+  # shared effects from registry_slice_0b_4.yaml
+  - effect_id: bfd_interval@int_subif
+    parent_template: int_subif
+    child_template: interface_bfd_interval_11_1
+    gate_nvpair: ENABLE_BFD_INTERVAL
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate: [BFD_TX_INTERVAL, BFD_MIN_RX_INTERVAL, BFD_MULTIPLIER]
+    value_bindings:
+      - {source_parent_nvpair: bfdTxInterval,     target_child_nvpair: BFD_TX_INTERVAL,     transform: identity}
+      - {source_parent_nvpair: bfdMinRxInterval, target_child_nvpair: BFD_MIN_RX_INTERVAL, transform: identity}
+      - {source_parent_nvpair: bfdMultiplier,      target_child_nvpair: BFD_MULTIPLIER,      transform: identity}
+    evidence_ref: "int_subif.template#L559"
+  # shared effects from registry_slice_0b_5.yaml
+  - effect_id: bfd_interval@int_vlan
+    parent_template: int_vlan
+    child_template: interface_bfd_interval_11_1
+    gate_nvpair: ENABLE_BFD_INTERVAL
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate: [BFD_TX_INTERVAL, BFD_MIN_RX_INTERVAL, BFD_MULTIPLIER]
+    value_bindings:
+      - {source_parent_nvpair: bfdTxInterval,     target_child_nvpair: BFD_TX_INTERVAL,     transform: identity}
+      - {source_parent_nvpair: bfdMinRxInterval, target_child_nvpair: BFD_MIN_RX_INTERVAL, transform: identity}
+      - {source_parent_nvpair: bfdMultiplier,      target_child_nvpair: BFD_MULTIPLIER,      transform: identity}
+    evidence_ref: "int_vlan.template#L1050"
+
+bindings:
+
+  # ==== Source lot registry_slice_0b_16.yaml (1 of 5 rows) ====
+  # The header of this lot is in registry_slice_interface_common.yaml.
+
+  - parent_template: int_routed_host
+    parent_nvpair: bfdEcho
+    profile_key: disable_bfd_echo
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_routed_host.template#L130
+    effect_rules:
+      - predicate: value_true
+        ndfc_effect: child_policy
+        child_template: bfd_no_echo_interface
+        cli: "no bfd echo"
+        phase: current
+        evidence_ref: int_routed_host.template#L817
+      - predicate: value_false
+        ndfc_effect: silent_noop
+        phase: current
+        evidence_ref: int_routed_host.template#L817
+
+  # ==== Source lot registry_slice_0b_24_bfd.yaml (1 of 1 rows) ====
+  # Registry slice 0b_24 — interface BFD. ONE new binding, not nine.
+  #
+  # The other eight BFD rows live in registry_slice_0b_4.yaml (int_subif) and
+  #   registry_slice_0b_5.yaml (int_vlan); registering them here again fails the generator with
+  #   `ValueError: duplicate committed binding ('int_subif', 'ENABLE_BFD_INTERVAL')`. Rows whose
+  #   (parent, nvpair) is not in the generator's COMMITTED_BINDINGS allowlist are SKIPPED silently,
+  #   by design, which is why those eight showed as pending. Their type, minimum and maximum were
+  #   checked against the bodies the controller runs (eight for eight) before allowlisting.
+  #
+  # New here: int_vlan DISABLE_BFD_ECHO. The public key `disable_bfd_echo` already exists on
+  #   int_routed_host, so this adds a (parent, nvpair) pair, not a new public field. It has its own
+  #   child and line, `no bfd echo`.
+  #
+  # THREE FIELDS, ONE LINE (unique in this registry): the interval child renders all three values
+  #   into a single line, so transport is proven by reading the three VALUES, not by "one line
+  #   changed":
+  #       interface_bfd_interval_11_1  ->  bfd interval $TX min_rx $MIN_RX multiplier $MULT
+  #
+  # THE TEMPLATE ENFORCES THE GATE, SO NOTHING HERE DOES (int_subif:650, int_vlan:1119, installed
+  #   bodies):
+  #       "BFD TX interval, minimum RX interval, and multiplier are required when interface BFD
+  #        interval is enabled."
+  #   The three intervals also carry IsShow="ENABLE_BFD_INTERVAL==true". Same decision as EIGRP's
+  #   process tag: a module rule requiring all three in every profile would break a valid partial
+  #   update whose other two values come from HAVE.
+
+
+  - parent_template: int_vlan
+    parent_nvpair: bfdEcho
+    profile_key: disable_bfd_echo
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: int_vlan.template@0efb09af7f837b30
+
+  # ==== Source lot registry_slice_0b_31_pim.yaml (8 of 8 rows) ====
+  # NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): int_routed_host now calls deleteChildTemplate on
+  # pim_bfd_instance_interface when pimBfdInstance is false, which the 'no deleteChildTemplate for PIM' remark below did not have. The
+  # removal path of enable_pim_bfd_instance=false therefore needs revalidation; the new branch is not a confirmed fix. int_subif and
+  # int_l3_port_channel declare pimBfdInstance too and are not registered here.
+  #
+  # Registry slice 0b_31 — PIM. Eight bindings: three fields spread unevenly over four parents.
+  #
+  #     ENABLE_PIM_SPARSE        4   int_loopback, int_routed_host, int_subif, int_vlan
+  #     PIM_DR_PRIORITY          3   int_routed_host, int_subif, int_vlan
+  #     ENABLE_PIM_BFD_INSTANCE  1   int_routed_host
+  #
+  #   PIM_DR_PRIORITY is absent from int_loopback by design (a loopback takes no part in DR
+  #   election); verified that the int_loopback body does not declare it.
+  #
+  # Sources: the bodies the controller runs, downloaded before any attribute was read:
+  #     int_loopback.template@27cd9ce7e671b5f3
+  #     int_routed_host.template@65426107b3d1cdcf
+  #     int_subif.template@a66388c2f21c5507
+  #     int_vlan.template@0efb09af7f837b30
+  #     pim_interface.template@27d7ff34de4b9047                (child of sparse)
+  #     interface_pim_dr_priority.template@83247cad0c81163f    (child of dr-priority)
+  #     pim_bfd_instance_interface.template@463bffbfe4eaa10f    (child of bfd-instance)
+  #   All three children are INSTALLED; their content was read, not assumed:
+  #       pim_interface                 ->  ip pim sparse-mode
+  #       interface_pim_dr_priority     ->  ip pim dr-priority $$PIM_DR_PRIORITY$$
+  #       pim_bfd_instance_interface    ->  ip pim bfd-instance
+  #   One line per field (unlike BFD, HSRP, dampening), so "exactly one line changed" is meaningful.
+  #
+  # TRAP: VALUE 1 EMITS NO LINE, AND 1 IS THE RANGE MINIMUM. All three declaring parents gate on
+  #       if pimDrPriority != "" and pimDrPriority != "1":
+  #           createOrUpdate(... "interface_pim_dr_priority" ...)
+  #   and the read's `except` defaults to "1" (int_routed_host:563, int_subif:411, int_vlan:857).
+  #   With `min = 1`, the lower bound is also the silent value and the defaultValue. A lower-bound
+  #   test sees no line: expected DSL behavior, not a defect. Validation separates "send 1, expect
+  #   no line" from "send 0, expect the engine to reject it on the bound".
+  #
+  # PIM_DR_PRIORITY IS `long` IN THE TEMPLATE AND REGISTERED AS `integer`:
+  #       long PIM_DR_PRIORITY { min = 1; max = 4294967295; defaultValue = 1; }
+  #   The registry `type` is a key of _TYPE_TO_VALIDATOR (boolean/enum/string/integer), not the
+  #   literal template type; `long` would make gie_validator_type raise GieBindingError (fail
+  #   closed, binding unreachable). `integer` validates identically (Python 3 int is unbounded;
+  #   4294967295 fits), so no engine alias was added. First registry field whose declared type is
+  #   not in the engine map; deliberate.
+  #
+  # THE THREE FIELDS ARE INDEPENDENT: no IsShow and no addErrorReport relating them in any of the
+  #   four parents. The gates are standalone `if`s:
+  #       if enablePimSparse == "true":                          (int_routed_host:1246)
+  #       if pimDrPriority != "" and pimDrPriority != "1":        (int_routed_host:1253)
+  #       if enablePimBfdInstance == "true":                      (int_routed_host:1260)
+  #   No template negatives; negative tests target the REGISTRY bounds (as for ARP_TIMEOUT).
+  #   ENABLE_PIM_SPARSE is NOT a DSL precondition of PIM_DR_PRIORITY: the template can emit
+  #   `dr-priority` without `sparse-mode`. Whether NX-OS refuses that is an open device question
+  #   the template does not answer.
+  #
+  # NO deleteChildTemplate FOR PIM IN ANY PARENT. As for ARP_TIMEOUT, this does NOT predict residue
+  #   after `deleted` (deleting the interface removes the policy and its children). Not yet
+  #   measured: keeping the interface managed with the boolean OFF (the case that left residue for
+  #   EIGRP); enable_pim_sparse: false does not instantiate the child, but does not request removal
+  #   of an existing one either. Hence removal_semantics: unresolved on all eight.
+  #
+  # NOT NATIVE MODULE ARGS: the three public keys and three nvPairs have 0 matches in
+  #   dcnm_interface.py.
+  #
+  # DEVICE SUPPORT: the operator confirms PIM and PIM6 are supported; `show feature` lists them as
+  #   `disabled`, so `feature pim` must be enabled by an NDFC policy (as for eigrp, bfd, hsrp). Not
+  #   taken as measured: if the CLI turns out not to exist, that is documented as a limit without
+  #   retiring the registration.
+  #
+  # MECHANISM: passthrough on all eight. The module writes the PARENT nvPairs; the DSL instantiates
+  #   the three children (same reasoning as BFD, dampening and ARP_TIMEOUT).
+
+
+  # ======================================================= ENABLE_PIM_SPARSE, all four parents
+  - parent_template: int_loopback
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: lo
+    applicable_mode: lo
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_loopback.template@27cd9ce7e671b5f3#ENABLE_PIM_SPARSE"
+
+  - parent_template: int_routed_host
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1246"
+
+  - parent_template: int_subif
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@a66388c2f21c5507#ENABLE_PIM_SPARSE"
+
+  - parent_template: int_vlan
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    reset_wire: 'false'
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#ENABLE_PIM_SPARSE"
+
+  # ================================================== PIM_DR_PRIORITY, no loopback (no DR election)
+  #
+  # min: 1 is both the declared bound and the value the DSL suppresses (see the trap note in the
+  # header). The bound-rejection message must name the range; this is the first family to
+  # exercise that fix.
+  - parent_template: int_routed_host
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1253"
+
+  - parent_template: int_subif
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@a66388c2f21c5507#L870"
+
+  - parent_template: int_vlan
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    reset_wire: '1'
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    min: 1
+    max: 4294967295
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#L1423"
+
+  # ============================================ ENABLE_PIM_BFD_INSTANCE, int_routed_host only
+  #
+  # The only parent that declares it. The current body (65426107b3d1cdcf) is the int_routed_host
+  # version that kept the dhcpServers fix; same hash as the ARP_TIMEOUT rows.
+  - parent_template: int_routed_host
+    parent_nvpair: pimBfdInstance
+    profile_key: enable_pim_bfd_instance
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1260"
+
+  # ==== Source lot registry_slice_0b_37_smu017_batch1.yaml (1 of 5 rows) ====
+  # The header of this lot is in registry_slice_interface_common.yaml.
+
+  # ============================================================== int_subif pimBfdInstance
+  #
+  # int_subif 1937c6a5:
+  #     boolean pimBfdInstance { defaultValue=false; }                               (L105)
+  #     interfaceOptions["pimBfdInstance"] = normalize(scope.get("pimBfdInstance",
+  #                                          scope.get("ENABLE_PIM_BFD_INSTANCE", "false"))).lower()   (L382)
+  #     if pimBfdInstance == "true": createOrUpdate(... "pim_bfd_instance_interface" ...)               (L840)
+  #     else: deleteChildTemplate(INTF_NAME, INTF_NAME, "pim_bfd_instance_interface")                    (L847)
+  # Independent of ENABLE_PIM_SPARSE in the template, as on int_routed_host.
+  - parent_template: int_subif
+    parent_nvpair: pimBfdInstance
+    profile_key: enable_pim_bfd_instance
+    reset_wire: 'false'
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@1937c6a5#L840"
+
+  # ==== Source lot registry_slice_0b_39_smu017_l3po_pim_bfd.yaml (1 of 1 rows) ====
+  # Registry slice 0b_39 -- SMU 4.3.1.0175006017 PIM BFD instance on the routed port-channel. One binding.
+  #
+  #     int_l3_port_channel  pimBfdInstance  enable_pim_bfd_instance  reset "false"
+  #
+  # This is the first row on int_l3_port_channel. The parent is the native `type: pc`, `mode: l3` profile
+  # (pol_types "pc_l3"), which the module already creates, updates, deletes and queries; the row only adds the field.
+  #
+  # Source: the int_l3_port_channel body exported from a controller with SMU 4.3.1.0175006017 (template REST API, read
+  # only), sha256 of `content` 81c9392e92a48897...
+  #     L156   boolean pimBfdInstance { defaultValue=false; }
+  #     L497   interfaceOptions["pimBfdInstance"] = normalize(scope.get("pimBfdInstance", "false")).lower()
+  #     L1015  add() calls delete(True), which deletes every PTI of the port-channel, unless the internal
+  #            SKIP_DEL_ON_ADD (L413, default false) is true
+  #     L1215  if pimBfdInstance == "true": createOrUpdate(... "pim_bfd_instance_interface" ...)
+  #            child pim_bfd_instance_interface 58a88c0b4bb8...  ->  ip pim bfd-instance
+  # There is no else branch: unlike int_routed_host and int_subif, the body never calls deleteChildTemplate for this child.
+  # A "false" is removed by the delete(True) that precedes every add. The reset is the template default, whose branch
+  # creates nothing.
+  #
+  # PIM DEPENDENCY. The body does not gate pimBfdInstance on ENABLE_PIM_SPARSE (L144) or on anything else, as on
+  # int_routed_host and int_subif. ENABLE_PIM_SPARSE is not registered on this parent, so the module cannot enable sparse
+  # mode on a routed port-channel. Whether NX-OS accepts `ip pim bfd-instance` without `ip pim sparse-mode` is a device
+  # question.
+  #
+  # NOTHING HERE IS MEASURED LIVE. removal_semantics stays unresolved until a controller and a device confirm the removal
+  # path read from the body. The module admits the row only with SMU 4.3.1.0175006017 or a numeric ND release >= 4.4.1;
+  # the 4.4.1 bodies were not read.
+  #
+  # ospfRetransmitInterval on this parent is NOT registered: the body refuses it unless `ospf` is true with a tag and an
+  # area (L906-930), and no public key reaches those nvPairs on a routed port-channel.
+
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: pimBfdInstance
+    profile_key: enable_pim_bfd_instance
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L1215"
+
+  # ==== Source lot registry_slice_0b_4.yaml (4 of 4 rows) ====
+  # Registry slice 0b_4 — BFD interval on int_subif (composition canary, one shared effect).
+  #
+  # Format B ({shared_effects, bindings}); designed offline (no engine, no live run).
+  # 4 params (1 gate + 3 value_source) feed ONE child, interface_bfd_interval_11_1, through ONE
+  # shared effect. The 3 values are mandatory when the gate is true (catalog:
+  # mand=ENABLE_BFD_INTERVAL==true). Ranges from the catalog. No delete path designed yet, so
+  # removal_semantics: unresolved.
+  #
+  # Mechanism: passthrough for all four rows (not child_pti, as the phase-0 ledger predicted). The
+  # module writes the values into the PARENT's nvPairs and NDFC's own DSL instantiates
+  # interface_bfd_interval_11_1 from them; the module never touches the child. Same as the OSPF
+  # fields (`ip ospf cost` is rendered by ospf_interface_cost_11_1 and its binding is passthrough).
+  # The ledger over-predicted child_pti: measured, only 3 of the 10 nvPairs it labelled that way are.
+  # Per slice 0b_6, the BFD passthrough rows were confirmed live by measuring the device line.
+
+  - parent_template: int_subif
+    parent_nvpair: bfdInterval
+    profile_key: enable_bfd_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_subif
+    effect_role: gate
+    evidence_ref: "int_subif.template#L555"
+
+  - parent_template: int_subif
+    parent_nvpair: bfdTxInterval
+    profile_key: bfd_tx_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    reset_wire: ''
+    min: 50
+    max: 999
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_subif
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_subif.template#L561"
+
+  - parent_template: int_subif
+    parent_nvpair: bfdMinRxInterval
+    profile_key: bfd_min_rx_interval
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    reset_wire: ''
+    min: 50
+    max: 999
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_subif
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_subif.template#L562"
+
+  - parent_template: int_subif
+    parent_nvpair: bfdMultiplier
+    profile_key: bfd_multiplier
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 50
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_subif
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_subif.template#L563"
+
+  # ==== Source lot registry_slice_0b_41_l3po_pim.yaml (2 of 2 rows) ====
+  # Registry slice 0b_41 -- PIM sparse mode and DR priority on the routed port-channel (int_l3_port_channel, `type: pc`,
+  # `mode: l3`). Two bindings, the keys and contracts of the int_routed_host rows in slice 0b_31.
+  #
+  #     int_l3_port_channel  ENABLE_PIM_SPARSE  enable_pim_sparse  reset "false"
+  #     int_l3_port_channel  PIM_DR_PRIORITY    pim_dr_priority    reset "1"
+  #
+  # Source: the int_l3_port_channel body served with SMU 4.3.1.0175006017 (template REST API, read only), sha256 of
+  # `content` 81c9392e92a488977d2a5c22fd2f79797fa826ff28b89d536d087fc8f9afe655:
+  #     L144   boolean ENABLE_PIM_SPARSE { defaultValue=false; }
+  #     L149   long PIM_DR_PRIORITY { min = 1; max = 4294967295; defaultValue = 1; }
+  #     L623   enablePimSparse = ENABLE_PIM_SPARSE, "false" on error
+  #     L628   pimDrPriority = PIM_DR_PRIORITY, "1" on error
+  #     L1201  if enablePimSparse == "true": createOrUpdate(... "pim_interface" ...)
+  #     L1208  if pimDrPriority != "" and pimDrPriority != "1": createOrUpdate(... "interface_pim_dr_priority" ...)
+  # The declarations differ from the int_routed_host ones only by display metadata (Section="PIM"); type, bounds and
+  # default are the same, so the routed contract applies: priority 1 is both the lower bound and the value that creates
+  # no child, and the registry type is `integer` (`long` is not an engine validator type; see slice 0b_31).
+  #
+  # INDEPENDENT FIELDS. No IsShow, error report or gate relates them; the body can render a DR priority without sparse
+  # mode. Whether NX-OS accepts that is a device question the body does not answer.
+  #
+  # Removal: neither branch deletes its child. add() calls delete(True) (L1015), which deletes every child of the
+  # port-channel, then recreates only those the current values select, so a reset to "false" or "1" should leave no
+  # child. removal_semantics stays unresolved: nothing here is measured live.
+
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ENABLE_PIM_SPARSE
+    profile_key: enable_pim_sparse
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L144"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: PIM_DR_PRIORITY
+    profile_key: pim_dr_priority
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    min: 1
+    max: 4294967295
+    reset_wire: '1'
+    default_template: 1
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L149"
+
+  # ==== Source lot registry_slice_0b_5.yaml (4 of 4 rows) ====
+  # Registry slice 0b_5 — BFD interval on int_vlan (second composition canary).
+  #
+  # Format B; designed offline (no engine, no live run). Distinct effect_id: bfd_interval@int_vlan.
+  # Same shape as int_subif (slice 0b_4); ranges and mandatory-when-gate confirmed against the
+  # catalog. Mechanism is passthrough for all four rows, for the reason given in slice 0b_4.
+
+  - parent_template: int_vlan
+    parent_nvpair: bfdInterval
+    profile_key: enable_bfd_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_vlan
+    effect_role: gate
+    evidence_ref: "int_vlan.template#L1046"
+
+  - parent_template: int_vlan
+    parent_nvpair: bfdTxInterval
+    profile_key: bfd_tx_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    reset_wire: ''
+    min: 50
+    max: 999
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_vlan
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_vlan.template#L1052"
+
+  - parent_template: int_vlan
+    parent_nvpair: bfdMinRxInterval
+    profile_key: bfd_min_rx_interval
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    reset_wire: ''
+    min: 50
+    max: 999
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_vlan
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_vlan.template#L1053"
+
+  - parent_template: int_vlan
+    parent_nvpair: bfdMultiplier
+    profile_key: bfd_multiplier
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 50
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_vlan
+    effect_role: value_source
+    required_when_gate: true
+    evidence_ref: "int_vlan.template#L1054"

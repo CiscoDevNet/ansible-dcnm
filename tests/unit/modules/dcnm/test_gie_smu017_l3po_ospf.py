@@ -96,8 +96,8 @@ def test_the_slice_cites_the_l3_port_channel_body_for_every_row():
     import os
     import yaml
     path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "tools", "registry", "slices",
-                        "registry_slice_0b_40_smu017_l3po_ospf.yaml")
-    rows = yaml.safe_load(open(path))["bindings"]
+                        "registry_slice_ospf.yaml")
+    rows = [r for r in yaml.safe_load(open(path))["bindings"] if r["parent_template"] == L3PO]
     assert [r["parent_nvpair"] for r in rows] == OSPF19
     assert all(r["evidence_ref"].startswith("int_l3_port_channel.template@81c9392e#L") for r in rows)
 
