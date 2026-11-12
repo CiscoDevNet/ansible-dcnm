@@ -16198,7 +16198,22 @@ class DcnmIntf:
             self.dcnm_intf_pvlan_validate_saved_updates()
 
         # Delete Breakout interface
+        # NDFC does not allow DELETE on the breakout endpoint (returns 405
+        # Method Not Allowed) - that path only accepts POST to create a
+        # breakout. Breakout interfaces are removed through the generic
+        # interface endpoint, like every other interface type.
         if len(self.diff_delete_breakout) > 0:
+            path = self.paths["INTERFACE"]
+            # Deduplicate the delete list. The breakout have_all scan runs once
+            # per breakout entry in config (have_all is cached across those
+            # iterations), so the same sub-interface can be collected several
+            # times. Sending duplicate deletes in a single bulk call leaves the
+            # parent interface in an inconsistent state on NDFC.
+            deduped_breakout = []
+            for payload in self.diff_delete_breakout:
+                if payload not in deduped_breakout:
+                    deduped_breakout.append(payload)
+            self.diff_delete_breakout = deduped_breakout
             json_payload = json.dumps(self.diff_delete_breakout)
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
             self.result["response"].append(resp)
@@ -16209,7 +16224,7 @@ class DcnmIntf:
                 resp["CHANGED"] = self.changed_dict
                 self.module.fail_json(msg=resp)
             else:
-                delete = changed
+                delete = True
 
         resp = None
         path = self.paths["GLOBAL_IF"]
