@@ -117,8 +117,11 @@ def _entry(name, alias="", reason=ABSENT, physical="true", if_type="INTERFACE_ET
     return item
 
 
-def _drive(entries, state, configs, have=None):
-    """Real main() with interface/detail answering ``entries``; returns (result, calls) from OUR recording transport."""
+def _drive(entries, state, configs, have=None, delete_response=None, **run_kw):
+    """Real main() with interface/detail answering ``entries``; returns (result, calls) from OUR recording transport.
+
+    ``delete_response`` replaces the controller answer to every DELETE.
+    """
     calls = []
     base = H._transport(calls, have or [])
 
@@ -126,10 +129,12 @@ def _drive(entries, state, configs, have=None):
         response = base(mod, method, path, payload)
         if method == "GET" and "/interface/detail" in path and "serialNumber=" in path:
             return {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": copy.deepcopy(entries)}
+        if method == "DELETE" and delete_response is not None:
+            return copy.deepcopy(delete_response)
         return response
 
     with mock.patch.object(H, "_transport", lambda _calls, _have: send):
-        result, _unused = H.run_configs(configs, state, have=have)
+        result, _unused = H.run_configs(configs, state, have=have, **run_kw)
     return result, calls
 
 
@@ -239,9 +244,20 @@ def test_interface_excluded_by_override_types_is_not_invalidated_by_absence_SYNT
 
 
 # ------------------------------------------------------------------ breakout deleted
+INTERFACE = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface"
+MODIFY = INTERFACE + "/modify"
+
+
+def _breakout(name):
+    return {"name": name, "type": "breakout", "switch": [H.SWITCH_IP]}
+
+
 def _run_breakout(entry):
-    conf = {"name": "Ethernet1/1", "type": "breakout", "switch": [H.SWITCH_IP]}
-    return _drive([entry], "deleted", [conf])
+    return _drive([entry], "deleted", [_breakout("Ethernet1/1")])
+
+
+def _lane(name):
+    return {"serialNumber": SN, "ifName": name}
 
 
 def _sub(reason, deletable):
@@ -269,4 +285,51 @@ def test_breakout_deletable_is_decided_by_deletable_alone(reason):
     result, calls = _run_breakout(_sub(reason, True))
     assert not result.get("failed"), result.get("msg")
     assert result["diff"][0]["skipped"] == []
-    assert any("breakout" in c["path"].lower() for c in _mutating(calls)), "a deletable breakout is still removed"
+    expected = [_lane("Ethernet1/1/1")]
+    assert _mutating(calls) == [{"method": "DELETE", "path": INTERFACE, "payload": expected}]
+    assert result["changed"] is True
+    assert result["diff"][0]["deleted"] == expected
+
+
+@pytest.mark.parametrize("blocked", [False, True], ids=["both-deletable", "second-protected"])
+def test_breakout_requested_parents_are_deleted_once_and_only_in_scope(blocked):
+    # Every breakout entry in config rescans the same cached interface list, so each
+    # requested first lane is planned once per entry; one DELETE must carry it once.
+    entries = [
+        _entry("Ethernet1/1/1", reason=None),
+        _entry("Ethernet1/1/2", reason=None),
+        _entry("Ethernet1/2/1", reason=None, deletable=not blocked),
+        _entry("Ethernet1/3/1", reason=None),
+    ]
+    result, calls = _drive(entries, "deleted", [_breakout("Ethernet1/1"), _breakout("Ethernet1/2")])
+    assert not result.get("failed"), result.get("msg")
+    expected = [_lane("Ethernet1/1/1")] if blocked else [_lane("Ethernet1/1/1"), _lane("Ethernet1/2/1")]
+    assert _mutating(calls) == [{"method": "DELETE", "path": INTERFACE, "payload": expected}]
+    assert result["changed"] is True
+    assert result["diff"][0]["deleted"] == expected
+    skipped = {item["Name"] for item in result["diff"][0]["skipped"]}
+    assert skipped == ({"Ethernet1/2/1"} if blocked else set())
+
+
+@pytest.mark.parametrize("bulk", [True, False], ids=["bulk", "legacy"])
+def test_breakout_delete_after_interface_update_uses_interface_endpoint(bulk):
+    entries = [_sub(None, True), _entry("Ethernet1/9", reason=None)]
+    configs = [_breakout("Ethernet1/1"), {"name": "Ethernet1/9", "type": "eth", "switch": [H.SWITCH_IP], "deploy": False}]
+    have = H.have_for(["Ethernet1/9"], H.TRUNK, None, None)
+    extra = None if bulk else mock.patch.object(dcnm_interface, "dcnm_get_bulk_api_support", return_value=False)
+    result, calls = _drive(entries, "deleted", configs, have=have, extra_patch=extra)
+    assert not result.get("failed"), result.get("msg")
+    update = ("POST", MODIFY) if bulk else ("PUT", INTERFACE)
+    assert [(c["method"], c["path"]) for c in _mutating(calls)] == [update, ("DELETE", INTERFACE)]
+    expected = [_lane("Ethernet1/1/1")]
+    assert _mutating(calls)[1]["payload"] == expected
+    assert result["changed"] is True
+    assert result["diff"][0]["deleted"] == expected
+
+
+def test_breakout_failed_delete_reports_no_deletion():
+    refusal = {"RETURN_CODE": 500, "MESSAGE": "ERROR", "DATA": "synthetic refusal"}
+    result, calls = _drive([_sub(None, True)], "deleted", [_breakout("Ethernet1/1")], delete_response=refusal)
+    assert result["failed"] is True
+    assert _mutating(calls) == [{"method": "DELETE", "path": INTERFACE, "payload": [_lane("Ethernet1/1/1")]}]
+    assert result["msg"]["CHANGED"][0]["deleted"] == []
