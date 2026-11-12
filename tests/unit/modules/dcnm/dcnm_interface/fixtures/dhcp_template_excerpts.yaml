@@ -13,7 +13,6 @@ sources:
     sha256: 1a1b4c0df76aec3cf70b886472e43a976dd1f18620234c05292c58a86c0c22c7
 cases:
   int_vlan_0efb09af_dhcp_excerpt:
-    sha256: c54c7473810b2bb80f349573b3f42ba9798ced4773d88e177ccf0ad1b455dbee
     text: |+
       ## EXCERPT of the NDFC parent template int_vlan, for tests only. Not a template: do not upload.
       ## Body: 0efb09af (pre-SMU body)
@@ -58,8 +57,8 @@ cases:
                                              "vlan_interface_dhcp_relay_src_interface_11_1",
                                              {"INTF_NAME": intfName, "DHCP_RELAY_SRC_INTF": dhcpRelaySrcIntf}))
 
+    sha256: c54c7473810b2bb80f349573b3f42ba9798ced4773d88e177ccf0ad1b455dbee
   int_vlan_4d043f65_dhcp_excerpt:
-    sha256: dec7f3f4ac478b64528a8e1c3955309d6f5f03a00ecfad44fd1db3a542c711b2
     text: |+
       ## EXCERPT of the NDFC parent template int_vlan, for tests only. Not a template: do not upload.
       ## Body: 4d043f65 (older body: no server 4 at all)
@@ -78,8 +77,8 @@ cases:
               except:
                   dhcpRelaySrcIntf = ""
 
+    sha256: dec7f3f4ac478b64528a8e1c3955309d6f5f03a00ecfad44fd1db3a542c711b2
   int_vlan_f32ef586_dhcp_excerpt:
-    sha256: 1a1b4c0df76aec3cf70b886472e43a976dd1f18620234c05292c58a86c0c22c7
     text: |+
       ## EXCERPT of the NDFC parent template int_vlan, for tests only. Not a template: do not upload.
       ## Body: f32ef586 (installed with SMU 4.3.1.0175006011)
@@ -118,3 +117,4 @@ cases:
                                              "vlan_interface_dhcp_relay_src_interface_11_1",
                                              {"INTF_NAME": intfName, "DHCP_RELAY_SRC_INTF": dhcpRelaySrcIntf}))
 
+    sha256: 1a1b4c0df76aec3cf70b886472e43a976dd1f18620234c05292c58a86c0c22c7
