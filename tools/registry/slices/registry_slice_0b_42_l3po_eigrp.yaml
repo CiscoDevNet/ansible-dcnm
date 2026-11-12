@@ -1,0 +1,253 @@
+# Registry slice 0b_42 -- EIGRP on the routed port-channel (int_l3_port_channel, `type: pc`, `mode: l3`). Thirteen
+# bindings with the public keys and contracts that int_routed_host, int_subif and int_vlan (slice 0b_22) and
+# int_loopback (slices 0b_25, 0b_38) already serve.
+#
+# Source: the int_l3_port_channel body served with SMU 4.3.1.0175006017 (template REST API, read only), sha256 of
+# `content` 81c9392e92a488977d2a5c22fd2f79797fa826ff28b89d536d087fc8f9afe655, compared with the int_routed_host body of
+# the same export (b5345584749288411fa44c5270b204fdffcb04941d70fb4e2daa2d1057b68918):
+#   * declarations L172-L240 (type, IsMandatory, IsShow, bounds, regularExpr, validValues, defaultValue): 13 of 13
+#     identical to int_routed_host L163-L231; only DisplayName and Description differ;
+#   * reads L498-L510 and L668-L706, with an empty direction normalised to "out": as int_routed_host;
+#   * refusals L867-L905: "EIGRP process tag is required when EIGRP interface options are enabled." (L878),
+#     "EIGRP IPv4 passive-interface enable and disable cannot both be selected." (L892) and "EIGRP BFD enable and
+#     disable cannot both be selected." (L899). Same conditions and messages as int_routed_host; the error-report key
+#     names the port-channel, and an unrelated MACsec check sits between the first two;
+#   * rendering L1231-L1296: one child per option inside `if eigrpProcessTag != "":`, the same ten children as
+#     int_routed_host with the port-channel name and the port-channel configuration priority.
+# Hence every contract field is the routed row's, including the three passive options without reset_wire. The module
+# does not duplicate the three refusals, as on the other parents: it transports the request and NDFC decides.
+#
+# PASSIVE OPTIONS. eigrp_ipv4_passive, eigrp_no_ipv4_passive and eigrp_no_ipv6_passive keep no reset. On the other
+# parents, clearing one to false renders its inverse on the device and the controller then alternates between the two
+# forms, so an omission under replaced or overridden is refused rather than sent. An explicit false is transported.
+#
+# Removal: add() calls delete(True) (L1015), which deletes every child of the port-channel, then recreates only the
+# children the current values select. removal_semantics stays unresolved and validated_on is absent: nothing here is
+# measured live. The module never creates the EIGRP process or the referenced prefix lists.
+
+shared_effects: []
+
+bindings:
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpProcessTag
+    profile_key: eigrp_process_tag
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: unverified
+    reset_wire: ''
+    max_length: 20
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L173"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpRouting
+    profile_key: enable_eigrp_routing
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L179"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpIpv6Routing
+    profile_key: enable_eigrp_ipv6_routing
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L184"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpNoIpv4Passive
+    profile_key: eigrp_no_ipv4_passive
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L189"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpIpv4Passive
+    profile_key: eigrp_ipv4_passive
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L194"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpNoIpv6Passive
+    profile_key: eigrp_no_ipv6_passive
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L199"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpIpv4DistributeListPrefixList
+    profile_key: eigrp_ipv4_distribute_list_prefix_list
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L204"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpIpv4DistributeListDirection
+    profile_key: eigrp_ipv4_distribute_list_direction
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: enum
+    reset_wire: 'out'
+    valid_values: ['in', 'out']
+    default_template: 'out'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L210"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpIpv6DistributeListPrefixList
+    profile_key: eigrp_ipv6_distribute_list_prefix_list
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    max_length: 63
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L216"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpIpv6DistributeListDirection
+    profile_key: eigrp_ipv6_distribute_list_direction
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: enum
+    reset_wire: 'out'
+    valid_values: ['in', 'out']
+    default_template: 'out'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L222"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpShutdown
+    profile_key: enable_eigrp_shutdown
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L228"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpBfd
+    profile_key: enable_eigrp_bfd
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L233"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: eigrpBfdDisable
+    profile_key: disable_eigrp_bfd
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L238"

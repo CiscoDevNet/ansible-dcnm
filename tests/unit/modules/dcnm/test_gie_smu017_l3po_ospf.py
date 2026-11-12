@@ -102,10 +102,13 @@ def test_the_slice_cites_the_l3_port_channel_body_for_every_row():
     assert all(r["evidence_ref"].startswith("int_l3_port_channel.template@81c9392e#L") for r in rows)
 
 
-def test_the_parent_carries_exactly_the_ospf_family_and_the_pim_rows():
-    """PIM sparse mode and DR priority are slice 0b_41 (test_gie_l3po_pim_sparse_dr_priority.py)."""
+def test_the_parent_carries_exactly_the_ospf_family_the_pim_rows_and_eigrp():
+    """PIM sparse mode and DR priority are slice 0b_41 (test_gie_l3po_pim_sparse_dr_priority.py); EIGRP is slice 0b_42
+    (test_gie_l3po_eigrp.py)."""
     nvpairs = sorted(r["parent_nvpair"] for r in BINDING_TABLE if r["parent_template"] == L3PO)
-    assert nvpairs == sorted(OSPF19 + ["pimBfdInstance", "ENABLE_PIM_SPARSE", "PIM_DR_PRIORITY"])
+    eigrp = [nv for nv in nvpairs if nv.startswith("eigrp")]
+    assert len(eigrp) == 13
+    assert nvpairs == sorted(OSPF19 + ["pimBfdInstance", "ENABLE_PIM_SPARSE", "PIM_DR_PRIORITY"] + eigrp)
 
 
 # ------------------------------------------------------------------ merged

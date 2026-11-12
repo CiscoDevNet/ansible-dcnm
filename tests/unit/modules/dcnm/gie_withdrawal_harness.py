@@ -893,6 +893,19 @@ PILOT = {
     (PC_L3, "ospfPriority"): ("ospf_priority", 77, "", dict(OSPF_CTX)),
     (PC_L3, "ospfNetworkType"): ("ospf_network_type", "point_to_point", "noChange", dict(OSPF_CTX)),
     (PC_L3, "ospfBfdMode"): ("ospf_bfd_mode", "enable", "noChange", dict(OSPF_CTX)),
+    # The routed port-channel EIGRP family (slice 0b_42): the ten rows with a reset, with the applied values and
+    # contexts of the other four parents. The passive options have no reset there either. Read from the body, not
+    # measured live.
+    (PC_L3, "eigrpRouting"): ("enable_eigrp_routing", True, "false", dict(EIGRP_CTX)),
+    (PC_L3, "eigrpShutdown"): ("enable_eigrp_shutdown", True, "false", dict(EIGRP_CTX)),
+    (PC_L3, "eigrpIpv6Routing"): ("enable_eigrp_ipv6_routing", True, "false", dict(EIGRP_CTX)),
+    (PC_L3, "eigrpIpv4DistributeListPrefixList"): ("eigrp_ipv4_distribute_list_prefix_list", "PILOT-PL4", "", dict(EIGRP_CTX)),
+    (PC_L3, "eigrpIpv6DistributeListPrefixList"): ("eigrp_ipv6_distribute_list_prefix_list", "PILOT-PL6", "", dict(EIGRP_CTX)),
+    (PC_L3, "eigrpIpv4DistributeListDirection"): ("eigrp_ipv4_distribute_list_direction", "in", "out", dict(EIGRP_DL4)),
+    (PC_L3, "eigrpIpv6DistributeListDirection"): ("eigrp_ipv6_distribute_list_direction", "in", "out", dict(EIGRP_DL6)),
+    (PC_L3, "eigrpBfd"): ("enable_eigrp_bfd", True, "false", dict(EIGRP_CTX)),
+    (PC_L3, "eigrpBfdDisable"): ("disable_eigrp_bfd", True, "false", dict(EIGRP_CTX)),
+    (PC_L3, "eigrpProcessTag"): ("eigrp_process_tag", "PILOT-EIGRP", "", dict(EIGRP_TAG_CTX)),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became

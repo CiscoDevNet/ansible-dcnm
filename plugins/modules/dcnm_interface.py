@@ -154,6 +154,18 @@ options:
       C(ospf_auth_key_id) stayed C(1). The simple key was measured with C(ospf_authentication_key_type) C(7) only, and
       the message-digest key with a type 3 encrypted key, which the template renders after C(md5 3). C(query), the
       C(4.4.1) bodies, OSPF adjacency and traffic are NOT LIVE TESTED.
+    - The routed port-channel also accepts the EIGRP keys of the routed Ethernet, subinterface, loopback and SVI profiles,
+      with the same meaning (NOT LIVE TESTED; the C(4.3.1.0175006017) declarations are identical) - C(eigrp_process_tag),
+      C(enable_eigrp_routing), C(enable_eigrp_ipv6_routing), C(eigrp_ipv4_passive), C(eigrp_no_ipv4_passive),
+      C(eigrp_no_ipv6_passive), C(eigrp_ipv4_distribute_list_prefix_list), C(eigrp_ipv4_distribute_list_direction),
+      C(eigrp_ipv6_distribute_list_prefix_list), C(eigrp_ipv6_distribute_list_direction), C(enable_eigrp_shutdown),
+      C(enable_eigrp_bfd) and C(disable_eigrp_bfd). Every option needs C(eigrp_process_tag), and the template refuses
+      C(eigrp_ipv4_passive) together with C(eigrp_no_ipv4_passive) and C(enable_eigrp_bfd) together with
+      C(disable_eigrp_bfd); the module does not check these rules. Under C(merged) an omitted key keeps its stored value,
+      so moving from one BFD option to the other needs the first one set to false in the same task. Under C(replaced)
+      and C(overridden) an omitted key is reset to the template default (false, an empty tag or prefix list, C(out)).
+      The three passive options have no reset; omitting one that is stored as true fails the task before any change is
+      sent. The module never creates the EIGRP process or the referenced prefix lists. EIGRP adjacency is not tested.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
       when it joins the port-channel. A member that already exists keeps its stored value when the option is raised or
@@ -3130,6 +3142,26 @@ EXAMPLES = """
           eigrp_ipv4_distribute_list_prefix_list: PL-V4         # "ip distribute-list eigrp EIGRP-1 prefix-list PL-V4 in"
           eigrp_ipv4_distribute_list_direction: in
           eigrp_ipv6_distribute_list_prefix_list: PL-V6         # direction omitted: "out"
+
+# EIGRP on a routed port-channel (SMU 4.3.1.0175006017, NOT LIVE TESTED). The prefix list must already exist on the switch.
+- name: Routed port-channel EIGRP
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ fabric }}"
+    state: merged
+    patch_version: "4.3.1.0175006017"
+    config:
+      - name: po22
+        type: pc
+        switch: ["{{ switch_ip }}"]
+        profile:
+          mode: l3
+          members: [e1/32]
+          ipv4_addr: 192.0.2.17
+          ipv4_mask_len: 30
+          eigrp_process_tag: EIGRP-1
+          enable_eigrp_routing: true                            # "ip router eigrp EIGRP-1"
+          enable_eigrp_bfd: true                                # "ip eigrp EIGRP-1 bfd"
+          eigrp_ipv4_distribute_list_prefix_list: PL-V4         # "ip distribute-list eigrp EIGRP-1 prefix-list PL-V4 out"
 
 # Trunk port-channel reset-skip default of SMU 4.3.1.0175006017. The option is the default that a member takes when it
 # joins. Members that already exist keep their stored values; this call does not change them.

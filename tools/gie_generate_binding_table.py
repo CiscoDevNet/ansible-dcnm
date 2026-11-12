@@ -704,6 +704,21 @@ COMMITTED_BINDINGS = {
     # the 017 body; not measured live.
     ("int_l3_port_channel", "ENABLE_PIM_SPARSE"): "enable_pim_sparse",
     ("int_l3_port_channel", "PIM_DR_PRIORITY"): "pim_dr_priority",
+    # EIGRP on the routed port-channel (slice 0b_42), the contracts of the other four EIGRP parents, passive options
+    # without a reset included. Read from the 017 body; not measured live.
+    ("int_l3_port_channel", "eigrpProcessTag"): "eigrp_process_tag",
+    ("int_l3_port_channel", "eigrpRouting"): "enable_eigrp_routing",
+    ("int_l3_port_channel", "eigrpIpv6Routing"): "enable_eigrp_ipv6_routing",
+    ("int_l3_port_channel", "eigrpIpv4Passive"): "eigrp_ipv4_passive",
+    ("int_l3_port_channel", "eigrpNoIpv4Passive"): "eigrp_no_ipv4_passive",
+    ("int_l3_port_channel", "eigrpNoIpv6Passive"): "eigrp_no_ipv6_passive",
+    ("int_l3_port_channel", "eigrpShutdown"): "enable_eigrp_shutdown",
+    ("int_l3_port_channel", "eigrpBfd"): "enable_eigrp_bfd",
+    ("int_l3_port_channel", "eigrpBfdDisable"): "disable_eigrp_bfd",
+    ("int_l3_port_channel", "eigrpIpv4DistributeListPrefixList"): "eigrp_ipv4_distribute_list_prefix_list",
+    ("int_l3_port_channel", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
+    ("int_l3_port_channel", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
+    ("int_l3_port_channel", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
     # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
     ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
     # Existing vPC peer-link parent (slice pl1). Read from the 017 body; not measured live.
