@@ -16225,6 +16225,13 @@ class DcnmIntf:
                 self.module.fail_json(msg=resp)
             else:
                 delete = True
+                # Report the removed breakout sub-interfaces so the task diff
+                # ("deleted") reflects the change. Use the deduplicated list so
+                # each interface appears only once.
+                for payload in self.diff_delete_breakout:
+                    self.changed_dict[0]["deleted"].append(
+                        copy.deepcopy(payload)
+                    )
 
         resp = None
         path = self.paths["GLOBAL_IF"]
