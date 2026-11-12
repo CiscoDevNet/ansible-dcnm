@@ -1,10 +1,11 @@
 """EIGRP on the routed port-channel (int_l3_port_channel, `type: pc`, `mode: l3`).
 
 The 4.3.1.0175006017 int_l3_port_channel body declares the thirteen EIGRP nvPairs of the routed, subinterface, loopback
-and SVI parents with the same types, bounds, enums and defaults, refuses an option without the process tag, refuses
-both IPv4 passive options together and both BFD options together, and renders one child per option inside
-`if eigrpProcessTag != ""`. Every add() first deletes all children of the port-channel. The rows reuse the public keys
-and contracts of the other four parents, including the three passive options that have no reset.
+and SVI parents with the same types, bounds, enums and defaults. It refuses an enabled boolean option or a non-empty
+prefix list without the process tag (a direction alone is not checked), refuses both IPv4 passive options together and
+both BFD options together, and renders one child per option inside `if eigrpProcessTag != ""`. Every add() first
+deletes all children of the port-channel. The rows reuse the public keys and contracts of the other four parents,
+including the three passive options that have no reset.
 
 Real main() through gie_withdrawal_harness: only inventory, transport and sleep are mocked, and every HAVE is the payload
 the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -193,9 +194,9 @@ def test_the_longest_tag_and_prefix_lists_are_accepted():
     {"eigrp_ipv6_distribute_list_direction": "in", **TAG},
 ], ids=["option_without_tag", "both_ipv4_passive", "both_bfd", "direction_without_prefix_list"])
 def test_combinations_the_template_refuses_or_ignores_are_transported_as_on_routed_ethernet(eigrp):
-    """The body refuses an option without the tag and each mutually exclusive pair; a direction without its prefix
-    list renders nothing. As on the other four parents, the module does not duplicate these rules: it sends the request
-    unchanged and the controller decides. The refusals are a live-matrix item."""
+    """The body refuses an enabled option without the tag and each mutually exclusive pair; a direction without its
+    prefix list is not checked and renders nothing. As on the other four parents, the module does not duplicate these
+    rules: it sends the request unchanged and the controller decides. The controller responses are not observed here."""
     result, calls = h.run_configs([po._po({**BASE, **eigrp})], "merged", [])
     assert not result.get("failed"), result.get("msg")
     nv = po._only(calls)
@@ -321,8 +322,9 @@ def test_replaced_without_eigrp_on_a_port_channel_that_never_had_it_writes_nothi
 # ------------------------------------------------------------------ the passive options: no reset on any parent
 @pytest.mark.parametrize("key,nvpair,applied,wire,reset", PASSIVE, ids=[r[0] for r in PASSIVE])
 def test_replaced_omission_of_a_stored_passive_option_is_refused_before_any_write(key, nvpair, applied, wire, reset):
-    """Clearing a passive option renders its inverse on the device and does not converge (measured on the other
-    parents). With no reset, replaced refuses the withdrawal instead of sending one."""
+    """No passive option has a registered reset on any parent, so replaced refuses the withdrawal instead of sending
+    one. On the other parents, clearing eigrp_ipv4_passive or eigrp_no_ipv6_passive was measured to render the inverse
+    line without converging; eigrp_no_ipv4_passive is operator-reported only. None was tested on this parent."""
     have = po._have({**ON, key: True})
     result, calls = h.run_configs([po._po(ON)], "replaced", have)
     assert result.get("failed"), "a withdrawal with no reset reported success"
@@ -343,8 +345,8 @@ def test_a_passive_option_restated_under_replaced_lets_the_other_fields_reset(ke
 @pytest.mark.parametrize("state", ["merged", "replaced"])
 @pytest.mark.parametrize("key,nvpair,applied,wire,reset", PASSIVE, ids=[r[0] for r in PASSIVE])
 def test_an_explicit_passive_false_is_transported(state, key, nvpair, applied, wire, reset):
-    """The module sends the requested "false". What the controller and device then render is the known external
-    passive-option finding, not module transport."""
+    """The module sends the requested "false". The device result is not established here: on the other parents two
+    passive fields were measured not to converge after this clear and the third is operator-reported."""
     have = po._have({**ON, key: True})
     result, calls = h.run_configs([po._po({**ON, key: False})], state, have)
     assert not result.get("failed"), result.get("msg")

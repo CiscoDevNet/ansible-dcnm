@@ -11,15 +11,25 @@
 #   * refusals L867-L905: "EIGRP process tag is required when EIGRP interface options are enabled." (L878),
 #     "EIGRP IPv4 passive-interface enable and disable cannot both be selected." (L892) and "EIGRP BFD enable and
 #     disable cannot both be selected." (L899). Same conditions and messages as int_routed_host; the error-report key
-#     names the port-channel, and an unrelated MACsec check sits between the first two;
+#     names the port-channel, and an unrelated MACsec check sits between the first two. The tag check (L867-L878)
+#     fires when one of the eight booleans is "true" or a prefix list is non-empty and the tag in the submitted
+#     nvPairs is empty; a distribute-list direction alone does not trigger it;
 #   * rendering L1231-L1296: one child per option inside `if eigrpProcessTag != "":`, the same ten children as
 #     int_routed_host with the port-channel name and the port-channel configuration priority.
 # Hence every contract field is the routed row's, including the three passive options without reset_wire. The module
-# does not duplicate the three refusals, as on the other parents: it transports the request and NDFC decides.
+# does not duplicate the three refusals, as on the other parents: it transports the request and NDFC decides. Under
+# merged the stored tag is carried into the request, so an update may omit it.
 #
-# PASSIVE OPTIONS. eigrp_ipv4_passive, eigrp_no_ipv4_passive and eigrp_no_ipv6_passive keep no reset. On the other
-# parents, clearing one to false renders its inverse on the device and the controller then alternates between the two
-# forms, so an omission under replaced or overridden is refused rather than sent. An explicit false is transported.
+# UNVERIFIED: the error report of the passive-pair refusal (L895) uses `fabricName`, which the captured body does not
+# assign (the other branches use FABRIC_NAME; int_routed_host assigns fabricName first). Whether NDFC returns the
+# message above for that request depends on its execution context and has not been observed. Valid requests do not
+# reach that branch.
+#
+# PASSIVE OPTIONS. eigrp_ipv4_passive, eigrp_no_ipv4_passive and eigrp_no_ipv6_passive keep no reset, as on the
+# other parents, so an omission under replaced or overridden is refused rather than sent. An explicit false is
+# transported. On the other parents, clearing eigrp_ipv4_passive or eigrp_no_ipv6_passive to false was measured to
+# render the inverse line, after which deployments alternate between the two forms; the same for eigrp_no_ipv4_passive
+# is operator-reported only. None of the three was tested on the routed port-channel.
 #
 # Removal: add() calls delete(True) (L1015), which deletes every child of the port-channel, then recreates only the
 # children the current values select. removal_semantics stays unresolved and validated_on is absent: nothing here is

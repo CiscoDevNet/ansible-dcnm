@@ -126,8 +126,9 @@ options:
       C(eigrp_ipv4_distribute_list_prefix_list) and C(eigrp_ipv6_distribute_list_prefix_list) (up to 63 characters;
       render C(ip distribute-list eigrp <tag> prefix-list <name> <direction>) and its IPv6 form), and
       C(eigrp_ipv4_distribute_list_direction) and C(eigrp_ipv6_distribute_list_direction) (C(in) or C(out), default
-      C(out); used only with their prefix list). All need C(eigrp_process_tag); the template refuses an option without
-      it and the module does not check it. The module never creates or deletes the referenced prefix lists. Under
+      C(out); used only with their prefix list). The template refuses C(enable_eigrp_ipv6_routing) true or a prefix
+      list without C(eigrp_process_tag) (a direction alone is not checked), and the module does not check it. The module
+      never creates or deletes the referenced prefix lists. Under
       C(replaced) and C(overridden) an omitted value is reset to the template default (C(false), an empty list, C(out));
       under C(merged) it is preserved.
     - On a routed port-channel (C(type) C(pc), C(mode) C(l3)), the C(4.3.1.0175006017) template also declares
@@ -159,9 +160,11 @@ options:
       C(enable_eigrp_routing), C(enable_eigrp_ipv6_routing), C(eigrp_ipv4_passive), C(eigrp_no_ipv4_passive),
       C(eigrp_no_ipv6_passive), C(eigrp_ipv4_distribute_list_prefix_list), C(eigrp_ipv4_distribute_list_direction),
       C(eigrp_ipv6_distribute_list_prefix_list), C(eigrp_ipv6_distribute_list_direction), C(enable_eigrp_shutdown),
-      C(enable_eigrp_bfd) and C(disable_eigrp_bfd). Every option needs C(eigrp_process_tag), and the template refuses
+      C(enable_eigrp_bfd) and C(disable_eigrp_bfd). The template refuses a resulting configuration in which a boolean
+      option is true or a prefix list is set while C(eigrp_process_tag) is empty; a distribute-list direction alone does
+      not trigger that check. Under C(merged) the stored tag is kept, so an update can omit it. The template also refuses
       C(eigrp_ipv4_passive) together with C(eigrp_no_ipv4_passive) and C(enable_eigrp_bfd) together with
-      C(disable_eigrp_bfd); the module does not check these rules. Under C(merged) an omitted key keeps its stored value,
+      C(disable_eigrp_bfd). The module does not check these rules. Under C(merged) an omitted key keeps its stored value,
       so moving from one BFD option to the other needs the first one set to false in the same task. Under C(replaced)
       and C(overridden) an omitted key is reset to the template default (false, an empty tag or prefix list, C(out)).
       The three passive options have no reset; omitting one that is stored as true fails the task before any change is
