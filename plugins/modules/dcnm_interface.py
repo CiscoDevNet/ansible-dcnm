@@ -67,6 +67,11 @@ options:
     - A list of interface types which will be deleted/defaulted in overridden/deleted state. If this list is empty, then during
       overridden/deleted state, all interface types will be defaulted/deleted. If this list includes specific interface types,
       then only those interface types that are included in the list will be deleted/defaulted.
+    - Breakout ports present on the controller but not included in the playbook are un-broken out (restored to the
+      original parent port, e.g. Ethernet1/1/1-4 back to Ethernet1/1) only if this list is empty or includes 'breakout'.
+      A breakout is retained if any of its child ports (e.g. Ethernet1/1/1, Ethernet1/1/1.10 or a port-channel/vPC
+      member Ethernet1/1/2) is referenced in the playbook, or if any child port is in use by the fabric (e.g. an
+      intra-fabric link, vPC peer-link or TOR uplink member); such breakouts are reported under 'skipped'.
     type: list
     required: false
     elements: str
@@ -1015,6 +1020,9 @@ EXAMPLES = """
 #   the interfaces under the fabric mentioned. Additions and deletions will be done to bring
 #   the DCNM interfaces to the state listed in the playbook. All interfaces other than the
 #   ones mentioned in the playbook will either be deleted or reset to default state.
+#   Breakout ports that are not in the playbook are un-broken out (restored to the original
+#   parent port) unless one of their child ports is referenced in the playbook or is in use
+#   by the fabric (e.g. an intra-fabric link).
 #   Note: Override will work on the all the interfaces present in the DCNM Fabric.
 #
 # Deleted:
@@ -1982,6 +1990,8 @@ class DcnmIntf:
         self.have_breakout = []
         self.diff_create_breakout = []
         self.diff_delete_breakout = []
+        # (serialNumber, parent_ifname_lower) -> parent ifName, for breakouts to remove
+        self.breakouts_to_remove = {}
         self.diff_deploy = []
         self.diff_query = []
         self.fd = None
@@ -2295,6 +2305,134 @@ class DcnmIntf:
             ):
                 return True, interface.get("type", None)
         return False, None
+
+    def dcnm_intf_get_breakout_parent_name(self, if_name):
+        """
+        Return the lower-cased parent breakout port ("ethernet1/x") for a breakout
+        child name such as "Ethernet1/x/y", "eth1/x/y" or "Ethernet1/x/y.10".
+        Return None if the name is not a breakout child.
+        """
+        match = isinstance(if_name, str) and re.fullmatch(
+            r"\s*(?:ethernet|eth|e)?\s*(\d+/\d+)/\d+(?:\.\d+)?\s*", if_name, re.IGNORECASE
+        )
+        return "ethernet" + match.group(1) if match else None
+
+    def dcnm_intf_get_vpc_peer_serials(self, switches):
+        """
+        Return (peer1_sno, peer2_sno): the serial numbers owning a vPC's playbook peer1_* and
+        peer2_* parameters, based on the ND vPC pair (SERIAL1~SERIAL2) of switches[0].
+
+        peer1_* belongs to switches[0] and peer2_* to switches[1]. With a single switch, the
+        other vPC peer owns peer2_*. Return None if switches[0] is not part of a known vPC
+        pair, or if the two playbook switches do not match that pair.
+        """
+        switches = list(switches or [])
+        pair = str(self.vpc_ip_sn.get(switches[0], "") if switches else "").split("~")
+        if len(pair) < 2:
+            return None
+        sno0 = self.ip_sn.get(switches[0], "")
+        if len(switches) < 2:
+            return (pair[1], pair[0]) if sno0 == pair[1] else (pair[0], pair[1])
+        sno1 = self.ip_sn.get(switches[1], "")
+        if {sno0, sno1} == {pair[0], pair[1]}:
+            return sno0, sno1
+        return None
+
+    def dcnm_intf_get_referenced_breakout_parents(self):
+        """
+        Return a set of (serialNumber, "ethernet1/x") for every breakout parent whose
+        child ports are referenced anywhere in the playbook config, either directly
+        (eth / sub-interface name) or as port-channel / vPC member interfaces.
+        Such breakouts are treated as implicitly wanted and are never removed.
+        """
+        referenced = set()
+        for cfg in self.config:
+            profile = cfg.get("profile") if isinstance(cfg.get("profile"), dict) else {}
+            switches = cfg.get("switch") or []
+            names = [cfg.get("name")] + list(profile.get("members") or [])
+            refs = [(self.ip_sn.get(sw), names) for sw in switches]
+
+            peer1 = list(profile.get("peer1_members") or [])
+            peer2 = list(profile.get("peer2_members") or [])
+            if peer1 or peer2:
+                peer_snos = self.dcnm_intf_get_vpc_peer_serials(switches)
+                if peer_snos is not None:
+                    refs += [(peer_snos[0], peer1), (peer_snos[1], peer2)]
+                else:
+                    # Peer ownership is unknown: keep the breakouts on every candidate switch.
+                    candidates = "~".join(str(self.vpc_ip_sn.get(sw) or self.ip_sn.get(sw) or "") for sw in switches)
+                    refs += [(sno, peer1 + peer2) for sno in candidates.split("~")]
+
+            for sno, members in refs:
+                if sno:
+                    parents = {self.dcnm_intf_get_breakout_parent_name(m) for m in members} - {None}
+                    referenced.update((str(sno), parent) for parent in parents)
+        return referenced
+
+    def dcnm_intf_get_breakouts_in_use(self):
+        """
+        Return {(serialNumber, "ethernet1/x"): reason} for breakouts with a physical
+        child port the fabric depends on, i.e. the ports overridden state never resets:
+        ports with a delete reason, TOR uplink members and ports with an underlay
+        policy source (e.g. intra-fabric links, vPC peer-link members).
+        """
+        in_use = {}
+        for have in self.have_all:
+            parent = self.dcnm_intf_get_breakout_parent_name(have.get("ifName"))
+            if parent is None or str(have.get("isPhysical")).lower() != "true":
+                continue
+            source = self.dcnm_intf_get_underlay_policy_source(have)
+            if have.get("alias") != "" and have.get("deleteReason") is not None:
+                reason = have["deleteReason"]
+            elif any(p.get("templateName") == "int_vpc_uplink_access_po_member" for p in have.get("underlayPolicies") or []):
+                reason = "TOR uplink member interface"
+            elif source is not None:
+                reason = "underlay policy source " + str(source)
+            else:
+                continue
+            in_use.setdefault(
+                (str(have["serialNo"]), parent),
+                "Breakout child port {0} is in use: {1}".format(have["ifName"], reason),
+            )
+        return in_use
+
+    def dcnm_intf_compute_breakouts_to_remove(self):
+        """
+        Return {(serialNumber, parent_lower): parent} for breakouts on the controller
+        (self.have_breakout) that must be removed in overridden state (and deleted
+        state without config, which reuses the overridden workflow).
+
+        A breakout is kept if:
+            - it is part of the playbook as a 'breakout' interface, or
+            - any of its child ports are referenced in the playbook, or
+            - override_intf_types is non-empty and does not include 'breakout', or
+            - any of its child ports is in use by the fabric (reported as skipped).
+        """
+        override_types = self.module.params.get("override_intf_types") or []
+        if override_types and self.int_types["breakout"] not in override_types:
+            return {}
+
+        keep = self.dcnm_intf_get_referenced_breakout_parents()
+        keep.update(
+            (str(w["interfaces"][0]["serialNumber"]), w["interfaces"][0]["ifName"].lower())
+            for w in self.want_breakout
+        )
+        in_use = self.dcnm_intf_get_breakouts_in_use()
+
+        remove = {}
+        for have_breakout in self.have_breakout:
+            for sno, parents in have_breakout.items():
+                for parent in parents:
+                    key = (sno, parent.lower())
+                    if key in keep:
+                        continue
+                    if key in in_use:
+                        self.changed_dict[0]["skipped"].append(
+                            {"Name": parent, "serialNumber": sno, "Reason": in_use[key]}
+                        )
+                        continue
+                    remove[key] = parent
+        return remove
 
     def dcnm_intf_dump_have_all(self):
 
@@ -3568,42 +3706,27 @@ class DcnmIntf:
 
         if "~" in vpc_pair_sn:
             vpc_sn_parts = vpc_pair_sn.split("~")
-            switch_0_sn = self.ip_sn.get(delem["switch"][0], "")
+            peer_snos = self.dcnm_intf_get_vpc_peer_serials(delem["switch"])
 
-            if len(delem["switch"]) < 2:
-                # Single switch in playbook - swap if it maps to ND's PEER2
-                if switch_0_sn == vpc_sn_parts[1]:
-                    peer1_members, peer2_members = peer2_members, peer1_members
-                    peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
-                    peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
-                    peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
-                    peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
-                    peer1_description, peer2_description = peer2_description, peer1_description
-                    peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
-            else:
+            if peer_snos is None:
+                # Serial numbers don't match vPC pair - this is an error condition
+                switch_0_sn = self.ip_sn.get(delem["switch"][0], "")
                 switch_1_sn = self.ip_sn.get(delem["switch"][1], "")
-
-                # Check if playbook switch order matches ND vPC pair order
-                if switch_0_sn == vpc_sn_parts[0] and switch_1_sn == vpc_sn_parts[1]:
-                    # Playbook order matches ND order - no swap needed
-                    pass
-                elif switch_0_sn == vpc_sn_parts[1] and switch_1_sn == vpc_sn_parts[0]:
-                    # Playbook order is reversed from ND order - swap all peer parameters
-                    peer1_members, peer2_members = peer2_members, peer1_members
-                    peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
-                    peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
-                    peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
-                    peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
-                    peer1_description, peer2_description = peer2_description, peer1_description
-                    peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
-                else:
-                    # Serial numbers don't match vPC pair - this is an error condition
-                    self.module.fail_json(
-                        msg=f"vPC {ifname} configuration error: Switch serial numbers "
-                            f"[{switch_0_sn}, {switch_1_sn}] do not match ND vPC pair "
-                            f"[{vpc_sn_parts[0]}, {vpc_sn_parts[1]}]. Verify that the "
-                            f"switches specified in the playbook are part of the same vPC pair."
-                    )
+                self.module.fail_json(
+                    msg=f"vPC {ifname} configuration error: Switch serial numbers "
+                        f"[{switch_0_sn}, {switch_1_sn}] do not match ND vPC pair "
+                        f"[{vpc_sn_parts[0]}, {vpc_sn_parts[1]}]. Verify that the "
+                        f"switches specified in the playbook are part of the same vPC pair."
+                )
+            elif peer_snos[0] != vpc_sn_parts[0]:
+                # Playbook peer1 is ND's PEER2 - swap all peer parameters
+                peer1_members, peer2_members = peer2_members, peer1_members
+                peer1_allowed_vlans, peer2_allowed_vlans = peer2_allowed_vlans, peer1_allowed_vlans
+                peer1_native_vlan, peer2_native_vlan = peer2_native_vlan, peer1_native_vlan
+                peer1_access_vlan, peer2_access_vlan = peer2_access_vlan, peer1_access_vlan
+                peer1_pcid, peer2_pcid = peer2_pcid, peer1_pcid
+                peer1_description, peer2_description = peer2_description, peer1_description
+                peer1_cmds, peer2_cmds = peer2_cmds, peer1_cmds
 
         if delem[profile]["mode"] == "trunk":
 
@@ -4574,6 +4697,8 @@ class DcnmIntf:
     def dcnm_intf_get_have_all_breakout_interfaces(self, sno):
         # This function will get policies for a given serial number and
         # populate the breakout interfaces in self.have_breakout
+        if any(sno in have_breakout for have_breakout in self.have_breakout):
+            return
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}".format(sno)
         resp = dcnm_send(self.module, "GET", path)
 
@@ -4983,20 +5108,13 @@ class DcnmIntf:
                     self.diff_create_breakout.append(want_breakout["interfaces"])
 
         if state == "deleted" or state == "overridden":
-            for have_breakout in self.have_breakout:
-                for interface in list(have_breakout.values())[0]:
-                    match_delete_interface = True
-                    for want_breakout in self.want_breakout:
-                        if list(have_breakout.keys())[0] == want_breakout["interfaces"][0]["serialNumber"]:
-                            if want_breakout["interfaces"][0]["ifName"] == interface:
-                                match_delete_interface = False
-                                break
-                    if match_delete_interface:
-                        payload = {
-                            "serialNumber": list(have_breakout.keys())[0],
-                            "ifName": interface + "/1"
-                        }
-                        self.diff_delete_breakout.append(payload)
+            # self.breakouts_to_remove is computed in dcnm_intf_get_diff_overridden(),
+            # which is also used by state 'deleted' without config.
+            for key, parent in self.breakouts_to_remove.items():
+                # NDFC removes the whole breakout given its first child port.
+                payload = {"serialNumber": key[0], "ifName": parent + "/1"}
+                self.diff_delete_breakout.append(payload)
+                self.changed_dict[0]["deleted"].append(dict(payload, ifName=parent, interfaceType="breakout_interface"))
 
         for want in self.want:
 
@@ -6031,6 +6149,10 @@ class DcnmIntf:
                     for d in self.have_all
                 ):
                     self.dcnm_intf_get_have_all(sw)
+                else:
+                    # Interfaces of a vPC peer arrive with the other peer's details,
+                    # but breakouts are per switch.
+                    self.dcnm_intf_get_have_all_breakout_interfaces(sno)
 
     def dcnm_intf_get_diff_overridden(self, cfg):
 
@@ -6056,6 +6178,8 @@ class DcnmIntf:
                     for d in self.have_all
                 ):
                     self.dcnm_intf_get_have_all(address)
+                else:
+                    self.dcnm_intf_get_have_all_breakout_interfaces(self.ip_sn[address])
         else:
             # compute have_all for every switch included in 'cfg'.
             # 'deploy' flag will be picked from 'cfg' in case of state 'deleted' and from
@@ -6071,6 +6195,8 @@ class DcnmIntf:
 
         del_list = []
         defer_list = []
+
+        self.breakouts_to_remove = self.dcnm_intf_compute_breakouts_to_remove()
 
         # Bulk pre-populate the interface detail cache for every switch
         # present in have_all.  This replaces N per-interface HTTP GETs
@@ -6130,6 +6256,12 @@ class DcnmIntf:
                 (str(have["isPhysical"]).lower() != "none")
                 and (str(have["isPhysical"]).lower() == "true")
             ):
+
+                # Child ports of a breakout that is going to be removed will
+                # disappear with the un-breakout, so do not reset them.
+                parent = self.dcnm_intf_get_breakout_parent_name(name)
+                if parent is not None and (str(sno), parent) in self.breakouts_to_remove:
+                    continue
 
                 if have["alias"] != "" and have["deleteReason"] is not None:
                     self.changed_dict[0]["skipped"].append(
@@ -6233,19 +6365,6 @@ class DcnmIntf:
                     self.dcnm_compare_default_payload(uelem, intf)
                     == "DCNM_INTF_MATCH"
                 ):
-                    # In case of breakout, check if parent interface is in cfg
-                    # If a match for Ethernet1/x/y is found, verify if the parent interface Ethernet1/x exists in cfg.
-                    # If the parent doesn't exist or isn't of type "breakout", remove the breakout interface.
-                    if re.search(r"\d+\/\d+\/\d+", name):
-                        found, parent_type = self.dcnm_intf_get_parent(name, have['mgmtIpAddress'])
-                        if not (found and parent_type == "breakout"):
-                            payload = {
-                                "serialNumber": have["serialNo"],
-                                "ifName": have["ifName"]
-                            }
-                            breakout_index = self.int_index[self.int_types["breakout"]]
-                            self.diff_delete[breakout_index].append(payload)
-                            self.changed_dict[0]["deleted"].append(copy.deepcopy(payload))
                     continue
 
                 if uelem is not None:
@@ -7053,14 +7172,12 @@ class DcnmIntf:
         delete_index = 0
         for delem in self.diff_delete:
 
-            if delem == []:
+            # Index 8 (breakout) is not sent here; breakouts are removed via
+            # self.diff_delete_breakout further below.
+            if delem == [] or delete_index == self.int_index["BREAKOUT"]:
                 delete_index = delete_index + 1
                 continue
 
-            # index 8 is used for breakout interface
-            if delete_index == 8:
-                path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface"
-                break
             json_payload = json.dumps(delem)
 
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
@@ -7200,6 +7317,11 @@ class DcnmIntf:
 
         # Delete Breakout interface
         if len(self.diff_delete_breakout) > 0:
+            # NDFC un-breaks a port through the "Delete/Unbreakout Interfaces"
+            # API (DELETE /interface with the first child port, e.g. Ethernet1/1/1).
+            # /interface/breakout only supports POST (create breakout). 'path' may
+            # have been changed by the replace block above, so set it explicitly.
+            path = self.paths["INTERFACE"]
             json_payload = json.dumps(self.diff_delete_breakout)
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
             self.result["response"].append(resp)
@@ -7210,7 +7332,7 @@ class DcnmIntf:
                 resp["CHANGED"] = self.changed_dict
                 self.module.fail_json(msg=resp)
             else:
-                delete = changed
+                delete = True
 
         resp = None
         path = self.paths["GLOBAL_IF"]
