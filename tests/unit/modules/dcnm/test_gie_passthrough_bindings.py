@@ -10,7 +10,6 @@ behaviour-compatible as the table grows.
 Offline: no controller and no device.
 """
 import hashlib
-import importlib.util
 import json
 from pathlib import Path
 
@@ -35,6 +34,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_version_supported,
     GIE_ENABLED_PATCH_VERSIONS,
 )
+from .dcnm_interface.helpers.binding_harness import _as_slice_rows, _load_generator
 
 TRUNK = "int_trunk_host"
 ACCESS = "int_access_host"
@@ -78,18 +78,6 @@ NINE = (
     (PC_TRUNK, "acl_filter", "aclFilter", "ACL_D"),
     (PC_DOT1Q, "acl_filter", "aclFilter", "ACL_E"),
 )
-
-
-def _load_generator():
-    path = (
-        Path(gie_binding_table.__file__).resolve().parents[2]
-        / "tools"
-        / "gie_generate_binding_table.py"
-    )
-    spec = importlib.util.spec_from_file_location("gie_gen_a16", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 
 # ------------------------------------------------------------------ table integrity
@@ -162,26 +150,6 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
     for (parent, pk), (itype, mode) in expected.items():
         b = resolve_binding(parent, pk)
         assert (b["applicable_interface_type"], b["applicable_mode"]) == (itype, mode)
-
-
-# compile_rows() validates slice rows; BINDING_TABLE is its output. Three schema fields
-# -- presence_model, emit_when, parent_resolution -- are documentation-only and FIELDS omits
-# them from the table, so a table row is not a valid compiler input.
-#
-# Reusing output as input only worked while the generator did not validate the schema.
-# Validation moved into the generator after two separate checkers had gone unused for four
-# batches. Compiler tests now restore those three fields to exercise compilation rules
-# (allowlists, duplicates, profile_key), not schema validation, which has separate tests.
-#
-# Adding the fields to FIELDS instead would change the binding table and enlarge the
-# runtime artifact with metadata that no runtime consumer reads.
-def _as_slice_rows(rows):
-    """Restore slice-only schema fields to binding table rows for compiler tests."""
-    return [
-        dict(r, presence_model="two_axis", emit_when="explicit_only",
-             parent_resolution="desired_parent")
-        for r in rows
-    ]
 
 
 # ------------------------------------------------------------------ generator guards

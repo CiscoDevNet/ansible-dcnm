@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from .test_dcnm_intf_pvlan_harness import (
+from .dcnm_interface.helpers.ethernet_controller import (
     IF7,
     IF8,
     PREVIEW_MARK,
@@ -28,10 +28,20 @@ from .test_dcnm_intf_pvlan_harness import (
     trunk_host_nv,
     trunk_item,
 )
+from .dcnm_interface.helpers.ethernet_controller import (
+    HOST_A11,
+    IF7,
+    TRUNK,
+    assert_no_writes,
+    assoc,
+    ctrl,
+    pvlan_item,
+    run,
+    trunk_host_nv,
+)
 
 TPROM_A11 = pvlan_nv("G6-M0a")
 TPROM_BOTH = pvlan_nv("G6-M0b")
-HOST_A11 = pvlan_nv("H3a")
 HOST_A12 = pvlan_nv("H3b")
 PROM_A11 = pvlan_nv("PU1")
 PROM_BOTH = pvlan_nv("PU2")
@@ -40,16 +50,6 @@ TSEC_A12 = pvlan_nv("TS1")
 
 def mapping(*secondaries):
     return [{"primary_vlan": 2210, "secondary_vlans": ",".join(str(s) for s in secondaries)}]
-
-
-def assoc(secondary, primary=2210):
-    return [{"primary_vlan": primary, "secondary_vlan": secondary}]
-
-
-def ctrl(nv, policy=PVLAN, ifname=IF7):
-    c = FakeController()
-    c.detail[ifname] = {"policy": policy, "nvPairs": copy.deepcopy(nv)}
-    return c
 
 
 def pairs(nv, key):
@@ -70,11 +70,6 @@ def diff_nv(result, bucket, ifname=IF7):
             if intf["ifName"] == ifname:
                 return intf["nvPairs"]
     return None
-
-
-def assert_no_writes(c):
-    assert c.mutating() == [], c.mutating()
-    assert c.requests(mark=PREVIEW_MARK) == []
 
 
 # ===================================================================================== E01

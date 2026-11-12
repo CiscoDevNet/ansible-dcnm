@@ -36,9 +36,7 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
 
-from .gie_withdrawal_harness import (
-    SUPPORTED, SUPPORTED_PATCH, base_for, build_have, run, split_calls,
-)
+from .dcnm_interface.helpers.binding_harness import SUPPORTED, SUPPORTED_PATCH, base_for, build_have, run, split_calls
 
 # Hand-transcribed neutral value per enum wire key.
 REVIEWED_NEUTRAL = {

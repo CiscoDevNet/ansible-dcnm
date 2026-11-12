@@ -9,58 +9,10 @@ import json
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from . import test_dcnm_intf_pvlan_po_host as H
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController
-
-PORTS = {V.SN1: [V.M1, "Ethernet1/9", "Ethernet1/10"], V.SN2: [V.M2, "Ethernet1/11"]}
-
-
-def vpc_baseline():
-    ctrl = V.VpcController()
-    for serial, ports in PORTS.items():
-        for port in ports:
-            nv = V.trunk_host_nv(port)
-            nv["ADMIN_STATE"] = "false"
-            ctrl.nodes[serial][port] = {"policy": V.TRUNK, "nvPairs": nv}
-    return ctrl
-
-
-def vpc_item(**kw):
-    return V.vpc_item(peer1_members=PORTS[V.SN1], peer2_members=PORTS[V.SN2], **kw)
-
-
-def combine_previews(serial, ports, factory, *args):
-    """One switch preview, assembled from existing explicit per-port fixtures."""
-    entries = [P.preview_entry(factory(serial, port, *args), serial) for port in ports]
-    fields = {}
-    for key in ("pendingConfig", "runningConfig", "expectedConfig"):
-        lines = []
-        for i, entry in enumerate(entries):
-            current = None
-            for line in entry[key]:
-                if line.lower().strip().startswith("interface "):
-                    current = line.lower().strip()[10:]
-                if i and (current == "port-channel10" or line.lower().strip() == "no interface port-channel10"):
-                    continue
-                lines.append(line)
-        fields[key] = lines
-    return V.preview(fields["pendingConfig"], serial=serial, running=fields["runningConfig"], expected=fields["expectedConfig"])
-
-
-def queue(ctrl, factory, *args):
-    for serial, ports in PORTS.items():
-        ctrl.vpc_previews[serial].append(combine_previews(serial, ports, factory, *args))
-
-
-def seeded_vpc():
-    ctrl = vpc_baseline().seed_vpc()
-    nv = ctrl.parents[V.VPC]["nvPairs"]
-    for n, serial in enumerate((V.SN1, V.SN2), 1):
-        nv["PEER%d_MEMBER_INTERFACES" % n] = ",".join(PORTS[serial])
-    ctrl._expand_children(nv)
-    ctrl.next_invocation()
-    return ctrl
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers import port_channel_controller as H
+from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController
+from .dcnm_interface.helpers.membership import PORTS, combine_previews, queue, seeded_vpc, vpc_baseline, vpc_item
 
 
 @pytest.mark.parametrize("reverse", [False, True])

@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from . import test_dcnm_intf_pvlan_vpc_batch as B
+from .dcnm_interface.helpers import vpc_controller as B
 
 A_PAIR = "~".join(sorted(B.PAIRS[0]))
 B_PAIR = "~".join(sorted(B.PAIRS[1]))

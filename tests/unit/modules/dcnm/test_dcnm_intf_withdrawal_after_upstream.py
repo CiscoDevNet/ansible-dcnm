@@ -30,14 +30,7 @@ __metaclass__ = type
 
 import copy
 
-from .gie_withdrawal_harness import (
-    ACCESS,
-    FABRIC,
-    base_for,
-    build_have,
-    run,
-    split_calls,
-)
+from .dcnm_interface.helpers.binding_harness import ACCESS, FABRIC, base_for, build_have, run, split_calls
 
 # Five accepted ACCESS bindings whose PILOT rows carry no prerequisite context, so the
 # only moving part is how many omissions one invocation reconciles. Values and resets are

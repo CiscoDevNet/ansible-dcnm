@@ -21,10 +21,19 @@ from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import registered_profile_keys
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_ENABLED_PATCH_VERSIONS
 
-from .test_dcnm_intf_pvlan_harness import IF7, IF8, PREVIEW_MARK, SWITCH_IP, TRUNK, run, trunk_host_nv, trunk_item
-from .test_dcnm_intf_pvlan_po_g1 import del_item, delete_preview
-from .test_dcnm_intf_pvlan_po_g1 import item as po_item
-from .test_dcnm_intf_pvlan_po_g5_next_modes import (
+from .dcnm_interface.helpers.ethernet_controller import (
+    IF7,
+    IF8,
+    PREVIEW_MARK,
+    SWITCH_IP,
+    TRUNK,
+    run,
+    trunk_host_nv,
+    trunk_item,
+)
+from .dcnm_interface.helpers.port_channel_controller import del_item, delete_preview
+from .dcnm_interface.helpers.port_channel_controller import item as po_item
+from .dcnm_interface.helpers.port_channel_controller import (
     CASES,
     MEM_10,
     MODES,
@@ -35,10 +44,18 @@ from .test_dcnm_intf_pvlan_po_g5_next_modes import (
     hr_delete,
     new_ctrl,
 )
-from .test_dcnm_intf_pvlan_po_host import PO
-from .test_dcnm_intf_pvlan_vpc_harness import run_vpc
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import P_, TP, TS, baseline_ctrl, converged_previews, create_previews, seeded_ctrl
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import item as vpc_item
+from .dcnm_interface.helpers.port_channel_controller import PO
+from .dcnm_interface.helpers.vpc_controller import run_vpc
+from .dcnm_interface.helpers.vpc_modes import (
+    P_,
+    TP,
+    TS,
+    baseline_ctrl,
+    converged_previews,
+    create_previews,
+    seeded_ctrl,
+)
+from .dcnm_interface.helpers.vpc_modes import item as vpc_item
 
 APPROVED = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 PATCH_VALUES = [

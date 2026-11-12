@@ -24,11 +24,11 @@ import json
 
 import pytest
 
-from . import test_dcnm_intf_pvlan_member_updates as MU
-from . import test_dcnm_intf_pvlan_po_g4_release as G4
-from . import test_dcnm_intf_pvlan_po_vpc_reconcile as RC
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP, TRUNK, run
+from .dcnm_interface.helpers import membership as MU
+from .dcnm_interface.helpers import port_channel_release as G4
+from .dcnm_interface.helpers import vpc_controller as RC
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, TRUNK, run
 
 UNREADABLE = ("maybe", None, "")
 

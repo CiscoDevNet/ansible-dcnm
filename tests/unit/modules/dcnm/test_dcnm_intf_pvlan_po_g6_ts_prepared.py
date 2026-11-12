@@ -13,75 +13,29 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
 import json
-import os
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP, TRUNK, preview, run, trunk_host_nv
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController, markdelete_ok
-
-FX = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_ts_exp1_measured.json")))
-MEM, PO_DEV, PO = "Ethernet1/8", "port-channel504", "Port-channel504"
-TS = "trunk secondary"
-TS1_PROFILE = {  # live model TS1 (replaced, 2210/2212)
-    "mode": "pvlan",
-    "pvlan_mode": TS,
-    "members": [MEM],
-    "pc_mode": "active",
-    "admin_state": False,
-    "pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2212}],
-    "native_vlan": "2301",
-    "allowed_vlans": "2301",
-}
-
-
-def branch(b):
-    return copy.deepcopy(FX["branches"][b])
-
-
-def member_nv(b):
-    return dict((k, v) for k, v in branch(b)["member_before"]["intent"][MEM]["nvPairs"].items() if k != "POLICY_ID")
-
-
-def member_policy(b):
-    return branch(b)["member_before"]["intent"][MEM]["policy"]
-
-
-def measured_preview(b, pending=None, running=None, expected=None):
-    cp = branch(b)["create_preview"]
-    return preview(
-        pending if pending is not None else cp["pendingConfig"],
-        running=running if running is not None else cp["runningConfig_stanzas"],
-        expected=expected if expected is not None else cp["expectedConfig_stanzas"],
-    )
-
-
-def self_children(b):
-    """The measured live child policies of the prepared member (routed: routed_interface/interface_mtu/shut_interface, source =
-    the member itself)."""
-    out = []
-    for p in branch(b)["member_before"]["policies"]:
-        if p.get("source") and p["source"].lower() == MEM.lower():
-            out.append(dict(p, entityType="INTERFACE", serialNumber="x"))
-    return out
-
-
-def ctrl_for(b, nv=None):
-    ctrl = PoLifecycleController()
-    ctrl.detail[MEM] = {"policy": member_policy(b), "nvPairs": nv if nv is not None else member_nv(b)}
-    ctrl.policies_extra = self_children(b)
-    return ctrl
-
-
-def create(ctrl, pv=None, **profile):
-    if pv is not None:
-        ctrl.previews = [pv]
-    prof = dict(TS1_PROFILE, **profile)
-    return run(ctrl, [{"name": "po504", "type": "pc", "switch": [SWITCH_IP], "deploy": True, "profile": prof}], state="replaced")
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, TRUNK, preview, run, trunk_host_nv
+from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController, markdelete_ok
+from .dcnm_interface.helpers.port_channel_prepared import (
+    FX,
+    MEM,
+    PO,
+    PO_DEV,
+    TS,
+    TS1_PROFILE,
+    branch,
+    create,
+    ctrl_for,
+    measured_preview,
+    member_nv,
+    member_policy,
+    self_children,
+)
 
 
 # ------------------------------------------------------------------ the measured data itself

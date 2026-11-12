@@ -45,7 +45,7 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     ACCESS,
     ROUTED,
     PC_TRUNK,

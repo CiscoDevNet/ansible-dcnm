@@ -24,7 +24,7 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
-from . import gie_withdrawal_harness as H
+from .dcnm_interface.helpers import binding_harness as H
 
 DcnmIntf = dcnm_interface.DcnmIntf
 PAIR = "SN1~SN2"

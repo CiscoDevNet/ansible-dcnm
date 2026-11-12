@@ -17,7 +17,7 @@ __metaclass__ = type
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 
 STATES = ("merged", "replaced", "overridden")
 

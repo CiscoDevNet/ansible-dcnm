@@ -21,9 +21,9 @@ import copy
 import json
 
 from . import test_dcnm_intf_pvlan_mixed_batch as MB
-from . import test_dcnm_intf_pvlan_po_host as PH
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import IF7, IF8, SERIAL, TRUNK, preview, run, trunk_host_nv
+from .dcnm_interface.helpers import port_channel_controller as PH
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import IF7, IF8, SERIAL, TRUNK, preview, run, trunk_host_nv
 
 CONV_PO, CONV_PO_ITEM = "Port-channel301", "port-channel301"
 IF9 = "Ethernet1/9"

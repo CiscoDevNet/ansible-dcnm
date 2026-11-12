@@ -29,11 +29,11 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_dcnm_intf_default_reset_registered_f2 as F2
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_gie_thin_engine as thin
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import role_reset as F2
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import registry_generator as thin
 
-FIXTURE = json.load(open(os.path.join(os.path.dirname(h.__file__), "fixtures", "dcnm_intf_routed_ospf_have.json")))
+FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "dcnm_intf_routed_ospf_have.json")))
 OSPF_OPTIONS_NEUTRAL = {
     "ospfAuthentication": "false", "ospfAuthenticationKey": "", "ospfBfdMode": "noChange", "ospfCost": "",
     "ospfDeadInterval": "", "ospfHelloInterval": "", "ospfMtuIgnore": "false", "ospfNetworkType": "noChange",

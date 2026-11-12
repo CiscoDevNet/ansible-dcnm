@@ -24,7 +24,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_ENABLED_PATCH_VERSIONS
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
-from .test_dcnm_intf_pvlan_harness import (
+from .dcnm_interface.helpers.ethernet_controller import (
     IF7,
     PVLAN,
     PREVIEW_MARK,

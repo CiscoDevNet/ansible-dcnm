@@ -19,12 +19,12 @@ from unittest.mock import patch
 
 import pytest
 
-from . import test_dcnm_intf_pvlan_release_routed as R
-from . import test_dcnm_intf_pvlan_vpc_batch as B
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_po_vpc_reconcile import lo
-from .test_dcnm_intf_pvlan_mixed_delete import vpc_conv_pending
-from .test_dcnm_intf_pvlan_mixed_saved_retry import conv_vpc_running
+from .dcnm_interface.helpers import port_channel_release as R
+from .dcnm_interface.helpers import vpc_controller as B
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.vpc_controller import lo
+from .dcnm_interface.helpers.mixed_controller import vpc_conv_pending
+from .dcnm_interface.helpers.mixed_controller import conv_vpc_running
 
 PA, PB = B.PA, B.PB
 SN3, SN4 = B.PAIRS[1]

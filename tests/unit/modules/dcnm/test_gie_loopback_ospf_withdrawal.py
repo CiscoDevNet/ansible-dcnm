@@ -33,10 +33,10 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_gie_thin_engine as thin
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import registry_generator as thin
 
-FIXTURE = json.load(open(os.path.join(os.path.dirname(h.__file__), "fixtures", "dcnm_intf_loopback_ospf_have.json")))
+FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "dcnm_intf_loopback_ospf_have.json")))
 VRF = FIXTURE["nvPairs"]["INTF_VRF"]
 TAG = FIXTURE["nvPairs"]["ospfTag"]
 SYN_MD5 = "SYNTH-MD5-KEY-NOT-REAL-0003"

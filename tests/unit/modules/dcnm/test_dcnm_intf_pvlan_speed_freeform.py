@@ -22,18 +22,22 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from . import gie_withdrawal_harness as G
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import IF7, PVLAN, SWITCH_IP, FakeController, measured_preview, pvlan_nv, preview
-from .test_dcnm_intf_pvlan_harness import run as eth_run
-from .test_dcnm_intf_pvlan_po_g1 import baseline, created, item, po_stanza, member_stanza
-from .test_dcnm_intf_pvlan_po_host import PO, PO_HOST, PO_ITEM_NAME, PO_MEMBER, RUNNING_MEMBER
-from .test_dcnm_intf_pvlan_harness import run
-
-FF_A = "logging event port link-status"
-FF_B = "no snmp trap link-status"
-HOST_LINES = ["switchport private-vlan host-association 2210 2212"]
-ASSOC = [{"primary_vlan": 2210, "secondary_vlan": 2212}]
+from .dcnm_interface.helpers import binding_harness as G
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import (
+    IF7,
+    PVLAN,
+    SWITCH_IP,
+    FakeController,
+    measured_preview,
+    pvlan_nv,
+    preview,
+)
+from .dcnm_interface.helpers.ethernet_controller import run as eth_run
+from .dcnm_interface.helpers.port_channel_controller import created, po_stanza, member_stanza
+from .dcnm_interface.helpers.port_channel_controller import PO, PO_HOST, PO_ITEM_NAME
+from .dcnm_interface.helpers.ethernet_controller import run
+from .dcnm_interface.helpers.port_channel_controller import ASSOC, FF_A, FF_B, HOST_LINES, created_with
 
 
 # ====================================================================================== reference: the module's regular rule
@@ -274,28 +278,6 @@ def _po_cfg(**profile):
     prof = {"mode": "pvlan", "pvlan_mode": "host"}
     prof.update(profile)
     return {"name": PO_ITEM_NAME, "type": "pc", "switch": [SWITCH_IP], "deploy": True, "profile": prof}
-
-
-def created_with(po_extra, member_extra, **profile):
-    """An EXISTING host port-channel created through main() with RC1 fields: the po_g1 creation shape plus the extra Po / member lines
-    (SYNTHETIC, template-predicted), then the member flip of po_g1.created()."""
-    ctrl = baseline("host")
-    po = po_stanza("host", HOST_LINES) + ["  " + x for x in po_extra]
-    member = member_stanza("host", HOST_LINES) + ["  " + x for x in member_extra]
-    pend = (["interface ethernet1/7", "  no spanning-tree port type edge trunk"] + po
-            + ["interface ethernet1/7", "  channel-group 10 force mode active", "  shutdown"]
-            + ["  " + x for x in member_extra] + ["configure terminal"])
-    ctrl.previews = [preview(pend, running=RUNNING_MEMBER, expected=po + member)]
-    status, result = run(ctrl, [item("host", pvlan_association=ASSOC, **profile)], state="replaced")
-    assert status == "exit" and result["changed"] is True, result.get("msg")
-    body = json.loads(ctrl.creates()[0][2])
-    result["created_nv"] = (body[0] if isinstance(body, list) else body)["interfaces"][0]["nvPairs"]
-    ctrl.detail[IF7] = {"policy": PO_MEMBER, "nvPairs": {
-        "PO_ID": PO, "PC_MODE": "active", "PVLAN_MODE": "host", "CDP_ENABLE": "true", "lldpTransmit": "false", "lldpReceive": "false",
-        "LACP_PORT_PRIO": "32768", "LACP_RATE": "normal", "DESC": "", "CONF": "", "ADMIN_STATE": "false", "INTF_NAME": IF7}}
-    ctrl.next_invocation()
-    ctrl.calls = []
-    return ctrl, result
 
 
 def test_po_creation_with_speed_and_freeform_payload_and_gate():

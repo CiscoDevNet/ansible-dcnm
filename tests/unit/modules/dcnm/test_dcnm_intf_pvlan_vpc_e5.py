@@ -17,7 +17,7 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_vpc_harness import (
+from .dcnm_interface.helpers.vpc_controller import (
     M1,
     M2,
     SN1,
@@ -88,14 +88,14 @@ def _updated(ctrl, previews, item, state):
 
 
 def test_a_merged_update_of_the_measured_parent_echoes_createVpc_unchanged_never_dropped():
-    from .test_dcnm_intf_pvlan_vpc_harness import converged_preview, pc_mode_preview
+    from .dcnm_interface.helpers.vpc_controller import converged_preview, pc_mode_preview
 
     sent = _updated(measured_ctrl(), (converged_preview, pc_mode_preview), vpc_item(pc_mode="passive"), "merged")
     assert sent["createVpc"] == "true" and sent["PC_MODE"] == "passive", "the controller's own metadata value travels back unchanged"
 
 
 def test_a_replaced_update_of_the_measured_parent_echoes_createVpc_unchanged_never_dropped():
-    from .test_dcnm_intf_pvlan_vpc_harness import PRIMARY, SECONDARY, converged_preview, update_preview
+    from .dcnm_interface.helpers.vpc_controller import PRIMARY, SECONDARY, converged_preview, update_preview
 
     new = 2213
     item = vpc_item(pvlan_association=[{"primary_vlan": PRIMARY, "secondary_vlan": new}])
@@ -104,7 +104,7 @@ def test_a_replaced_update_of_the_measured_parent_echoes_createVpc_unchanged_nev
 
 
 def test_creation_never_writes_createVpc_the_controller_adds_it():
-    from .test_dcnm_intf_pvlan_vpc_harness import baseline_ctrl, create_previews
+    from .dcnm_interface.helpers.vpc_controller import baseline_ctrl, create_previews
 
     ctrl = baseline_ctrl()
     create_previews(ctrl)
@@ -170,6 +170,6 @@ def test_an_uncertain_member_modify_after_the_measured_form_still_stops_before_t
 def test_the_vpc_child_model_carries_the_template_default_bpduguard_enable_measured_on_the_live_po():
     nv = FX["created_parent_nvpairs_A1_A2"]
     assert nv["BPDUGUARD_ENABLED"] == "true", "measured parent default; the child Po therefore renders `spanning-tree bpduguard enable`"
-    from .test_dcnm_intf_pvlan_vpc_harness import po_stanza
+    from .dcnm_interface.helpers.vpc_controller import po_stanza
 
     assert "  spanning-tree bpduguard enable" in po_stanza()

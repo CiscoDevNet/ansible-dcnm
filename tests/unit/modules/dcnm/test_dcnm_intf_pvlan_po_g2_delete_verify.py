@@ -15,9 +15,16 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from .test_dcnm_intf_pvlan_harness import IF7, TRUNK, run, trunk_host_nv
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController, create_preview, del_item, delete_preview, item, markdelete_ok
-from .test_dcnm_intf_pvlan_po_host import PO, PO_MEMBER
+from .dcnm_interface.helpers.ethernet_controller import IF7, TRUNK, run, trunk_host_nv
+from .dcnm_interface.helpers.port_channel_controller import (
+    PoLifecycleController,
+    create_preview,
+    del_item,
+    delete_preview,
+    item,
+    markdelete_ok,
+)
+from .dcnm_interface.helpers.port_channel_controller import PO, PO_MEMBER
 
 SUMMARY = "/rest/interface/detail?serialNumber="
 POLICIES = "/control/policies/switches/"

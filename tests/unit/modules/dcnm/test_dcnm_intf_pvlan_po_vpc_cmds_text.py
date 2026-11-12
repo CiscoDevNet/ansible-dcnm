@@ -15,11 +15,11 @@ import jinja2
 import pytest
 import yaml
 
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP, preview, run
-from .test_dcnm_intf_pvlan_po_g1 import created, po_stanza, member_stanza
-from .test_dcnm_intf_pvlan_po_host import PO_ITEM_NAME
-from .test_dcnm_intf_pvlan_speed_freeform import ASSOC, FF_A, FF_B, HOST_LINES, created_with
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, preview, run
+from .dcnm_interface.helpers.port_channel_controller import created, po_stanza, member_stanza
+from .dcnm_interface.helpers.port_channel_controller import PO_ITEM_NAME
+from .dcnm_interface.helpers.port_channel_controller import ASSOC, FF_A, FF_B, HOST_LINES, created_with
 
 PO_FRAGMENT = "profile:\n    cmds: |2-\n      {{ interface['freeform_config'] | default('') | indent(6, false) }}\n"
 VPC_FRAGMENT = ("profile:\n    peer1_cmds: |2-\n      {{ switches[peer1].freeform_config | default('') | indent(6, false) }}\n"

@@ -19,12 +19,17 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import BINDING_TABLE, resolve_by_nvpair
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.test_gie_passthrough_bindings import (
-    _as_slice_rows, _load_generator,
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers.binding_harness import (
+    _as_slice_rows,
+    _load_generator,
 )
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.test_gie_smu017_batch1_states import (
-    _as_have, _deploys, _emitted, _have_for, _run,
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers.role_reset import (
+    _as_have,
+    _deploys,
+    _emitted,
+    _have_for,
+    _run,
 )
 
 LOGGING_ON = {**h.BASE_ACCESS, "logging_event_port_link_status": True}

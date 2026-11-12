@@ -18,17 +18,17 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import preview as po_preview
-from .test_dcnm_intf_pvlan_harness import run as po_run
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP
-from .test_dcnm_intf_pvlan_po_g1 import member_stanza, po_stanza
-from .test_dcnm_intf_pvlan_po_g5_next_modes import CASES, existing
-from .test_dcnm_intf_pvlan_po_host import PO, PO_ITEM_NAME
-from .test_dcnm_intf_pvlan_vpc_harness import IP1, IP2, M1, M2, SN1, SN2, VPC, preview, run_vpc
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import PAIRS, member_after, per_peer, seeded_ctrl
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import po_stanza as vpc_po_stanza
-from .test_dcnm_intf_pvlan_vpc_r5 import ReleaseMtu, queue_delete, release_ctrl, releases
-from .test_dcnm_intf_pvlan_vpc_harness import vpc_del_item
+from .dcnm_interface.helpers.ethernet_controller import preview as po_preview
+from .dcnm_interface.helpers.ethernet_controller import run as po_run
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP
+from .dcnm_interface.helpers.port_channel_controller import member_stanza, po_stanza
+from .dcnm_interface.helpers.port_channel_controller import CASES, existing
+from .dcnm_interface.helpers.port_channel_controller import PO, PO_ITEM_NAME
+from .dcnm_interface.helpers.vpc_controller import IP1, IP2, M1, M2, SN1, SN2, VPC, preview, run_vpc
+from .dcnm_interface.helpers.vpc_modes import PAIRS, member_after, per_peer, seeded_ctrl
+from .dcnm_interface.helpers.vpc_modes import po_stanza as vpc_po_stanza
+from .dcnm_interface.helpers.vpc_controller import ReleaseMtu, queue_delete, release_ctrl, releases
+from .dcnm_interface.helpers.vpc_controller import vpc_del_item
 
 MODES = sorted(CASES)  # the three non-host modes of the existing per-mode harness
 PEERS = ((SN1, M1), (SN2, M2))

@@ -6,7 +6,7 @@ __metaclass__ = type
 
 import copy
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     SVI,
     VPC_DOT1Q,
     VPC_PAIR_SERIAL,

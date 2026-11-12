@@ -19,9 +19,9 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import IF7, preview, run
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController, member_stanza, po_stanza
-from .test_dcnm_intf_pvlan_po_host import DEPLOY, PO, PO_HOST
+from .dcnm_interface.helpers.ethernet_controller import IF7, preview, run
+from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController, member_stanza, po_stanza
+from .dcnm_interface.helpers.port_channel_controller import DEPLOY, PO, PO_HOST
 from .test_dcnm_intf_pvlan_speed_freeform import (
     ASSOC,
     FF_A,

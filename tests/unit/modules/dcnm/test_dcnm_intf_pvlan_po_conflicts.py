@@ -17,8 +17,8 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
-from .test_dcnm_intf_pvlan_harness import IF7, IF8, SWITCH_IP, TRUNK, trunk_host_nv, run
-from .test_dcnm_intf_pvlan_po_host import _eth, baseline_ctrl, created_ctrl, good_preview, po_item
+from .dcnm_interface.helpers.ethernet_controller import IF7, IF8, SWITCH_IP, TRUNK, trunk_host_nv, run
+from .dcnm_interface.helpers.port_channel_controller import _eth, baseline_ctrl, created_ctrl, good_preview, po_item
 
 IF9 = "Ethernet1/9"
 ORDERS = ("parent_first", "member_first")

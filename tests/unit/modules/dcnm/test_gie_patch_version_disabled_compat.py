@@ -29,7 +29,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_contribute_nvpairs,
 )
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     IF_A,
     PATCH_KEY_OMITTED,
     PC_TRUNK,

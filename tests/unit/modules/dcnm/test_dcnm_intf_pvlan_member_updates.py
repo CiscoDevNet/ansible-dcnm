@@ -16,131 +16,32 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
-import json
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from . import test_dcnm_intf_pvlan_po_host as H
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from . import test_dcnm_intf_pvlan_release_routed as RR
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController
-
-PAIR = (V.PRIMARY, V.SECONDARY)
-ROUTED = "int_routed_host"
-E7, E9, E10 = "Ethernet1/7", "Ethernet1/9", "Ethernet1/10"
-
-
-def member_nv(port):
-    return {"PO_ID": H.PO, "PC_MODE": "active", "PVLAN_MODE": "host", "CDP_ENABLE": "true", "lldpTransmit": "false", "lldpReceive": "false",
-            "LACP_PORT_PRIO": "32768", "LACP_RATE": "normal", "DESC": "", "CONF": "", "ADMIN_STATE": "false", "INTF_NAME": port}
-
-
-class MembershipPo(PoLifecycleController):
-    """PoLifecycleController + the SIMULATED effect of a membership modify of the port-channel. `released_policy` / `released_nv(port)`
-    give the release of a removed port (default: the measured-shape int_trunk_host, ADMIN_STATE "true"); `keep_claim` leaves the removed
-    port as a member (the controller did not release it); routed releases get their measured own children (no_shut -> shut on a down
-    modify, DERIVED)."""
-
-    released_policy = V.TRUNK
-    keep_claim = False
-
-    def released_nv(self, port):
-        if self.released_policy == ROUTED:
-            nv = copy.deepcopy(RR.RELEASED_ROUTED)
-            nv["INTF_NAME"] = port
-            return nv
-        nv = V.trunk_host_nv(port)
-        nv["ADMIN_STATE"] = "true"
-        return nv
-
-    def __call__(self, mod, method, path, data=None):
-        before = None
-        body = json.loads(data) if (method == "POST" and path.endswith(V.MODIFY)) else None
-        po_update = body and any(p.get("policy") == H.PO_HOST for p in body)
-        if po_update:
-            before = set(P.normalize_member_list(self.detail[H.PO]["nvPairs"].get("MEMBER_INTERFACES"))[0])
-        resp = super(MembershipPo, self).__call__(mod, method, path, data)
-        if po_update and str((resp.get("DATA") or [{}])[0].get("reportItemType", "")).upper() == "SUCCESS":
-            after = set(P.normalize_member_list(self.detail[H.PO]["nvPairs"].get("MEMBER_INTERFACES"))[0])
-            for port in sorted(after - before):
-                name = "Ethernet" + port[len("ethernet"):]
-                self.detail[name] = {"policy": H.PO_MEMBER, "nvPairs": member_nv(name)}
-            for port in sorted(before - after):
-                name = "Ethernet" + port[len("ethernet"):]
-                if self.keep_claim:
-                    continue
-                self.detail[name] = {"policy": self.released_policy, "nvPairs": self.released_nv(name)}
-                if self.released_policy == ROUTED:
-                    self.policies_extra = self.policies_extra + RR.child_policies(name, RR.CHILDREN_UP)
-        if body and not po_update:  # a released routed member set down: its own up child becomes the down child (DERIVED)
-            for payload in body:
-                for intf in payload["interfaces"]:
-                    if payload["policy"] == ROUTED and intf["nvPairs"].get("ADMIN_STATE") == "false":
-                        for p in self.policies_extra:
-                            if p["entityName"] == intf["ifName"] and p["templateName"] == "no_shut_interface":
-                                p["templateName"], p["priority"] = "shut_interface", 458
-        return resp
-
-    def po_modifies(self):
-        return [b for b in self.modify_bodies() if any(p.get("policy") == H.PO_HOST for p in b)]
-
-    def member_modifies(self):
-        return [b for b in self.modify_bodies() if not any(p.get("policy") == H.PO_HOST for p in b)]
-
-
-def seeded(members=(E7, E9), spare=(E10,), **knobs):
-    ctrl = PoLifecycleController()
-    ctrl.__class__ = MembershipPo
-    nv = P.po_host_nvpairs(H.po_item(members=list(members))["profile"], H.PO)
-    ctrl.detail[H.PO] = {"policy": H.PO_HOST, "nvPairs": nv}
-    ctrl.po_names.add(H.PO)
-    for port in members:
-        ctrl.detail[port] = {"policy": H.PO_MEMBER, "nvPairs": member_nv(port)}
-    for port in spare:
-        tnv = V.trunk_host_nv(port)
-        tnv["ADMIN_STATE"] = "false"
-        ctrl.detail[port] = {"policy": V.TRUNK, "nvPairs": tnv}
-    for k, v in knobs.items():
-        setattr(ctrl, k, v)
-    return ctrl
-
-
-def strip_vpc(lines):
-    return [line for line in lines if line.strip() != "vpc 10"]
-
-
-def fragments(kept=(), added=(), removed_trunk=(), removed_routed=()):
-    """One switch preview from per-port fragments (see the module docstring for what is simulated)."""
-    pend, run, exp = [], strip_vpc(V.po_stanza(PAIR)), strip_vpc(V.po_stanza(PAIR))
-    for port in kept:
-        run += V.member_after(port, PAIR)
-        exp += V.member_after(port, PAIR)
-    for port in added:
-        pend += V.create_pending(port, PAIR)[len(V.po_stanza(PAIR)):]
-        run += V.member_running_baseline(port)
-        exp += V.member_after(port, PAIR)
-    for port in removed_trunk:
-        d = P.preview_entry(V.delete_preview(V.SN1, port, PAIR), V.SN1)
-        pend += d["pendingConfig"][1:]
-        run += V.member_after(port, PAIR)
-        exp += d["expectedConfig"]
-    for port in removed_routed:
-        p_, _r, e_ = RR.routed_release_preview(port=port, po_number="10", pair=PAIR)
-        pend += p_[1:]
-        run += V.member_after(port, PAIR)
-        exp += e_
-    return H.preview(pend, running=run, expected=exp)
-
-
-def item(members, **kw):
-    return H.po_item(members=members, **kw)
-
-
-def run(ctrl, cfg, state):
-    return H.run(ctrl, [cfg], state=state)
+from .dcnm_interface.helpers import port_channel_controller as H
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers import port_channel_release as RR
+from .dcnm_interface.helpers.membership import (
+    E10,
+    E7,
+    E9,
+    E9P,
+    H,
+    MembershipPo,
+    PAIR,
+    ROUTED,
+    fragments,
+    item,
+    member_nv,
+    queue_peer,
+    run,
+    seeded,
+    strip_vpc,
+    vpc_seeded,
+)
 
 
 # ------------------------------------------------------------------ adding members (merged and replaced)
@@ -320,111 +221,6 @@ def test_a_stale_preview_for_the_removed_member_refuses_the_deploy():
     status, result = run(ctrl, item([E7]), "replaced")
     assert status == "fail" and "No deployment request was sent" in result["msg"], result.get("msg")
     assert len(ctrl.member_modifies()) == 1 and ctrl.deploys() == []
-
-
-# ================================================================== vPC: membership per peer (one peer or both)
-E9P = "Ethernet1/9"
-
-
-class MembershipVpc(V.VpcController):
-    """VpcController + the SIMULATED release of the ports a parent modify removes (the harness already turns added ports into members):
-    int_trunk_host ADMIN_STATE "true", or the measured routed form with its own children (`routed_ports`)."""
-
-    routed_ports = frozenset()
-    unsafe_ports = frozenset()
-
-    def __call__(self, mod, method, path, data=None):
-        before = {}
-        body = json.loads(data) if (method == "POST" and path.endswith(V.MODIFY)) else None
-        vpc_update = body and any(p.get("policy") == V.VPC_HOST for p in body)
-        if vpc_update and V.VPC in self.parents:
-            nv = self.parents[V.VPC]["nvPairs"]
-            before = dict((s, set(P.normalize_member_list(nv["PEER%d_MEMBER_INTERFACES" % n])[0])) for n, s in ((1, V.SN1), (2, V.SN2)))
-        resp = super(MembershipVpc, self).__call__(mod, method, path, data)
-        if vpc_update and before and V.VPC in self.parents:
-            nv = self.parents[V.VPC]["nvPairs"]
-            for n, serial in ((1, V.SN1), (2, V.SN2)):
-                after = set(P.normalize_member_list(nv["PEER%d_MEMBER_INTERFACES" % n])[0])
-                for port in sorted(before[serial] - after):
-                    name = "Ethernet" + port[len("ethernet"):]
-                    if (serial, name) in self.routed_ports:
-                        rnv = copy.deepcopy(RR.RELEASED_ROUTED)
-                        rnv["INTF_NAME"] = name
-                        self.nodes[serial][name] = {"policy": ROUTED, "nvPairs": rnv}
-                        self.policies_extra[serial] += RR.child_policies(name, RR.CHILDREN_UP, serial)
-                    else:
-                        tnv = V.trunk_host_nv(name)
-                        tnv["ADMIN_STATE"] = "true"
-                        if (serial, name) in self.unsafe_ports:
-                            tnv["ALLOWED_VLANS"] = "all"
-                        self.nodes[serial][name] = {"policy": V.TRUNK, "nvPairs": tnv}
-        if body and not vpc_update:
-            for payload in body:
-                for intf in payload["interfaces"]:
-                    if payload["policy"] == ROUTED and intf["nvPairs"].get("ADMIN_STATE") == "false":
-                        for p in self.policies_extra[intf["serialNumber"]]:
-                            if p["entityName"] == intf["ifName"] and p["templateName"] == "no_shut_interface":
-                                p["templateName"], p["priority"] = "shut_interface", 458
-        return resp
-
-    def parent_modifies(self):
-        return [json.loads(c[2]) for c in self.modifies() if any(p.get("policy") == V.VPC_HOST for p in json.loads(c[2]))]
-
-    def member_modifies(self):
-        return [json.loads(c[2]) for c in self.modifies() if not any(p.get("policy") == V.VPC_HOST for p in json.loads(c[2]))]
-
-
-def vpc_seeded(ports, spare=None):
-    ctrl = V.VpcController()
-    for serial, plist in ports.items():
-        for port in plist:
-            nv = V.trunk_host_nv(port)
-            nv["ADMIN_STATE"] = "false"
-            ctrl.nodes[serial][port] = {"policy": V.TRUNK, "nvPairs": nv}
-    ctrl = ctrl.seed_vpc()
-    nv = ctrl.parents[V.VPC]["nvPairs"]
-    for n, serial in ((1, V.SN1), (2, V.SN2)):
-        nv["PEER%d_MEMBER_INTERFACES" % n] = ",".join(ports[serial])
-    ctrl._expand_children(nv)
-    for serial, plist in (spare or {}).items():
-        for port in plist:
-            tnv = V.trunk_host_nv(port)
-            tnv["ADMIN_STATE"] = "false"
-            ctrl.nodes[serial][port] = {"policy": V.TRUNK, "nvPairs": tnv}
-    ctrl.next_invocation()
-    ctrl.__class__ = MembershipVpc
-    return ctrl
-
-
-def peer_preview(serial, kept=(), added=(), removed_trunk=(), removed_routed=(), prior=False):
-    """One peer's preview from fragments: `prior` = the current state before the modify (added ports still standalone, removed still members)."""
-    pend, run, exp = [], list(V.po_stanza(PAIR)), list(V.po_stanza(PAIR))
-    for port in list(kept) + (list(removed_trunk) + list(removed_routed) if prior else []):
-        run += V.member_after(port, PAIR)
-        exp += V.member_after(port, PAIR)
-    for port in added:
-        run += V.member_running_baseline(port)
-        if prior:
-            exp += V.member_running_baseline(port)
-        else:
-            pend += V.create_pending(port, PAIR)[len(V.po_stanza(PAIR)):]
-            exp += V.member_after(port, PAIR)
-    if not prior:
-        for port in removed_trunk:
-            d = P.preview_entry(V.delete_preview(serial, port, PAIR), serial)
-            pend += d["pendingConfig"][1:]
-            run += V.member_after(port, PAIR)
-            exp += d["expectedConfig"]
-        for port in removed_routed:
-            p_, _r, e_ = RR.routed_release_preview(port=port, po_number="10", pair=PAIR)
-            pend += p_[1:]
-            run += V.member_after(port, PAIR)
-            exp += e_
-    return V.preview(pend, serial=serial, running=run, expected=exp)
-
-
-def queue_peer(ctrl, serial, **kw):
-    ctrl.vpc_previews[serial] = [peer_preview(serial, prior=True, **kw), peer_preview(serial, **kw)]
 
 
 def test_vpc_adding_a_member_on_one_peer_only_keeps_the_other_peer():

@@ -22,10 +22,10 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
 from . import test_dcnm_intf_pvlan as EP
-from . import test_dcnm_intf_pvlan_po_g5_next_modes as G5
-from . import test_dcnm_intf_pvlan_vpc_modes_e1 as E1
-from .test_dcnm_intf_pvlan_harness import PVLAN, TRUNK, measured_preview, pvlan_item, run, trunk_host_nv
-from .test_dcnm_intf_pvlan_vpc_harness import run_vpc
+from .dcnm_interface.helpers import port_channel_controller as G5
+from .dcnm_interface.helpers import vpc_modes as E1
+from .dcnm_interface.helpers.ethernet_controller import PVLAN, TRUNK, measured_preview, pvlan_item, run, trunk_host_nv
+from .dcnm_interface.helpers.vpc_controller import run_vpc
 
 
 # ================================================================== the shared parser

@@ -19,8 +19,8 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import preview
-from .test_dcnm_intf_pvlan_vpc_harness import (
+from .dcnm_interface.helpers.ethernet_controller import preview
+from .dcnm_interface.helpers.vpc_controller import (
     M1,
     M2,
     PAIR,

@@ -20,7 +20,7 @@ from unittest.mock import patch
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.test_dcnm_intf_default_reset_registered_f2 import (
     NO_WITHDRAWAL,
     STATES,
@@ -143,7 +143,7 @@ def test_every_int_routed_host_row_and_no_other_carries_the_marker():
 
 def _generator():
     # tests/unit/modules/dcnm -> collection root
-    root = os.path.abspath(os.path.join(os.path.dirname(h.__file__), os.pardir, os.pardir, os.pardir, os.pardir))
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir, os.pardir))
     spec = importlib.util.spec_from_file_location("gie_gen", os.path.join(root, "tools", "gie_generate_binding_table.py"))
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

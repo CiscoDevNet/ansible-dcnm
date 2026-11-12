@@ -26,7 +26,7 @@ from unittest.mock import patch
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 
 V6 = "2001:db8:117::1"
 V6_B = "2001:db8:118::1"
@@ -37,7 +37,7 @@ V6_ONLY = {"mode": "routed", "ipv6_addr": V6, "ipv6_mask_len": 64, "admin_state"
 
 _ORIG_TRANSPORT = h._transport
 PHYSICAL = {"deletable": "false", "editAllowed": "true", "mgmtIpAddress": h.SWITCH_IP}
-FIXTURES = os.path.join(os.path.dirname(h.__file__), "fixtures")
+FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 
 
 def _physical_transport(calls, have):

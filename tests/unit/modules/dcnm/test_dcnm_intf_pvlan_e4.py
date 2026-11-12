@@ -18,9 +18,9 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_e2 import OVERLAY_PROFILE
+from .dcnm_interface.helpers.ethernet_controller import OVERLAY_PROFILE
 from .test_dcnm_intf_pvlan_e3 import NOT_OWNED, NOT_ROLLED_BACK, with_device_line
-from .test_dcnm_intf_pvlan_harness import (
+from .dcnm_interface.helpers.ethernet_controller import (
     DELETE,
     DEPLOY,
     IF7,

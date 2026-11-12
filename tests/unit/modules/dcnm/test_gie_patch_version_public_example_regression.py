@@ -22,7 +22,7 @@ import yaml
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
-from .gie_withdrawal_harness import PATCH_KEY_OMITTED, SUPPORTED_PATCH, run, writes
+from .dcnm_interface.helpers.binding_harness import PATCH_KEY_OMITTED, SUPPORTED_PATCH, run, writes
 
 
 def _parse_examples_block():

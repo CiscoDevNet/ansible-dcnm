@@ -20,36 +20,23 @@ __metaclass__ = type
 
 import pytest
 
-from . import test_dcnm_intf_pvlan_po_g4_release as G4
-from . import test_dcnm_intf_pvlan_po_g5_next_modes as G5
-from . import test_dcnm_intf_pvlan_po_vpc_reconcile as R
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import SERIAL, SWITCH_IP, ok, run
+from .dcnm_interface.helpers import port_channel_release as G4
+from .dcnm_interface.helpers import port_channel_controller as G5
+from .dcnm_interface.helpers import vpc_controller as R
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import SERIAL, SWITCH_IP, ok, run
 from .test_dcnm_intf_pvlan_mixed_batch import released_block
-
-CONV_PO, C14 = "Port-channel301", "Ethernet1/14"
-CONV_PO_POLICY, CONV_MEMBER_POLICY = "int_port_channel_trunk_host", "int_port_channel_trunk_member_11_1"
-CONV_VPC, V5, V6 = "vPC305", "Ethernet1/5", "Ethernet1/6"
-
-
-def add_conv_po(ctrl, name=CONV_PO, members=(C14,)):
-    """A conventional trunk port-channel ( Po301 shape) with its members, next to the harness's PVLAN Po."""
-    nv = {"MEMBER_INTERFACES": ",".join(members), "PO_ID": name, "PC_MODE": "active", "DESC": "INTEG-PO-CONV-V2", "ADMIN_STATE": "true",
-          "ALLOWED_VLANS": "none", "MTU": "jumbo", "SPEED": "Auto", "BPDUGUARD_ENABLED": "true", "PORTTYPE_FAST_ENABLED": "true", "CONF": ""}
-    ctrl.detail[name] = {"policy": CONV_PO_POLICY, "nvPairs": nv}
-    ctrl.po_names.add(name)
-    for port in members:
-        ctrl.detail[port] = {"policy": CONV_MEMBER_POLICY, "nvPairs": {"PO_ID": name, "ADMIN_STATE": "true", "INTF_NAME": port}}
-    return ctrl
-
-
-def po_preview(extra_global, extra_blocks, base=None):
-    """The measured deletion pending of the PVLAN Po (its own `no interface` + released member) plus the conventional sibling's."""
-    resp = base or G5.corrected_hr_preview()
-    entry = resp["DATA"][0]
-    entry["pendingConfig"] = list(extra_global) + list(entry["pendingConfig"]) + list(extra_blocks)
-    entry["status"] = "Out-of-Sync"
-    return resp
+from .dcnm_interface.helpers.mixed_controller import vpc_conv_pending
+from .dcnm_interface.helpers.mixed_controller import (
+    C14,
+    T6_GLOBAL,
+    V5,
+    V6,
+    add_conv_po,
+    po_preview,
+    vpc_conv_pending,
+    vpc_mixed_ctrl,
+)
 
 
 def hr_mixed_ctrl(cls=None):
@@ -57,9 +44,6 @@ def hr_mixed_ctrl(cls=None):
     if cls is not None:
         ctrl.__class__ = cls
     return ctrl
-
-
-T6_GLOBAL = ["no interface port-channel301"]
 
 
 def t6_po(ctrl, extra_global=None, extra_blocks=None, deploy=False, previews=1):
@@ -214,23 +198,6 @@ def test_overridden_without_the_conventional_deletion_still_refuses_its_pending(
     ctrl.previews = [po_preview(T6_GLOBAL, released_block(C14, 301), base=G4.entry("H1-verify"))]
     status, result = run(ctrl, [R.lo(SWITCH_IP, deploy=False)], state="overridden")
     assert status == "fail" and "outside interface scope" in result["msg"], result.get("msg")
-
-
-# ================================================================== vPC
-def vpc_mixed_ctrl(peer_members=(V5, V6), pcids=("305", "305")):
-    """The PVLAN vPC10 deletion harness plus a conventional trunk vPC305 whose members DIFFER per peer (peer1 Eth1/5, peer2 Eth1/6), so a
-    crossed assignment is visible."""
-    ctrl = R.vpc_ctrl()
-    ctrl.children_marked_deleted = True
-    ctrl.parents[CONV_VPC] = {"policy": "int_vpc_trunk_host", "nvPairs": {
-        "PEER1_MEMBER_INTERFACES": peer_members[0], "PEER2_MEMBER_INTERFACES": peer_members[1], "PEER1_PCID": pcids[0], "PEER2_PCID": pcids[1],
-        "PC_MODE": "active", "ADMIN_STATE": "true", "PEER1_PO_DESC": "INTEG-VPC-CONV-V2", "PEER2_PO_DESC": "INTEG-VPC-CONV-V2",
-        "PEER1_PO_CONF": "", "PEER2_PO_CONF": ""}}
-    return ctrl
-
-
-def vpc_conv_pending(member, pcid=305):
-    return ["no interface port-channel%d" % pcid] + released_block(member, pcid)
 
 
 def t6_vpc(ctrl, extra=None, deploy=False):

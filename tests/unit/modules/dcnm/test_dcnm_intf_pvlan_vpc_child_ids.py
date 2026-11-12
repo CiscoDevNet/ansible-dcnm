@@ -10,16 +10,15 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
 import json
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import TRUNK
+from .dcnm_interface.helpers.ethernet_controller import TRUNK
 
-from .test_dcnm_intf_pvlan_vpc_harness import (
+from .dcnm_interface.helpers.vpc_controller import (
     IP1,
     IP2,
     M1,
@@ -36,7 +35,6 @@ from .test_dcnm_intf_pvlan_vpc_harness import (
     converged_preview,
     converged_previews,
     create_previews,
-    created_ctrl,
     delete_previews,
     description_preview,
     pc_mode_preview,
@@ -46,46 +44,15 @@ from .test_dcnm_intf_pvlan_vpc_harness import (
     vpc_del_item,
     vpc_item,
 )
+from .dcnm_interface.helpers.vpc_controller import remap, seeded, sent_nv
 
 # (peer1 = SN1, peer2 = SN2). All differ from the vPC id 10; the second is asymmetric; the third swaps them.
 PCIDS = [("11", "11"), ("11", "12"), ("12", "11"), ("4096", "1")]
 BASE_VID = "10"
 
 
-def _remap_line(line, pcid):
-    return line.replace("port-channel10", "port-channel" + pcid).replace("channel-group 10", "channel-group " + pcid)
-
-
-def _remap_answer(answer, pcid):
-    if callable(answer):
-        return lambda path, _a=answer: _remap_answer(_a(path), pcid)
-    out = copy.deepcopy(answer)
-    for entry in out.get("DATA") or []:
-        for key in ("pendingConfig", "runningConfig", "expectedConfig"):
-            if isinstance(entry.get(key), list):
-                entry[key] = [_remap_line(x, pcid) for x in entry[key]]
-    return out
-
-
-def remap(ctrl, pcids):
-    """Rewrite the queued previews of both peers for their own port-channel numbers."""
-    for serial, pcid in ((SN1, pcids[0]), (SN2, pcids[1])):
-        ctrl.vpc_previews[serial] = [_remap_answer(a, pcid) for a in ctrl.vpc_previews.get(serial, [])]
-    return ctrl
-
-
-def seeded(pcids, **kw):
-    return created_ctrl(pcids=pcids, **kw)
-
-
 def po(serial_index, pcids):
     return "port-channel" + pcids[serial_index]
-
-
-def sent_nv(ctrl):
-    body = json.loads(ctrl.creates()[0][2])
-    body = body[0] if isinstance(body, list) else body
-    return body["interfaces"][0]["nvPairs"]
 
 
 # ================================================================== the contract (pure function, raw input)

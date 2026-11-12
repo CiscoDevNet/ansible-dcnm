@@ -23,10 +23,10 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import IF7, SWITCH_IP, preview, run
-from .test_dcnm_intf_pvlan_po_g1 import created
-from .test_dcnm_intf_pvlan_po_host import PO_ITEM_NAME
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import IF7, SWITCH_IP, preview, run
+from .dcnm_interface.helpers.port_channel_controller import created
+from .dcnm_interface.helpers.port_channel_controller import PO_ITEM_NAME
 
 HERE = os.path.dirname(__file__)
 PO_FX = json.load(open(os.path.join(HERE, "fixtures", "pvlan_po_speed_diag_measured.json")))

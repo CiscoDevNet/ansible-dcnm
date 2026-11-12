@@ -17,36 +17,19 @@ import json
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
-from . import test_dcnm_intf_pvlan_member_updates as MU
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import TRUNK, trunk_host_nv
+from .dcnm_interface.helpers import membership as MU
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import TRUNK, trunk_host_nv
+from .dcnm_interface.helpers.vpc_controller import CANARY, CanaryController, mutating, refused
 
 SN1, SN2, M1, M2 = V.SN1, V.SN2, V.M1, V.M2
 SUMMARY, BULK, POLICIES = "/rest/interface/detail?serialNumber=", "/rest/interface?serialNumber=", "/control/policies/switches/"
 ABSENT = "the absence of the port-channel and of the vPC children could not be established authoritatively"
 UNREAD = "its current state could not be read authoritatively"
-CANARY = "SYNTH-CANARY-Zq9"  # fake sensitive-looking value placed inside failing responses; it must never reach the error
-
-
-def mutating(ctrl):
-    return [(m, p) for m, p, _d in ctrl.calls if m in ("POST", "PUT", "DELETE")]
-
-
-def lines(result):
-    return [l.strip() for l in result.get("msg", "").splitlines() if l.startswith("  ")]
 
 
 def cause(serial, stage, reason):
     return "{0} on {1}: {2} {1} could not be read authoritatively ({3})".format(V.VPC, serial, stage, reason)
-
-
-def refused(ctrl, items=None):
-    status, result = V.run_vpc(ctrl, items or [V.vpc_item()])
-    assert status == "fail", result
-    assert mutating(ctrl) == [], mutating(ctrl)
-    assert result["msg"].endswith("No configuration or deployment request was sent.")
-    assert CANARY not in json.dumps(result)
-    return lines(result)
 
 
 def generic(serial, member):
@@ -57,21 +40,6 @@ def generic(serial, member):
 
 def folded(got):
     return {l.lower() for l in got}
-
-
-class CanaryController(V.VpcController):
-    """VpcController whose failing answers carry a fake canary in every place a careless diagnostic could copy from."""
-
-    def __init__(self):
-        super(CanaryController, self).__init__()
-        self.canary_failures = set()
-
-    def __call__(self, mod, method, path, data=None):
-        for mark in self.canary_failures:
-            if mark in path:
-                self.calls.append((method, path, data))
-                return {"RETURN_CODE": 500, "MESSAGE": CANARY, "DATA": {"message": CANARY, "detail": CANARY}}
-        return super(CanaryController, self).__call__(mod, method, path, data)
 
 
 # ------------------------------------------------------------------ positive control: unchanged requests and payloads

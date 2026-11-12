@@ -46,8 +46,13 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
 )
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
-from .dcnm_module import set_module_args
-from .test_dcnm_intf_binding_module_path import A161Base
+from ...dcnm_module import set_module_args
+from .module_runner import A161Base
+from unittest import mock
+from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
+import importlib.util
+from pathlib import Path
+from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table
 
 # Captured before any TestCase installs the netcommon doubles. Module import happens at
 # collection time, so these are the genuine implementations; `real_serialiser_is_genuine`
@@ -1455,3 +1460,133 @@ def have_for(ifnames, parent, key, value):
         h[0]["interfaces"][0]["ifName"] = n
         out.extend(h)
     return out
+
+
+DcnmIntf = dcnm_interface.DcnmIntf
+
+
+MD = "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"
+SNO = "SN1"
+FAB = "fab"
+
+
+# nvPair -> public key map for the comparator (only consulted for keys that differ under merged).
+KEYMAP = {
+    "IP": "ipv4_addr", "INTF_NAME": "name", "DESC": "description", "CONF": "cmds",
+    "ADMIN_STATE": "admin_state", "SPEED": "speed", "V6IP": "ipv6_addr",
+    "ROUTE_MAP_TAG": "route_tag", "SECONDARY_IP": "secondary_ipv4_addr",
+    "PRIORITY": "priority", "REPLICATION_MODE": "replication_mode",
+    "LINK_STATE_ROUTING_TAG": "link_state_routing_tag", "OSPF_AREA_ID": "ospf_area_id",
+    MD: "enable_ospf_auth_message_digest",
+}
+
+
+def _instance():
+    s = object.__new__(DcnmIntf)  # methods auto-bind from the class; set only data attributes
+    s.class_name = "DcnmIntf"
+    s.log = mock.Mock()
+    s.module = mock.Mock()
+    s.fabric = FAB
+    s.dcnm_version = 12
+    s.pol_pc_member_types = {12: {}}
+    s.keymap = dict(KEYMAP)
+    s.want_breakout = []
+    s.have_breakout = []
+    s.have_all = []
+    s.intf_detail_cache = {}
+    s.intf_detail_cached_snos = set()
+    s.intf_detail_fetch_failed_snos = set()
+    s.intf_detail_failed_keys = set()
+    s.intf_detail_authoritative_absent_keys = set()
+    s.have_all_cached_snos = set()
+    s.have_all_failed_snos = set()
+    s._replace_have_lookup = {}
+    s._replace_pb_input_lookup = {}
+    s._ospf_auth_md_requests = {}
+    s.diff_create = []
+    s.diff_replace = []
+    s.diff_delete_breakout = []
+    s.diff_create_breakout = []
+    s.diff_deploy = []
+    s.changed_dict = [{
+        "merged": [], "replaced": [], "overridden": [], "deleted": [], "query": [],
+        "deploy": [], "debugs": [], "delete_deploy": [], "deferred": [], "skipped": [],
+    }]
+    return s
+
+
+def _payload_nv(s):
+    if not s.diff_replace:
+        return None
+    return s.diff_replace[0]["interfaces"][0]["nvPairs"]
+
+
+def _public_nv(s, state="merged"):
+    entries = s.changed_dict[0][state]
+    if not entries:
+        return None
+    return entries[0]["interfaces"][0]["nvPairs"]
+
+
+PL = "int_vpc_peer_link_po"
+
+
+# One row per registered reset of the parent. test_dcnm_intf_withdrawal.py requires this set to equal the registry.
+PEER_LINK_ROUTE_RESET_ROWS = (
+    (PL, "qosStatsSuppressed", "disable_qos_stats", "true", "false"),
+    (PL, "spanningTreePortType", "spanning_tree_port_type", "network", "no"),
+)
+PEER_LINK_ROUTE_RESET_IDENTITIES = frozenset((p, n) for p, n, _k, _h, _r in PEER_LINK_ROUTE_RESET_ROWS)
+
+
+UL = "int_vpc_uplink_access"
+
+
+# One row per registered reset of the parent. test_dcnm_intf_withdrawal.py requires this set to equal the registry.
+UPLINK_ROUTE_RESET_ROWS = (
+    (UL, "ENABLE_QOS", "enable_qos", "true", "false"),
+    (UL, "QOS_POLICY", "qos_policy", "UL-QOS", ""),
+    (UL, "qosStatsSuppressed", "disable_qos_stats", "true", "false"),
+    (UL, "spanningTreePortType", "spanning_tree_port_type", "network", "no"),
+    (UL, "ENABLE_STORM_CONTROL", "enable_storm_control", "true", "false"),
+    (UL, "STORM_CONTROL_ACTION", "storm_control_action", "trap", "no"),
+    (UL, "STORM_CONTROL_BCAST_LEVEL_PERCENT", "storm_control_broadcast_level_percent", "50", ""),
+    (UL, "STORM_CONTROL_MCAST_LEVEL_PERCENT", "storm_control_multicast_level_percent", "50", ""),
+    (UL, "STORM_CONTROL_UCAST_LEVEL_PERCENT", "storm_control_unicast_level_percent", "50", ""),
+    (UL, "STORM_CONTROL_BCAST_LEVEL_PPS", "storm_control_broadcast_level_pps", "1000", ""),
+    (UL, "STORM_CONTROL_MCAST_LEVEL_PPS", "storm_control_multicast_level_pps", "1000", ""),
+    (UL, "STORM_CONTROL_UCAST_LEVEL_PPS", "storm_control_unicast_level_pps", "1000", ""),
+)
+UPLINK_ROUTE_RESET_IDENTITIES = frozenset((p, n) for p, n, _k, _h, _r in UPLINK_ROUTE_RESET_ROWS)
+
+
+def _load_generator():
+    path = (
+        Path(gie_binding_table.__file__).resolve().parents[2]
+        / "tools"
+        / "gie_generate_binding_table.py"
+    )
+    spec = importlib.util.spec_from_file_location("gie_gen_a16", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+# compile_rows() validates slice rows; BINDING_TABLE is its output. Three schema fields
+# -- presence_model, emit_when, parent_resolution -- are documentation-only and FIELDS omits
+# them from the table, so a table row is not a valid compiler input.
+#
+# Reusing output as input only worked while the generator did not validate the schema.
+# Validation moved into the generator after two separate checkers had gone unused for four
+# batches. Compiler tests now restore those three fields to exercise compilation rules
+# (allowlists, duplicates, profile_key), not schema validation, which has separate tests.
+#
+# Adding the fields to FIELDS instead would change the binding table and enlarge the
+# runtime artifact with metadata that no runtime consumer reads.
+def _as_slice_rows(rows):
+    """Restore slice-only schema fields to binding table rows for compiler tests."""
+    return [
+        dict(r, presence_model="two_axis", emit_when="explicit_only",
+             parent_resolution="desired_parent")
+        for r in rows
+    ]

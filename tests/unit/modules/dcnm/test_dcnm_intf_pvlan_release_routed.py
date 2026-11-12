@@ -20,52 +20,29 @@ __metaclass__ = type
 
 import copy
 import json
-import os
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from . import test_dcnm_intf_pvlan_po_g4_release as G4
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import TRUNK, preview
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController
-from . import test_dcnm_intf_pvlan_po_host as H
-
-Q56 = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_release_routed_q56_measured.json")))
-CDP_RELEASE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_release_routed_cdp_measured.json")))
-ROUTED = "int_routed_host"
-RELEASED_ROUTED = dict(Q56["released_routed_nvpairs"])  # MEASURED, ADMIN_STATE "true"
-RELEASED_ROUTED_CDP = dict(CDP_RELEASE["released_routed_nvpairs"])  # MEASURED on NDFC 12.6.0.267: the Q56 keys plus CDP_ENABLE and two inactive keys
-CHILDREN_UP = [(c["templateName"], c["priority"]) for c in Q56["released_children"]]  # MEASURED own children
-MEM, PO_NAME = G4.MEM, G4.PO_NAME
-
-
-def remap(lines, port, po_number, pair):
-    """The measured lines on the harness names (port, Po number, association)."""
-    out = []
-    for line in lines:
-        line = line.replace("ethernet1/8", port.lower()).replace("Ethernet1/8", port)
-        line = line.replace("port-channel521", "port-channel%s" % po_number).replace("channel-group 521", "channel-group %s" % po_number)
-        out.append(line.replace("2410 2412", "%d %d" % pair))
-    return out
-
-
-def routed_release_preview(port=MEM, po_number="502", pair=(2210, 2212), admin_up=False, form="measured"):
-    """MEASURED release preview (admin_up=True), the MEASURED preview after the module-equivalent modify (admin_up=False, the default
-    form), or the DERIVED admin-down form of the RA1 battery (form="derived": `no shutdown` dropped from the measured release preview)."""
-    pv = Q56["preview_release_admin_up"] if admin_up or form == "derived" else Q56["preview_release_admin_down_measured"]
-    pending = remap(pv["pendingConfig"], port, po_number, pair)
-    expected = remap(pv["expected_member"], port, po_number, pair)
-    if not admin_up and form == "derived":
-        pending = [line for line in pending if line.strip() != "no shutdown"]
-        expected = [("  shutdown" if line.strip() == "no shutdown" else line) for line in expected]
-    return pending, remap(pv["running_member"], port, po_number, pair), expected
-
-
-def child_policies(port, templates, serial="x"):
-    return [{"entityName": port, "entityType": "INTERFACE", "templateName": t, "source": port, "deleted": False,
-             "policyId": "POLICY-77%03d" % i, "priority": prio, "serialNumber": serial} for i, (t, prio) in enumerate(templates)]
+from .dcnm_interface.helpers import port_channel_release as G4
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import TRUNK, preview
+from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController
+from .dcnm_interface.helpers import port_channel_controller as H
+from .dcnm_interface.helpers.port_channel_release import (
+    CDP_RELEASE,
+    CHILDREN_UP,
+    MEM,
+    PO_NAME,
+    Q56,
+    RELEASED_ROUTED,
+    RELEASED_ROUTED_CDP,
+    ROUTED,
+    child_policies,
+    own,
+    routed_release_preview,
+)
 
 
 class RoutedReleaseController(G4.ReleaseController):
@@ -189,12 +166,6 @@ def test_a_second_run_after_the_routed_delete_writes_nothing():
     status, result = delete(ctrl)
     assert status == "exit" and result["changed"] is False, result.get("msg")
     assert ctrl.writes() == []
-
-
-# ------------------------------------------------------------------ Po: refused before any member write
-def own(port, template, source=None, prio=452):
-    return {"entityName": port, "entityType": "INTERFACE", "templateName": template, "source": port if source is None else source,
-            "deleted": False, "policyId": "POLICY-779%02d" % (len(template) % 97), "priority": prio, "serialNumber": "x"}
 
 
 @pytest.mark.parametrize(

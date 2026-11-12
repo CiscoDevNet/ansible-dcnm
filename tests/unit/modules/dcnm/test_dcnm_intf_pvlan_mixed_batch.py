@@ -20,10 +20,11 @@ import copy
 
 import pytest
 
-from . import test_dcnm_intf_pvlan_harness as HH
-from . import test_dcnm_intf_pvlan_member_updates as MU
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP, run
+from .dcnm_interface.helpers import ethernet_controller as HH
+from .dcnm_interface.helpers import membership as MU
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, run
+from .dcnm_interface.helpers.mixed_controller import released_block
 
 CONV_PO, CONV_PO_ITEM = "Port-channel301", "port-channel301"
 C14, C15 = "Ethernet1/14", "Ethernet1/15"
@@ -49,15 +50,6 @@ CONV_VPC_PROFILE = {
     "peer1_pcid": 305, "peer2_allowed_vlans": "none", "peer2_cmds": "", "peer2_description": "INTEG-VPC-CONV-V2", "peer2_members": [V5],
     "peer2_native_vlan": "", "peer2_pcid": 305, "port_type_fast": True, "spanning_tree_port_type": "no", "speed": "auto",
 }
-
-
-def released_block(member, pcid=301, withdrawal=True):
-    """The measured forced-preview pending of a conventional member released by its port-channel (live diagnosis)."""
-    lines = ["interface %s" % member.lower()]
-    if withdrawal:
-        lines.append("  no channel-group %d force mode active" % pcid)
-    return lines + ["  switchport", "  switchport mode trunk", "  switchport trunk allowed vlan none", "  mtu 9216",
-                    "  spanning-tree port type edge trunk", "  no shutdown"]
 
 
 def with_pending(resp, extra):

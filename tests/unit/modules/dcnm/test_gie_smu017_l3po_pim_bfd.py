@@ -25,7 +25,7 @@ from urllib.parse import parse_qs, urlsplit
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_binding, resolve_by_nvpair
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 
 L3PO = h.PC_L3
 KEY, NVPAIR = "enable_pim_bfd_instance", "pimBfdInstance"

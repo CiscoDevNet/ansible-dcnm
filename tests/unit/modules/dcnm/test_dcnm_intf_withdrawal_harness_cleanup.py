@@ -30,14 +30,7 @@ from ansible.module_utils import basic
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
-from .gie_withdrawal_harness import (
-    ACCESS,
-    IF_A,
-    base_for,
-    cfg,
-    harness_case,
-    run_configs,
-)
+from .dcnm_interface.helpers.binding_harness import ACCESS, IF_A, base_for, cfg, harness_case, run_configs
 
 
 def test_the_harness_restores_the_serialiser_it_replaced():
@@ -95,7 +88,7 @@ def test_a_partial_setup_still_unwinds_the_patches_it_installed():
     This test FAILS on the pre-fix harness and passes after it. It asserts the serialiser
     methods specifically, not merely "no exception".
     """
-    from .test_dcnm_intf_binding_module_path import A161Base
+    from .dcnm_interface.helpers.module_runner import A161Base
 
     before = (basic.AnsibleModule.exit_json, basic.AnsibleModule.fail_json)
     original_setup = A161Base.setUp
@@ -136,7 +129,7 @@ def test_a_partial_setup_leaves_unrelated_patches_alone():
     `patch.stopall()` would make the test above pass while silently stopping patches this
     harness never installed. This one fails under that shortcut.
     """
-    from .test_dcnm_intf_binding_module_path import A161Base
+    from .dcnm_interface.helpers.module_runner import A161Base
 
     sentinel = object()
     unrelated = patch.object(module, "__doc__", sentinel)
@@ -170,7 +163,7 @@ def test_a_partial_setup_leaves_unrelated_patches_alone():
 def test_the_case_does_not_leak_its_version_override_to_the_next_case():
     """`ndfc_version` is set on the INSTANCE. A class attribute would outlive the case and
     silently retune every later test in the session."""
-    from .test_dcnm_intf_binding_module_path import A161Base
+    from .dcnm_interface.helpers.module_runner import A161Base
     original = A161Base.ndfc_version
     run_configs([cfg(IF_A, base_for(ACCESS), deploy=False)], "replaced", None,
                 ndfc_version="12.6.0.266")

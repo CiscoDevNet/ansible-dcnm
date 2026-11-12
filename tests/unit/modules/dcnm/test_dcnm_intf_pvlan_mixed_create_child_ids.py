@@ -9,9 +9,9 @@ __metaclass__ = type
 import copy
 import json
 
-from . import test_dcnm_intf_pvlan_vpc_harness as V
+from .dcnm_interface.helpers import vpc_controller as V
 from .test_dcnm_intf_pvlan_mixed_create import PATCH, V5, conv_child, conv_vpc_create_item, join_block, vpc_ctrl, vpc_owned
-from .test_dcnm_intf_pvlan_vpc_child_ids import _remap_answer
+from .dcnm_interface.helpers.vpc_controller import _remap_answer
 
 
 def _call(extra):

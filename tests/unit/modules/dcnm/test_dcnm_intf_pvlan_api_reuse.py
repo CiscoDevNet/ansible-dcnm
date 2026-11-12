@@ -18,9 +18,9 @@ from unittest.mock import patch
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
-from . import test_dcnm_intf_pvlan_mixed_saved_retry as SR
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import SERIAL, preview
+from .dcnm_interface.helpers import mixed_controller as SR
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import SERIAL, preview
 
 PREVIEW = "/config-preview/"
 
@@ -146,8 +146,8 @@ def test_the_sender_closes_the_planning_phase_before_any_request():
 
 
 # ================================================================== 2. PREWRITE-REUSE (vPC reads before the first write)
-from . import test_dcnm_intf_pvlan_vpc_child_ids as CI  # noqa: E402
-from . import test_dcnm_intf_pvlan_vpc_read_diagnostics as RD  # noqa: E402
+from .dcnm_interface.helpers import vpc_controller as CI
+from .dcnm_interface.helpers import vpc_controller as RD
 
 POLICIES, DETAIL = "/control/policies/switches/", "/rest/interface?serialNumber="
 

@@ -37,7 +37,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
     resolve_binding as _resolve_binding,
 )
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     IF_A,
     ROUTED,
     base_for,

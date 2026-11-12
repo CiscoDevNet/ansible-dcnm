@@ -79,13 +79,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_carry_forward_bindings,
     gie_validate_binding_value,
 )
-from .test_dcnm_intf_loopback_carry_forward import (
-    FAB,
-    SNO,
-    _instance,
-    _payload_nv,
-    _public_nv,
-)
+from .dcnm_interface.helpers.binding_harness import FAB, SNO, _instance, _payload_nv, _public_nv
 
 ROUTED = "int_routed_host"
 IFNAME = "Ethernet1/5"

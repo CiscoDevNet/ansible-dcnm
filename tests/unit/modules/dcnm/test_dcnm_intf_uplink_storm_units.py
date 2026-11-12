@@ -25,7 +25,7 @@ __metaclass__ = type
 
 import pytest
 
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.test_dcnm_intf_uplink_access import (
     ROWS, _assert_refused, _cfg, _have, _modify, _run)
 

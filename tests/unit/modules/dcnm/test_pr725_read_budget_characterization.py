@@ -33,7 +33,7 @@ from unittest import mock
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
-from .test_dcnm_intf_have_fetch_contract import _stub
+from .dcnm_interface.helpers.have_reader import _stub
 
 DcnmIntf = dcnm_interface.DcnmIntf
 POLICY = "int_routed_host"

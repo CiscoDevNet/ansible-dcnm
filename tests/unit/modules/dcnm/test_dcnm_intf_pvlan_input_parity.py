@@ -31,10 +31,10 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from . import gie_withdrawal_harness as GH
-from . import test_dcnm_intf_pvlan as E
-from . import test_dcnm_intf_pvlan_po_host as PO
-from . import test_dcnm_intf_pvlan_vpc_harness as VH
+from .dcnm_interface.helpers import binding_harness as GH
+from .dcnm_interface.helpers import ethernet_controller as E
+from .dcnm_interface.helpers import port_channel_controller as PO
+from .dcnm_interface.helpers import vpc_controller as VH
 
 BPDU_ALIASES = [
     ("true", True), ("true", "TRUE"), ("true", "True"),

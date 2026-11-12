@@ -16,8 +16,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
-import os
 from unittest.mock import patch
 
 import pytest
@@ -25,66 +23,26 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from .dcnm_interface.helpers.role_reset import (
+    PHYSICAL,
+    STATES,
+    _inventory,
+    _physical_transport,
+    as_have,
+    nvpairs_of_reset,
+    reset_policies,
+    reset_wire,
+    run,
+)
 
 ACL = "SYNTHETIC-ACL"
 NO_WITHDRAWAL = "This module has no verified withdrawal for it; it must be cleaned up by a separate, verified procedure"
-STATES = ("deleted", "overridden")
 ROLES = {
     "leaf": dict(default=h.TRUNK, drift={"aclFilter": ACL, "flowcontrolReceive": "on"},
                  seed=dict(acl_filter=ACL, flowcontrol_receive="on")),
     "border": dict(default=h.ROUTED, drift={"ipv4AclIn": ACL}, seed=dict(ipv4_acl_in=ACL)),
 }
-_ORIG_TRANSPORT = h._transport
-
-
-def _physical_transport(flags):
-    def factory(calls, have):
-        inner = _ORIG_TRANSPORT(calls, have)
-
-        def send(mod, method, path, payload=None):
-            resp = inner(mod, method, path, payload)
-            if method == "GET" and "/interface/detail" in path and isinstance(resp.get("DATA"), list):
-                for e in resp["DATA"]:
-                    if str(e.get("isPhysical")).lower() == "true":
-                        e.update(flags)
-            return resp
-        return send
-    return factory
-
-
-PHYSICAL = {"deletable": "false", "editAllowed": "true", "mgmtIpAddress": h.SWITCH_IP}
-
-
-def _inventory(role):
-    path = os.path.join(os.path.dirname(h.__file__), "fixtures", "dcnm_intf_binding_configs.json")
-    inv = json.load(open(path))["mock_fab_inv_data"]
-    for v in inv.values():
-        v["switchRole"] = role
-    return inv
-
-
-def run(state, have, role, configs=None, flags=None, patch_version=h._UNSET):
-    if configs is None:
-        configs = [{"name": h.IF_A, "type": "eth", "switch": [h.SWITCH_IP]}] if state == "deleted" else []
-    with patch.object(h, "_transport", _physical_transport(flags or PHYSICAL)):
-        return h.run_configs(configs, state, have=have, patch_version=patch_version,
-                             extra_patch=patch.object(module, "get_fabric_inventory_details", return_value=_inventory(role)))
-
-
-def reset_policies(calls):
-    found = []
-    h._collect_policies([c["payload"] for c in h.split_calls(calls)["updates"]], found)
-    return found
-
-
-def as_have(calls):
-    found = reset_policies(calls)
-    assert len(found) == 1, found
-    have = copy.deepcopy(found)
-    have[0]["interfaces"][0]["interfaceType"] = "INTERFACE_ETHERNET"
-    have[0]["interfaces"][0]["fabricName"] = h.FABRIC
-    return have
 
 
 _DEFAULT_HAVE = {}
@@ -97,14 +55,6 @@ def default_have(role):
         _r, calls = run("deleted", seed, role)
         _DEFAULT_HAVE[role] = as_have(calls)
     return copy.deepcopy(_DEFAULT_HAVE[role])
-
-
-def nvpairs_of_reset(calls):
-    return reset_policies(calls)[0]["interfaces"][0]["nvPairs"]
-
-
-def reset_wire(parent, nvpair):
-    return table.resolve_by_nvpair(parent, nvpair)["reset_wire"]
 
 
 # ------------------------------------------------------------------ the finding, fixed

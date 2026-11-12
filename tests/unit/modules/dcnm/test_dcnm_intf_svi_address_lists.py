@@ -31,7 +31,7 @@ import copy
 
 import pytest
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     IF_SVI,
     SVI,
     SWITCH_IP,

@@ -23,12 +23,11 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import registered_profile_keys
-from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_ENABLED_PATCH_VERSIONS
 
-from .test_dcnm_intf_pvlan_harness import IF7, PREVIEW_MARK, PVLAN, authority, preview, pvlan_item, run
-from .test_dcnm_intf_pvlan_lifecycle import TPROM_A11, ctrl
+from .dcnm_interface.helpers.ethernet_controller import IF7, PREVIEW_MARK, PVLAN, authority, preview, run
+from .dcnm_interface.helpers.ethernet_lifecycle import TPROM_A11, ctrl
+from .dcnm_interface.helpers.ethernet_controller import PVLAN_ROUTE_RESET_ROWS, SMU, eth_item, full_model, have_nv
 
-SMU = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 APPROVED = [pytest.param(SMU, id="smu"), pytest.param("4.4.1", id="nd441")]
 REFUSED = [
     pytest.param(None, id="absent"),
@@ -208,16 +207,6 @@ def eth_preview(running_extra=(), expected_extra=(), pending=()):
     return preview(lines, running=running + list(running_extra), expected=expected + list(expected_extra))
 
 
-def eth_item(**profile):
-    return pvlan_item(pvlan_mode="trunk promiscuous", **profile)
-
-
-def have_nv(**over):
-    nv = copy.deepcopy(TPROM_A11)
-    nv.update(over)
-    return nv
-
-
 @pytest.mark.parametrize("patch_version", APPROVED)
 @pytest.mark.parametrize(
     "key,nvp,line", [("disable_lldp_transmit", "lldpTransmit", "no lldp transmit"), ("disable_lldp_receive", "lldpReceive", "no lldp receive")]
@@ -260,18 +249,6 @@ def test_eth_merged_omission_keeps_a_true_have_while_the_list_changes():
     nv = c.sent_nv(IF7)[1]
     assert nv["lldpReceive"] == "true" and nv["lldpTransmit"] == "false"
     assert "lldpReceive" not in res["diff"][0]["merged"][0]["interfaces"][0]["nvPairs"]
-
-
-def full_model(**extra):
-    return eth_item(
-        pvlan_mapping=[{"primary_vlan": 2210, "secondary_vlans": "2211"}],
-        native_vlan="2301",
-        allowed_vlans="2301",
-        admin_state=False,
-        bpdu_guard="no",
-        deploy=False,
-        **extra
-    )
 
 
 def test_eth_replaced_omission_with_an_approved_capability_withdraws_to_the_inferred_reset():
@@ -336,12 +313,12 @@ def test_eth_policy_change_still_carries_the_have_lldp_when_omitted():
 
 
 # ================================================================== port-channel int_port_channel_pvlan_host (+ member)
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP  # noqa: E402
-from .test_dcnm_intf_pvlan_po_g1 import RUNNING_MEMBER as PO_RUNNING_MEMBER  # noqa: E402
-from .test_dcnm_intf_pvlan_po_g1 import member_stanza, po_stanza  # noqa: E402
-from .test_dcnm_intf_pvlan_po_g5_next_modes import CASES, existing, new_ctrl  # noqa: E402
-from .test_dcnm_intf_pvlan_po_host import PO, PO_ITEM_NAME  # noqa: E402
-from .test_dcnm_intf_pvlan_po_g1 import item as po_item  # noqa: E402
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP
+from .dcnm_interface.helpers.port_channel_controller import RUNNING_MEMBER as PO_RUNNING_MEMBER
+from .dcnm_interface.helpers.port_channel_controller import member_stanza, po_stanza
+from .dcnm_interface.helpers.port_channel_controller import CASES, existing, new_ctrl
+from .dcnm_interface.helpers.port_channel_controller import PO, PO_ITEM_NAME
+from .dcnm_interface.helpers.port_channel_controller import item as po_item
 
 TP_LINES = CASES["trunk promiscuous"][1]
 
@@ -619,10 +596,10 @@ def test_po_exact_repeat_of_the_companions_writes_nothing():
 
 
 # ================================================================== vPC int_vpc_pvlan_host -> int_vpc_pvlan_po x2 -> member x2
-from .test_dcnm_intf_pvlan_vpc_harness import IP1, IP2, M1, M2, SN1, SN2, VPC, run_vpc  # noqa: E402
-from .test_dcnm_intf_pvlan_vpc_harness import preview as vpc_preview  # noqa: E402
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import MODES as VPC_MODES  # noqa: E402
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import (
+from .dcnm_interface.helpers.vpc_controller import IP1, IP2, M1, M2, SN1, SN2, VPC, run_vpc
+from .dcnm_interface.helpers.vpc_controller import preview as vpc_preview
+from .dcnm_interface.helpers.vpc_modes import MODES as VPC_MODES
+from .dcnm_interface.helpers.vpc_modes import (
     PAIRS,
     TP,
     baseline_ctrl,
@@ -632,10 +609,10 @@ from .test_dcnm_intf_pvlan_vpc_modes_e1 import (
     per_peer,
     seeded_ctrl,
     sent_parent,
-)  # noqa: E402
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import item as vpc_item  # noqa: E402
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import po_stanza as vpc_po_stanza  # noqa: E402
-from .test_dcnm_intf_pvlan_vpc_modes_e1 import create_preview as vpc_create_preview  # noqa: E402
+)
+from .dcnm_interface.helpers.vpc_modes import item as vpc_item
+from .dcnm_interface.helpers.vpc_modes import po_stanza as vpc_po_stanza
+from .dcnm_interface.helpers.vpc_modes import create_preview as vpc_create_preview
 
 PEERS = ((SN1, M1), (SN2, M2))
 
@@ -893,24 +870,6 @@ def test_vpc_qos_is_in_the_public_contract_and_the_port_channel_still_refuses_it
     assert reasons and "enable_qos" in reasons[0] and "qos_policy" in reasons[0]
 
 
-# ================================================================== omission contract of EVERY registry companion (real helper)
-# (parent, nvPair, public key, non-default HAVE value, reset). Consumed by test_dcnm_intf_withdrawal.py's coverage guard: these
-# identities take the PVLAN route, not the generic comparator its fixture matrix drives.
-PVLAN_ROUTE_RESET_ROWS = (
-    (P.PVLAN_POLICY, "lldpTransmit", "disable_lldp_transmit", "true", "false"),
-    (P.PVLAN_POLICY, "lldpReceive", "disable_lldp_receive", "true", "false"),
-    (P.PO_HOST_POLICY, "lldpTransmit", "disable_lldp_transmit", "true", "false"),
-    (P.PO_HOST_POLICY, "lldpReceive", "disable_lldp_receive", "true", "false"),
-    (P.PO_HOST_POLICY, "spanningTreePortType", "spanning_tree_port_type", "network", "no"),
-    (P.PO_HOST_POLICY, "queuingStats", "disable_queuing_stats", "true", "false"),
-    (P.VPC_HOST_POLICY, "lldpTransmit", "disable_lldp_transmit", "true", "false"),
-    (P.VPC_HOST_POLICY, "lldpReceive", "disable_lldp_receive", "true", "false"),
-    (P.VPC_HOST_POLICY, "spanningTreePortType", "spanning_tree_port_type", "normal", "no"),
-    (P.VPC_HOST_POLICY, "queuingStats", "disable_queuing_stats", "true", "false"),
-    (P.VPC_HOST_POLICY, "aclFilter", "acl_filter", "OLD-ACL", ""),
-    (P.VPC_HOST_POLICY, "qosStatsSuppressed", "disable_qos_stats", "true", "false"),  # ingress QoS
-)
-PVLAN_ROUTE_RESET_IDENTITIES = frozenset((p, n) for p, n, _k, _h, _r in PVLAN_ROUTE_RESET_ROWS)
 _IDS = ["%s::%s" % (p.replace("int_", ""), n) for p, n, _k, _h, _r in PVLAN_ROUTE_RESET_ROWS]
 
 

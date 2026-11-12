@@ -25,9 +25,9 @@ __metaclass__ = type
 
 import json
 
-from .test_dcnm_intf_pvlan_harness import run
-from . import test_dcnm_intf_pvlan_duplex_inherited as D
-from . import test_dcnm_intf_pvlan_vpc_harness as V
+from .dcnm_interface.helpers.ethernet_controller import run
+from .dcnm_interface.helpers import member_link_settings as D
+from .dcnm_interface.helpers import vpc_controller as V
 
 COMBINED = "speed and duplex cannot change in the same request"
 FA = "needs a fixed speed"

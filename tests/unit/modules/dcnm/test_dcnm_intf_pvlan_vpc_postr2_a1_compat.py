@@ -16,9 +16,9 @@ import json
 
 import pytest
 
-from . import test_dcnm_intf_pvlan_multimember as MM
+from .dcnm_interface.helpers import membership as MM
 from . import test_dcnm_intf_pvlan_vpc_a1_description as A1
-from . import test_dcnm_intf_pvlan_vpc_harness as V
+from .dcnm_interface.helpers import vpc_controller as V
 
 COMBINED = "speed and duplex cannot change in the same request"
 

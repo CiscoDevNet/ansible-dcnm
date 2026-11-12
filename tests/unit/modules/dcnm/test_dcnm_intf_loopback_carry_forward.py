@@ -15,20 +15,15 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-from unittest import mock
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_have_carry_forward_nvpairs,
 )
-from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
+from .dcnm_interface.helpers.binding_harness import FAB, MD, SNO, _instance, _payload_nv, _public_nv
 
-DcnmIntf = dcnm_interface.DcnmIntf
 PARENT = "int_fabric_loopback_11_1"
-MD = "ENABLE_OSPF_AUTH_MESSAGE_DIGEST"
-SNO = "SN1"
-FAB = "fab"
 
 # Builder-emitted nvPairs (present in WANT), matching HAVE so they are idempotent.
 BUILDER_NV = {
@@ -62,50 +57,6 @@ HAVE_OSPF_DOMAIN = {
     "OSPF_AUTH_KEY_ID": "",
     "ospfAuthKeychainName": "",
 }
-
-# nvPair -> public key map for the comparator (only consulted for keys that differ under merged).
-KEYMAP = {
-    "IP": "ipv4_addr", "INTF_NAME": "name", "DESC": "description", "CONF": "cmds",
-    "ADMIN_STATE": "admin_state", "SPEED": "speed", "V6IP": "ipv6_addr",
-    "ROUTE_MAP_TAG": "route_tag", "SECONDARY_IP": "secondary_ipv4_addr",
-    "PRIORITY": "priority", "REPLICATION_MODE": "replication_mode",
-    "LINK_STATE_ROUTING_TAG": "link_state_routing_tag", "OSPF_AREA_ID": "ospf_area_id",
-    MD: "enable_ospf_auth_message_digest",
-}
-
-
-def _instance():
-    s = object.__new__(DcnmIntf)  # methods auto-bind from the class; set only data attributes
-    s.class_name = "DcnmIntf"
-    s.log = mock.Mock()
-    s.module = mock.Mock()
-    s.fabric = FAB
-    s.dcnm_version = 12
-    s.pol_pc_member_types = {12: {}}
-    s.keymap = dict(KEYMAP)
-    s.want_breakout = []
-    s.have_breakout = []
-    s.have_all = []
-    s.intf_detail_cache = {}
-    s.intf_detail_cached_snos = set()
-    s.intf_detail_fetch_failed_snos = set()
-    s.intf_detail_failed_keys = set()
-    s.intf_detail_authoritative_absent_keys = set()
-    s.have_all_cached_snos = set()
-    s.have_all_failed_snos = set()
-    s._replace_have_lookup = {}
-    s._replace_pb_input_lookup = {}
-    s._ospf_auth_md_requests = {}
-    s.diff_create = []
-    s.diff_replace = []
-    s.diff_delete_breakout = []
-    s.diff_create_breakout = []
-    s.diff_deploy = []
-    s.changed_dict = [{
-        "merged": [], "replaced": [], "overridden": [], "deleted": [], "query": [],
-        "deploy": [], "debugs": [], "delete_deploy": [], "deferred": [], "skipped": [],
-    }]
-    return s
 
 
 def _want(nv, policy=PARENT):
@@ -156,19 +107,6 @@ def _want_md(md_value, extra=None):
 
 def _run(s, state="merged"):
     s.dcnm_intf_compare_want_and_have(state)
-
-
-def _payload_nv(s):
-    if not s.diff_replace:
-        return None
-    return s.diff_replace[0]["interfaces"][0]["nvPairs"]
-
-
-def _public_nv(s, state="merged"):
-    entries = s.changed_dict[0][state]
-    if not entries:
-        return None
-    return entries[0]["interfaces"][0]["nvPairs"]
 
 
 # 1. same parent, user changes only OSPF-MD -> full payload preserves the four HAVE nvPairs

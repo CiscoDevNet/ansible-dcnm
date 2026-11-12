@@ -31,7 +31,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm import dcnm as utility
 
 from .dcnm_module import set_module_args
-from .test_dcnm_intf_pvlan_harness import (
+from .dcnm_interface.helpers.ethernet_controller import (
     DEPLOY,
     FABRIC,
     FIXTURE,

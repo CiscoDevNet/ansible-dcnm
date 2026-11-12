@@ -33,9 +33,9 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_binding
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from .dcnm_interface.helpers.binding_harness import PEER_LINK_ROUTE_RESET_ROWS, PL
 
-PL = "int_vpc_peer_link_po"
 PO = "port-channel1"
 SERIALS = (h.SERIAL, h.PEER_SERIAL)
 
@@ -332,14 +332,6 @@ def test_a_qos_sub_key_is_stored_while_qos_is_off(key, value, nvpair, wire):
     assert set(sent) == set(SERIALS)
     for nv in sent.values():
         assert nv[nvpair] == wire and "ENABLE_QOS" not in nv
-
-
-# One row per registered reset of the parent. test_dcnm_intf_withdrawal.py requires this set to equal the registry.
-PEER_LINK_ROUTE_RESET_ROWS = (
-    (PL, "qosStatsSuppressed", "disable_qos_stats", "true", "false"),
-    (PL, "spanningTreePortType", "spanning_tree_port_type", "network", "no"),
-)
-PEER_LINK_ROUTE_RESET_IDENTITIES = frozenset((p, n) for p, n, _k, _h, _r in PEER_LINK_ROUTE_RESET_ROWS)
 
 
 @pytest.mark.parametrize("policy,nvp,key,have_value,reset", PEER_LINK_ROUTE_RESET_ROWS,

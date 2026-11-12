@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from .test_dcnm_intf_pvlan_vpc_harness import (
+from .dcnm_interface.helpers.vpc_controller import (
     M1,
     SN1,
     SN2,

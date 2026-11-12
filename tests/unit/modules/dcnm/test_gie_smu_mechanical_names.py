@@ -40,7 +40,7 @@ import copy
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     ACCESS,
     TRUNK,
     base_for,

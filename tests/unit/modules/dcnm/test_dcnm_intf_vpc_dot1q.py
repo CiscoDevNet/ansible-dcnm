@@ -25,7 +25,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
     BINDING_TABLE,
 )
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     PEER_IP,
     SWITCH_IP,
     VPC_ACCESS,

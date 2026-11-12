@@ -21,7 +21,7 @@ from unittest.mock import patch
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_binding, resolve_by_nvpair
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_gie_smu017_l3po_pim_bfd as po
 
 L3PO = h.PC_L3

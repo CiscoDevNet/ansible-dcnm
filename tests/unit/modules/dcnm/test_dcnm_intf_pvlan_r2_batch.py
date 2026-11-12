@@ -25,7 +25,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
 from .dcnm_module import set_module_args
-from .test_dcnm_intf_pvlan_harness import FABRIC, NDFC, PVLAN, TRANSITIONS, ok
+from .dcnm_interface.helpers.ethernet_controller import FABRIC, NDFC, PVLAN, TRANSITIONS, ok
 
 SN_A, SN_B = "SAL1819SAN8", "SAL1819SAN9"
 IP_A, IP_B = "10.0.0.1", "10.0.0.2"

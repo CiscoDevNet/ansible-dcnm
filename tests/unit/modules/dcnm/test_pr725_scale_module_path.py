@@ -29,7 +29,7 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
-from . import gie_withdrawal_harness as H
+from .dcnm_interface.helpers import binding_harness as H
 
 SIZES = (1000, 5000)
 NET = ipaddress.ip_network("198.18.0.0/15")

@@ -21,7 +21,7 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import DEVICE, TRANSITIONS, module
+from .dcnm_interface.helpers.ethernet_controller import DEVICE, TRANSITIONS, module
 
 VOCAB = getattr(P, "transition_vocabulary", None)
 ACL = "ip access-group KEEP-IN in"  # SYNTHETIC

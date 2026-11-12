@@ -17,8 +17,8 @@ import json
 
 import pytest
 
-from . import test_dcnm_intf_pvlan_vpc_batch as B
-from . import test_dcnm_intf_pvlan_vpc_harness as V
+from .dcnm_interface.helpers import vpc_controller as B
+from .dcnm_interface.helpers import vpc_controller as V
 
 module = B.module
 PA, PB = B.PA, B.PB

@@ -20,8 +20,8 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_ENABLED_PATCH_VERSIONS
 
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP, preview, run
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, preview, run
+from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController
 
 FX = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_m1_measured.json")))
 PO, MEM = "Port-channel501", "Ethernet1/8"

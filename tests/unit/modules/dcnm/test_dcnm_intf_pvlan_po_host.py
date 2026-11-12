@@ -21,120 +21,44 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import (
+from .dcnm_interface.helpers.ethernet_controller import (
     IF7,
     IF8,
     SERIAL,
     SWITCH_IP,
     TRUNK,
-    FakeController,
     ok,
     preview,
     run,
     trunk_host_nv,
 )
-
-PO = "Port-channel10"  # the module-normalised name; device stanzas stay lower case
-PO_ITEM_NAME = "po10"
-PO_HOST = "int_port_channel_pvlan_host"
-PO_MEMBER = "int_port_channel_pvlan_member"
-GLOBAL_IF = "/rest/globalInterface"
-DEPLOY = "/rest/globalInterface/deploy"
-MODIFY = "/rest/interface/modify"
-PRIMARY, SECONDARY = 2210, 2212  # candidates, not validated by this review
-
-RUNNING_MEMBER = ["interface Ethernet1/7", "  switchport", "  switchport mode trunk",
-                  "  switchport trunk allowed vlan none", "  spanning-tree port type edge trunk",
-                  "  mtu 9216", "  shutdown"]
-PO_STANZA = ["interface port-channel10", "  switchport", "  switchport mode private-vlan host",
-             "  switchport private-vlan host-association 2210 2212", "  mtu 9216",
-             "  spanning-tree bpduguard enable", "  spanning-tree port type edge trunk", "  shutdown"]
-# MEASURED member forms of the creation (fixtures/pvlan_po_h1_measured.json, port-channel502 /
-# Ethernet1/10), TRANSPOSED to this harness's names (port-channel10 / Ethernet1/7). The controller's expected member holds
-# `channel-group N mode active` (no `force`) plus the inherited PVLAN mode and list line; the member pending holds only
-# `no spanning-tree port type edge trunk` (before the parent block) and `channel-group N force mode active` + `shutdown`.
-# The G1/E2 hand predictions (expected WITH force; pending withdrawing the trunk lines and adding the PVLAN lines) were
-# contradicted by that measurement.
-MEMBER_AFTER = ["interface ethernet1/7", "  channel-group 10 mode active", "  mtu 9216", "  shutdown", "  switchport",
-                "  switchport mode private-vlan host", "  switchport private-vlan host-association 2210 2212"]
-PENDING_NEW = (["interface ethernet1/7", "  no spanning-tree port type edge trunk"] + PO_STANZA
-               + ["interface ethernet1/7", "  channel-group 10 force mode active", "  shutdown", "configure terminal"])
-
-
-class PoController(FakeController):
-    """The existing fake controller + the port-channel create path (POST globalInterface)."""
-
-    def __init__(self):
-        super(PoController, self).__init__()
-        self.create_responses = []
-        self.po_names = set()
-
-    def __call__(self, mod, method, path, data=None):
-        if method == "POST" and path.endswith(GLOBAL_IF):
-            self.calls.append((method, path, data))
-            resp = self.create_responses.pop(0) if self.create_responses else ok({})
-            body = json.loads(data)
-            body = body if isinstance(body, list) else [body]
-            if resp.get("RETURN_CODE") in (200, 207):
-                for payload in body:
-                    for intf in payload["interfaces"]:
-                        self.detail[intf["ifName"]] = {"policy": payload["policy"], "nvPairs": copy.deepcopy(intf["nvPairs"])}
-                        self.po_names.add(intf["ifName"])
-            return resp
-        return super(PoController, self).__call__(mod, method, path, data)
-
-    def _summary_list(self):
-        out = super(PoController, self)._summary_list()
-        for entry in out:
-            if entry["ifName"] in self.po_names:
-                entry["ifType"], entry["isPhysical"], entry["mode"] = "INTERFACE_PORT_CHANNEL", "False", "trunk"
-        return out
-
-    def creates(self):
-        return [c for c in self.calls if c[0] == "POST" and c[1].endswith(GLOBAL_IF)]
-
-    def deploys(self):
-        return [c for c in self.calls if c[0] == "POST" and c[1].endswith(DEPLOY)]
-
-    def writes(self):
-        return [c for c in self.calls if c[0] in ("POST", "PUT", "DELETE") and "networkAttachments/query" not in c[1]
-                and "/config-preview" not in c[1]]
-
-
-def _as_list(body):
-    return body if isinstance(body, list) else [body]
-
-
-def po_item(name=PO_ITEM_NAME, deploy=True, **profile):
-    prof = {"mode": "pvlan", "pvlan_mode": "host", "members": [IF7], "admin_state": False,
-            "pvlan_association": [{"primary_vlan": PRIMARY, "secondary_vlan": SECONDARY}]}
-    prof.update(profile)
-    return {"name": name, "type": "pc", "switch": [SWITCH_IP], "deploy": deploy, "profile": prof}
-
-
-def baseline_ctrl(member_nv=None):
-    ctrl = PoController()
-    ctrl.detail[IF7] = {"policy": TRUNK, "nvPairs": member_nv if member_nv is not None else trunk_host_nv(IF7)}
-    return ctrl
-
-
-def good_preview():
-    return preview(PENDING_NEW, running=RUNNING_MEMBER, expected=PO_STANZA + MEMBER_AFTER)
-
-
-def created_ctrl():
-    """Controller state after a successful M1 (SYNTHETIC: the member policy flip is predicted)."""
-    ctrl = baseline_ctrl()
-    ctrl.previews = [good_preview()]
-    status, result = run(ctrl, [po_item()])
-    assert status == "exit", result
-    nv = {"PO_ID": PO, "PC_MODE": "active", "PVLAN_MODE": "host", "CDP_ENABLE": "true", "lldpTransmit": "false",
-          "lldpReceive": "false", "LACP_PORT_PRIO": "32768", "LACP_RATE": "normal", "DESC": "", "CONF": "",
-          "ADMIN_STATE": "false", "INTF_NAME": IF7}
-    ctrl.detail[IF7] = {"policy": PO_MEMBER, "nvPairs": nv}
-    ctrl.next_invocation()
-    ctrl.calls = []
-    return ctrl
+from .dcnm_interface.helpers.port_channel_controller import (
+    IF7,
+    MEMBER_AFTER,
+    MODIFY,
+    PENDING_NEW,
+    PO,
+    PO_HOST,
+    PO_ITEM_NAME,
+    PO_MEMBER,
+    PO_STANZA,
+    PRIMARY,
+    PoController,
+    RUNNING_MEMBER,
+    SECONDARY,
+    SERIAL,
+    SWITCH_IP,
+    TRUNK,
+    _as_list,
+    _eth,
+    baseline_ctrl,
+    created_ctrl,
+    good_preview,
+    po_item,
+    preview,
+    run,
+    trunk_host_nv,
+)
 
 
 # ------------------------------------------------------------------ route, payload types, creation
@@ -593,13 +517,6 @@ def test_models_carry_only_placeholders_and_declare_not_run():
         assert "NOT RUN" in text, name
         for real in ("192.168.", "SAL0000PO01", "FAB1", "Leaf"):
             assert real not in text, (name, real)
-
-
-# ------------------------------------------------------------------ existing routes that could reach a PVLAN Po/member
-# Found by probing the existing routes: before the guard these four reached the
-# controller (markdelete / modify / deploy). Each is now refused before any write.
-def _eth(name, mode="trunk"):
-    return {"name": name, "type": "eth", "switch": [SWITCH_IP], "deploy": False, "profile": {"mode": mode}}
 
 
 def _po_trunk():

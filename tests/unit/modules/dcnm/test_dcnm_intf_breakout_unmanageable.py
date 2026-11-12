@@ -18,8 +18,8 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
-from . import test_dcnm_intf_pvlan_harness as H
-from .test_dcnm_intf_have_fetch_contract import _assert_zero_mutating_calls, _stub
+from .dcnm_interface.helpers import ethernet_controller as H
+from .dcnm_interface.helpers.have_reader import _assert_zero_mutating_calls, _stub
 
 SKIP_REASON = "Switch is in preprovision state or not manageable"
 BREAKOUT = "/rest/interface/breakout"

@@ -13,8 +13,8 @@ import copy
 
 import pytest
 
-from .test_dcnm_intf_pvlan_companions_c1 import SMU, eth_item, full_model, have_nv
-from .test_dcnm_intf_pvlan_harness import IF7, IF8, PVLAN, TRUNK, pvlan_nv, run, trunk_host_nv
+from .dcnm_interface.helpers.ethernet_controller import SMU, eth_item, full_model, have_nv
+from .dcnm_interface.helpers.ethernet_controller import IF7, IF8, PVLAN, TRUNK, pvlan_nv, run, trunk_host_nv
 from .test_dcnm_intf_pvlan_lifecycle import ctrl
 
 REFUSAL = "qos_policy requires enable_qos true"

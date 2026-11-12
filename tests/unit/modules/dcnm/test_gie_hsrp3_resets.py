@@ -51,7 +51,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_withdrawal_action,
 )
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     GROUPED_ONLY_NO_PER_ROW_FIXTURE,
     HSRP_CTX,
     SVI,

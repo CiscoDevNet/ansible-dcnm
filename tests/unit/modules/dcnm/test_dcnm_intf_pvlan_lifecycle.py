@@ -9,14 +9,13 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import ast
-import copy
 import os
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_ENABLED_PATCH_VERSIONS
 
-from .test_dcnm_intf_pvlan_harness import (
+from .dcnm_interface.helpers.ethernet_controller import (
     DEPLOY,
     FIXTURE,
     IF7,
@@ -27,7 +26,6 @@ from .test_dcnm_intf_pvlan_harness import (
     RECOMPUTE_FLAGS,
     SERIAL,
     TRUNK,
-    FakeController,
     ok,
     authority,
     measured_preview,
@@ -41,18 +39,12 @@ from .test_dcnm_intf_pvlan_harness import (
     trunk_host_nv,
     trunk_item,
 )
+from .dcnm_interface.helpers.ethernet_lifecycle import ctrl
 
 IF9 = "Ethernet1/9"
 APPROVED_PATCH = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
-TPROM_A11 = pvlan_nv("G6-M0a")
 TPROM_BOTH = pvlan_nv("G6-M0b")
 ADD_2212 = dict(pvlan_mode="trunk promiscuous", pvlan_mapping=[{"primary_vlan": 2210, "secondary_vlans": "2212"}])
-
-
-def ctrl(nv=TPROM_A11, policy=PVLAN, ifname=IF7):
-    c = FakeController()
-    c.detail[ifname] = {"policy": policy, "nvPairs": copy.deepcopy(nv)}
-    return c
 
 
 def deploys(c):

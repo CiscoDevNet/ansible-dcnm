@@ -25,7 +25,7 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 
-from . import gie_withdrawal_harness as H
+from .dcnm_interface.helpers import binding_harness as H
 
 DcnmIntf = dcnm_interface.DcnmIntf
 ABSENT = object()  # the key is not in the entry at all (synthetic)
@@ -220,7 +220,7 @@ def test_mixed_switch_refuses_the_mutation_that_needs_the_datum_and_names_only_t
 def test_interface_excluded_by_override_types_is_not_invalidated_by_absence_SYNTHETIC():
     # alias set and key absent, but the sweep is restricted to another type: the decision is never reached.
     # Driven through the real sweep with the authority-scope stub (the module params are not exposed by main() harness).
-    from . import test_dcnm_intf_override_authority_scope as A
+    from .dcnm_interface.helpers import override_scope as A
 
     have = A._have("Ethernet1/9", "INTERFACE_ETHERNET", is_physical="true")
     have["alias"] = "uplink-a"

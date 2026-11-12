@@ -17,81 +17,21 @@ __metaclass__ = type
 import json
 
 import pytest
-from unittest.mock import patch
 
-from . import test_dcnm_intf_pvlan_harness as HH
-from . import test_dcnm_intf_pvlan_member_updates as MU
-from . import test_dcnm_intf_pvlan_po_g4_release as G4
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP, TRUNK, run
+from .dcnm_interface.helpers import ethernet_controller as HH
+from .dcnm_interface.helpers import membership as MU
+from .dcnm_interface.helpers import port_channel_release as G4
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, TRUNK, run
+from .dcnm_interface.helpers.vpc_controller import MeasuredVpc, lo, measured_po, vpc_ctrl, vpc_queue, with_args, writes
 
 PO_PROFILE = {"mode": "pvlan", "pvlan_mode": "host", "members": [G4.MEM], "pc_mode": "active", "admin_state": False,
               "pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2212}]}
 RETAINED_PO = {"name": "po502", "type": "pc", "switch": [SWITCH_IP], "deploy": True, "profile": PO_PROFILE}
 
 
-def lo(ip, deploy=True):
-    """A desired non-PVLAN interface, so the overridden request is not empty (the sweep keeps its normal scope)."""
-    return {"name": "lo100", "type": "lo", "switch": [ip], "deploy": deploy,
-            "profile": {"mode": "lo", "int_vrf": "", "ipv4_addr": "10.9.9.9", "admin_state": True}}
-
-
-def with_args(harness, runner, ctrl, config, extra, **kw):
-    """The harness runner with extra module arguments (global deploy, override_intf_types): the harness's own set_module_args is
-    wrapped, nothing else changes."""
-    original = harness.set_module_args
-    with patch.object(harness, "set_module_args", side_effect=lambda a: original(dict(a, **extra))):
-        return runner(ctrl, config, **kw)
-
-
-def writes(ctrl):
-    out = []
-    for m, p, _d in ctrl.calls:
-        if m in ("POST", "PUT", "DELETE") and "/config-preview" not in p and "networkAttachments" not in p:
-            out.append(p.rsplit("/rest/", 1)[-1])
-    return out
-
-
 def modify_payloads(ctrl):
     return [p for m, path, d in ctrl.calls if m == "POST" and path.endswith("/rest/interface/modify") for p in json.loads(d)]
-
-
-class MeasuredVpc(V.VpcController):
-    """The vPC harness with the MEASURED summary `deletable` (child Po and physical members False, parent True)."""
-
-    def _summary_entry(self, serial, name, d, status):
-        entry = super(MeasuredVpc, self)._summary_entry(serial, name, d, status)
-        if d["policy"] in (V.VPC_PO, V.PO_MEMBER, TRUNK, "int_access_host", "int_routed_host"):
-            entry["deletable"] = "False"
-        return entry
-
-
-def measured_po(ctrl):
-    """The Po harnesses report `deletable` True and no policy source on physical ports; the controller reports `deletable` False on a
-    PVLAN member and on a standalone int_trunk_host, and the member's policy source is its port-channel in lower case (MEASURED in the
-    summaries). The sweep then defers those ports to
-    their source instead of resetting them directly, which is the path the controller really takes."""
-    original = ctrl._summary_list
-
-    def summary():
-        out = original()
-        for entry in out:
-            if str(entry.get("isPhysical")).lower() == "true":
-                entry["deletable"] = "False"
-                d = ctrl.detail.get(entry["ifName"]) or {}
-                if d.get("policy") == G4.PO_MEMBER:
-                    for pol in entry.get("underlayPolicies") or []:
-                        pol["source"] = str((d.get("nvPairs") or {}).get("PO_ID", "")).lower()
-        return out
-
-    ctrl._summary_list = summary
-    return ctrl
-
-
-def vpc_ctrl(cls=None):
-    ctrl = (cls or MeasuredVpc)().seed_baseline().seed_vpc()
-    ctrl.next_invocation()
-    return ctrl
 
 
 # ================================================================== A: regular port-channel
@@ -213,7 +153,7 @@ def test_vpc_dropped_with_an_up_member_on_one_peer_is_released_to_the_fabric_def
 
 
 # ================================================================== B: deploy false saves; a later process completes from controller state
-from . import test_dcnm_intf_pvlan_po_g5_next_modes as G5  # noqa: E402
+from .dcnm_interface.helpers import port_channel_controller as G5
 
 
 def po_saved_ctrl():
@@ -312,11 +252,6 @@ def test_a_repetition_whose_saved_removal_check_cannot_read_the_preview_is_refus
     ctrl.previews = [{"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": {}}]
     status, result = run(ctrl, [MU.item([MU.E7], deploy=True)], state="replaced")
     assert status == "fail" and "rule out a saved member removal" in result["msg"] and ctrl.deploys() == [], result.get("msg")
-
-
-def vpc_queue(ctrl, n):
-    for serial, port in ((V.SN1, V.M1), (V.SN2, V.M2)):
-        ctrl.vpc_previews[serial] = [V.delete_preview(serial, port) for _i in range(n)]
 
 
 def vpc_saved_ctrl():

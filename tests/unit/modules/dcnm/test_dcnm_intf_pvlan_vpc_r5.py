@@ -19,8 +19,8 @@ import json
 
 import pytest
 
-from .test_dcnm_intf_pvlan_harness import trunk_host_nv
-from .test_dcnm_intf_pvlan_vpc_harness import (
+from .dcnm_interface.helpers.ethernet_controller import trunk_host_nv
+from .dcnm_interface.helpers.vpc_controller import (
     IP1,
     IP2,
     M1,
@@ -32,7 +32,6 @@ from .test_dcnm_intf_pvlan_vpc_harness import (
     VPC,
     VpcController,
     created_ctrl,
-    delete_preview,
     member_after,
     po_stanza,
     preview,
@@ -41,13 +40,9 @@ from .test_dcnm_intf_pvlan_vpc_harness import (
     vpc_del_item,
     vpc_item,
 )
+from .dcnm_interface.helpers.vpc_controller import PEERS, ReleaseMtu, queue_delete, release_ctrl, releases, without_mtu
 
-PEERS = ((SN1, M1), (SN2, M2))
 FORCE = "  channel-group 10 force mode active"
-
-
-def without_mtu(lines):
-    return [l for l in lines if l.strip() != "mtu 9216"]
 
 
 def gate(result):
@@ -55,10 +50,6 @@ def gate(result):
     for rec in result.get("pvlan_gate") or []:
         out.setdefault(rec["site"], []).append((rec["peer"], rec["serial"], rec["targets"].get(VPC)))
     return dict((k, sorted(v)) for k, v in out.items())
-
-
-def releases(result):
-    return [r for r in result.get("pvlan_vpc_release") or [] if "member_write" in r or "member_writes" in r]
 
 
 def jumbo_state(port, member_extra=(), po_extra=()):
@@ -270,48 +261,6 @@ def test_g2_explicit_member_withdrawal_stays_ordinary_validation():
     queue(ctrl, jumbo_state, lambda p: without_mtu(jumbo_state(p)), {SN1: pend, SN2: pend})
     status, res = run_vpc(ctrl, [vpc_item(mtu="default")])
     assert status == "exit" and len(ctrl.deploys()) == 1, res.get("msg")
-
-
-# ================================================================== G3: the FRESH release of each member models the deletion
-class ReleaseMtu(VpcController):
-    """The controller releases each member with the MTU given per serial (default from a port-channel intent, as measured), SYNTHETIC."""
-
-    def __init__(self, mtu, admin=None):
-        super(ReleaseMtu, self).__init__()
-        self.release_mtu = mtu
-        self.release_admin = admin or {}
-
-    def __call__(self, mod, method, path, data=None):
-        resp = super(ReleaseMtu, self).__call__(mod, method, path, data)
-        if method == "DELETE" and path.endswith("/rest/interface/markdelete"):
-            for serial, port in PEERS:
-                nv = self.nodes[serial][port]["nvPairs"]
-                nv["MTU"] = self.release_mtu.get(serial, nv["MTU"])
-                if serial in self.release_admin:
-                    nv["ADMIN_STATE"] = self.release_admin[serial]
-        return resp
-
-
-def release_ctrl(mtu=None, admin=None):
-    ctrl = ReleaseMtu(mtu or {}, admin).seed_baseline().seed_vpc()
-    ctrl.next_invocation()
-    return ctrl
-
-
-def released_delete_preview(serial, port, jumbo):
-    """The delete preview of ONE peer: released stanza at the fresh MTU; for a default release the member's `mtu 9216` must go (DERIVED)."""
-    entry = delete_preview(serial, port)
-    if not jumbo:
-        e = entry["DATA"][0] if isinstance(entry.get("DATA"), list) else None
-        target = e if e is not None else entry
-        target["expectedConfig"] = without_mtu(target["expectedConfig"])
-        target["pendingConfig"] = target["pendingConfig"] + ["  no mtu 9216"]
-    return entry
-
-
-def queue_delete(ctrl, jumbo=(True, True)):
-    for (serial, port), j in zip(PEERS, jumbo):
-        ctrl.vpc_previews[serial] = [released_delete_preview(serial, port, j)]
 
 
 def test_g3_release_at_default_is_the_member_model_and_is_reported_as_restoration_delta():

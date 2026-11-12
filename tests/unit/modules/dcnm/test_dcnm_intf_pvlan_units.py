@@ -13,7 +13,7 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import FIXTURE, TRANSITIONS
+from .dcnm_interface.helpers.ethernet_controller import FIXTURE, TRANSITIONS
 
 
 @pytest.mark.parametrize("case", sorted(TRANSITIONS))

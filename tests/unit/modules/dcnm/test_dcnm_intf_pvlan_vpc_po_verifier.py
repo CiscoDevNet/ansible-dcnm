@@ -14,7 +14,7 @@ __metaclass__ = type
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
-from .test_dcnm_intf_pvlan_vpc_harness import SN1, SN2, VPC, created_ctrl, delete_previews, run_vpc, vpc_del_item
+from .dcnm_interface.helpers.vpc_controller import SN1, SN2, VPC, created_ctrl, delete_previews, run_vpc, vpc_del_item
 
 
 class SpyPoVerifier(object):

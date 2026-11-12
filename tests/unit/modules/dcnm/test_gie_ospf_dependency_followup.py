@@ -21,10 +21,10 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_dcnm_intf_default_reset_registered_f2 as F2
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import role_reset as F2
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_gie_ospf_gate_inert_withdrawal as G
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import test_gie_thin_engine as thin
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import registry_generator as thin
 
 SYN_MD5 = "SYNTH-MD5-KEY-NOT-REAL-0001"
 SYN_SIMPLE = "SYNTH-SIMPLE-NOT-REAL-02"

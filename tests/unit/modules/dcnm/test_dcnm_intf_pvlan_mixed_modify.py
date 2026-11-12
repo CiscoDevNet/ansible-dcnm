@@ -18,11 +18,11 @@ __metaclass__ = type
 
 import copy
 
-from . import test_dcnm_intf_pvlan_harness as HH
-from . import test_dcnm_intf_pvlan_member_updates as MU
+from .dcnm_interface.helpers import ethernet_controller as HH
+from .dcnm_interface.helpers import membership as MU
 from . import test_dcnm_intf_pvlan_mixed_batch as MB
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP, run
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, run
 
 LO, LO_ITEM, LO_POLICY = "Loopback391", "loopback391", "int_loopback"
 PO_BLOCK = ["interface port-channel301", "  description INTEG-PO-CONV-V2"]

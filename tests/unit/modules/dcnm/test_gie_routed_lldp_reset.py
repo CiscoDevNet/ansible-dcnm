@@ -54,7 +54,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_withdrawal_action,
 )
 
-from .gie_withdrawal_harness import (  # noqa: F401  (fixtures come with the harness)
+from .dcnm_interface.helpers.binding_harness import (
     ACCESS,
     ROUTED,
     SUPPORTED,

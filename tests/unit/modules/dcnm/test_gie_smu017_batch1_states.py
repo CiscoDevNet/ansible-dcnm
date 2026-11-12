@@ -23,11 +23,8 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.test_dcnm_intf_default_reset_registered_f2 import (
-    _inventory, _physical_transport, PHYSICAL,
-)
-from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from .dcnm_interface.helpers.role_reset import _as_have, _deploys, _emitted, _have_for, _run
 
 OSPF_ON = {**h.BASE_ROUTED, **h.OSPF_CTX}
 ROUTED_OFF = {**h.BASE_ROUTED, "enable_ospf": False}
@@ -38,68 +35,6 @@ FIELDS = ("CDP_ENABLE", "evpnMultisiteDciTracking", "ospfRetransmitInterval", "l
           "pimBfdInstance")
 IF_CTL = "Ethernet1/40"
 IF_SUB2 = "Ethernet1/31.3002"
-
-
-def _emitted(calls):
-    """Every interface of every write, as {(serial, ifName): (policy, nvPairs)}."""
-    out = {}
-    found = []
-    h._collect_policies([c["payload"] for c in h.writes(calls)], found)
-    for pol in found:
-        for intf in pol["interfaces"]:
-            key = (intf["serialNumber"], intf["ifName"])
-            assert key not in out, ("identity written twice", key)
-            out[key] = (pol["policy"], intf.get("nvPairs") or {})
-    return out
-
-
-def _deploys(calls):
-    return sorted((e.get("serialNumber"), e.get("ifName")) for c in h.writes(calls) if "deploy" in c["path"]
-                  for e in (c["payload"] or []))
-
-
-def _have_for(ifname, profile, iftype="eth"):
-    """The payload the module emits for `profile` on `ifname`, as the controller would return it."""
-    result, calls = h.run_configs([h.cfg(ifname, profile, iftype=iftype)], "replaced", [])
-    assert not result.get("failed"), result.get("msg")
-    found = []
-    h._collect_policies([c["payload"] for c in h.writes(calls)], found)
-    assert len(found) == 1 and found[0]["interfaces"][0]["ifName"] == ifname, found
-    have = copy.deepcopy(found)
-    have[0]["interfaces"][0]["interfaceType"] = "INTERFACE_ETHERNET"
-    have[0]["interfaces"][0]["fabricName"] = h.FABRIC
-    return have
-
-
-def _as_have(policy, ifname, nv):
-    return [{"policy": policy, "interfaces": [{"interfaceType": "INTERFACE_ETHERNET", "serialNumber": h.SERIAL,
-                                               "ifName": ifname, "fabricName": h.FABRIC, "nvPairs": copy.deepcopy(nv)}]}]
-
-
-_ORIG_PHYSICAL = _physical_transport(PHYSICAL)
-
-
-def _detail_transport(calls, have):
-    """The F2 physical-port flags plus the subinterface flag the harness does not model: a live 12.6.0.267
-    interface/detail read returned a user subinterface with `isPhysical: "false"` and `deletable: true`.
-    `overridden` deletes a non-physical interface only when `deletable` is true."""
-    inner = _ORIG_PHYSICAL(calls, have)
-
-    def send(mod, method, path, payload=None):
-        resp = inner(mod, method, path, payload)
-        if method == "GET" and "/interface/detail" in path and isinstance(resp.get("DATA"), list):
-            for e in resp["DATA"]:
-                if str(e.get("isPhysical")).lower() == "false" and "." in str(e.get("ifName")):
-                    e["deletable"] = True
-        return resp
-    return send
-
-
-def _run(configs, state, have, role="leaf"):
-    with patch.object(h, "_transport", _detail_transport):
-        return h.run_configs(configs, state, have=have,
-                             extra_patch=patch.object(module, "get_fabric_inventory_details",
-                                                      return_value=_inventory(role)))
 
 
 def _nv(have):

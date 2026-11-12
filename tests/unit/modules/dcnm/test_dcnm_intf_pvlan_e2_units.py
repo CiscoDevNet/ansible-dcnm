@@ -15,7 +15,7 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import DEVICE, FIXTURE, SERIAL, TRANSITIONS, ok
+from .dcnm_interface.helpers.ethernet_controller import DEVICE, FIXTURE, SERIAL, TRANSITIONS, ok
 
 
 def entry(phase):

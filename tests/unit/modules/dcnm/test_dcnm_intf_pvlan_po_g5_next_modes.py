@@ -16,119 +16,47 @@ __metaclass__ = type
 
 import copy
 import json
-import os
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import IF7, SERIAL, SWITCH_IP, TRUNK, preview, run, trunk_host_nv
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController, baseline, create_preview, del_item, delete_preview, item, member_stanza, po_stanza
-from .test_dcnm_intf_pvlan_po_host import PO, PO_HOST, PO_ITEM_NAME, PO_MEMBER, RUNNING_MEMBER
-
-NATIVE = "switchport private-vlan trunk native vlan 2301"
-ALLOWED = "switchport private-vlan trunk allowed vlan 2301"
-
-# Battery profiles (creation) and their synthetic expected list lines.
-CASES = {
-    "promiscuous": (
-        {"pvlan_mapping": [{"primary_vlan": 2210, "secondary_vlans": "2212"}]},
-        ["switchport private-vlan mapping 2210 2212"],
-    ),
-    "trunk promiscuous": (
-        {
-            "pvlan_mapping": [{"primary_vlan": 2210, "secondary_vlans": "2211-2212"}, {"primary_vlan": 2410, "secondary_vlans": "2412"}],
-            "native_vlan": "2301",
-            "allowed_vlans": "2301",
-        },
-        [
-            NATIVE,
-            ALLOWED,
-            "switchport private-vlan mapping trunk 2210 2211",
-            "switchport private-vlan mapping trunk 2210 2212",
-            "switchport private-vlan mapping trunk 2410 2412",
-        ],
-    ),
-    "trunk secondary": (
-        {
-            "pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2212}, {"primary_vlan": 2410, "secondary_vlan": 2412}],
-            "native_vlan": "2301",
-            "allowed_vlans": "2301",
-        },
-        [NATIVE, ALLOWED, "switchport private-vlan association trunk 2210 2212", "switchport private-vlan association trunk 2410 2412"],
-    ),
-}
-MODES = sorted(CASES)
-
-
-def with_second_primary(ctrl):
-    """SYNTHETIC networks for the battery's second primary: 2410 primary, 2412 isolated (copied shapes of the fixture)."""
-    nets = ctrl.networks
-    prim = copy.deepcopy([n for n in nets if n["type"] == "Primary"][0])
-    iso = copy.deepcopy([n for n in nets if n["type"] == "Isolated"][0])
-    prim.update(networkId=30410, networkName="SYN_PRIMARY_2410", networkTemplateConfig=prim["networkTemplateConfig"].replace("2210", "2410"))
-    iso.update(
-        networkId=30412,
-        networkName="SYN_ISOLATED_2412",
-        primaryNetworkId=30410,
-        networkTemplateConfig=iso["networkTemplateConfig"].replace("2212", "2412"),
-    )
-    nets += [prim, iso]
-    return ctrl
-
-
-def new_ctrl(mode=None):
-    return with_second_primary(baseline(mode))
-
-
-def creation_preview(mode, lines, pending_member=None, expected_member=None, extra=()):
-    """The synthetic creation preview of g1 (measured host form transposed) with an optional named change."""
-    pv = create_preview(mode, lines)
-    entry = pv["DATA"][0]
-    if pending_member is not None:
-        pend = entry["pendingConfig"]
-        start = len(pend) - 1 - pend[::-1].index("interface ethernet1/7")
-        entry["pendingConfig"] = pend[: start + 1] + ["  " + l for l in pending_member] + ["configure terminal"]
-    if expected_member is not None:
-        entry["expectedConfig"] = ["hostname placeholder-sw-1"] + po_stanza(mode, lines) + expected_member
-    if extra:
-        entry["pendingConfig"] = entry["pendingConfig"][:-1] + list(extra) + ["configure terminal"]
-    return pv
-
-
-def create(mode, ctrl=None, pv=None):
-    profile, lines = CASES[mode]
-    ctrl = ctrl or new_ctrl(mode)
-    ctrl.previews = [pv or creation_preview(mode, lines)]
-    status, result = run(ctrl, [item(mode, **profile)], state="replaced")
-    return ctrl, status, result
-
-
-def existing(mode):
-    """A port-channel of `mode` created through main() with the battery profile, then the SYNTHETIC member flip of the g1
-    helper (the controller rewriting the member as int_port_channel_pvlan_member)."""
-    ctrl, status, result = create(mode)
-    assert status == "exit", result.get("msg")
-    ctrl.detail[IF7] = {
-        "policy": PO_MEMBER,
-        "nvPairs": {
-            "PO_ID": PO,
-            "PC_MODE": "active",
-            "PVLAN_MODE": mode,
-            "CDP_ENABLE": "true",
-            "lldpTransmit": "false",
-            "lldpReceive": "false",
-            "LACP_PORT_PRIO": "32768",
-            "LACP_RATE": "normal",
-            "DESC": "",
-            "CONF": "",
-            "ADMIN_STATE": "false",
-            "INTF_NAME": IF7,
-        },
-    }
-    ctrl.next_invocation()
-    ctrl.calls = []
-    return ctrl
+from .dcnm_interface.helpers.ethernet_controller import IF7, SWITCH_IP, TRUNK, preview, run, trunk_host_nv
+from .dcnm_interface.helpers.port_channel_controller import (
+    PoLifecycleController,
+    del_item,
+    delete_preview,
+    item,
+    member_stanza,
+    po_stanza,
+)
+from .dcnm_interface.helpers.port_channel_controller import PO, PO_HOST, PO_ITEM_NAME, PO_MEMBER, RUNNING_MEMBER
+from .dcnm_interface.helpers.port_channel_controller import (
+    ALLOWED,
+    CASES,
+    G4R1,
+    MEM_10,
+    MODES,
+    NATIVE,
+    PO,
+    PO_502,
+    PO_NAME_502,
+    RUNNING_MEMBER,
+    corrected_hr_preview,
+    create,
+    creation_preview,
+    existing,
+    g4r1_entry,
+    g4r1_stage,
+    hr_ctrl,
+    hr_delete,
+    item,
+    member_stanza,
+    new_ctrl,
+    po_stanza,
+    preview,
+    with_second_primary,
+)
 
 
 # ------------------------------------------------------------------ creation through main(), battery profiles
@@ -347,29 +275,6 @@ def test_a_confirmed_markdelete_of_a_port_channel_in_another_mode_releases_and_d
     assert PO not in ctrl.detail and ctrl.detail[IF7]["policy"] == TRUNK and PO_HOST not in json.dumps(ctrl.detail[IF7])
 
 
-# ================================================================== live host findings
-# MEASURED (fixtures/pvlan_po_g4r1_host_measured.json, extracted read-only from the G4R1 live captures;
-# only port-channel502 / Ethernet1/10): H4 (host association 2210/2212 -> 2410/2412 on a
-# deployed Po: member pending EMPTY) and the R-B deletion of that DEPLOYED Po (Po listed as interface_delete until the
-# deploy; member withdrawn with `no channel-group 502 force mode active`; released member ADMIN_STATE "true").
-# SIMULATED: the networks 2410/2412 typing, the legacy modify answer, and the post-correction deletion preview (named below).
-G4R1 = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_g4r1_host_measured.json")))
-PO_NAME_502, PO_502, MEM_10 = "port-channel502", "Port-channel502", "Ethernet1/10"
-
-
-def g4r1_stage(name):
-    return copy.deepcopy(G4R1["stages"][name])
-
-
-def g4r1_entry(name, pending=None, expected=None, running=None):
-    pf = g4r1_stage(name)["preview_forced"]
-    return preview(
-        pending if pending is not None else pf["pendingConfig"],
-        running=running if running is not None else pf["runningConfig_stanzas"],
-        expected=expected if expected is not None else pf["expectedConfig_stanzas"],
-    )["DATA"][0]
-
-
 def h4_parts(e):
     po_nv = g4r1_stage("H4-post")["intent"][PO_NAME_502]["nvPairs"]
     mem_pre_nv = g4r1_stage("H4-pre")["intent"][MEM_10]["nvPairs"]
@@ -465,65 +370,6 @@ def test_main_h4_replay_with_the_measured_preview_modifies_and_deploys():
     sent = ctrl.bulk_bodies()[0][0]["interfaces"][0]["nvPairs"]
     assert P.pairs_from_wire(sent["ASSOCIATION_LIST"], "ASSOCIATION_LIST") == [(2410, 2412)] and sent["DESC"] == "PR725-POH-DESC-1"
     assert result["pvlan_gate"][0]["targets"][PO_502] == "deploy"
-
-
-class DeployedReleaseController(PoLifecycleController):
-    """The g1 lifecycle harness + the MEASURED release of a DEPLOYED port-channel: after the mark-delete the
-    Po's detail is empty, its summary entry stays (markDeleted, NA, interface_delete) and the policy list holds the
-    interface_delete (deleted true) until the deploy; the member is the measured released int_trunk_host (ADMIN "true")."""
-
-    def __init__(self, marked_entry=None):
-        super(DeployedReleaseController, self).__init__()
-        self.release_member = False
-        po_summary = [x for x in g4r1_stage("HR-post")["summary"] if x["ifName"] == PO_502][0]
-        po_summary["serialNo"] = SERIAL
-        po_summary["underlayPolicies"][0]["serialNumber"] = SERIAL
-        po_summary.update(marked_entry or {})
-        self.marked_template = po_summary
-        self.marked = None
-        self.released = dict((k, v) for k, v in g4r1_stage("HR-post")["intent"][MEM_10]["nvPairs"].items() if k != "POLICY_ID")
-
-    def __call__(self, mod, method, path, data=None):
-        if method == "DELETE" and path.endswith("/rest/interface/markdelete"):
-            resp = super(DeployedReleaseController, self).__call__(mod, method, path, data)
-            self.detail[MEM_10] = {"policy": TRUNK, "nvPairs": copy.deepcopy(self.released)}
-            self.marked = copy.deepcopy(self.marked_template)
-            self.policies_extra = [dict(p, serialNumber=SERIAL) for p in g4r1_stage("HR-post")["policies"] if p["templateName"] == "interface_delete"]
-            return resp
-        resp = super(DeployedReleaseController, self).__call__(mod, method, path, data)
-        if method == "POST" and path.endswith("/rest/globalInterface/deploy"):
-            self.marked, self.policies_extra = None, []  # the deploy completes the deletion (NOT measured for a deployed Po)
-        return resp
-
-    def _summary_list(self):
-        return super(DeployedReleaseController, self)._summary_list() + ([copy.deepcopy(self.marked)] if self.marked else [])
-
-    def modifies(self):
-        return [c for c in self.calls if c[0] == "POST" and c[1].endswith("/rest/interface/modify")]
-
-
-def hr_ctrl(previews, **marked):
-    ctrl = DeployedReleaseController(marked or None)
-    for name, key in ((PO_502, PO_NAME_502), (MEM_10, MEM_10)):
-        nv = dict((k, v) for k, v in g4r1_stage("HR-pre")["intent"][key]["nvPairs"].items() if k != "POLICY_ID")
-        ctrl.detail[name] = {"policy": g4r1_stage("HR-pre")["intent"][key]["policy"], "nvPairs": nv}
-    ctrl.po_names.add(PO_502)
-    ctrl.previews = previews
-    return ctrl
-
-
-def corrected_hr_preview():
-    """SYNTHETIC, one named change of the MEASURED HR-post entry: the member corrected to ADMIN_STATE false, so the
-    controller's expected member holds `shutdown` and the pending no longer carries `no shutdown` (the post-correction
-    pending of a DEPLOYED Po is NOT measured; for the never-deployed Po the measured correction gave In-Sync)."""
-    pf = g4r1_stage("HR-post")["preview_forced"]
-    pending = [l for l in pf["pendingConfig"] if l != "  no shutdown"]
-    expected = ["  shutdown" if l == "  no shutdown" else l for l in pf["expectedConfig_stanzas"]]
-    return {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": [g4r1_entry("HR-post", pending=pending, expected=expected)]}
-
-
-def hr_delete(ctrl):
-    return run(ctrl, [{"name": "po502", "switch": [SWITCH_IP], "deploy": True}], state="deleted")
 
 
 def test_marked_deleted_listing_is_only_the_measured_form():

@@ -23,8 +23,8 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import SWITCH_IP, TRUNK, preview, run
-from .test_dcnm_intf_pvlan_po_g1 import PoLifecycleController, markdelete_ok
+from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, TRUNK, preview, run
+from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController, markdelete_ok
 
 FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_h1_measured.json")))
 STAGES = FIXTURE["stages"]

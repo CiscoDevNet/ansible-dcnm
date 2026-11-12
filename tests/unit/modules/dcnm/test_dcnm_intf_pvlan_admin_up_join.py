@@ -15,35 +15,18 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
-import os
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from . import test_dcnm_intf_pvlan_po_host as H
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from . import test_dcnm_intf_pvlan_member_updates as MU
-from .test_dcnm_intf_pvlan_harness import IF7, trunk_host_nv
+from .dcnm_interface.helpers import port_channel_controller as H
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers import membership as MU
+from .dcnm_interface.helpers.ethernet_controller import IF7, trunk_host_nv
+from .dcnm_interface.helpers.membership import LEAF_A, LEAF_B, measured, shut_the_member, up_peers, vpc_preview
 
-FX = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_admin_up_join_measured.json")))
-LEAF_A, LEAF_B = "<SERIAL_LEAF_A>", "<SERIAL_LEAF_B>"
 E9, E10 = "Ethernet1/9", "Ethernet1/10"
-
-
-def transpose(lines, number, port, to_port):
-    """A measured stanza list renamed to the harness: port-channel<number> -> port-channel10, its channel-group and vpc ids -> 10."""
-    out = []
-    for line in lines:
-        line = line.replace("port-channel%s" % number, "port-channel10").replace("channel-group %s " % number, "channel-group 10 ")
-        line = line.replace("vpc %s" % number, "vpc 10").replace("interface %s" % port, "interface %s" % to_port.lower())
-        out.append(line)
-    return out
-
-
-def measured(case, phase, serial, number, port, to_port):
-    m = FX[case][phase][serial]
-    return dict((k, transpose(m[k], number, port, to_port)) for k in ("pending", "expected", "running"))
 
 
 def po_preview(case="M1", phase="pre_deploy", number="573", port="ethernet1/13", serial_fx=LEAF_B, mutate=None):
@@ -53,23 +36,10 @@ def po_preview(case="M1", phase="pre_deploy", number="573", port="ethernet1/13",
     return H.preview(m["pending"], running=m["running"], expected=m["expected"])
 
 
-def vpc_preview(serial, to_port, phase="pre_deploy", serial_fx=LEAF_A, mutate=None):
-    m = measured("M3", phase, serial_fx, "575", "ethernet1/16", to_port)
-    if mutate:
-        mutate(m)
-    return V.preview(m["pending"], serial=serial, running=m["running"], expected=m["expected"])
-
-
 def up_nv(port=IF7):
     nv = trunk_host_nv(port)
     nv["ADMIN_STATE"] = "true"
     return nv
-
-
-def shut_the_member(m):
-    """The pending a controller would produce if it shut the joining member (never measured): its `no shutdown` becomes `shutdown`."""
-    idx = max(i for i, line in enumerate(m["pending"]) if line.strip() == "no shutdown")
-    m["pending"][idx] = "  shutdown"
 
 
 # ================================================================== helper contract
@@ -215,13 +185,6 @@ def test_po_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markdel
     status, result = H.run(ctrl, [{"name": H.PO_ITEM_NAME, "switch": [H.SWITCH_IP], "deploy": True}], state="deleted")
     assert "not administratively down" not in str(result.get("msg"))
     assert ctrl.writes() and "markdelete" in ctrl.writes()[0][1], ctrl.writes()
-
-
-# ================================================================== vPC through main()
-def up_peers(ctrl, peers=(V.SN1, V.SN2)):
-    for serial in peers:
-        port = V.M1 if serial == V.SN1 else V.M2
-        ctrl.nodes[serial][port]["nvPairs"]["ADMIN_STATE"] = "true"
 
 
 def test_vpc_creation_with_both_members_up_deploys_once_on_the_measured_previews():

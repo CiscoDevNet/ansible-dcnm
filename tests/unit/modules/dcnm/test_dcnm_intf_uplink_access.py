@@ -38,9 +38,9 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_binding
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from .dcnm_interface.helpers.binding_harness import UL, UPLINK_ROUTE_RESET_ROWS
 
-UL = "int_vpc_uplink_access"
 UL_PO = "int_vpc_uplink_access_po"
 UL_MEMBER = "int_vpc_uplink_access_po_member"
 VPC = "vPC2"
@@ -407,24 +407,6 @@ def test_overridden_leaves_the_uplink_family_in_place():
     _modify(calls)
     skipped = [s["Name"] for s in result["diff"][0]["skipped"] if "TOR uplink" in s.get("Reason", "")]
     assert sorted(skipped) == sorted([VPC, MEMBER, MEMBER]), skipped
-
-
-# One row per registered reset of the parent. test_dcnm_intf_withdrawal.py requires this set to equal the registry.
-UPLINK_ROUTE_RESET_ROWS = (
-    (UL, "ENABLE_QOS", "enable_qos", "true", "false"),
-    (UL, "QOS_POLICY", "qos_policy", "UL-QOS", ""),
-    (UL, "qosStatsSuppressed", "disable_qos_stats", "true", "false"),
-    (UL, "spanningTreePortType", "spanning_tree_port_type", "network", "no"),
-    (UL, "ENABLE_STORM_CONTROL", "enable_storm_control", "true", "false"),
-    (UL, "STORM_CONTROL_ACTION", "storm_control_action", "trap", "no"),
-    (UL, "STORM_CONTROL_BCAST_LEVEL_PERCENT", "storm_control_broadcast_level_percent", "50", ""),
-    (UL, "STORM_CONTROL_MCAST_LEVEL_PERCENT", "storm_control_multicast_level_percent", "50", ""),
-    (UL, "STORM_CONTROL_UCAST_LEVEL_PERCENT", "storm_control_unicast_level_percent", "50", ""),
-    (UL, "STORM_CONTROL_BCAST_LEVEL_PPS", "storm_control_broadcast_level_pps", "1000", ""),
-    (UL, "STORM_CONTROL_MCAST_LEVEL_PPS", "storm_control_multicast_level_pps", "1000", ""),
-    (UL, "STORM_CONTROL_UCAST_LEVEL_PPS", "storm_control_unicast_level_pps", "1000", ""),
-)
-UPLINK_ROUTE_RESET_IDENTITIES = frozenset((p, n) for p, n, _k, _h, _r in UPLINK_ROUTE_RESET_ROWS)
 
 
 @pytest.mark.parametrize("policy,nvp,key,have_value,reset", UPLINK_ROUTE_RESET_ROWS,

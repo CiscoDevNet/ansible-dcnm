@@ -15,8 +15,8 @@ import json
 
 import pytest
 
-from .test_dcnm_intf_pvlan_harness import TRUNK, preview
-from .test_dcnm_intf_pvlan_vpc_harness import (
+from .dcnm_interface.helpers.ethernet_controller import TRUNK, preview
+from .dcnm_interface.helpers.vpc_controller import (
     release_only,
     DEPLOY,
     M1,
@@ -189,7 +189,7 @@ def test_two_wrong_members_are_both_reported():
 
 
 def test_update_readback_judges_the_member_against_the_new_model():
-    from .test_dcnm_intf_pvlan_vpc_harness import converged_preview, pc_mode_preview
+    from .dcnm_interface.helpers.vpc_controller import converged_preview, pc_mode_preview
 
     for serial, port, peer in PEERS:
         ctrl = AfterDeploy(serial, port, setter("PC_MODE", "active"))  # the controller did NOT apply the new mode on that member

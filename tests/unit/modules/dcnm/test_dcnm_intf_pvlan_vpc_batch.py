@@ -11,331 +11,28 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import collections
-import copy
 import json
 from unittest.mock import patch
 
 import pytest
 
-from ansible.module_utils import basic
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleExitJson, AnsibleFailJson, exit_json, fail_json
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
-from . import test_dcnm_intf_pvlan_vpc_harness as V
-from .dcnm_module import set_module_args
-
-PAIRS = ((V.SN1, V.SN2), ("FDO00000003", "FDO00000004"))
-IPS = {V.SN1: V.IP1, V.SN2: V.IP2, "FDO00000003": "10.0.0.3", "FDO00000004": "10.0.0.4"}
-
-
-def subst(lines, k, pcid=None):
-    """The harness stanzas for vPC id `k`; `pcid` is the peer's own port-channel number when it differs from the vPC id."""
-    pcid = k if pcid is None else pcid
-    return [x.replace("port-channel10", "port-channel%d" % pcid).replace("vpc 10", "vpc %d" % k).replace("channel-group 10", "channel-group %d" % pcid)
-            for x in lines]
-
-
-class MultiVpc(V.VpcController):
-    """VpcController for N vPCs over one or two pairs. The identity of a vPC is the controller's: its PAIR serial + its name, so the same
-    name may exist on two pairs. `plan[(pair serial, name)] = (k, pair, members_peer1, members_peer2)`, `parents[(pair serial, name)]`."""
-
-    def __init__(self, npairs=1):
-        super(MultiVpc, self).__init__()
-        self.pairs = PAIRS[:npairs]
-        serials = [s for p in self.pairs for s in p]
-        self.nodes = dict((s, {}) for s in serials)
-        for attr in ("vpc_previews", "policies_extra", "summary_extra"):
-            setattr(self, attr, dict((s, []) for s in serials))
-        self.plan = {}
-        self.pcids = {}  # (pair serial, name) -> (peer1 pcid, peer2 pcid) when they differ from the vPC id
-        self.deployed_vpcs, self.deleted_vpcs = set(), set()
-        self.ready_round = {}     # (serial, ifName) -> waits after which the summary says In-Sync (None = never)
-        self.sleep_log = []
-        self.post_fail = {}       # (kind, serial) -> number of post-deploy GETs of that kind answered HTTP 500
-        self.post_drop = {}       # serial -> {ifName} missing from post-deploy summaries
-        self.post_dup = {}        # serial -> {ifName} listed twice in post-deploy summaries
-        self.post_extra = {}      # serial -> summary entries listed only AFTER the last deploy
-        self.post_mutate = {}     # (serial, ifName) -> nvPairs applied to post-deploy detail reads
-        self.post_mutate_parent = {}  # (pair serial, name) -> nvPairs applied to post-deploy reads of that parent
-        self.extra_pending = {}   # serial -> pending lines appended to every preview of that serial
-
-    def pair_of(self, serial):
-        return [p for p in self.pairs if serial in p][0]
-
-    @staticmethod
-    def psn(pair):
-        return pair[0] + "~" + pair[1]
-
-    def add_vpc(self, k, pair_index=0, members=1, deploy=True, **profile):
-        pair = self.pairs[pair_index]
-        ports = (["Ethernet1/%d" % (k + 100 * i) for i in range(members)], ["Ethernet2/%d" % (k + 100 * i) for i in range(members)])
-        for serial, plist in zip(pair, ports):
-            for port in plist:
-                nv = V.trunk_host_nv(port)
-                nv["ADMIN_STATE"] = "false"
-                self.nodes[serial][port] = {"policy": V.TRUNK, "nvPairs": nv}
-        self.plan[(self.psn(pair), "vPC%d" % k)] = (k, pair, ports[0], ports[1])
-        item = {"name": "vpc%d" % k, "type": "vpc", "switch": [IPS[pair[0]], IPS[pair[1]]], "deploy": deploy,
-                "profile": {"mode": "pvlan", "pvlan_mode": "host", "peer1_members": ports[0], "peer2_members": ports[1], "peer1_pcid": k,
-                            "peer2_pcid": k, "admin_state": False,
-                            "pvlan_association": [{"primary_vlan": V.PRIMARY, "secondary_vlan": V.SECONDARY}]}}
-        item["profile"].update(profile)
-        self.pcids[(self.psn(pair), "vPC%d" % k)] = (item["profile"]["peer1_pcid"], item["profile"]["peer2_pcid"])
-        return item
-
-    def del_item(self, k, pair_index=0):
-        pair = self.pairs[pair_index]
-        return {"name": "vpc%d" % k, "type": "vpc", "switch": [IPS[pair[0]], IPS[pair[1]]], "deploy": True}
-
-    def key(self, sno, name):
-        """The plan key of the vPC `name` on the pair `sno`: exact pair serial, case-insensitive name; never another pair's entry."""
-        found = [k for k in self.plan if k[0] == sno and k[1].lower() == str(name).lower()]
-        assert len(found) == 1, (sno, name)
-        return found[0]
-
-    def _with_pair(self, key, fn):
-        pair = self.plan[key][1]
-        saved = (V.SN1, V.SN2, V.VPC, V.PAIR)
-        V.SN1, V.SN2, V.VPC, V.PAIR = pair[0], pair[1], key[1], key[0]
-        try:
-            return fn()
-        finally:
-            V.SN1, V.SN2, V.VPC, V.PAIR = saved
-
-    def _store_parent(self, intf, expand):
-        key = self.key(intf["serialNumber"], intf["ifName"])
-        nv = copy.deepcopy(intf["nvPairs"])
-        nv.setdefault("INTF_NAME", intf["ifName"])
-        self.parents[key] = {"policy": V.VPC_HOST, "nvPairs": nv}
-        if expand:
-            self._with_pair(key, lambda: V.VpcController._expand_children(self, nv))
-
-    def _parent_nv(self, key, d):
-        nv = copy.deepcopy(d["nvPairs"])
-        if self.deployed:
-            nv.update(self.post_mutate_parent.get(key, {}))
-        return nv
-
-    def _peer_summary(self, serial):
-        out = []
-        for name, d in sorted(self.nodes[serial].items()):
-            status = self.compliance_by.get((serial, name), "In-Sync")
-            if self.deployed and (serial, name) in self.ready_round:
-                ready = self.ready_round[(serial, name)]
-                status = "In-Sync" if (ready is not None and len(self.sleep_log) >= ready) else "Out-of-Sync"
-            if self.deployed and name in self.post_drop.get(serial, set()):
-                continue
-            entry = self._summary_entry(serial, name, d, status)
-            out.append(entry)
-            if self.deployed and name in self.post_dup.get(serial, set()):
-                out.append(copy.deepcopy(entry))
-        out.extend(copy.deepcopy(self.summary_extra.get(serial, [])))
-        if self.deployed:
-            out.extend(copy.deepcopy(self.post_extra.get(serial, [])))
-        for key in self.parents:
-            if serial in self.plan[key][1]:
-                e = self._summary_entry(serial, key[1], {"policy": V.VPC_HOST}, "In-Sync")
-                e.update({"serialNo": key[0], "ifType": "INTERFACE_VPC", "isPhysical": "False"})
-                out.append(e)
-        return out
-
-    def _peer_details(self, serial):
-        out = []
-        if "~" in serial:
-            for key, d in self.parents.items():
-                if serial == key[0]:
-                    out.append({"policy": d["policy"], "interfaces": [{"serialNumber": serial, "ifName": key[1], "nvPairs": self._parent_nv(key, d)}]})
-            return out
-        for name, d in sorted(self.nodes[serial].items()):
-            nv = copy.deepcopy(d["nvPairs"])
-            if self.deployed:
-                nv.update(self.post_mutate.get((serial, name), {}))
-            out.append({"policy": d["policy"], "interfaces": [{"serialNumber": serial, "ifName": name, "nvPairs": nv}]})
-        for key, d in self.parents.items():
-            if serial in self.plan[key][1]:
-                out.append({"policy": d["policy"], "interfaces": [{"serialNumber": key[0], "ifName": key[1], "nvPairs": self._parent_nv(key, d)}]})
-        return out
-
-    def _released(self, serial, port, k, pcid):
-        """(pending lines after `no interface port-channelN`, expected lines) of a member the mark-delete released; the default is the
-        trunk release of the vPC harness."""
-        return subst(V.delete_preview(serial, port)["DATA"][0]["pendingConfig"][1:], k, pcid), V.member_running_baseline(port)
-
-    def _preview_for(self, serial):
-        pending, running, expected = [], [], []
-        for key, (k, pair, m1, m2) in sorted(self.plan.items(), key=lambda x: x[1][0]):
-            if serial not in pair:
-                continue
-            ports = m1 if serial == pair[0] else m2
-            pcid = self.pcids.get(key, (k, k))[0 if serial == pair[0] else 1]
-            # the child carries ITS pair's peer description (PEERn_PO_DESC of the parent stored under this pair identity)
-            desc = (self.parents.get(key, {}).get("nvPairs") or {}).get("PEER%d_PO_DESC" % (1 if serial == pair[0] else 2)) or None
-            po = subst(V.po_stanza(desc=desc), k, pcid)
-            after = po + [x for p in ports for x in subst(V.member_after(p), k, pcid)]
-            base = [x for p in ports for x in V.member_running_baseline(p)]
-            if key in self.deleted_vpcs and key not in self.deployed_vpcs:
-                released = [self._released(serial, p, k, pcid) for p in ports]
-                pending += ["no interface port-channel%d" % pcid] + [x for withdrawn, _expected in released for x in withdrawn]
-                running += after
-                expected += [x for _withdrawn, member_expected in released for x in member_expected]
-            elif key in self.parents and key not in self.deployed_vpcs:
-                pending += po + [x for p in ports for x in subst(V.create_pending(p, desc=desc), k, pcid)[len(po):]]
-                running += base
-                expected += after
-            elif key in self.parents:
-                running += after
-                expected += after
-            else:
-                running += base
-                expected += base
-        pending += self.extra_pending.get(serial, [])
-        return V.preview(pending, serial=serial, running=running, expected=expected)
-
-    def _deploy_completed(self, data):
-        """A deploy completes the deletion of the vPCs it names, on THEIR pair only: the marked-for-deletion listings of another pair stay."""
-        for item in json.loads(data):
-            if "~" not in str(item.get("serialNumber")):
-                continue
-            source = str(item["ifName"]).lower()
-            for serial in self.pair_of(item["serialNumber"].split("~")[0]):
-                self.summary_extra[serial] = [e for e in self.summary_extra[serial] if not (
-                    str(e.get("markDeleted")) == "True" and any(str(u.get("source")).lower() == source for u in e.get("underlayPolicies") or []))]
-                self.policies_extra[serial] = [p_ for p_ in self.policies_extra[serial] if not (
-                    p_.get("templateName") == "interface_delete" and str(p_.get("source")).lower() == source)]
-
-    def __call__(self, mod, method, path, data=None):
-        if "vpcpair_serial_number" in path:
-            self.calls.append((method, path, data))
-            return V.ok({"vpc_pair_sn": self.psn(self.pair_of(path.split("serial_number=")[1].split("&")[0]))})
-        if V.PREVIEW_MARK in path:
-            self.calls.append((method, path, data))
-            return self._preview_for(path.split("config-preview/")[1].split("?")[0])
-        if method == "GET" and self.deployed:
-            kind = kind_of(path)
-            serial = serial_of(path)
-            if self.post_fail.get((kind, serial), 0) > 0:
-                self.calls.append((method, path, data))
-                self.post_fail[(kind, serial)] -= 1
-                return {"RETURN_CODE": 500, "MESSAGE": "Internal Server Error", "DATA": {}}
-        if method == "POST" and path.endswith(V.GLOBAL_IF):
-            # the parent is stored under its PAIR identity; the children of THAT pair are expanded as the harness predicts
-            self.calls.append((method, path, data))
-            resp = self.create_responses.pop(0) if self.create_responses else V.ok({})
-            body = json.loads(data)
-            if resp.get("RETURN_CODE") in (200, 207):
-                for payload in body if isinstance(body, list) else [body]:
-                    assert payload["policy"] in (V.VPC_HOST, "int_loopback"), payload["policy"]  # a loopback keeps an overridden request non-empty
-                    for intf in payload["interfaces"] if payload["policy"] == V.VPC_HOST else []:
-                        self._store_parent(intf, self.children_on_save)
-            return resp
-        if method == "POST" and path.endswith(V.MODIFY):
-            body = json.loads(data)
-            if any(p_["policy"] == V.VPC_HOST for p_ in body):
-                assert all(p_["policy"] == V.VPC_HOST for p_ in body) and not self.modify_responses
-                self.calls.append((method, path, data))
-                for payload in body:
-                    for intf in payload["interfaces"]:
-                        self._store_parent(intf, True)
-                return {"RETURN_CODE": 207, "MESSAGE": "Multi-Status", "DATA": [
-                    {"reportItemType": "SUCCESS", "message": "Interface updated successfully", "entity": "%s~%s" % (i["serialNumber"], i["ifName"])}
-                    for p_ in body for i in p_["interfaces"]]}
-        if method == "DELETE" and path.endswith(V.MARKDELETE):
-            items = json.loads(data)
-            assert len(items) == 1, items  # the module marks one vPC per request
-            key = self.key(items[0]["serialNumber"], items[0]["ifName"])
-            self.deleted_vpcs.add(key)
-            self.deployed_vpcs.discard(key)
-            saved = self.parents
-            self.parents = {key[1]: saved.pop(key)} if key in saved else {}
-            try:
-                return self._with_pair(key, lambda: super(MultiVpc, self).__call__(mod, method, path, data))
-            finally:
-                self.parents = saved
-        if method == "POST" and path.endswith(V.DEPLOY):
-            for d in json.loads(data):
-                if "~" in str(d.get("serialNumber")) and any(k[0] == d["serialNumber"] and k[1].lower() == str(d["ifName"]).lower() for k in self.plan):
-                    self.deployed_vpcs.add(self.key(d["serialNumber"], d["ifName"]))  # a vPC outside the plan is a seeded conventional one
-        return super(MultiVpc, self).__call__(mod, method, path, data)
-
-
-def kind_of(path):
-    if "config-preview" in path:
-        return "preview"
-    if "/rest/interface/detail?serialNumber=" in path:
-        return "summary"
-    if "/control/policies/switches/" in path:
-        return "policies"
-    if "/rest/interface?serialNumber=" in path:
-        return "individual" if "&ifName=" in path else "bulk"
-    if "vpcpair_serial_number" in path:
-        return "vpcpair"
-    return path.split("/rest/")[-1].split("?")[0] if "/rest/" in path else path
-
-
-def serial_of(path):
-    if "/control/policies/switches/" in path:
-        return path.rsplit("/", 1)[1]
-    if "config-preview/" in path:
-        return path.split("config-preview/")[1].split("?")[0]
-    for key in ("serialNumber=", "serial_number="):
-        if key in path:
-            return path.split(key)[1].split("&")[0]
-    return None
-
-
-def run(ctrl, config, state="merged"):
-    inv = dict((IPS[sn], {"logicalName": "sw-%s" % sn[-1], "serialNumber": sn, "isVpcConfigured": "True", "vpcDomain": 10 + i // 2,
-                          "switchRole": getattr(ctrl, "roles", {}).get(sn, "leaf"), "managable": "True"}) for i, sn in enumerate(sorted(ctrl.nodes)))
-    args = {"state": state, "fabric": V.FABRIC, "config": config, "check_deploy": False}
-    patches = [
-        patch.object(basic.AnsibleModule, "exit_json", exit_json),
-        patch.object(basic.AnsibleModule, "fail_json", fail_json),
-        patch.object(module, "get_fabric_inventory_details", return_value=inv),
-        patch.object(module, "get_ip_sn_dict", return_value=(dict((ip, v["serialNumber"]) for ip, v in inv.items()), {})),
-        patch.object(module, "dcnm_get_ip_addr_info", side_effect=lambda m, sw, a, b: sw),
-        patch.object(module, "dcnm_version_supported", return_value=(12, V.NDFC)),
-        patch.object(module, "dcnm_send", side_effect=ctrl),
-        patch.object(module, "dcnm_get_bulk_api_support", return_value=True),
-        patch.object(module, "get_fabric_details", return_value={"nvPairs": {"HOST_INTF_ADMIN_STATE": "false"}}),
-        patch.object(module.time, "sleep", side_effect=ctrl.sleep_log.append),
-    ]
-    for p in patches:
-        p.start()
-    try:
-        set_module_args(args)
-        try:
-            module.main()
-        except AnsibleExitJson as exc:
-            return "exit", exc.args[0]
-        except AnsibleFailJson as exc:
-            return "fail", exc.args[0]
-        raise AssertionError("main() returned without exit_json/fail_json")
-    finally:
-        for p in reversed(patches):
-            p.stop()
-
-
-def phase_counts(ctrl):
-    """GET counts by phase (pre-write / before deploy / after the LAST deploy) and kind, from the recorded requests."""
-    calls = ctrl.calls
-    first_write = next((i for i, c in enumerate(calls) if c[0] != "GET"), len(calls))
-    deploys = [i for i, c in enumerate(calls) if c[0] == "POST" and c[1].endswith(V.DEPLOY)]
-    last = deploys[-1] if deploys else len(calls)
-    out = collections.Counter()
-    for i, (method, path, _d) in enumerate(calls):
-        phase = "pre" if i < first_write else "post" if i > last else "mid"
-        out["%s %s %s" % (phase, method, kind_of(path))] += 1
-    return out
-
-
-def post_gets(ctrl):
-    return sum(v for k, v in phase_counts(ctrl).items() if k.startswith("post GET"))
-
-
-def created(n, npairs=1, members=1):
-    ctrl = MultiVpc(npairs)
-    config = [ctrl.add_vpc(10 + i, i % npairs, members=members) for i in range(n)]
-    return ctrl, config
+from .dcnm_interface.helpers import vpc_controller as V
+from .dcnm_interface.helpers.vpc_controller import (
+    MultiVpc,
+    PA,
+    PAIRS,
+    PB,
+    created,
+    kind_of,
+    module,
+    post_gets,
+    post_kinds,
+    run,
+    same_name_on_two_pairs,
+    serial_of,
+)
 
 
 # ------------------------------------------------------------------ VPC-BATCH-GATE
@@ -442,10 +139,6 @@ def later(ctrl, rounds, serials, only=None):
                         ctrl.ready_round[(serial, n)] = rounds
 
 
-def post_kinds(ctrl):
-    return dict((k.split(" ", 2)[2], v) for k, v in phase_counts(ctrl).items() if k.startswith("post GET"))
-
-
 @pytest.mark.parametrize("n, npairs", [(1, 1), (2, 1), (10, 1), (100, 1), (2, 2), (10, 2), (100, 2)])
 def test_post_deploy_reads_grow_with_pairs_and_rounds_not_with_vpcs(n, npairs):
     ctrl, config = created(n, npairs)
@@ -539,18 +232,6 @@ def test_an_identical_repetition_writes_nothing_and_has_no_post_deploy_phase():
     repeat = ctrl.calls[first:]
     assert status == "exit" and result["changed"] is False, result.get("msg")
     assert [c for c in repeat if c[0] != "GET"] == []
-
-
-# ------------------------------------------------------------------ IDENTITY: the same vPC name on two pairs (review of 80c37c8)
-# The controller identifies a vPC by its PAIR serial + its name. vPC10 exists on both pairs, with the SAME member names on different serials
-# and DIFFERENT expected values per pair (peer1 description), so a plan keyed by the name alone would judge one pair with the other's data.
-PA, PB = PAIRS[0][0] + "~" + PAIRS[0][1], PAIRS[1][0] + "~" + PAIRS[1][1]
-
-
-def same_name_on_two_pairs():
-    ctrl = MultiVpc(2)
-    config = [ctrl.add_vpc(10, 0, peer1_description="pair-a-p1"), ctrl.add_vpc(10, 1, peer1_description="pair-b-p1")]
-    return ctrl, config
 
 
 def judged(ctrl, config):

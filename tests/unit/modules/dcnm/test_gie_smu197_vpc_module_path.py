@@ -11,9 +11,20 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import BINDING_TABLE
 
-from .gie_withdrawal_harness import (
-    PEER_SERIAL, SERIAL, VPC_PAIR_SERIAL, VPC_ACCESS, VPC_TRUNK, ROUTED,
-    base_for, cfg_for, diff_nvpairs, request_nvpairs, run_configs, split_calls, writes,
+from .dcnm_interface.helpers.binding_harness import (
+    PEER_SERIAL,
+    SERIAL,
+    VPC_PAIR_SERIAL,
+    VPC_ACCESS,
+    VPC_TRUNK,
+    ROUTED,
+    base_for,
+    cfg_for,
+    diff_nvpairs,
+    request_nvpairs,
+    run_configs,
+    split_calls,
+    writes,
     _collect_policies,
 )
 

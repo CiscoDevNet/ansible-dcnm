@@ -20,9 +20,11 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_binding, resolve_by_nvpair
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.test_dcnm_intf_default_reset_registered_f2 import (
-    nvpairs_of_reset, reset_policies, run as f2_run,
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers.role_reset import (
+    nvpairs_of_reset,
+    reset_policies,
+    run as f2_run,
 )
 
 ROUTED_OFF = dict(h.BASE_ROUTED, enable_ospf=False)

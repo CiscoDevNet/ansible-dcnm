@@ -20,12 +20,13 @@ import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from . import test_dcnm_intf_pvlan_member_updates as MU
-from . import test_dcnm_intf_pvlan_po_g5_next_modes as G5
-from . import test_dcnm_intf_pvlan_po_g6_ts_prepared as G6
-from . import test_dcnm_intf_pvlan_vpc_modes_e1 as E1
-from .test_dcnm_intf_pvlan_harness import IF7, run, trunk_host_nv
-from .test_dcnm_intf_pvlan_vpc_harness import IP1, IP2, M1, M2, SN1, SN2
+from .dcnm_interface.helpers import membership as MU
+from .dcnm_interface.helpers import port_channel_controller as G5
+from .dcnm_interface.helpers import port_channel_prepared as G6
+from .dcnm_interface.helpers import vpc_modes as E1
+from .dcnm_interface.helpers import vpc_controller as E1_VPC
+from .dcnm_interface.helpers.ethernet_controller import IF7, run, trunk_host_nv
+from .dcnm_interface.helpers.vpc_controller import IP1, IP2, M1, M2, SN1, SN2
 
 P_, TP, TS = "promiscuous", "trunk promiscuous", "trunk secondary"
 E9 = "Ethernet1/9"
@@ -247,7 +248,7 @@ def e1_ctrl(mode, up=(SN1, SN2)):
 @pytest.mark.parametrize("up", [(SN1, SN2), (SN1,), (SN2,)], ids=["both-up", "peer1-up", "peer2-up"])
 def test_vpc_creation_with_up_and_mixed_members_judges_both_peers_and_deploys_once(mode, up):
     ctrl = e1_ctrl(mode, up)
-    status, result = E1.run_vpc(ctrl, [E1.item(mode)])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(mode)])
     assert status == "exit" and result["changed"] is True, result.get("msg")
     assert len(ctrl.creates()) == 1 and len(ctrl.deploys()) == 1 and sorted(ctrl.previews_asked()) == [SN1, SN2]
     assert E1.gate(result) == {"deploy": [(1, SN1, "deploy"), (2, SN2, "deploy")]}
@@ -257,11 +258,11 @@ def test_vpc_creation_with_up_and_mixed_members_judges_both_peers_and_deploys_on
 @pytest.mark.parametrize("mode", [P_, TP, TS])
 def test_vpc_mixed_states_with_the_switches_reversed_send_the_same_intent(mode):
     a, b = e1_ctrl(mode, (SN1,)), e1_ctrl(mode, (SN1,))
-    assert E1.run_vpc(a, [E1.item(mode)])[0] == "exit"
+    assert E1_VPC.run_vpc(a, [E1.item(mode)])[0] == "exit"
     swapped = {"peer1_members": [M2], "peer2_members": [M1]}
     if mode in (TP, TS):
         swapped.update({"peer1_native_vlan": "2302", "peer1_allowed_vlans": "2302", "peer2_native_vlan": "2301", "peer2_allowed_vlans": "2301"})
-    status, result = E1.run_vpc(b, [E1.item(mode, switches=[IP2, IP1], **swapped)])
+    status, result = E1_VPC.run_vpc(b, [E1.item(mode, switches=[IP2, IP1], **swapped)])
     assert status == "exit", result.get("msg")
     assert sent_nv(a) == sent_nv(b)
 
@@ -271,7 +272,7 @@ def test_vpc_peer2_pending_that_would_shut_its_up_member_stops_every_deploy(mode
     ctrl = e1_ctrl(mode)
     ctrl.vpc_previews[SN2] = [E1.create_preview(SN2, M2, mode, E1.PAIRS[mode], *E1.per_peer(mode, 1),
                                                 baseline="access" if mode == TS else "trunk")]
-    status, result = E1.run_vpc(ctrl, [E1.item(mode)])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(mode)])
     assert status == "fail" and SN2 in result["msg"] and "ALREADY changed" in result["msg"], result.get("msg")
     assert len(ctrl.creates()) == 1 and ctrl.deploys() == []
 
@@ -280,7 +281,7 @@ def test_vpc_peer2_pending_that_would_shut_its_up_member_stops_every_deploy(mode
 def test_vpc_unreadable_peer_with_up_members_is_refused_before_any_write(mode):
     ctrl = e1_ctrl(mode)
     ctrl.read_failures = {"/rest/interface/detail?serialNumber=" + SN2}
-    status, result = E1.run_vpc(ctrl, [E1.item(mode)])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(mode)])
     assert status == "fail" and "could not be read authoritatively" in result["msg"] and ctrl.writes() == [], result.get("msg")
 
 
@@ -288,14 +289,14 @@ def test_vpc_unreadable_peer_with_up_members_is_refused_before_any_write(mode):
 def test_vpc_unknown_admin_state_on_one_peer_refuses_the_whole_vpc(mode):
     ctrl = e1_ctrl(mode, (SN1,))
     ctrl.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] = None
-    status, result = E1.run_vpc(ctrl, [E1.item(mode)])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(mode)])
     assert status == "fail" and "administrative state is unknown" in result["msg"] and SN2 in result["msg"] and ctrl.writes() == []
 
 
 def test_vpc_trunk_secondary_up_trunk_member_on_one_peer_is_still_the_known_incident():
     ctrl = e1_ctrl(TS)
     ctrl.nodes[SN2][M2] = {"policy": P.TRUNK_HOST_POLICY, "nvPairs": admin(trunk_host_nv(M2), "true")}
-    status, result = E1.run_vpc(ctrl, [E1.item(TS)])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(TS)])
     assert status == "fail" and "Known incident pending engineering" in result["msg"] and ctrl.writes() == []
 
 
@@ -317,7 +318,7 @@ def test_vpc_trunk_secondary_up_routed_member_with_its_up_children_deploys():
         if p["templateName"] == "shut_interface":
             p["templateName"] = "no_shut_interface"
     ctrl.vpc_previews[SN2] = [up_preview(ctrl.vpc_previews[SN2][0], M2, routed=True)]
-    status, result = E1.run_vpc(ctrl, [E1.item(TS)])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(TS)])
     assert status == "exit", result.get("msg")
     assert E1.gate(result) == {"deploy": [(1, SN1, "deploy"), (2, SN2, "deploy")]}
 
@@ -326,7 +327,7 @@ def test_vpc_trunk_secondary_up_routed_member_with_the_down_child_is_refused_bef
     ctrl = E1.routed_ctrl(M2)
     ctrl.nodes[SN2][M2]["nvPairs"]["ADMIN_STATE"] = "true"
     ctrl.vpc_previews[SN2] = [up_preview(ctrl.vpc_previews[SN2][0], M2, routed=True)]
-    status, result = E1.run_vpc(ctrl, [E1.item(TS)])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(TS)])
     assert status == "fail" and "live policies" in result["msg"] and ctrl.writes() == [], result.get("msg")
 
 
@@ -338,7 +339,7 @@ def test_vpc_repetition_with_up_members_writes_nothing(mode):
     E1.converged_previews(ctrl, mode)
     for serial, port in ((SN1, M1), (SN2, M2)):
         ctrl.vpc_previews[serial] = [up_preview(ctrl.vpc_previews[serial][0], port)]
-    status, result = E1.run_vpc(ctrl, [E1.item(mode)])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(mode)])
     assert status == "exit" and result["changed"] is False, result.get("msg")
     assert ctrl.writes() == []
 
@@ -348,7 +349,7 @@ def test_vpc_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markde
     # Supersedes the admin-down-only release: the up member is released to the fabric default in every mode.
     ctrl = E1.seeded_ctrl(mode)
     ctrl.nodes[SN1][M1]["nvPairs"]["ADMIN_STATE"] = "true"
-    status, result = E1.run_vpc(ctrl, [E1.vpc_del_item()], state="deleted")
+    status, result = E1_VPC.run_vpc(ctrl, [E1_VPC.vpc_del_item()], state="deleted")
     assert "not administratively down" not in str(result.get("msg"))
     assert len(ctrl.markdeletes()) == 1, result.get("msg")
 
@@ -356,5 +357,5 @@ def test_vpc_deletion_with_an_up_member_no_longer_refuses_and_reaches_the_markde
 @pytest.mark.parametrize("mode", [P_, TP, TS])
 def test_vpc_lacp_rate_fast_with_an_up_member_stays_refused(mode):
     ctrl = e1_ctrl(mode)
-    status, result = E1.run_vpc(ctrl, [E1.item(mode, lacp_rate="fast")])
+    status, result = E1_VPC.run_vpc(ctrl, [E1.item(mode, lacp_rate="fast")])
     assert status == "fail" and "lacp_rate" in result["msg"] and ctrl.writes() == [], result.get("msg")

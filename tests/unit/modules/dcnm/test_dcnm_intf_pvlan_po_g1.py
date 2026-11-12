@@ -12,178 +12,36 @@ __metaclass__ = type
 
 import copy
 import json
-import os
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 
-from .test_dcnm_intf_pvlan_harness import IF7, IF8, SWITCH_IP, TRUNK, ok, preview, run, trunk_host_nv
-from .test_dcnm_intf_pvlan_po_host import PO, PO_HOST, PO_ITEM_NAME, PO_MEMBER, RUNNING_MEMBER, PoController
-
-MARKDELETE = "/rest/interface/markdelete"
-BULK = "/rest/interface/modify"
-
-
-def markdelete_ok(data):
-    """The MEASURED mark-delete success answer (wire log, NDFC 12.6.0.267): 200/OK with DATA.message and one
-    `value` item per deleted interface naming its serial and IfName."""
-    body = json.loads(data)
-    body = body if isinstance(body, list) else [body]
-    return ok(
-        {
-            "message": "Interface deleted successfully",
-            "value": [{"interfaceType": "INTERFACE_PORT_CHANNEL", "serialNumber": i.get("serialNumber"), "IfName": i.get("ifName")} for i in body],
-        }
-    )
-
-
-class PoLifecycleController(PoController):
-    """PoController + a markdelete that removes the parent and leaves the member on the released trunk policy (the
-    measured regular-Po behaviour; for a PVLAN member this is the PREDICTION under test, not a measurement)."""
-
-    def __init__(self):
-        super(PoLifecycleController, self).__init__()
-        self.release_member = True
-        self.inherited_child = True
-
-    def __call__(self, mod, method, path, data=None):
-        if method == "DELETE" and path.endswith(MARKDELETE):
-            self.calls.append((method, path, data))
-            body = json.loads(data)
-            for intf in body if isinstance(body, list) else [body]:
-                name = intf.get("ifName")
-                parent = self.detail.pop(name, None)
-                self.po_names.discard(name)
-                if parent and self.release_member:
-                    for member in str(parent["nvPairs"].get("MEMBER_INTERFACES", "")).split(","):
-                        if member.strip():
-                            nv = trunk_host_nv(member.strip())
-                            nv["ADMIN_STATE"] = "false"
-                            self.detail[member.strip()] = {"policy": TRUNK, "nvPairs": nv}
-            return markdelete_ok(data)
-        return super(PoLifecycleController, self).__call__(mod, method, path, data)
-
-    def _policies(self):
-        """The member policies in the MEASURED shape (fixtures/pvlan_po_h1_measured.json): the
-        int_port_channel_pvlan_member carries the port-channel as source, and the parent's 'Inherited Commands' int_eth
-        child (source = the port-channel) sits on the same member. The base harness gives every policy source ''."""
-        out = super(PoLifecycleController, self)._policies()
-        children = []
-        for p in out:
-            if p["templateName"] == PO_MEMBER:
-                po = str(self.detail[p["entityName"]]["nvPairs"].get("PO_ID", "")).lower()
-                p["source"] = po
-                if self.inherited_child:
-                    children.append(
-                        dict(p, templateName="int_eth", source=po, policyId=p["policyId"] + "-inherited", priority=512, description="Inherited Commands")
-                    )
-        return out + children
-
-    def bulk_bodies(self):
-        return [json.loads(c[2]) for c in self.calls if c[0] == "POST" and c[1].endswith(BULK)]
-
-    def markdeletes(self):
-        return [c for c in self.calls if c[0] == "DELETE" and c[1].endswith(MARKDELETE)]
-
-
-def item(mode, deploy=True, **profile):
-    prof = {"mode": "pvlan", "pvlan_mode": mode, "members": [IF7], "admin_state": False}
-    prof.update(profile)
-    return {"name": PO_ITEM_NAME, "type": "pc", "switch": [SWITCH_IP], "deploy": deploy, "profile": prof}
+from .dcnm_interface.helpers.ethernet_controller import IF7, IF8, SWITCH_IP, TRUNK, preview, run
+from .dcnm_interface.helpers.port_channel_controller import PO, PO_HOST, PO_ITEM_NAME, PO_MEMBER
+from .dcnm_interface.helpers.port_channel_controller import (
+    PoLifecycleController,
+    baseline,
+    create_preview,
+    created,
+    del_item,
+    delete_preview,
+    item,
+    member_stanza,
+    po_stanza,
+)
+from .dcnm_interface.helpers.port_channel_controller import (
+    PoLifecycleController,
+    baseline,
+    create_preview,
+    item,
+    member_stanza,
+    po_stanza,
+)
 
 
 MAP_2212 = [{"primary_vlan": 2210, "secondary_vlans": "2212"}]
 MAP_2211 = [{"primary_vlan": 2210, "secondary_vlans": "2211"}]
-
-
-def po_stanza(mode, lines):
-    return (
-        ["interface port-channel10", "  switchport", "  switchport mode private-vlan %s" % mode]
-        + ["  " + l for l in lines]
-        + ["  mtu 9216", "  spanning-tree bpduguard enable", "  spanning-tree port type edge trunk", "  shutdown"]
-    )
-
-
-def member_stanza(mode, lines):
-    # The MEASURED expected member form (host), transposed: persisted `channel-group N mode active` (no force) and
-    # the parent's PVLAN mode/list lines. For the other modes this is the same form, NOT measured (SYNTHETIC, inferred).
-    return [
-        "interface ethernet1/7",
-        "  channel-group 10 mode active",
-        "  mtu 9216",
-        "  shutdown",
-        "  switchport",
-        "  switchport mode private-vlan %s" % mode,
-    ] + ["  " + l for l in lines]
-
-
-# Trunk secondary is created only from a member PREPARED as access (or routed); it was MEASURED that a switchport-trunk member
-# is rejected by the device. The prepared access member is the measured access-branch one (fixtures/pvlan_po_ts_exp1_measured.json).
-EXP1 = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_ts_exp1_measured.json")))
-ACCESS = "int_access_host"
-RUNNING_ACCESS = ["interface Ethernet1/7", "  shutdown", "  spanning-tree port type edge", "  mtu 9216"]
-
-
-def prepared_access_nv(ifname=IF7):
-    nv = dict((k, v) for k, v in EXP1["branches"]["A"]["member_before"]["intent"]["Ethernet1/8"]["nvPairs"].items() if k != "POLICY_ID")
-    nv["INTF_NAME"] = ifname
-    return nv
-
-
-def create_preview(mode, lines):
-    # The MEASURED pending form of a member creation (host), transposed: the trunk spanning-tree withdrawal before
-    # the parent block, then `channel-group N force mode active` + `shutdown`. For promiscuous and trunk promiscuous this form
-    # is now MEASURED (P1, TP1); trunk secondary uses the MEASURED access-member form (`no spanning-tree port type
-    # edge`), transposed to the harness port-channel10/Ethernet1/7.
-    ts = mode == "trunk secondary"
-    pend = (
-        ["interface ethernet1/7", "  no spanning-tree port type edge" if ts else "  no spanning-tree port type edge trunk"]
-        + po_stanza(mode, lines)
-        + ["interface ethernet1/7", "  channel-group 10 force mode active", "  shutdown", "configure terminal"]
-    )
-    return preview(pend, running=RUNNING_ACCESS if ts else RUNNING_MEMBER, expected=po_stanza(mode, lines) + member_stanza(mode, lines))
-
-
-def baseline(mode=None):
-    ctrl = PoLifecycleController()
-    if mode == "trunk secondary":
-        ctrl.detail[IF7] = {"policy": ACCESS, "nvPairs": prepared_access_nv(IF7)}
-    else:
-        ctrl.detail[IF7] = {"policy": TRUNK, "nvPairs": trunk_host_nv(IF7)}
-    return ctrl
-
-
-def created(mode, lines, **profile):
-    """Controller holding an EXISTING port-channel of `mode` with its member (SYNTHETIC member flip, as in
-    created_ctrl). Every mode is created through main() (host: measured force form; the others: inferred, with the
-    synthetic create_preview)."""
-    ctrl = baseline(mode)
-    ctrl.previews = [create_preview(mode, lines)]
-    status, result = run(ctrl, [item(mode, **profile)], state="replaced")
-    assert status == "exit" and result["changed"] is True, result
-    parent = ctrl.detail[PO]["nvPairs"]
-    ctrl.detail[IF7] = {
-        "policy": PO_MEMBER,
-        "nvPairs": {
-            "PO_ID": PO,
-            "PC_MODE": "active",
-            "PVLAN_MODE": mode,
-            "CDP_ENABLE": "true",
-            "lldpTransmit": "false",
-            "lldpReceive": "false",
-            "LACP_PORT_PRIO": "32768",
-            "LACP_RATE": "normal",
-            "DESC": "",
-            "CONF": "",
-            "ADMIN_STATE": "false",
-            "INTF_NAME": IF7,
-        },
-    }
-    assert parent["PVLAN_MODE"] == mode
-    ctrl.next_invocation()
-    ctrl.calls = []
-    return ctrl
 
 
 # ------------------------------------------------------------------ creation in the four modes
@@ -383,36 +241,6 @@ def test_merged_without_members_on_an_existing_port_channel_keeps_its_member():
     have = P.po_host_nvpairs({"pvlan_mode": "promiscuous", "members": [IF7], "pvlan_mapping": MAP_2212}, PO)
     out = P.reconcile_po("merged", {"pvlan_mode": "promiscuous", "pvlan_mapping": MAP_2211}, PO, PO_HOST, have)
     assert out["blocked"] == [] and out["members"] == IF7 and out["nv"]["MEMBER_INTERFACES"] == IF7
-
-
-# ------------------------------------------------------------------ PO-PR: deletion of the own port-channel
-def delete_preview(mode, lines):
-    run_cfg = po_stanza(mode, lines) + member_stanza(mode, lines)
-    released = [
-        "interface Ethernet1/7",
-        "  switchport",
-        "  switchport mode trunk",
-        "  switchport trunk allowed vlan none",
-        "  spanning-tree port type edge trunk",
-        "  mtu 9216",
-        "  shutdown",
-    ]
-    pend = (
-        ["no interface port-channel10", "interface Ethernet1/7", "  no switchport mode private-vlan %s" % mode]
-        + ["  no " + l for l in lines]
-        # The running member holds the PERSISTED `channel-group 10 mode active` (measured form), so the synthetic
-        # withdrawal names that line. The deletion pending of a DEPLOYED PVLAN port-channel is NOT MEASURED (deleted a
-        # never-deployed one); this stays a synthetic prediction.
-        + ["  no channel-group 10 mode active", "  switchport mode trunk", "  switchport trunk allowed vlan none", "  spanning-tree port type edge trunk"]
-    )
-    return preview(pend, running=run_cfg, expected=released)
-
-
-def del_item(**profile):
-    out = {"name": PO_ITEM_NAME, "type": "pc", "switch": [SWITCH_IP], "deploy": True}
-    if profile:
-        out["profile"] = profile
-    return out
 
 
 def test_pr_deletion_markdeletes_deploys_and_verifies_the_member_release_without_writing_it():

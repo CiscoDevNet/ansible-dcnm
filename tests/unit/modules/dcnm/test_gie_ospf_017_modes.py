@@ -23,7 +23,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     GIE_OSPF_BOOLEAN_ALIASES,
     gie_normalize_ospf_aliases,
 )
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm import gie_withdrawal_harness as h
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 
 CTX = dict(h.OSPF_CTX)
 CASES = [  # parent, public mode key, nvPair, alias key, positive word, wire positive

@@ -50,7 +50,7 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 
-from .gie_withdrawal_harness import (
+from .dcnm_interface.helpers.binding_harness import (
     ACCESS,
     GROUPED_ONLY_NO_PER_ROW_FIXTURE,
     BELOW,
@@ -124,18 +124,18 @@ def test_the_fixture_matrix_covers_every_registered_reset():
     # The PVLAN parents' registry companions never reach the generic comparator this matrix drives; their omission
     # contract is pinned per identity in test_dcnm_intf_pvlan_companions_c1.py. Declared by identity, and they must be exactly
     # the PVLAN parents' registered resets (a new PVLAN row without that coverage still fails here).
-    from .test_dcnm_intf_pvlan_companions_c1 import PVLAN_ROUTE_RESET_IDENTITIES
+    from .dcnm_interface.helpers.ethernet_controller import PVLAN_ROUTE_RESET_IDENTITIES
     pvlan_registered = {k for k in registered if k[0] in ("int_pvlan_host", "int_port_channel_pvlan_host", "int_vpc_pvlan_host")}
     assert pvlan_registered == set(PVLAN_ROUTE_RESET_IDENTITIES), sorted(pvlan_registered ^ set(PVLAN_ROUTE_RESET_IDENTITIES))
     registered = registered - pvlan_registered
     # The same holds for the peer-link parent: its two resets are pinned per identity in test_dcnm_intf_peer_link.py.
-    from .test_dcnm_intf_peer_link import PEER_LINK_ROUTE_RESET_IDENTITIES
+    from .dcnm_interface.helpers.binding_harness import PEER_LINK_ROUTE_RESET_IDENTITIES
     peer_link_registered = {k for k in registered if k[0] == "int_vpc_peer_link_po"}
     assert peer_link_registered == set(PEER_LINK_ROUTE_RESET_IDENTITIES), sorted(
         peer_link_registered ^ set(PEER_LINK_ROUTE_RESET_IDENTITIES))
     registered = registered - peer_link_registered
     # And for the ToR-uplink parent: its twelve resets are pinned per identity in test_dcnm_intf_uplink_access.py.
-    from .test_dcnm_intf_uplink_access import UPLINK_ROUTE_RESET_IDENTITIES
+    from .dcnm_interface.helpers.binding_harness import UPLINK_ROUTE_RESET_IDENTITIES
     uplink_registered = {k for k in registered if k[0] == "int_vpc_uplink_access"}
     assert uplink_registered == set(UPLINK_ROUTE_RESET_IDENTITIES), sorted(
         uplink_registered ^ set(UPLINK_ROUTE_RESET_IDENTITIES))

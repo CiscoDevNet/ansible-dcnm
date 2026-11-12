@@ -38,8 +38,7 @@ __metaclass__ = type
 
 import pytest
 
-from .gie_withdrawal_harness import (SVI, SUPPORTED_PATCH, base_for, build_have, cfg,
-                                     run_configs, writes)
+from .dcnm_interface.helpers.binding_harness import SVI, SUPPORTED_PATCH, base_for, build_have, cfg, run_configs, writes
 
 PARENT = SVI
 KEY = "private_vlan_mapping"

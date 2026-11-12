@@ -20,8 +20,8 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_ENABLED_PATCH_VERSIONS
 
-from . import gie_withdrawal_harness as G
-from . import test_dcnm_intf_pvlan_vpc_harness as V
+from .dcnm_interface.helpers import binding_harness as G
+from .dcnm_interface.helpers import vpc_controller as V
 
 SMU = sorted(GIE_ENABLED_PATCH_VERSIONS)[0]
 QOS_KEYS = ("ENABLE_QOS", "QOS_POLICY", "qosStatsSuppressed")
