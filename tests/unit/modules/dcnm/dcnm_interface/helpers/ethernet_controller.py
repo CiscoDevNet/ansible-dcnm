@@ -481,7 +481,7 @@ def full_model(**extra):
 
 
 # ================================================================== omission contract of EVERY registry companion (real helper)
-# (parent, nvPair, public key, non-default HAVE value, reset). Consumed by test_dcnm_intf_withdrawal.py's coverage guard: these
+# (parent, nvPair, public key, non-default HAVE value, reset). Consumed by test_binding_withdrawal.py's coverage guard: these
 # identities take the PVLAN route, not the generic comparator its fixture matrix drives.
 PVLAN_ROUTE_RESET_ROWS = (
     (P.PVLAN_POLICY, "lldpTransmit", "disable_lldp_transmit", "true", "false"),

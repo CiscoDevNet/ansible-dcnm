@@ -1,7 +1,7 @@
 """The minimal two-serial extension of the existing PVLAN harness.
 
 NOT LIVE TESTED. Real main(); only the external boundary is mocked, through the EXISTING harness
-(test_dcnm_intf_pvlan_harness.FakeController) plus the smallest subclass that teaches it a PAIR of switches: state per serial, the
+(helpers/ethernet_controller.FakeController) plus the smallest subclass that teaches it a PAIR of switches: state per serial, the
 vPC parent that appears on both peers, per-serial previews/policy lists and a vPC create/delete. No new framework or simulator.
 
 Shapes taken from the regular Po measurements (fixtures/pvlan_po_create_update.json#pvlan_po_h1_measured, NDFC 12.6.0.267):

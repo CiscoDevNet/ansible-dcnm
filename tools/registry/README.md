@@ -11,7 +11,7 @@ registry sources in `tools/registry/slices/` (`registry_slice_*.yaml`), one file
 | `plugins/module_utils/gie_binding_table.py` | Compiled, versioned table (`BINDING_TABLE`, `PROVENANCE_SHA256`) | Yes. This is the only artifact the module imports. |
 | `tools/registry/slices/*.yaml` | Canonical registry sources (eight family files) | No. Development tooling. |
 | `tools/gie_generate_binding_table.py` | Deterministic generator and `--check` | No. Development tooling. |
-| `tests/unit/modules/dcnm/test_gie_registry_sources.py` | Regeneration, determinism, divergence and hygiene tests | Tests only. |
+| `tests/unit/modules/dcnm/dcnm_interface/test_binding_registry_sources.py` | Regeneration, determinism, divergence and hygiene tests | Tests only. |
 
 The module never reads YAML or NDFC templates. `tools/` is part of the collection tree (and of the built tarball, as
 `tools/gie_generate_binding_table.py` already was), so the source tests run both from a checkout and from the installed
@@ -116,8 +116,8 @@ bytes). Editing a comment in a slice therefore does not change the table, and an
 2. Run `python3 tools/gie_generate_binding_table.py --regenerate`.
 3. Review the diff of **both** the slice and `plugins/module_utils/gie_binding_table.py`. The table diff must contain exactly the
    change you meant (one key per line, so a changed field is one changed line).
-4. Run `python3 tools/gie_generate_binding_table.py --check` and the unit tests (`tests/unit/modules/dcnm/test_gie_*.py`).
-   `test_gie_patch_version_gate.py` pins the provenance hash on purpose: update it in the same commit, and say why.
+4. Run `python3 tools/gie_generate_binding_table.py --check` and the unit tests (`tests/unit/modules/dcnm/dcnm_interface/test_binding_*.py`).
+   `test_binding_versions.py` pins the provenance hash on purpose: update it in the same commit, and say why.
 5. Commit the slice and the regenerated table together. CI fails if they disagree.
 
 ## Compiled metadata and registry-only metadata
@@ -132,4 +132,4 @@ from the compiled `reset_wire` and `default_template` (`gie_withdrawal_action`),
 Slices are published. They must not contain absolute or personal paths, references to private evidence files, lab serial numbers,
 switch names or management addresses. Measurements are kept as provenance (what was measured, on which NDFC version, the outcome)
 but the lab objects are replaced by neutral placeholders (`leaf-A`, `<lab-serial>`, `<lab-ip>`, `<tag>` for routing-process tags).
-`test_gie_registry_sources.py` enforces this.
+`test_binding_registry_sources.py` enforces this.

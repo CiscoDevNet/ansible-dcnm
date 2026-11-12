@@ -261,7 +261,7 @@ HSRP_CTX = {"ipv4_addr": "192.0.2.1", "ipv4_mask_len": 24, "enable_hsrp": True,
 # controller cannot hold: two of the three present and one absent. A fixture
 # encoding that would be green in the mock and impossible on a controller -- the
 # exact failure these fixtures exist to avoid. Those three are covered as a GROUP
-# in `test_gie_damp_grouped_omission.py`, and the coverage guard names them
+# in `test_binding_withdrawal.py`, and the coverage guard names them
 # explicitly rather than letting them slip.
 DAMP_GATE_ONLY = {}
 DAMP_GATE = {"enable_dampening": True}
@@ -500,7 +500,7 @@ PILOT = {
     # The applied value of each is the one whose CLI artifact was measured live:
     # `no_passive` renders `no ip ospf passive-interface`, `point_to_point` renders
     # `ip ospf network point-to-point`. The OTHER non-neutral value of each pair
-    # (`passive`, `broadcast`) is exercised in test_gie_routed_enum_omission_b3.py, so
+    # (`passive`, `broadcast`) is exercised in test_binding_ospf_routed.py, so
     # both variants of both enums are covered.
     (ROUTED, "ospfPassiveMode"): ("ospf_passive_mode", "no_passive", "noChange",
                                   dict(OSPF_CTX)),
@@ -916,14 +916,14 @@ PILOT = {
 GROUPED_ONLY_NO_PER_ROW_FIXTURE = {
     # Rule 2 (all_or_none) makes a per-row omission of any one of these three describe a
     # controller state that cannot exist. Covered as a group in
-    # `test_gie_damp_grouped_omission.py`.
+    # `test_binding_withdrawal.py`.
     (ROUTED, "dampeningReuse"): "all_or_none with suppress/max_suppress",
     (ROUTED, "dampeningSuppress"): "all_or_none with reuse/max_suppress",
     (ROUTED, "dampeningMaxSuppress"): "all_or_none with reuse/suppress",
     # One child emits BOTH thresholds and the installed int_vlan body rejects either one alone
     # ("Both HSRP lower and upper forwarding thresholds are required"), so a per-row omission of
     # one describes a request the controller refuses. Covered as a pair in
-    # `test_gie_hsrp3_resets.py`.
+    # `test_binding_role_resets.py`.
     (SVI, "hsrpPriorityForwardingThresholdLower"): "coordinated pair with the upper threshold",
     (SVI, "hsrpPriorityForwardingThresholdUpper"): "coordinated pair with the lower threshold",
 }
@@ -1531,7 +1531,7 @@ def _public_nv(s, state="merged"):
 PL = "int_vpc_peer_link_po"
 
 
-# One row per registered reset of the parent. test_dcnm_intf_withdrawal.py requires this set to equal the registry.
+# One row per registered reset of the parent. test_binding_withdrawal.py requires this set to equal the registry.
 PEER_LINK_ROUTE_RESET_ROWS = (
     (PL, "qosStatsSuppressed", "disable_qos_stats", "true", "false"),
     (PL, "spanningTreePortType", "spanning_tree_port_type", "network", "no"),
@@ -1542,7 +1542,7 @@ PEER_LINK_ROUTE_RESET_IDENTITIES = frozenset((p, n) for p, n, _k, _h, _r in PEER
 UL = "int_vpc_uplink_access"
 
 
-# One row per registered reset of the parent. test_dcnm_intf_withdrawal.py requires this set to equal the registry.
+# One row per registered reset of the parent. test_binding_withdrawal.py requires this set to equal the registry.
 UPLINK_ROUTE_RESET_ROWS = (
     (UL, "ENABLE_QOS", "enable_qos", "true", "false"),
     (UL, "QOS_POLICY", "qos_policy", "UL-QOS", ""),
