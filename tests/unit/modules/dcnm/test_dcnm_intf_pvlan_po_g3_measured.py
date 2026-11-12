@@ -1,6 +1,6 @@
 """The member comparison against a MEASURED capture.
 
-MEASURED inputs (fixtures/pvlan_po_h1_measured.json, NDFC 12.6.0.267): the forced-preview pending (complete) and the
+MEASURED inputs (fixtures/pvlan_po_create_update.json#pvlan_po_h1_measured, NDFC 12.6.0.267): the forced-preview pending (complete) and the
 expected/running stanzas of the port-channel and its member, their intents and policies. The member pending held
 `channel-group <N> force mode active`; the controller's expected member held `channel-group <N> mode active` plus the inherited
 PVLAN mode and host-association, which the earlier gate refused. Every variation below CHANGES one measured line and says so;
@@ -16,8 +16,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
-import os
 
 import pytest
 
@@ -25,8 +23,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan 
 
 from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, TRUNK, preview, run
 from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController, markdelete_ok
+from .dcnm_interface.helpers.fixture_cases import load_case
 
-FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_h1_measured.json")))
+FIXTURE = load_case("pvlan_po_h1_measured")
 STAGES = FIXTURE["stages"]
 PO_NAME, MEM = "port-channel502", "Ethernet1/10"
 PO = "Port-channel502"  # the module-normalised name

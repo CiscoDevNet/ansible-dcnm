@@ -3,7 +3,7 @@
 NOT LIVE TESTED. Real main() through the EXISTING vPC harness (VpcController: two peers, per-serial previews). Labels:
   [SRC] the installed templates (VPC-TEMPLATE-READ): the parent's per-submode lists and per-peer PVLAN native/allowed (HOST 192-229,
         604-680), the child Po body (POVPC 217-252) = the regular Po body + `vpc N`;
-  [MEASURED elsewhere] the prepared access member of the regular-Po EXP-1 (fixtures/pvlan_po_ts_exp1_measured.json, branch A), and the
+  [MEASURED elsewhere] the prepared access member of the regular-Po EXP-1 (fixtures/pvlan_po_delete_saved.json#pvlan_po_ts_exp1_measured, branch A), and the
         regular-Po pending shapes (force join, parent-only update, `mapping trunk P remove S`);
   SYNTHETIC: every vPC preview below (written by hand from those templates; no vPC of these submodes was ever observed).
 Gate records are checked per SITE with the exact peer + serial + target + decision (the host L2 lesson: an update records two `prior`

@@ -16,7 +16,7 @@ So the tag and the options are inert with OSPF off except in the default VRF (`i
 authentication rows follow the same single gates as int_routed_host. In the default VRF a disable that omits a stored
 tag is still refused; stating the tag is the supported direct form.
 
-The HAVE is a real NDFC 12.6.0.267 interface read (fixtures/dcnm_intf_loopback_ospf_have.json); the default-VRF HAVE
+The HAVE is a real NDFC 12.6.0.267 interface read (fixtures/routing_have_cases.json#dcnm_intf_loopback_ospf_have); the default-VRF HAVE
 changes only INTF_VRF. Profiles are the shapes NaC renders. Real main() through gie_withdrawal_harness; assertions are
 on the captured request. Synthetic secrets only.
 """
@@ -27,7 +27,6 @@ __metaclass__ = type
 
 import copy
 import json
-import os
 
 import pytest
 
@@ -35,8 +34,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_tabl
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import registry_generator as thin
+from .dcnm_interface.helpers.fixture_cases import load_case
 
-FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "dcnm_intf_loopback_ospf_have.json")))
+FIXTURE = load_case("dcnm_intf_loopback_ospf_have")
 VRF = FIXTURE["nvPairs"]["INTF_VRF"]
 TAG = FIXTURE["nvPairs"]["ospfTag"]
 SYN_MD5 = "SYNTH-MD5-KEY-NOT-REAL-0003"

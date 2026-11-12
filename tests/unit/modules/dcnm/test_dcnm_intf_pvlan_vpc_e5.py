@@ -2,7 +2,7 @@
 
 F1: the created vPC parent carries `createVpc` = "true" (MEASURED): read-only controller metadata, not a template field.
 F2: the child Po of a deleted vPC is listed `interface_delete` whose source is the PARENT vPC (MEASURED).
-The fixtures come from the sanitized captures in fixtures/pvlan_vpc_l1e4_measured.json; the harness stays SIMULATED elsewhere.
+The fixtures come from the sanitized captures in fixtures/pvlan_vpc_lifecycle.json; the harness stays SIMULATED elsewhere.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -11,7 +11,6 @@ __metaclass__ = type
 
 import copy
 import json
-import os
 
 import pytest
 
@@ -31,8 +30,9 @@ from .dcnm_interface.helpers.vpc_controller import (
     vpc_del_item,
     vpc_item,
 )
+from .dcnm_interface.helpers.fixture_cases import load_case
 
-FX = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_vpc_l1e4_measured.json")))
+FX = load_case("pvlan_vpc_l1e4_measured")
 
 
 def measured_ctrl(**kw):

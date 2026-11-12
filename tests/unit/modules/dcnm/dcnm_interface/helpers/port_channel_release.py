@@ -6,14 +6,13 @@ __metaclass__ = type
 
 import copy
 import json
-import os
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 from .ethernet_controller import SWITCH_IP, TRUNK, preview, run
 from .port_channel_controller import PoLifecycleController, markdelete_ok
-from .fixture_cases import FIXTURE_DIR
+from .fixture_cases import load_case
 
 
-FIXTURE = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_po_h1_measured.json")))
+FIXTURE = load_case("pvlan_po_h1_measured")
 PO_NAME, MEM = "port-channel502", "Ethernet1/10"
 PO = "Port-channel502"
 PO_MEMBER = "int_port_channel_pvlan_member"
@@ -144,10 +143,10 @@ def delete(ctrl):
     return run(ctrl, [{"name": "po502", "switch": [SWITCH_IP], "deploy": True}], state="deleted")
 
 
-Q56 = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_release_routed_q56_measured.json")))
+Q56 = load_case("pvlan_release_routed_q56_measured")
 
 
-CDP_RELEASE = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_release_routed_cdp_measured.json")))
+CDP_RELEASE = load_case("pvlan_release_routed_cdp_measured")
 
 
 ROUTED = "int_routed_host"

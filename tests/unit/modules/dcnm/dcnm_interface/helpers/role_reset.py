@@ -5,13 +5,11 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
-import os
 from unittest.mock import patch
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_binding_table as table
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
-from .fixture_cases import FIXTURE_DIR
+from .fixture_cases import load_case
 
 
 STATES = ("deleted", "overridden")
@@ -39,8 +37,7 @@ PHYSICAL = {"deletable": "false", "editAllowed": "true", "mgmtIpAddress": h.SWIT
 
 
 def _inventory(role):
-    path = os.path.join(FIXTURE_DIR, "dcnm_intf_binding_configs.json")
-    inv = json.load(open(path))["mock_fab_inv_data"]
+    inv = load_case("dcnm_intf_binding_configs")["mock_fab_inv_data"]
     for v in inv.values():
         v["switchRole"] = role
     return inv

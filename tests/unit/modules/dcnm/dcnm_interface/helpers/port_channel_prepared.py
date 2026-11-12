@@ -5,14 +5,12 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
-import os
 from .ethernet_controller import SWITCH_IP, preview, run
 from .port_channel_controller import PoLifecycleController
-from .fixture_cases import FIXTURE_DIR
+from .fixture_cases import load_case
 
 
-FX = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_po_ts_exp1_measured.json")))
+FX = load_case("pvlan_po_ts_exp1_measured")
 MEM, PO_DEV, PO = "Ethernet1/8", "port-channel504", "Port-channel504"
 TS = "trunk secondary"
 TS1_PROFILE = {  # live model TS1 (replaced, 2210/2212)

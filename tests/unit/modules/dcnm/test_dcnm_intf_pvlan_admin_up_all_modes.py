@@ -3,7 +3,7 @@ secondary (on the access/routed bases prepared for it) and keeps its own state, 
 
 OFFLINE ONLY: no lab measurement of these modes with an up member. The previews are the existing harnesses' down-member previews
 of each mode (measured for trunk secondary and for the promiscuous/trunk promiscuous creation form) with the member's admin line
-switched by the rule MEASURED for host (fixtures/pvlan_admin_up_join_measured.json): the member pending and expected carry
+switched by the rule MEASURED for host (fixtures/pvlan_admin_state.json): the member pending and expected carry
 `no shutdown`; the running of an up switchport member has no `shutdown` line and an up routed port shows `no shutdown`; an up
 routed port carries the measured own child `no_shut_interface` instead of `shut_interface`. That switch is SYNTHETIC for these
 modes. Real main(); only the controller boundary is intercepted.
@@ -27,6 +27,7 @@ from .dcnm_interface.helpers import vpc_modes as E1
 from .dcnm_interface.helpers import vpc_controller as E1_VPC
 from .dcnm_interface.helpers.ethernet_controller import IF7, run, trunk_host_nv
 from .dcnm_interface.helpers.vpc_controller import IP1, IP2, M1, M2, SN1, SN2
+from .dcnm_interface.helpers.fixture_cases import load_case
 
 P_, TP, TS = "promiscuous", "trunk promiscuous", "trunk secondary"
 E9 = "Ethernet1/9"
@@ -74,7 +75,7 @@ def sent_nv(ctrl):
 
 def test_the_up_rule_reproduces_the_measured_host_forms():
     """Guard of the SYNTHETIC switch: applied to the harness host preview it gives the member lines MEASURED in M1."""
-    fx = json.load(open(G6.os.path.join(G6.os.path.dirname(__file__), "fixtures", "pvlan_admin_up_join_measured.json")))
+    fx = load_case("pvlan_admin_up_join_measured")
     measured = fx["M1"]["pre_deploy"]["<SERIAL_LEAF_B>"]
     pend = up_lines(["interface ethernet1/7", "  channel-group 10 force mode active", "  shutdown"], IF7, "pending")
     assert pend[-1].strip() == measured["pending"][-2].strip() == "no shutdown"

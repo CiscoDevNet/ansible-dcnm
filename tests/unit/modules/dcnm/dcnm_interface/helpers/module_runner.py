@@ -7,7 +7,8 @@ __metaclass__ = type
 from unittest.mock import patch
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_ENABLED_PATCH_VERSIONS
-from ...dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
+from ...dcnm_module import TestDcnmModule, set_module_args
+from .fixture_cases import load_case
 
 
 SUPPORTED = "12.6.0.267"
@@ -27,7 +28,7 @@ class A161Base(TestDcnmModule):
 
     def setUp(self):
         super(A161Base, self).setUp()
-        self.config_data = loadPlaybookData("dcnm_intf_binding_configs")
+        self.config_data = load_case("dcnm_intf_binding_configs")
 
         self.mock_fabric_details = patch(
             "ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface"

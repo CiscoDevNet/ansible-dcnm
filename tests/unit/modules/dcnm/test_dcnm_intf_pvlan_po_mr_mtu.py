@@ -1,6 +1,6 @@
 """The member MTU ADDITION inherited from the port-channel (default -> jumbo), as MEASURED.
 
-MEASURED inputs (fixtures/pvlan_po_mr_measured.json, provenance per field inside it): the GUI preview pending (the port-channel
+MEASURED inputs (fixtures/pvlan_po_member_mtu.json#pvlan_po_mr_measured, provenance per field inside it): the GUI preview pending (the port-channel
 stanza re-emitted with `mtu 9216`, no member block, no force), intents before/after, the controller's runningConfig before and
 expectedConfig after, device stanzas and operational MTU (1500 -> 9216 on BOTH port-channel and member), and one module recompute
 preview with its modify body.
@@ -14,7 +14,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
-import os
 
 import pytest
 
@@ -23,8 +22,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_E
 
 from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, preview, run
 from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController
+from .dcnm_interface.helpers.fixture_cases import load_case
 
-FX = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_mr_measured.json")))
+FX = load_case("pvlan_po_mr_measured")
 PO, MEM = "Port-channel501", "Ethernet1/8"
 MODIFY = "/rest/interface/modify"
 DEPLOY = "/rest/globalInterface/deploy"

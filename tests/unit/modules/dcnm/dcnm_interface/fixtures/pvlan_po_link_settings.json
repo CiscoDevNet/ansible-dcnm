@@ -1,0 +1,606 @@
+{
+ "_bundle": "PVLAN port-channel member duplex and speed inheritance captures.",
+ "sources": {
+  "pvlan_po_duplex_measured": {
+   "file": "pvlan_po_duplex_measured.json",
+   "sha256": "6fd94fceb3135eb9d1450502ad18272cb2a93f51f356d17cd05d6dbac6b62f0c"
+  },
+  "pvlan_po_speed_diag_measured": {
+   "file": "pvlan_po_speed_diag_measured.json",
+   "sha256": "9fd5430ab09850d818d32e646386fc427c16855b18da8c8964091af75ad28051"
+  },
+  "pvlan_po_speed_s1_measured": {
+   "file": "pvlan_po_speed_s1_measured.json",
+   "sha256": "7e5c3cad6d004ef2eea0fa63d5f87edb5d86876882ec4cc41a17478506d1ebf0"
+  }
+ },
+ "baselines": {
+  "pvlan_po_duplex_measured.member_nv": {
+   "ADMIN_STATE": "false",
+   "CDP_ENABLE": "true",
+   "CONF": "",
+   "DESC": "",
+   "INTF_NAME": "Ethernet1/8",
+   "INTF_PTP": "false",
+   "LACP_PORT_PRIO": "32768",
+   "LACP_RATE": "normal",
+   "PC_MODE": "active",
+   "PO_ID": "Port-channel521",
+   "PTP": "false",
+   "PVLAN_MODE": "host",
+   "lldpReceive": "false",
+   "lldpTransmit": "false"
+  },
+  "pvlan_po_duplex_measured.parent_after_nv": {
+   "ADMIN_STATE": "false",
+   "ASSOCIATION_LIST": "{\"ASSOCIATION_LIST\":[{\"P_VLAN\":\"2410\",\"S_VLAN\":\"2412\"}]}",
+   "BPDUGUARD_ENABLED": "true",
+   "CDP_ENABLE": "true",
+   "CONF": "",
+   "COPY_DESC": "false",
+   "DESC": "",
+   "DISABLE_LACP_SUSPEND": "false",
+   "ENABLE_ORPHAN_PORT": "false",
+   "INTF_NAME": "Port-channel521",
+   "LACP_PORT_PRIO": "32768",
+   "LACP_RATE": "normal",
+   "MAPPING_LIST": "",
+   "MEMBER_INTERFACES": "Ethernet1/8",
+   "MTU": "jumbo",
+   "PC_MODE": "active",
+   "PORTTYPE_FAST_ENABLED": "true",
+   "PORT_DUPLEX_MODE": "full",
+   "PO_ID": "Port-channel521",
+   "PTP": "false",
+   "PVLAN_ALLOWED_VLANS": "",
+   "PVLAN_MODE": "host",
+   "PVLAN_NATIVE_VLAN": "",
+   "QUEUING_POLICY": "",
+   "SPEED": "1Gb",
+   "lldpReceive": "false",
+   "lldpTransmit": "false",
+   "queuingStats": "false",
+   "spanningTreePortType": "no"
+  },
+  "pvlan_po_duplex_measured.parent_before_nv": {
+   "ADMIN_STATE": "false",
+   "ASSOCIATION_LIST": "{\"ASSOCIATION_LIST\":[{\"P_VLAN\":\"2410\",\"S_VLAN\":\"2412\"}]}",
+   "BPDUGUARD_ENABLED": "true",
+   "CDP_ENABLE": "true",
+   "CONF": "",
+   "COPY_DESC": "false",
+   "DESC": "",
+   "DISABLE_LACP_SUSPEND": "false",
+   "ENABLE_ORPHAN_PORT": "false",
+   "INTF_NAME": "Port-channel521",
+   "LACP_PORT_PRIO": "32768",
+   "LACP_RATE": "normal",
+   "MAPPING_LIST": "",
+   "MEMBER_INTERFACES": "Ethernet1/8",
+   "MTU": "jumbo",
+   "PC_MODE": "active",
+   "PORTTYPE_FAST_ENABLED": "true",
+   "PORT_DUPLEX_MODE": "auto",
+   "PO_ID": "Port-channel521",
+   "PTP": "false",
+   "PVLAN_ALLOWED_VLANS": "",
+   "PVLAN_MODE": "host",
+   "PVLAN_NATIVE_VLAN": "",
+   "QUEUING_POLICY": "",
+   "SPEED": "1Gb",
+   "lldpReceive": "false",
+   "lldpTransmit": "false",
+   "queuingStats": "false",
+   "spanningTreePortType": "no"
+  },
+  "pvlan_po_speed_diag_measured.parent_before_nv": {
+   "ADMIN_STATE": "false",
+   "ASSOCIATION_LIST": "{\"ASSOCIATION_LIST\":[{\"P_VLAN\":\"2410\",\"S_VLAN\":\"2412\"}]}",
+   "BPDUGUARD_ENABLED": "true",
+   "CDP_ENABLE": "true",
+   "CONF": "",
+   "COPY_DESC": "false",
+   "DESC": "",
+   "DISABLE_LACP_SUSPEND": "false",
+   "ENABLE_ORPHAN_PORT": "false",
+   "INTF_NAME": "Port-channel521",
+   "LACP_PORT_PRIO": "32768",
+   "LACP_RATE": "normal",
+   "MAPPING_LIST": "",
+   "MEMBER_INTERFACES": "Ethernet1/8",
+   "MTU": "jumbo",
+   "PC_MODE": "active",
+   "PORTTYPE_FAST_ENABLED": "true",
+   "PORT_DUPLEX_MODE": "auto",
+   "PO_ID": "Port-channel521",
+   "PTP": "false",
+   "PVLAN_ALLOWED_VLANS": "",
+   "PVLAN_MODE": "host",
+   "PVLAN_NATIVE_VLAN": "",
+   "QUEUING_POLICY": "",
+   "SPEED": "Auto",
+   "lldpReceive": "false",
+   "lldpTransmit": "false",
+   "queuingStats": "false",
+   "spanningTreePortType": "no"
+  }
+ },
+ "cases": {
+  "pvlan_po_duplex_measured": {
+   "_comment": "MEASURED (a port-channel with one member, speed 1000 fixed, admin down, NDFC 12.6.0.267, N9K-C9300v 10.5(5)): duplex full apply (apply_preview) and its withdrawal (withdraw_preview) before the deploy, and the converged previews after each. The previews are sanitized stanzas re-formatted as CLI lines. The nvPairs are DERIVED from the speed fixture (SPEED 1Gb) with only PORT_DUPLEX_MODE changed.",
+   "after_apply_preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  duplex full",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  duplex full",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  duplex full",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  duplex full",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "In-Sync"
+   },
+   "after_withdraw_preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "In-Sync"
+   },
+   "apply_preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  duplex full",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  duplex full",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [
+     "interface port-channel521",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "  mtu 9216",
+     "  speed 1000",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "  duplex full",
+     "configure terminal"
+    ],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "Out-of-Sync"
+   },
+   "member_nv": {
+    "$baseline": "pvlan_po_duplex_measured.member_nv"
+   },
+   "parent_after_nv": {
+    "$baseline": "pvlan_po_duplex_measured.parent_after_nv"
+   },
+   "parent_before_nv": {
+    "$baseline": "pvlan_po_duplex_measured.parent_before_nv"
+   },
+   "parent_withdraw_after_nv": {
+    "$baseline": "pvlan_po_duplex_measured.parent_before_nv"
+   },
+   "parent_withdraw_before_nv": {
+    "$baseline": "pvlan_po_duplex_measured.parent_after_nv"
+   },
+   "source_stamps_sha256_16": {
+    "GATE-apply": "0eaa04c9788968e2",
+    "GATE-withdraw": "c849ee17a697a616",
+    "SNAP-A1": "9edcfaa27988c732",
+    "SNAP-B0": "343f89d307d5fe40",
+    "SNAP-W1": "f52452f7561ad26b"
+   },
+   "withdraw_preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [
+     "interface port-channel521",
+     "  no duplex full",
+     "configure terminal"
+    ],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  duplex full",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  duplex full",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "pvlan_po_speed_diag_measured": {
+   "_comment": "MEASURED speed-inheritance diagnosis (NDFC 12.6.0.267, N9K-C9300v 10.5(5), host mode, one member per port-channel, every port administratively down). Extracted read-only from the raw captures listed in source_sha256 and sanitized: serials replaced by SN-A/SN-B, policy ids, switch names and fabric names removed; only the port-channel and member stanzas are kept. These captures are controller/switch behaviour, not a module result. In the source_sha256 keys the serial fragment of each raw file name is replaced by SN-A/SN-B like the values.",
+   "after_apply_preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "In-Sync"
+   },
+   "after_withdraw_preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "In-Sync"
+   },
+   "apply_preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [
+     "interface port-channel521",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "  mtu 9216",
+     "  speed 1000",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "Out-of-Sync"
+   },
+   "member_nv": {
+    "$baseline": "pvlan_po_duplex_measured.member_nv"
+   },
+   "parent_after_nv": {
+    "$baseline": "pvlan_po_duplex_measured.parent_before_nv"
+   },
+   "parent_before_nv": {
+    "$baseline": "pvlan_po_speed_diag_measured.parent_before_nv"
+   },
+   "parent_withdraw_after_nv": {
+    "$baseline": "pvlan_po_speed_diag_measured.parent_before_nv"
+   },
+   "parent_withdraw_before_nv": {
+    "$baseline": "pvlan_po_duplex_measured.parent_before_nv"
+   },
+   "source_sha256": {
+    "diag-po/raw/gate-apply-prev-SN-A-01.json": "7289afa1bc1de536a2c81e40fbe62521636022c22537110e6606dc124f4fd7a1",
+    "diag-po/raw/gate-withdraw-prev-SN-A-00.json": "c75bf76982ec54a019f50954763e621c3e896e30a6eaf10beef7d9c95494c306",
+    "diag-po/raw/modify-apply-post-00.json": "79ca27258e10521b3149347b05999d4dade0eadd4b8340c2d614a47588157f84",
+    "diag-po/raw/modify-apply-pre-00.json": "ba2c029376910a33a4e486b62bc0e1e0bd1d5e3b41ed40f2403c86a880befb15",
+    "diag-po/raw/modify-withdraw-post-00.json": "414e3ea9190fbc86e81542fe4c07237f14fa9c658ce888928f9faae473eb1a6b",
+    "diag-po/raw/modify-withdraw-pre-00.json": "79ca27258e10521b3149347b05999d4dade0eadd4b8340c2d614a47588157f84",
+    "diag-po/raw/snap-A1-prev-SN-A-00.json": "bf6a92b1f925274966bcfb9813c4daf3f8371795de51baa48626cf9e050c79a7",
+    "diag-po/raw/snap-B0-if-SN-A-Ethernet1-8-00.json": "8cc9eb7e439b7d1ee1dd333972ae75c670c4eeb8b80a348bb1205b33de33ed5f",
+    "diag-po/raw/snap-W1-prev-SN-A-00.json": "0cadba3d7c8bf500f4ff55c26287ce622c539255e88d8a904408e7690ae1390a"
+   },
+   "withdraw_preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [
+     "interface port-channel521",
+     "  no speed 1000",
+     "configure terminal"
+    ],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "Out-of-Sync"
+   }
+  },
+  "pvlan_po_speed_s1_measured": {
+   "_comment": "MEASURED (merged speed 1Gb on an existing PVLAN host port-channel with one member; NDFC 12.6.0.267, N9K-C9300v 10.5(5)). Extracted read-only and sanitized: serials, policy ids and switch names removed; only the port-channel and member stanzas of the switch that changed are kept. The deploy was refused (nothing deployed); the intent was then restored to SPEED Auto.",
+   "member_before_nv": {
+    "$baseline": "pvlan_po_duplex_measured.member_nv"
+   },
+   "member_nv": {
+    "$baseline": "pvlan_po_duplex_measured.member_nv"
+   },
+   "module_refusal": "Native PVLAN pre-deploy gate (deploy) refused the deployment:\n  Port-channel521 on <SERIAL>: Ethernet1/8: the pending for Ethernet1/8 is empty but the device differs from the intended state: {'missing': ['speed 1000'], 'unexpected': []}\nNo deployment request was sent for this batch. Intent for these targets was ALREADY changed on the controller and is not rolled back: Port-channel521 on <SERIAL>.",
+   "parent_after_nv": {
+    "$baseline": "pvlan_po_duplex_measured.parent_before_nv"
+   },
+   "parent_before_nv": {
+    "$baseline": "pvlan_po_speed_diag_measured.parent_before_nv"
+   },
+   "preview": {
+    "expectedConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  speed 1000",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "pendingConfig": [
+     "interface port-channel521",
+     "  switchport",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "  mtu 9216",
+     "  speed 1000",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  shutdown",
+     "configure terminal"
+    ],
+    "runningConfig": [
+     "interface ethernet1/8",
+     "  channel-group 521 mode active",
+     "  mtu 9216",
+     "  shutdown",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412",
+     "interface port-channel521",
+     "  mtu 9216",
+     "  shutdown",
+     "  spanning-tree bpduguard enable",
+     "  spanning-tree port type edge trunk",
+     "  switchport mode private-vlan host",
+     "  switchport private-vlan host-association 2410 2412"
+    ],
+    "status": "Out-of-Sync"
+   },
+   "source_sha256": {
+    "P1-L2.json": "c8528670073053dcf022dfd1d7229d3ee0d3a3d74d8a6542ec97df73d54f60d6",
+    "S1-L2.json": "35ef599f08b2199d9b3aa36891e2ac0643fed66ff179154935138f391ad947ae",
+    "S1-L3.json": "b43d2771e04510160fedf58677b2656b339a9671e20f76bbd2e28e8a648ef6b1",
+    "S1-RESULT.json": "0cd673c57a539e1c429593372444e8c9bb5e31f3f30a246a167e054658464ad0"
+   }
+  }
+ }
+}

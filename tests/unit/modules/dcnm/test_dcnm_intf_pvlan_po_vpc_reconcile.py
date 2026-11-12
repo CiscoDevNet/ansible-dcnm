@@ -24,6 +24,7 @@ from .dcnm_interface.helpers import port_channel_release as G4
 from .dcnm_interface.helpers import vpc_controller as V
 from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, TRUNK, run
 from .dcnm_interface.helpers.vpc_controller import MeasuredVpc, lo, measured_po, vpc_ctrl, vpc_queue, with_args, writes
+from .dcnm_interface.helpers.fixture_cases import load_case
 
 PO_PROFILE = {"mode": "pvlan", "pvlan_mode": "host", "members": [G4.MEM], "pc_mode": "active", "admin_state": False,
               "pvlan_association": [{"primary_vlan": 2210, "secondary_vlan": 2212}]}
@@ -302,11 +303,10 @@ def test_overridden_with_deploy_false_saves_the_dropped_vpc():
     assert "globalInterface/deploy" not in writes(ctrl) and len(ctrl.markdeletes()) == 1
 
 
-# ================================================================== NaC PR895 argument shapes (fixtures/nac_pr895_pvlan_args.json)
+# ================================================================== NaC PR895 argument shapes (fixtures/nac_case_models.yaml#nac_pr895_pvlan_args)
 import copy  # noqa: E402
-import os  # noqa: E402
 
-NAC = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "nac_pr895_pvlan_args.json")))
+NAC = load_case("nac_pr895_pvlan_args")
 
 
 def nac_po(members, deploy=False):

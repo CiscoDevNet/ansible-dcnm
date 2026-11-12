@@ -59,6 +59,7 @@ from .dcnm_interface.helpers.port_channel_controller import (
     run,
     trunk_host_nv,
 )
+from .dcnm_interface.helpers.fixture_cases import load_text
 
 
 # ------------------------------------------------------------------ route, payload types, creation
@@ -479,10 +480,8 @@ def test_po_models_are_unmodeled_outside_the_first_delivery():
 
 # ------------------------------------------------------------------ models M1/M2 (NOT RUN live)
 def _load_model(name):
-    import os
     import yaml
-    path = os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_host_models", name)
-    play = yaml.safe_load(open(path))[0]
+    play = yaml.safe_load(load_text(name))[0]
     args = copy.deepcopy(play["tasks"][0]["cisco.dcnm.dcnm_interface"])
     values = {"po_fabric": "test_fabric", "po_switch": SWITCH_IP, "po_name": PO_ITEM_NAME, "po_member": IF7}
 
@@ -498,7 +497,7 @@ def _load_model(name):
 
 
 def test_models_m1_and_m2_are_valid_and_run_through_the_real_argspec():
-    m1, m2 = _load_model("M1_po_host_create.yml"), _load_model("M2_po_host_repeat.yml")
+    m1, m2 = _load_model("M1_po_host_create"), _load_model("M2_po_host_repeat")
     assert m1 == m2, "M2 is the IDENTICAL model of M1"
     ctrl = baseline_ctrl()
     ctrl.previews = [good_preview()]
@@ -510,10 +509,8 @@ def test_models_m1_and_m2_are_valid_and_run_through_the_real_argspec():
 
 
 def test_models_carry_only_placeholders_and_declare_not_run():
-    import os
-    d = os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_host_models")
-    for name in ("vars_po_host_e1.yml", "M1_po_host_create.yml", "M2_po_host_repeat.yml"):
-        text = open(os.path.join(d, name)).read()
+    for name in ("vars_po_host_e1", "M1_po_host_create", "M2_po_host_repeat"):
+        text = load_text(name)
         assert "NOT RUN" in text, name
         for real in ("192.168.", "SAL0000PO01", "FAB1", "Leaf"):
             assert real not in text, (name, real)

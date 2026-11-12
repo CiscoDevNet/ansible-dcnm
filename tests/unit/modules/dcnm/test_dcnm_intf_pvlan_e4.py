@@ -11,8 +11,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
-import os
 
 import pytest
 
@@ -42,8 +40,9 @@ from .dcnm_interface.helpers.ethernet_controller import (
     trunk_host_nv,
     trunk_item,
 )
+from .dcnm_interface.helpers.fixture_cases import load_case
 
-MEASURED = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "dcnm_intf_pvlan_summary_measured.json")))["entries"]
+MEASURED = load_case("dcnm_intf_pvlan_summary_measured")["entries"]
 IF3 = "Ethernet1/3"
 ADD_2212 = dict(pvlan_mode="trunk promiscuous", pvlan_mapping=[{"primary_vlan": 2210, "secondary_vlans": "2212"}])
 NO_WRITE = "No configuration or deployment request was sent"

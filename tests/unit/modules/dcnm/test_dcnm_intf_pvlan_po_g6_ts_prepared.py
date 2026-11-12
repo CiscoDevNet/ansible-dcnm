@@ -1,6 +1,6 @@
 """Trunk secondary from a member PREPARED as access/routed, and equivalent member names.
 
-MEASURED inputs (fixtures/pvlan_po_ts_exp1_measured.json, NX-OS 10.5(5), NDFC 12.6.0.267), extracted read-only:
+MEASURED inputs (fixtures/pvlan_po_delete_saved.json#pvlan_po_ts_exp1_measured, NX-OS 10.5(5), NDFC 12.6.0.267), extracted read-only:
   * per branch T (trunk), R (routed), A (access): the member state before the creation (intent, policies, running), the creation
     preview (full pending, running/expected stanzas), the deploy answer (T 500 device ERROR; R/A 200) and the post stanzas;
   * branch T clean0: a port-channel created through Manage (INTF_NAME/PO_ID `port-channel<N>`, MEMBER_INTERFACES `e1/8`) and the

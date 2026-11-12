@@ -3,7 +3,7 @@
 After the accepted mark-delete and BEFORE any deploy, the released standalone member's ADMIN_STATE is set to "false" with its
 complete writable nvPairs (legacy interface/modify), then the normal gate, deploy and deletion verification run.
 
-MEASURED inputs (fixtures/pvlan_po_h1_measured.json): the parent/member intents before the deletion, the member AS RELEASED by the
+MEASURED inputs (fixtures/pvlan_po_create_update.json#pvlan_po_h1_measured): the parent/member intents before the deletion, the member AS RELEASED by the
 controller after the mark-delete (int_trunk_host, 55 nvPairs, ADMIN_STATE "true", pending `no shutdown`), and the state after a
 manual correction (ADMIN_STATE "false", In-Sync, 0 pending, member expected/running trunk + shutdown).
 

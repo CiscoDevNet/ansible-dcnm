@@ -2,7 +2,7 @@
 keeps its own state; every other member keeps its own. This file is the MEASURED host series; the other modes (ADMIN-UP-ALL-MODES,
 offline) are in test_dcnm_intf_pvlan_admin_up_all_modes.py.
 
-MEASURED basis (fixtures/pvlan_admin_up_join_measured.json, NDFC 12.6.0.267 / NX-OS 10.5(5), direct legacy writes with the module's own
+MEASURED basis (fixtures/pvlan_admin_state.json, NDFC 12.6.0.267 / NX-OS 10.5(5), direct legacy writes with the module's own
 create bodies): M1 regular Po host, parent down; M2 the same with the parent up; M3 vPC host, parent down, one up member per peer. In all
 three the member policy keeps ADMIN_STATE "true", the member pending is `no spanning-tree port type edge trunk` + `channel-group N force
 mode active` + `no shutdown`, and after the deploy the running member holds no `shutdown` and the switch is In-Sync. The measured stanzas

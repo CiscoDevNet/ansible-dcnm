@@ -1,7 +1,7 @@
 """Two pre-deploy refusals MEASURED live (NDFC 12.6.0.267, a PVLAN host port-channel with one member),
 replayed offline through the real main().
 
-MEASURED inputs (fixtures/pvlan_po_t2_measured.json, redacted, previews reduced to the two target stanzas, serial/fabric
+MEASURED inputs (fixtures/pvlan_po_delete_saved.json#pvlan_po_t2_measured, redacted, previews reduced to the two target stanzas, serial/fabric
 sanitized): the intents after the creation, the module's own recompute preview of the companion update, the intents after that
 update (never deployed), the member exactly as the controller released it after the mark-delete, the admin-down modify body, and
 the module's own delete_deploy preview.
@@ -23,7 +23,6 @@ __metaclass__ = type
 
 import copy
 import json
-import os
 
 import pytest
 
@@ -32,8 +31,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_E
 
 from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, TRUNK, preview, run
 from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController, markdelete_ok
+from .dcnm_interface.helpers.fixture_cases import load_case
 
-FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_t2_measured.json")))
+FIXTURE = load_case("pvlan_po_t2_measured")
 PO, MEM = "Port-channel501", "Ethernet1/8"
 PO_MEMBER = "int_port_channel_pvlan_member"
 MARKDELETE = "/rest/interface/markdelete"

@@ -6,7 +6,7 @@ carried no IPv6 nvPair.
 
 Every case runs real main() through gie_withdrawal_harness and asserts the CAPTURED REQUEST: policy, interface identity
 and nvPairs. The default HAVE is the module's own replaced payload with the IPv6 pair set the way the controller stores
-it ("" and "" when unset, as in the measured int_routed_host read in fixtures/dcnm_intf_routed_ospf_have.json); the
+it ("" and "" when unset, as in the measured int_routed_host read in fixtures/routing_have_cases.json#dcnm_intf_routed_ospf_have); the
 measured-shape cases use that 84-key read itself. Roles are the lower-case values NDFC returns ("leaf" resets to
 int_trunk_host, "border" to int_routed_host). Addresses are documentation values.
 
@@ -19,14 +19,13 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
-import os
 from unittest.mock import patch
 
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
+from .dcnm_interface.helpers.fixture_cases import load_case
 
 V6 = "2001:db8:117::1"
 V6_B = "2001:db8:118::1"
@@ -37,7 +36,6 @@ V6_ONLY = {"mode": "routed", "ipv6_addr": V6, "ipv6_mask_len": 64, "admin_state"
 
 _ORIG_TRANSPORT = h._transport
 PHYSICAL = {"deletable": "false", "editAllowed": "true", "mgmtIpAddress": h.SWITCH_IP}
-FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 
 
 def _physical_transport(calls, have):
@@ -54,7 +52,7 @@ def _physical_transport(calls, have):
 
 
 def _inventory(role):
-    inv = json.load(open(os.path.join(FIXTURES, "dcnm_intf_binding_configs.json")))["mock_fab_inv_data"]
+    inv = load_case("dcnm_intf_binding_configs")["mock_fab_inv_data"]
     for v in inv.values():
         v["switchRole"] = role
     return inv
@@ -87,7 +85,7 @@ def routed_have(ifname=h.IF_A, ipv6="", prefix="", **profile):
 
 def measured_have(ipv6="", prefix=""):
     """The measured 84-key int_routed_host read (OSPF gate set to its disabled value, tag kept stored as NDFC does)."""
-    m = json.load(open(os.path.join(FIXTURES, "dcnm_intf_routed_ospf_have.json")))
+    m = load_case("dcnm_intf_routed_ospf_have")
     nv = copy.deepcopy(m["nvPairs"])
     nv.update({"ospf": "false", "IPv6": ipv6, "IPv6_PREFIX": prefix, "INTF_NAME": h.IF_A})
     intf = {"ifName": h.IF_A, "serialNumber": h.SERIAL, "fabricName": h.FABRIC,

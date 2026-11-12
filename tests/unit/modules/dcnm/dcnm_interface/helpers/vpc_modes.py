@@ -5,13 +5,12 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
-import os
 from ansible_collections.cisco.dcnm.plugins.module_utils import interface_pvlan as P
 from .vpc_controller import IP1, IP2, M1, M2, SN1, SN2, VPC, VpcController, member_running_baseline, preview
-from .fixture_cases import FIXTURE_DIR
+from .fixture_cases import load_case
 
 
-EXP1 = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_po_ts_exp1_measured.json")))
+EXP1 = load_case("pvlan_po_ts_exp1_measured")
 P_, TP, TS = "promiscuous", "trunk promiscuous", "trunk secondary"
 KEYWORD = {P_: "mapping", TP: "mapping trunk", TS: "association trunk"}
 

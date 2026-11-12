@@ -7,8 +7,7 @@ __metaclass__ = type
 import copy
 import json
 from .ethernet_controller import IF7, SERIAL, SWITCH_IP, TRUNK, FakeController, ok, preview, run, trunk_host_nv
-import os
-from .fixture_cases import FIXTURE_DIR
+from .fixture_cases import load_case
 
 
 PO = "Port-channel10"  # the module-normalised name; device stanzas stay lower case
@@ -26,7 +25,7 @@ RUNNING_MEMBER = ["interface Ethernet1/7", "  switchport", "  switchport mode tr
 PO_STANZA = ["interface port-channel10", "  switchport", "  switchport mode private-vlan host",
              "  switchport private-vlan host-association 2210 2212", "  mtu 9216",
              "  spanning-tree bpduguard enable", "  spanning-tree port type edge trunk", "  shutdown"]
-# MEASURED member forms of the creation (fixtures/pvlan_po_h1_measured.json, port-channel502 /
+# MEASURED member forms of the creation (fixtures/pvlan_po_create_update.json#pvlan_po_h1_measured, port-channel502 /
 # Ethernet1/10), TRANSPOSED to this harness's names (port-channel10 / Ethernet1/7). The controller's expected member holds
 # `channel-group N mode active` (no `force`) plus the inherited PVLAN mode and list line; the member pending holds only
 # `no spanning-tree port type edge trunk` (before the parent block) and `channel-group N force mode active` + `shutdown`.
@@ -165,7 +164,7 @@ class PoLifecycleController(PoController):
         return super(PoLifecycleController, self).__call__(mod, method, path, data)
 
     def _policies(self):
-        """The member policies in the MEASURED shape (fixtures/pvlan_po_h1_measured.json): the
+        """The member policies in the MEASURED shape (fixtures/pvlan_po_create_update.json#pvlan_po_h1_measured): the
         int_port_channel_pvlan_member carries the port-channel as source, and the parent's 'Inherited Commands' int_eth
         child (source = the port-channel) sits on the same member. The base harness gives every policy source ''."""
         out = super(PoLifecycleController, self)._policies()
@@ -215,8 +214,8 @@ def member_stanza(mode, lines):
 
 
 # Trunk secondary is created only from a member PREPARED as access (or routed); it was MEASURED that a switchport-trunk member
-# is rejected by the device. The prepared access member is the measured access-branch one (fixtures/pvlan_po_ts_exp1_measured.json).
-EXP1 = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_po_ts_exp1_measured.json")))
+# is rejected by the device. The prepared access member is the measured access-branch one (fixtures/pvlan_po_delete_saved.json#pvlan_po_ts_exp1_measured).
+EXP1 = load_case("pvlan_po_ts_exp1_measured")
 ACCESS = "int_access_host"
 RUNNING_ACCESS = ["interface Ethernet1/7", "  shutdown", "  spanning-tree port type edge", "  mtu 9216"]
 
@@ -418,12 +417,12 @@ def existing(mode):
 
 
 # ================================================================== live host findings
-# MEASURED (fixtures/pvlan_po_g4r1_host_measured.json, extracted read-only from the G4R1 live captures;
+# MEASURED (fixtures/pvlan_po_create_update.json#pvlan_po_g4r1_host_measured, extracted read-only from the G4R1 live captures;
 # only port-channel502 / Ethernet1/10): H4 (host association 2210/2212 -> 2410/2412 on a
 # deployed Po: member pending EMPTY) and the R-B deletion of that DEPLOYED Po (Po listed as interface_delete until the
 # deploy; member withdrawn with `no channel-group 502 force mode active`; released member ADMIN_STATE "true").
 # SIMULATED: the networks 2410/2412 typing, the legacy modify answer, and the post-correction deletion preview (named below).
-G4R1 = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_po_g4r1_host_measured.json")))
+G4R1 = load_case("pvlan_po_g4r1_host_measured")
 PO_NAME_502, PO_502, MEM_10 = "port-channel502", "Port-channel502", "Ethernet1/10"
 
 

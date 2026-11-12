@@ -2,10 +2,10 @@
 
 NOT LIVE TESTED on a vPC. Every preview below is DERIVED: the host stanzas of the existing vPC harness (SYNTHETIC, from the templates)
 carrying the pending FORMS measured on a REGULAR host port-channel (NDFC 12.6.0.267 / NX-OS 10.5(5)
-  * M2 / T2-R2 S1 (fixtures/pvlan_po_t2_measured.json): an update that renders member lines re-emits the member block WITH
+  * M2 / T2-R2 S1 (fixtures/pvlan_po_delete_saved.json#pvlan_po_t2_measured): an update that renders member lines re-emits the member block WITH
     `channel-group N force mode M` for the port-channel the member already belongs to;
-  * Fixtures/pvlan_po_m1_measured.json: MTU jumbo -> default = ONLY `interface port-channelN` / `no mtu 9216`, no member block;
-  * Fixtures/pvlan_po_mr_measured.json: MTU default -> jumbo = ONLY the port-channel stanza re-emitted with `mtu 9216`;
+  * Fixtures/pvlan_po_member_mtu.json#pvlan_po_m1_measured: MTU jumbo -> default = ONLY `interface port-channelN` / `no mtu 9216`, no member block;
+  * Fixtures/pvlan_po_member_mtu.json#pvlan_po_mr_measured: MTU default -> jumbo = ONLY the port-channel stanza re-emitted with `mtu 9216`;
   * T2 R1: the controller releases the member with the MTU of the port-channel intent, not always jumbo.
 Whether a vPC child/member behaves the same is what T3 measures; nothing here certifies the controller.
 G4 (two-phase release) is a module ordering property: proved here with the harness's per-serial knobs.

@@ -11,8 +11,7 @@ from . import port_channel_controller as H
 from . import vpc_controller as V
 from . import port_channel_release as RR
 from .port_channel_controller import PoLifecycleController
-import os
-from .fixture_cases import FIXTURE_DIR
+from .fixture_cases import load_case
 
 
 PAIR = (V.PRIMARY, V.SECONDARY)
@@ -285,7 +284,7 @@ def seeded_vpc():
     return ctrl
 
 
-FX = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_admin_up_join_measured.json")))
+FX = load_case("pvlan_admin_up_join_measured")
 
 
 LEAF_A, LEAF_B = "<SERIAL_LEAF_A>", "<SERIAL_LEAF_B>"

@@ -5,17 +5,15 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
-import os
 from . import vpc_controller as V
 from .ethernet_controller import SWITCH_IP, preview
 from .port_channel_controller import created
 from .port_channel_controller import PO_ITEM_NAME
-from .fixture_cases import FIXTURE_DIR
+from .fixture_cases import load_case
 
 
-FX = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_po_duplex_measured.json")))
-VFX = json.load(open(os.path.join(FIXTURE_DIR, "pvlan_vpc_duplex_measured.json")))
+FX = load_case("pvlan_po_duplex_measured")
+VFX = load_case("pvlan_vpc_duplex_measured")
 
 
 ASSOC_2410 = [{"primary_vlan": 2410, "secondary_vlan": 2412}]

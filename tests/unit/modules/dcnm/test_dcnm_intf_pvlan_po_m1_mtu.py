@@ -1,6 +1,6 @@
 """The member MTU withdrawal inherited from the port-channel (jumbo -> default), as MEASURED.
 
-MEASURED inputs (fixtures/pvlan_po_m1_measured.json, provenance per field inside it): the GUI preview pending
+MEASURED inputs (fixtures/pvlan_po_member_mtu.json#pvlan_po_m1_measured, provenance per field inside it): the GUI preview pending
 `interface port-channel<N>` / `no mtu 9216`, the intents before/after, the controller's runningConfig before and expectedConfig
 after the change, the device running stanzas and the operational MTU (9216 -> 1500 on BOTH port-channel and member).
 The module request that reproduces the GUI change is `merged` with `mtu: default` on the existing port-channel (the GUI payload
@@ -13,7 +13,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
-import os
 
 import pytest
 
@@ -22,8 +21,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_E
 
 from .dcnm_interface.helpers.ethernet_controller import SWITCH_IP, preview, run
 from .dcnm_interface.helpers.port_channel_controller import PoLifecycleController
+from .dcnm_interface.helpers.fixture_cases import load_case
 
-FX = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "pvlan_po_m1_measured.json")))
+FX = load_case("pvlan_po_m1_measured")
 PO, MEM = "Port-channel501", "Ethernet1/8"
 MODIFY = "/rest/interface/modify"
 DEPLOY = "/rest/globalInterface/deploy"
@@ -156,7 +156,7 @@ def test_an_explicit_member_withdrawal_keeps_the_ordinary_validation():
 
 def test_the_reverse_default_to_jumbo_without_a_member_command_follows_the_c1r4_mr_rule():
     """DERIVED from the jumbo -> default captures (reverse direction): `mtu 9216` only on the parent. Modeled because this
-    direction was MEASURED too (fixtures/pvlan_po_mr_measured.json, test_dcnm_intf_pvlan_po_mr_mtu.py)."""
+    direction was MEASURED too (fixtures/pvlan_po_member_mtu.json#pvlan_po_mr_measured, test_dcnm_intf_pvlan_po_mr_mtu.py)."""
     pend = ["interface port-channel501", "  mtu 9216", "configure terminal"]
     ctrl, status, result = m1(pending=pend, running=list(FX["post"]["preview_running_stanzas"]), expected=EXP_PRE, side="post", mtu="jumbo")
     assert status == "exit", result.get("msg")

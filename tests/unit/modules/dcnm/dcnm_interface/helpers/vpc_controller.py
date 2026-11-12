@@ -4,7 +4,7 @@ NOT LIVE TESTED. Real main(); only the external boundary is mocked, through the 
 (test_dcnm_intf_pvlan_harness.FakeController) plus the smallest subclass that teaches it a PAIR of switches: state per serial, the
 vPC parent that appears on both peers, per-serial previews/policy lists and a vPC create/delete. No new framework or simulator.
 
-Shapes taken from the regular Po measurements (fixtures/pvlan_po_h1_measured.json, NDFC 12.6.0.267):
+Shapes taken from the regular Po measurements (fixtures/pvlan_po_create_update.json#pvlan_po_h1_measured, NDFC 12.6.0.267):
   MEASURED for a REGULAR host Po, SIMULATED here for a vPC: the member joins through the pending COMMAND
   `channel-group N force mode M` while the controller's expected member and the device keep the PERSISTED `channel-group N mode M`;
   an existing member inherits its Po's association change with NO member pending; a deployed member leaves with the command form

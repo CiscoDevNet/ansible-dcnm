@@ -13,7 +13,7 @@ rows declare `inert_when: {nvpair: ospf, value: 'false'}`: a stored tag under a 
 not a withdrawal target, is kept as stored, and transports nothing new. In the default VRF int_loopback
 falls back to the fabric underlay when OSPF is off, so its tag stays live there (test_gie_loopback_ospf_withdrawal.py).
 
-The routed HAVE is a real NDFC 12.6.0.267 interface read (fixtures/dcnm_intf_routed_ospf_have.json).
+The routed HAVE is a real NDFC 12.6.0.267 interface read (fixtures/routing_have_cases.json#dcnm_intf_routed_ospf_have).
 Real main() through gie_withdrawal_harness.
 """
 
@@ -22,8 +22,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import json
-import os
 
 import pytest
 
@@ -32,8 +30,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as en
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import binding_harness as h
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import role_reset as F2
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_interface.helpers import registry_generator as thin
+from .dcnm_interface.helpers.fixture_cases import load_case
 
-FIXTURE = json.load(open(os.path.join(os.path.dirname(__file__), "fixtures", "dcnm_intf_routed_ospf_have.json")))
+FIXTURE = load_case("dcnm_intf_routed_ospf_have")
 OSPF_OPTIONS_NEUTRAL = {
     "ospfAuthentication": "false", "ospfAuthenticationKey": "", "ospfBfdMode": "noChange", "ospfCost": "",
     "ospfDeadInterval": "", "ospfHelloInterval": "", "ospfMtuIgnore": "false", "ospfNetworkType": "noChange",

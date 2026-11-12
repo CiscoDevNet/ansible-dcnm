@@ -1,6 +1,6 @@
 """Release of a PVLAN port-channel / vPC member as int_routed_host besides int_trunk_host.
 
-MEASURED inputs (fixtures/pvlan_release_routed_q56_measured.json, live runs on a switch whose fabric role is not leaf): the member
+MEASURED inputs (fixtures/pvlan_routed_release.json#pvlan_release_routed_q56_measured, live runs on a switch whose fabric role is not leaf): the member
 released by the controller after the mark-delete of a deployed PVLAN Po (int_routed_host, 83 writable nvPairs + POLICY_ID,
 ADMIN_STATE "true"), its own child policies (routed_interface 450, interface_mtu 452, no_shut_interface 452, source = the member),
 the fresh preview at that point (pending `no channel-group ... force` / PVLAN withdrawals / `no switchport` / `mtu 9216` /
@@ -455,7 +455,8 @@ def test_po_with_two_members_and_a_later_unsafe_routed_release_writes_no_member_
 
 
 # ------------------------------------------------------------------ CDP_ENABLE on the installed template
-# MEASURED (fixtures/pvlan_release_routed_cdp_measured.json): the border port released by the mark-delete of a deployed vPC carries three keys
+# MEASURED (fixtures/pvlan_routed_release.json#pvlan_release_routed_cdp_measured): the border port released by the
+# mark-delete of a deployed vPC carries three keys
 # the Q56 body lacks, CDP_ENABLE "true", evpnMultisiteDciTracking "false" and ospfRetransmitInterval "". The installed int_routed_host declares
 # CDP_ENABLE as a boolean with defaultValue true, and creates the child cdp_disable_interface_11_1 (`no cdp enable`) only for "false": "true"
 # renders no command, which the release preview of the same port confirms. The Q56 body (no CDP key) stays the compatibility control.

@@ -2,9 +2,9 @@
 inheritance), plus the refusal of `duplex full` with speed Auto.
 
 Sources (sanitized, read-only extracts of live duplex diagnostics):
-  fixtures/pvlan_po_duplex_measured.json  -- a port-channel with one member, speed 1000 fixed, `duplex full` apply and
+  fixtures/pvlan_po_link_settings.json#pvlan_po_duplex_measured  -- a port-channel with one member, speed 1000 fixed, `duplex full` apply and
                                              withdrawal, previews before the deploy and the converged previews after each;
-  fixtures/pvlan_vpc_duplex_measured.json -- a vPC with one member per leg, the same cases on BOTH peers, each on its own serial.
+  fixtures/pvlan_vpc_link_settings.json#pvlan_vpc_duplex_measured -- a vPC with one member per leg, the same cases on BOTH peers, each on its own serial.
 Measured: NDFC 12.6.0.267, N9K-C9300v 10.5(5), host mode, ONE member per port-channel / leg, admin down, border switches. NOT
 measured, refused here: `duplex half`, a speed + duplex change in one transition, another speed, an MTU change with it, an up
 port. These tests are offline controller DOUBLES fed with real captured previews; they are not the module's live acceptance.

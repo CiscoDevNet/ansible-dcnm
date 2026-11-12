@@ -22,7 +22,7 @@ The int_vlan parent template exists in (at least) two bodies that name the fourt
     DHCP_RELAY_SRC_INTF  (profile dhcp_relay_src_intf) dhcpRelaySourceInterface
 
 The EXPECTED names below are NOT taken from the module: they are read out of verbatim excerpts of the two real template bodies
-(fixtures/int_vlan_*_dhcp_excerpt.txt, each headed by the sha256 of the full body), so the mapping cannot be its own oracle. The selector is the
+(fixtures/dhcp_template_excerpts.yaml, each excerpt headed by the sha256 of the full body), so the mapping cannot be its own oracle. The selector is the
 module's existing ``patch_version`` capability (approved SMU ``4.3.1.0175006011`` or a numeric ND release >= 4.4.1; see gie_patch_supported):
 an approved patch selects the SMU-schema body, a missing or unapproved one keeps the legacy names. 4.4.1 is OFFLINE-ONLY: no capture of an
 ND >= 4.4.1 exists, so its names are the existing selector's assumption, not an observation.
@@ -35,7 +35,6 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-import os
 import re
 
 import pytest
@@ -43,8 +42,8 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface as module
 from . import test_dcnm_intf_svi_dhcp4_clear as f3
 from .dcnm_module import AnsibleExitJson, AnsibleFailJson, loadPlaybookData, set_module_args
+from .dcnm_interface.helpers.fixture_cases import load_text
 
-FIXTURES = os.path.join(os.path.dirname(__file__), "fixtures")
 APPROVED_SMU = "4.3.1.0175006017"
 IFNAME = f3.IFNAME
 PROFILE_KEYS = ("dhcp_server_addr4", "vrf_dhcp4", "dhcp_relay_src_intf")
@@ -53,8 +52,7 @@ PROFILE_KEYS = ("dhcp_server_addr4", "vrf_dhcp4", "dhcp_relay_src_intf")
 # ============================================================================== the oracle: names declared by the real template bodies
 def _declared(excerpt):
     """{profile key: nvPair name} read from the `type name;` declarations of a template excerpt (no knowledge of the module's mapping)."""
-    with open(os.path.join(FIXTURES, excerpt), encoding="utf-8") as handle:
-        text = handle.read()
+    text = load_text(excerpt)
     found = {}
     for kind, name in re.findall(r"^(ipAddress|string|interface)\s+(\w+);", text, re.M):
         if kind == "ipAddress" and re.search(r"dhcp\w*4$", name, re.I):
@@ -66,9 +64,9 @@ def _declared(excerpt):
     return found
 
 
-LEGACY = _declared("int_vlan_0efb09af_dhcp_excerpt.txt")
-SMU = _declared("int_vlan_f32ef586_dhcp_excerpt.txt")
-OLDER = _declared("int_vlan_4d043f65_dhcp_excerpt.txt")
+LEGACY = _declared("int_vlan_0efb09af_dhcp_excerpt")
+SMU = _declared("int_vlan_f32ef586_dhcp_excerpt")
+OLDER = _declared("int_vlan_4d043f65_dhcp_excerpt")
 FAMILIES = {"legacy": (LEGACY, None), "smu": (SMU, APPROVED_SMU)}  # (names declared by the body, patch_version that selects it)
 
 

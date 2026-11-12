@@ -1,9 +1,10 @@
 """SP1: the member's `speed 1000` of a PVLAN port-channel / vPC leg, carried by the port-channel's own pending (MEASURED inheritance).
 
 Sources (sanitized, read-only extracts; raw captures and their sha256 stay outside the product):
-  fixtures/pvlan_po_speed_diag_measured.json and pvlan_vpc_speed_diag_measured.json -- the speed-inheritance diagnosis,
+  fixtures/pvlan_po_link_settings.json#pvlan_po_speed_diag_measured and
+  fixtures/pvlan_vpc_link_settings.json#pvlan_vpc_speed_diag_measured -- the speed-inheritance diagnosis,
   DIAG-20261012T091312Z: apply / withdraw previews before the deploy and the converged previews after it, Po521 and both peers of vPC522;
-  fixtures/pvlan_po_speed_s1_measured.json -- the measured S1 refusal (see test_dcnm_intf_pvlan_po_speed_s1_measured.py).
+  fixtures/pvlan_po_link_settings.json#pvlan_po_speed_s1_measured -- the measured S1 refusal (see test_dcnm_intf_pvlan_po_speed_s1_measured.py).
 Measured: `speed 1000`, host mode, one member, admin down, NDFC 12.6.0.267, N9K-C9300v 10.5(5). Everything else stays refused, and these
 tests are offline: they are not the module's live acceptance.
 Po cases run the module's own gate (DcnmIntf.dcnm_intf_pvlan_po_assess) on the real stanza names; the main() cases retarget the measured
@@ -27,10 +28,11 @@ from .dcnm_interface.helpers import vpc_controller as V
 from .dcnm_interface.helpers.ethernet_controller import IF7, SWITCH_IP, preview, run
 from .dcnm_interface.helpers.port_channel_controller import created
 from .dcnm_interface.helpers.port_channel_controller import PO_ITEM_NAME
+from .dcnm_interface.helpers.fixture_cases import load_case
 
 HERE = os.path.dirname(__file__)
-PO_FX = json.load(open(os.path.join(HERE, "fixtures", "pvlan_po_speed_diag_measured.json")))
-VPC_FX = json.load(open(os.path.join(HERE, "fixtures", "pvlan_vpc_speed_diag_measured.json")))
+PO_FX = load_case("pvlan_po_speed_diag_measured")
+VPC_FX = load_case("pvlan_vpc_speed_diag_measured")
 PO_NAME, MEMBER = "Port-channel521", "Ethernet1/8"
 ASSOC_2410 = [{"primary_vlan": 2410, "secondary_vlan": 2412}]
 

@@ -4,7 +4,7 @@ Self-contained and collection-local. It mocks ONLY the external boundary -- inve
 the transport (dcnm_send), the bulk-API probe, fabric details and sleep -- through a stateful,
 path-routed fake controller that records every request in order. Nothing under test (builder,
 reconciliation, preflight, pre-deploy gate) is stubbed. Fixtures come from
-fixtures/dcnm_intf_pvlan_measured.json, sanitized from measured discovery evidence.
+fixtures/pvlan_ethernet_cases.json#dcnm_intf_pvlan_measured, sanitized from measured discovery evidence.
 
 The fake controller APPLIES a successful modify to its stored intent, so later reads (post-deploy
 readback, a second run) see what the module actually sent. Pending is NEVER computed by the fake:
