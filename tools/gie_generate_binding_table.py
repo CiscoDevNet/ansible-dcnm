@@ -780,7 +780,7 @@ def rebuild_binding_indexes():
     """Rebuild every structural index from the CURRENT value of BINDING_TABLE.
 
     Called once below, at import. A test that replaces BINDING_TABLE must call this
-    explicitly and rebuild again on teardown; see tests/unit/modules/dcnm/test_gie_binding_indexes.py.
+    explicitly and rebuild again on teardown; see tests/unit/modules/dcnm/dcnm_interface/test_binding_contracts.py.
     """
     global _BINDING_BY_PROFILE_KEY, _BINDING_BY_NVPAIR, _PROFILE_KEYS_BY_PARENT
     global _PROFILE_KEYS_BY_MECHANISM, _PARENT_MECHANISM_KEYS, _PARENT_MECHANISM_BINDINGS
