@@ -79,7 +79,7 @@ COMMITTED_BINDINGS = {
 
     # The same four fields on the port-channel host parents. DISABLE_LLDP differs from the
     # other three: the parent delegates it to the member policy instead of emitting the CLI
-    # itself, so whether it takes effect is measured rather than assumed. See the slice. Each was originally registered
+    # itself, so whether it takes effect is measured rather than assumed. See the registry source. Each was originally registered
     # only on the parents under test at the time; sweeping all 98 templates showed the
     # port-channel parents declare them too. An unregistered binding does not fail -- the
     # module answers "not supported on this interface", which is false: the template declares
@@ -110,7 +110,7 @@ COMMITTED_BINDINGS = {
     # member template and is registered passthrough. Delegation does not decide the mechanism.
     #
     # Measured, not inferred: writing GUARD_MODE=root into the vpc55 parent's nvPairs produced
-    # `spanning-tree guard root` on both peers. See registry_slice_0b_15.yaml.
+    # `spanning-tree guard root` on both peers. See the source lot 0b_15 in registry_slice_port_channel_vpc.yaml.
     ("int_vpc_trunk_host", "spanningTreePortType"): "spanning_tree_port_type",
     ("int_vpc_access_host", "spanningTreePortType"): "spanning_tree_port_type",
 
@@ -132,7 +132,7 @@ COMMITTED_BINDINGS = {
     # parent declarations and its forwarding: four reach each peer's
     # int_vpc_dot1q_tunnel_po_11_1, the two LLDP fields each member's
     # int_vpc_dot1q_tunnel_po_member_11_1. Each carries the reset of its explicit neutral,
-    # measured on this parent on both peers. See registry_slice_0b_36_vpc_dot1q.yaml.
+    # measured on this parent on both peers. See the source lot 0b_36 in registry_slice_port_channel_vpc.yaml.
     ("int_vpc_dot1q_tunnel", "aclFilter"): "acl_filter",
     ("int_vpc_dot1q_tunnel", "spanningTreePortType"): "spanning_tree_port_type",
     ("int_vpc_dot1q_tunnel", "qosStatsSuppressed"): "disable_qos_stats",
@@ -145,7 +145,7 @@ COMMITTED_BINDINGS = {
     # PVLAN helper keeps the PVLAN core and the CLI model of the child/member these values reach;
     # the registry owns their explicit value (patch_version gate) and their withdrawal. The resets
     # are inferred from the siblings, NOT measured on a PVLAN parent. See
-    # registry_slice_c1_pvlan_companions.yaml.
+    # the source lot c1 in registry_slice_pvlan.yaml.
     ("int_pvlan_host", "lldpTransmit"): "disable_lldp_transmit",
     ("int_pvlan_host", "lldpReceive"): "disable_lldp_receive",
     ("int_port_channel_pvlan_host", "lldpTransmit"): "disable_lldp_transmit",
@@ -158,7 +158,7 @@ COMMITTED_BINDINGS = {
     ("int_vpc_pvlan_host", "queuingStats"): "disable_queuing_stats",
     ("int_vpc_pvlan_host", "aclFilter"): "acl_filter",
     # PR725 ingress QoS: qosStatsSuppressed of the vPC PVLAN parent, the sibling vPC parents' public key and reset form
-    # (inferred, NOT measured on a PVLAN parent). See registry_slice_iq1_vpc_pvlan_qos_stats.yaml.
+    # (inferred, NOT measured on a PVLAN parent). See the source lot iq1 in registry_slice_pvlan.yaml.
     ("int_vpc_pvlan_host", "qosStatsSuppressed"): "disable_qos_stats",
 
     # int_routed_host -- the first non-switchport parent after the fabric loopback.
@@ -186,7 +186,7 @@ COMMITTED_BINDINGS = {
     ("int_routed_host", "ipv4AclIn"): "ipv4_acl_in",
     # DISABLE_LLDP was retired: the newer release removes it from all eight parents
     # and splits it into two independent fields. This is not a rename: the old field disabled
-    # both directions together; these can disable either direction. See registry_slice_0b_17.
+    # both directions together; these can disable either direction. See the source lot 0b_17 in registry_slice_port_channel_vpc.yaml.
     #
     # Keeping the old binding would be worse than removing it: a PTI accepts nvPairs its
     # template does not declare. DISABLE_LLDP would still travel through the API and appear
