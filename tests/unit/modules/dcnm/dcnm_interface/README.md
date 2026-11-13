@@ -25,6 +25,8 @@ description. A name that two former modules defined differently carries a short 
   `emit_real_result`) for bindings, `helpers/ethernet_controller.py` (`run`) and `helpers/vpc_controller.py` (`run_vpc`)
   for PVLAN. `helpers/module_runner.py` holds the `TestCase` base that patches only the external boundary. Each test
   builds a fresh controller; patches are owned by the case that starts them and are stopped by it.
+- Real `main()` and real communication helpers (`dcnm_send`, `dcnm_get_bulk_api_support`) with the controller doubled
+  at `Connection`, beneath those helpers: `transport_run()` in `test_pvlan_ethernet_current_policy.py`.
 - Engine and helper functions without the module, for example `test_binding_engine.py` and `test_pvlan_vpc_units.py`.
 - The HTTPAPI connection layer is tested in `tests/unit/plugins/httpapi/`, not here.
 

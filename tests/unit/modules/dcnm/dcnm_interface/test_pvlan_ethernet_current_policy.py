@@ -5,7 +5,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import ast
+import contextlib
 import copy
+import functools
 import inspect
 import json
 import pytest
@@ -152,6 +154,21 @@ def tctrl(nv=TPROM_A11, policy=PVLAN, ifname=IF7):
     return c
 
 
+# The real communication helpers, taken when this module is imported, before any test can patch them.
+TRANSPORT_HELPERS = ("dcnm_send", "dcnm_get_bulk_api_support")
+REAL_HELPERS = dict((name, getattr(utility, name)) for name in TRANSPORT_HELPERS)
+
+
+def assert_real_helpers(owner):
+    """Fail unless owner binds the helpers defined in module_utils/network/dcnm/dcnm.py."""
+    for name, helper in REAL_HELPERS.items():
+        code = getattr(helper, "__code__", None)
+        assert code is not None and code.co_filename == utility.__file__ and code.co_name == name, (
+            "%s taken at import is not the helper defined in %s" % (name, utility.__name__))
+        assert getattr(owner, name) is helper, "%s.%s is not the real helper from %s" % (
+            owner.__name__.rsplit(".", 1)[-1], name, utility.__name__)
+
+
 def transport_run(ctrl_, config, state="merged", check_mode=False, check_deploy=False):
     """Real main(); the only transport mock is Connection (no capability or dcnm_send mock)."""
 
@@ -178,16 +195,16 @@ def transport_run(ctrl_, config, state="merged", check_mode=False, check_deploy=
         patch.object(utility, "Connection", FakeConnection),
         patch.object(module, "get_fabric_details", return_value={"nvPairs": {"HOST_INTF_ADMIN_STATE": "false"}}),
         patch.object(module.time, "sleep", return_value=None),
-        # The shared helpers call utility.dcnm_send. Pin the genuine functions the module imported, so a patch that
-        # another test module never undid cannot replace the transport these cases exercise.
-        patch.object(utility, "dcnm_send", module.dcnm_send),
-        patch.object(utility, "dcnm_get_bulk_api_support", module.dcnm_get_bulk_api_support),
+        # The shared helpers call utility.dcnm_send. Pin the real functions, so a patch that another test module
+        # never undid cannot replace the transport these cases exercise.
+        patch.object(utility, "dcnm_send", REAL_HELPERS["dcnm_send"]),
+        patch.object(utility, "dcnm_get_bulk_api_support", REAL_HELPERS["dcnm_get_bulk_api_support"]),
     ]
+    assert_real_helpers(module)
     for p in patches:
         p.start()
     try:
-        assert module.dcnm_get_bulk_api_support is utility.dcnm_get_bulk_api_support
-        assert module.dcnm_send is utility.dcnm_send
+        assert_real_helpers(utility)  # the pins above took effect
         set_module_args(args)
         try:
             module.main()
@@ -600,6 +617,64 @@ class TestE308AuthorityControls:
         status, res = run(c, [pvlan_item(**ADD_2212)])
         assert status == "fail" and NOT_ROLLED_BACK in res["msg"]
         assert len(c.requests("POST", MODIFY)) == 1 and deploys(c) == []
+
+
+# ===================================================================================== E3-09
+# Everything transport_run() patches; none of it may stay changed after a run or a refusal.
+TRANSPORT_RUN_TARGETS = (
+    (basic.AnsibleModule, "exit_json"), (basic.AnsibleModule, "fail_json"), (module, "get_fabric_inventory_details"),
+    (module, "get_ip_sn_dict"), (module, "dcnm_get_ip_addr_info"), (module, "dcnm_version_supported"),
+    (utility, "Connection"), (module, "get_fabric_details"), (module.time, "sleep"),
+    (utility, "dcnm_send"), (utility, "dcnm_get_bulk_api_support"),
+)
+
+
+def transport_run_state():
+    return [getattr(owner, name) for owner, name in TRANSPORT_RUN_TARGETS]
+
+
+def same_objects(left, right):
+    return len(left) == len(right) and all(a is b for a, b in zip(left, right))
+
+
+class TestE309RealHelperGuard:
+    """transport_run() refuses a substitute in the module's own helper binding before main() or Connection runs."""
+
+    @staticmethod
+    def stand_in(name):
+        # Delegates to the real helper and copies its name and module, so only the guard can tell it apart.
+        real = REAL_HELPERS[name]
+
+        @functools.wraps(real)
+        def substitute(*args, **kwargs):
+            return real(*args, **kwargs)
+        return substitute
+
+    @pytest.mark.parametrize("utility_too", [False, True], ids=["module_binding", "module_and_utility_bindings"])
+    @pytest.mark.parametrize("name", TRANSPORT_HELPERS)
+    def test_substituted_helper_is_refused_before_main(self, name, utility_too):
+        c = tctrl()
+        c.previews = [measured_preview("G6-M0b")]
+        substitute = self.stand_in(name)
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(patch.object(module, name, substitute))
+            if utility_too:
+                stack.enter_context(patch.object(utility, name, substitute))
+            main = stack.enter_context(patch.object(module, "main"))
+            before = transport_run_state()
+            with pytest.raises(AssertionError, match=r"dcnm_interface\.%s is not the real helper from " % name):
+                transport_run(c, [pvlan_item(**ADD_2212)])
+            assert main.call_count == 0 and c.calls == []
+            assert same_objects(transport_run_state(), before)
+
+    def test_real_helpers_reach_the_controller_through_connection(self):
+        c = tctrl()
+        c.previews = [measured_preview("G6-M0b")]
+        before = transport_run_state()
+        status, res = transport_run(c, [pvlan_item(**ADD_2212)])
+        assert status == "exit", res
+        assert len(c.requests(mark=BULK_PROBE)) == 1 and len(c.requests("POST", MODIFY)) == 1 and len(deploys(c)) == 1
+        assert same_objects(transport_run_state(), before)
 
 
 # ====================================================================================================
