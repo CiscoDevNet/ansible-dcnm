@@ -1,0 +1,1476 @@
+# Registry source: Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options.
+#
+# Compiled by tools/gie_generate_binding_table.py with the other registry_slice_*.yaml files; see
+# tools/registry/README.md. Each section below is one original source lot. Its header is the original
+# text. A lot whose rows span several families keeps its header in the family that holds most of them
+# and is cross-referenced from the others.
+
+shared_effects:
+  # shared effects from registry_slice_0b_6.yaml
+  - effect_id: dampening@int_routed_host
+    parent_template: int_routed_host
+    child_template: interface_dampening
+    gate_nvpair: ENABLE_DAMPENING
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate: []          # none unconditionally required (ENABLE alone is valid)
+    value_bindings:
+      - {source_parent_nvpair: dampeningHalfLife,     target_child_nvpair: DAMPENING_HALF_LIFE,     transform: identity}
+      - {source_parent_nvpair: dampeningReuse,         target_child_nvpair: DAMPENING_REUSE,         transform: identity}
+      - {source_parent_nvpair: dampeningSuppress,      target_child_nvpair: DAMPENING_SUPPRESS,      transform: identity}
+      - {source_parent_nvpair: dampeningMaxSuppress,  target_child_nvpair: DAMPENING_MAX_SUPPRESS,  transform: identity}
+      - {source_parent_nvpair: dampeningRestart,       target_child_nvpair: DAMPENING_RESTART,       transform: identity}
+      - {source_parent_nvpair: dampeningRestartPenalty, target_child_nvpair: DAMPENING_RESTART_PENALTY, transform: identity}
+    conditional_eval: explicit_intent   # conditions evaluate over EXPLICIT intent, before defaults/HAVE
+    conditional_requirements:
+      # 6: any explicit dampening value requires the gate (avoids silent no-op)
+      - kind: requires_gate
+        params: [DAMPENING_HALF_LIFE, DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS, DAMPENING_RESTART, DAMPENING_RESTART_PENALTY]
+        evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L790"
+      # 3a: reuse/suppress/max_suppress are all-or-none
+      - kind: all_or_none
+        params: [DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS]
+        evidence_ref: "interface_dampening.template#L28"
+      # 3b: that group requires half_life
+      - kind: requires
+        if_present: [DAMPENING_REUSE]
+        then_required: [DAMPENING_HALF_LIFE]
+        evidence_ref: "interface_dampening.template#L22"
+      # 4: restart=true requires the full group + half_life
+      - kind: if_true_requires
+        if_true: DAMPENING_RESTART
+        then_required: [DAMPENING_HALF_LIFE, DAMPENING_REUSE, DAMPENING_SUPPRESS, DAMPENING_MAX_SUPPRESS]
+        evidence_ref: "interface_dampening.template#L55"
+      # 5: restart_penalty requires restart=true
+      - kind: requires_true
+        if_present: [DAMPENING_RESTART_PENALTY]
+        then_true: DAMPENING_RESTART
+        evidence_ref: "interface_dampening.template#L45"
+    evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L794"
+
+bindings:
+
+  # ==== Source lot registry_slice_0b.yaml (2 of 3 rows) ====
+  # Registry slice 0b — first registry slice (3 bindings). Authored offline (design-only);
+  # live measurements are marked inline.
+  # Keyed by (parent_template, parent_nvpair). mechanism vocabulary: ledger inline_passthrough -> passthrough.
+  # NOTE: enum values "on"/"off" are quoted — in YAML 1.1 bare on/off parse as booleans.
+
+  - parent_template: int_access_host
+    parent_nvpair: flowcontrolReceive
+    profile_key: flowcontrol_receive
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: enum
+    reset_wire: "off"          # measured live
+    valid_values: ["on", "off"]
+    default_template: "off"          # template default; NEVER emitted when the user omits the field
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_rules: []                 # inline CLI on the parent; no child PTI
+    evidence_ref: "int_access_host.template#L513"
+
+  - parent_template: int_trunk_host
+    parent_nvpair: flowcontrolReceive
+    reset_wire: "off"
+    profile_key: flowcontrol_receive
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: enum
+    valid_values: ["on", "off"]
+    default_template: "off"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_rules: []
+    evidence_ref: "int_trunk_host.template#L586"
+
+  # ==== Source lot registry_slice_0b_11.yaml (2 of 2 rows) ====
+  # Registry slice 0b_11 — FLOWCONTROL_SEND on host Ethernet interfaces (2 bindings).
+  #
+  # Companion of FLOWCONTROL_RECEIVE (slice 0b), identical shape, declared in the same templates:
+  #   int_trunk_host:152/158, int_access_host:137/143  enum { validValues=on,off; defaultValue=off; }
+  # A sweep of the 90+ templates found FLOWCONTROL only on these two parents (not port-channel,
+  # vPC or dot1q), so these rows cover the field completely.
+  #
+  # Mechanism: passthrough; the DSL consumes the value inline, no child:
+  #   int_trunk_host:588   if flowcontrolSend == "on":
+  #   int_trunk_host:589       config_builder.add_config('flowcontrol send on', ...)
+  # Only "on" emits CLI, so "off" is a real off path: a valid value, not an emptied field (the
+  # removal path the OSPF key pair lacks).
+  #
+  # As passthrough, the field enters HAVE carry-forward: omitting the key preserves the
+  # controller's value. Measured for `receive` on both parents (doc 31). The template default
+  # "off" must not turn omission into "set off"; emit_when: explicit_only keeps it from being
+  # emitted on omission (see slice 0b).
+
+
+  - parent_template: int_trunk_host
+    parent_nvpair: flowcontrolSend
+    reset_wire: "off"
+    profile_key: flowcontrol_send
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: enum
+    valid_values:
+      - "on"
+      - "off"
+    default_template: "off"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    evidence_ref: int_trunk_host.template#L158
+    effect_rules:
+      - predicate: value_on
+        ndfc_effect: inline_config
+        cli: flowcontrol send on
+        phase: current
+        evidence_ref: int_trunk_host.template#L588
+      - predicate: value_off
+        ndfc_effect: no_config
+        phase: current
+        # "off" emits no CLI; NDFC's compliance engine generates the `no` itself when the
+        # line leaves the intent. Measured for `receive` (doc 31).
+        evidence_ref: int_trunk_host.template#L588
+
+  - parent_template: int_access_host
+    parent_nvpair: flowcontrolSend
+    reset_wire: "off"
+    profile_key: flowcontrol_send
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: enum
+    valid_values:
+      - "on"
+      - "off"
+    default_template: "off"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    evidence_ref: int_access_host.template#L143
+    effect_rules:
+      - predicate: value_on
+        ndfc_effect: inline_config
+        cli: flowcontrol send on
+        phase: current
+        evidence_ref: int_access_host.template#L349
+      - predicate: value_off
+        ndfc_effect: no_config
+        phase: current
+        evidence_ref: int_access_host.template#L349
+
+  # ==== Source lot registry_slice_0b_12.yaml (2 of 2 rows) ====
+  # Registry slice 0b_12 — SPANNING_TREE_PORT_TYPE (nvPair spanningTreePortType) on Ethernet host
+  # interfaces: int_trunk_host and int_access_host.
+  #
+  # Catalog: WP98_TEMPLATE_PARAMETER_CATALOG.csv marks it dcnm_interface_gap_vs_nd43 = TRUE, family
+  # "Spanning-tree/guard", on both parents. Declaration (identical in both templates,
+  # int_trunk_host:56, int_access_host:46): enum, validValues=no,network,normal; defaultValue=no.
+  #
+  # NOT AN INDEPENDENT FIELD (first such field in the registry). The template rejects it when
+  # PORTTYPE_FAST_ENABLED is true (int_trunk_host:534):
+  #   if PORTTYPE_FAST_ENABLED == "true" and spanningTreePortType not in ("", "no"):
+  #       errMsg = "'Spanning-tree port type' cannot be set to '%s' when
+  #                 'Enable port type fast' is enabled" -> setFailureRetCode()
+  # true is the default on both sides (template PORTTYPE_FAST_ENABLED defaultValue=true; module
+  # port_type_fast=dict(type="bool", default=True)), so rejection is the default path. To use this
+  # field, send `port_type_fast: false` in the SAME payload.
+  #
+  # Why the dependency is not registered: it would need a new one-off schema field (`depends_on` was
+  # already rejected as speculative), and PORTTYPE_FAST_ENABLED is not in the registry (the module's
+  # legacy path owns it), so the registry cannot reference it. Registered flat; how NDFC surfaces the
+  # template rejection is to be measured (explicit negative stage in the matrix). A dedicated module
+  # validator is justified only if the error reaches the user buried.
+  #
+  # CLI generation (three branches, int_trunk_host:605):
+  #   if  spanningTreePortType not in ("", "no")  ->  'spanning-tree port type <value>'
+  #   elif PORTTYPE_FAST_ENABLED == "true"        ->  'spanning-tree port type edge trunk'
+  #   elif isHif                                  ->  'spanning-tree port type edge'
+  # So "no" does NOT mean "no config"; it defers to the other branches (unlike flowcontrol, where
+  # "off" is absence of CLI).
+  #
+  # Omission must preserve, not set "no": as a passthrough field it enters carry-forward, and
+  # preserving is correct (measured for flowcontrol). default_template "no" is metadata only and is
+  # never emitted (see slice 0b_8 header).
+
+
+  - parent_template: int_trunk_host
+    parent_nvpair: spanningTreePortType
+    reset_wire: "no"
+    profile_key: spanning_tree_port_type
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: enum
+    valid_values:
+      - "no"
+      - network
+      - normal
+    default_template: "no"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    evidence_ref: int_trunk_host.template#L56
+    catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_trunk_host/SPANNING_TREE_PORT_TYPE
+    effect_rules:
+      - predicate: value_network_or_normal
+        ndfc_effect: inline_config
+        cli: spanning-tree port type <value>
+        phase: current
+        evidence_ref: int_trunk_host.template#L605
+      - predicate: value_no_and_port_type_fast_true
+        ndfc_effect: inline_config
+        cli: spanning-tree port type edge trunk
+        phase: current
+        # "no" defers to the port-type-fast branch; it is NOT absence of config.
+        evidence_ref: int_trunk_host.template#L607
+      - predicate: value_set_and_port_type_fast_true
+        ndfc_effect: template_rejects
+        phase: current
+        # Template returns an error and aborts. To be MEASURED live before deciding whether the
+        # module should validate it first.
+        evidence_ref: int_trunk_host.template#L534
+
+  - parent_template: int_access_host
+    parent_nvpair: spanningTreePortType
+    reset_wire: "no"
+    profile_key: spanning_tree_port_type
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: enum
+    valid_values:
+      - "no"
+      - network
+      - normal
+    default_template: "no"
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    evidence_ref: int_access_host.template#L46
+    catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_access_host/SPANNING_TREE_PORT_TYPE
+    effect_rules:
+      - predicate: value_network_or_normal
+        ndfc_effect: inline_config
+        cli: spanning-tree port type <value>
+        phase: current
+        evidence_ref: int_access_host.template#L605
+      - predicate: value_set_and_port_type_fast_true
+        ndfc_effect: template_rejects
+        phase: current
+        evidence_ref: int_access_host.template#L534
+
+  # ==== Source lot registry_slice_0b_13.yaml (4 of 4 rows) ====
+  # Registry slice 0b_13 — DISABLE_QOS_STATS and DISABLE_QUEUING_STATS on host Ethernet.
+  #
+  # Catalog: WP98_TEMPLATE_PARAMETER_CATALOG.csv marks both as dcnm_interface_gap_vs_nd43 = TRUE,
+  # family "L2/QoS controls", on both parents. They close the 16 confirmed catalog gaps for
+  # int_access_host / int_trunk_host.
+  #
+  # Declaration:
+  #   int_trunk_host:201 / int_access_host:186   boolean DISABLE_QOS_STATS     { false }
+  #   int_trunk_host:209 / int_access_host:194   boolean DISABLE_QUEUING_STATS { false }
+  #
+  # Neither emits its own CLI line; each is a SUFFIX of the line its dependency emits:
+  #   service-policy type qos input <policy> no-stats
+  #   service-policy type queuing output <policy> no-stats
+  # Without the dependency the field is a SILENT NO-OP: accepted, stored in the nvPair, no
+  # observable change on the switch. A test without the dependency in place "passes" without
+  # measuring anything.
+  #
+  # Dependencies (template IsShow):
+  #   DISABLE_QOS_STATS      IsShow="ENABLE_QOS==true"
+  #   DISABLE_QUEUING_STATS  IsShow="QUEUING_POLICY!=''"
+  # The QoS one is stricter than its IsShow (int_trunk_host:689-699): it needs ENABLE_QOS==true AND
+  # a resolvable qosPolicyName, i.e. non-empty QOS_POLICY or the fabric AI/ML option
+  # (configAIML == "true" -> "QOS_CLASSIFICATION"). ENABLE_QOS true with empty QOS_POLICY and no
+  # AI/ML emits nothing.
+  #
+  # Asymmetry (read from the template):
+  #   DISABLE_QOS_STATS is read through a local with a default (int_trunk_host:401-403,
+  #   `except: disableQosStats = "false"`).
+  #   DISABLE_QUEUING_STATS is read directly from the nvPair inside `try: ... except: pass`
+  #   (int_trunk_host:704-706). If that nvPair were missing, the NameError would drop the WHOLE
+  #   queuing line, not just the suffix.
+  # NDFC always sends the template's full nvPair set, so absence should not occur; it is one more
+  # reason the engine must NEVER omit an nvPair already in HAVE (passthrough carry-forward covers it).
+  #
+  # On default_template: the template default is false on both, but registering it would turn
+  # omission into "set false" instead of "preserve". As passthrough fields they are carried
+  # forward, and preserving is the correct behaviour (measured for flowcontrol and disable_lldp).
+
+
+  # ---------------------------------------------------------------- DISABLE_QOS_STATS ---
+  - parent_template: int_trunk_host
+    parent_nvpair: qosStatsSuppressed
+    reset_wire: "false"
+    profile_key: disable_qos_stats
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: false  # int_trunk_host.template declares defaultValue = false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    evidence_ref: int_trunk_host.template#L201
+    catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_trunk_host/DISABLE_QOS_STATS
+    effect_rules:
+      - predicate: value_true_and_qos_policy_resolvable
+        ndfc_effect: inline_config
+        cli: service-policy type qos input <policy> no-stats
+        phase: current
+        evidence_ref: int_trunk_host.template#L699
+      - predicate: value_false_and_qos_policy_resolvable
+        ndfc_effect: inline_config
+        cli: service-policy type qos input <policy>
+        phase: current
+        # The suffix disappears; the service-policy line remains.
+        evidence_ref: int_trunk_host.template#L699
+      - predicate: enable_qos_false_or_policy_unresolvable
+        ndfc_effect: silent_noop
+        phase: current
+        # Accepted and stored in the nvPair, but there is no line to suffix.
+        evidence_ref: int_trunk_host.template#L689
+
+  - parent_template: int_access_host
+    parent_nvpair: qosStatsSuppressed
+    profile_key: disable_qos_stats
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    reset_wire: "false"          # measured live with a real QoS policy
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    evidence_ref: int_access_host.template#L186
+    catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_access_host/DISABLE_QOS_STATS
+    effect_rules:
+      - predicate: value_true_and_qos_policy_resolvable
+        ndfc_effect: inline_config
+        cli: service-policy type qos input <policy> no-stats
+        phase: current
+        evidence_ref: int_access_host.template#L630
+      - predicate: value_false_and_qos_policy_resolvable
+        ndfc_effect: inline_config
+        cli: service-policy type qos input <policy>
+        phase: current
+        evidence_ref: int_access_host.template#L630
+      - predicate: enable_qos_false_or_policy_unresolvable
+        ndfc_effect: silent_noop
+        phase: current
+        evidence_ref: int_access_host.template#L620
+
+  # ------------------------------------------------------------ DISABLE_QUEUING_STATS ---
+  - parent_template: int_trunk_host
+    parent_nvpair: queuingStats
+    reset_wire: "false"
+    profile_key: disable_queuing_stats
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: false  # int_trunk_host.template declares defaultValue = false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    evidence_ref: int_trunk_host.template#L209
+    catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_trunk_host/DISABLE_QUEUING_STATS
+    effect_rules:
+      - predicate: value_true_and_queuing_policy_set
+        ndfc_effect: inline_config
+        cli: service-policy type queuing output <policy> no-stats
+        phase: current
+        evidence_ref: int_trunk_host.template#L706
+      - predicate: value_false_and_queuing_policy_set
+        ndfc_effect: inline_config
+        cli: service-policy type queuing output <policy>
+        phase: current
+        evidence_ref: int_trunk_host.template#L706
+      - predicate: queuing_policy_empty
+        ndfc_effect: silent_noop
+        phase: current
+        evidence_ref: int_trunk_host.template#L704
+
+  - parent_template: int_access_host
+    parent_nvpair: queuingStats
+    reset_wire: "false"
+    profile_key: disable_queuing_stats
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    default_template: false  # int_access_host.template declares defaultValue = false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: 12.6.0.267
+    validated_on: 12.6.0.267
+    parent_resolution: desired_parent
+    evidence_ref: int_access_host.template#L194
+    catalog_ref: WP98_TEMPLATE_PARAMETER_CATALOG.csv#int_access_host/DISABLE_QUEUING_STATS
+    effect_rules:
+      - predicate: value_true_and_queuing_policy_set
+        ndfc_effect: inline_config
+        cli: service-policy type queuing output <policy> no-stats
+        phase: current
+        evidence_ref: int_access_host.template#L637
+      - predicate: value_false_and_queuing_policy_set
+        ndfc_effect: inline_config
+        cli: service-policy type queuing output <policy>
+        phase: current
+        evidence_ref: int_access_host.template#L637
+      - predicate: queuing_policy_empty
+        ndfc_effect: silent_noop
+        phase: current
+        evidence_ref: int_access_host.template#L635
+
+  # ==== Source lot registry_slice_0b_16.yaml (4 of 5 rows) ====
+  # NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): int_routed_host now creates
+  # interface_lldp_transmit_disable and interface_lldp_receive_disable separately (there is no delete call when a flag is false, as before)
+  # instead of the combined interface_lldp_disable, and selects interface_qos_service_policy_no_stats / interface_queuing_service_policy_no_stats
+  # for the no-stats case. The plain QoS and queuing children no longer declare DISABLE_STATS. The parent nvPairs and CLI intent below are
+  # unchanged; the child names in the effect rules describe the earlier SMU for the routed parent. Other parents keep interface_lldp_disable.
+  #
+  # Registry slice 0b_16 — int_routed_host (first routed parent), 5 bindings.
+  #
+  # Scope: int_routed_host, reached from `mode: routed` on an Ethernet (pol_types[12]["eth_routed"];
+  # the module builds the policy key as <type>_<mode>). Other routed templates are separate parents,
+  # not registered here:
+  #   int_routed_host_sub_11_1   subinterface
+  #   int_port_channel_routed*   routed port-channel
+  #   int_fabric_loopback_11_1   already covered by slice 0b
+  #
+  # Mechanism: passthrough for all five, although each ends in a child template:
+  #   DISABLE_LLDP           interface_lldp_disable              (creation gate)
+  #   DISABLE_BFD_ECHO       bfd_no_echo_interface               (creation gate)
+  #   IPV4_ACL_IN            interface_ip_access_group_in_11_1   (gate + value)
+  #   DISABLE_QOS_STATS      interface_qos_service_policy        (DISABLE_STATS parameter)
+  #   DISABLE_QUEUING_STATS  interface_queuing_service_policy    (DISABLE_STATS parameter)
+  # Delegation does not decide the mechanism (precedent: slice 0b_15): `mechanism` records who owns
+  # validation, the invalid-parent guard, generic prof_spec, carry-forward and wire-form
+  # conversion. int_routed_host has no dedicated machinery for any of these; child_pti would skip
+  # wire-form conversion and revive the fixed boolean defect (a native bool compared against NDFC's
+  # "true" never converges). int_port_channel_trunk_host::DISABLE_LLDP also delegates and is
+  # registered passthrough, validated live.
+  #
+  # All five child templates exist on the controller: GET
+  # /configtemplate/rest/config/templates/<name> on 12.6.0.267 returned 200 with a real body for
+  # each. This matters because a missing child gives no error: the parent nvPair travels, the call
+  # succeeds and no CLI is produced. Each child's CLI was read from the controller, not deduced.
+  #
+  # The two stats fields carry IsShow, reachable here:
+  #   DISABLE_QOS_STATS      IsShow="ENABLE_QOS==true"
+  #   DISABLE_QUEUING_STATS  IsShow="QUEUING_POLICY!=''"
+  # They gate nothing: the policy creates the child (`if qosPolicyName:` / `if QUEUING_POLICY:`) and
+  # the boolean travels as DISABLE_STATS. Without QoS scaffolding they transport but produce no CLI
+  # (the same gap as the dot1q port-channel), but here the scaffolding is native to
+  # eth_prof_spec_routed_host (enable_qos / qos_policy / queuing_policy), so it comes from the data
+  # model without patching the module.
+  #
+  # ARP_TIMEOUT is deliberately excluded. int_routed_host declares it (L187), but int_subif and
+  # int_vlan declare it too and all three are reachable (pol_types "sub_int_subint" -> int_subif,
+  # "svi_vlan" -> int_vlan, "eth_routed"). Committing it on one parent would make the module answer
+  # "not supported on this interface" on the other two, which is false. The generator enforces
+  # this: it rejects a row claiming a public profile_key already committed from an uncommitted
+  # parent, instead of skipping it silently. ARP_TIMEOUT belongs in a three-parent batch with its
+  # own prof_spec and live run, which must keep two facts already measured:
+  #   - The declaration is `integer ARP_TIMEOUT;` (no defaultValue, min or max), but the body
+  #     validates: `if int(arpTimeout) <= 0` fails with "ARP timeout must be a positive integer"
+  #     (L636). The schema has min_length/max_length only for strings, so 0 or a negative value is
+  #     rejected by the controller, not the engine.
+  #   - No default_template: asserting a default the template does not declare would make the engine
+  #     read an absence on the controller as a match.
+  #
+  # Removal, measured live. Two distinct behaviours:
+  #   value set to its inert form (false / "")  ->  the CLI IS RETIRED from the device
+  #   field OMITTED from the payload            ->  the value SURVIVES intact
+  # removal_semantics describes the second, hence `preserves_on_absent` (`deletes_on_absent` would
+  # be false); this is the emit_when: explicit_only contract, confirmed on the device. The first has
+  # no field of its own: the gates are `if <value> == "true":` / `!= "":` + createOrUpdate with no
+  # else branch deleting the child (unlike the slice 0b OSPF pair's explicit value_false -> delete),
+  # yet NDFC reconciles and removes what the new pass does not create. Verified on the switch, not
+  # on the controller. (DISABLE_LLDP is still registered unresolved.)
+  #
+  # Limits: evidence_ref points to the template declaration (proves the parameter exists and
+  # where); child CLI was read from the controller. Neither proves end-to-end function; that was
+  # left to the live run against the ToR, pending when this was written.
+
+
+  - parent_template: int_routed_host
+    parent_nvpair: DISABLE_LLDP
+    profile_key: disable_lldp
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_routed_host.template#L65
+    effect_rules:
+      - predicate: value_true
+        ndfc_effect: child_policy
+        child_template: interface_lldp_disable
+        cli: "no lldp transmit / no lldp receive"
+        phase: current
+        evidence_ref: int_routed_host.template#L803
+      - predicate: value_false
+        ndfc_effect: silent_noop
+        phase: current
+        evidence_ref: int_routed_host.template#L803
+
+  - parent_template: int_routed_host
+    parent_nvpair: ipv4AclIn
+    profile_key: ipv4_acl_in
+    reset_wire: ''
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: exact
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_routed_host.template#L190
+    effect_rules:
+      - predicate: value_present
+        ndfc_effect: child_policy
+        child_template: interface_ip_access_group_in_11_1
+        cli: "ip access-group <IPV4_ACL_IN> in"
+        phase: current
+        evidence_ref: int_routed_host.template#L969
+      - predicate: value_empty
+        ndfc_effect: silent_noop
+        phase: current
+        evidence_ref: int_routed_host.template#L969
+
+  - parent_template: int_routed_host
+    parent_nvpair: qosStatsSuppressed
+    profile_key: disable_qos_stats
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # Measured live (apply + clear on a lab Ethernet) with ENABLE_QOS=true and
+    # QOS_POLICY=port_qos_policy, a policy already on the chassis. The clear set the nvPair to
+    # "false"; `service-policy type qos input port_qos_policy` survived without ` no-stats`, while
+    # the queuing line kept its own. Confirms the first two effect_rules below on the device.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_routed_host.template#L279
+    effect_rules:
+      - predicate: value_true_and_qos_policy_resolvable
+        ndfc_effect: inline_config
+        child_template: interface_qos_service_policy
+        cli: "service-policy type qos input <policy> no-stats"
+        phase: current
+        evidence_ref: int_routed_host.template#L1022
+      - predicate: value_false_and_qos_policy_resolvable
+        ndfc_effect: inline_config
+        child_template: interface_qos_service_policy
+        cli: "service-policy type qos input <policy>"
+        phase: current
+        evidence_ref: int_routed_host.template#L1022
+      - predicate: enable_qos_false_or_policy_unresolvable
+        ndfc_effect: silent_noop
+        phase: current
+        evidence_ref: int_routed_host.template#L1017
+
+  - parent_template: int_routed_host
+    parent_nvpair: queuingStats
+    profile_key: disable_queuing_stats
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    # Measured live (apply + clear on a lab Ethernet) with QUEUING_POLICY=port_queuing_policy
+    # (already on the chassis). The clear set the nvPair to "false"; `service-policy type queuing
+    # output port_queuing_policy` survived without ` no-stats`, while the qos line kept its own:
+    # the two directions are independent.
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_routed_host.template#L287
+    effect_rules:
+      - predicate: value_true_and_queuing_policy_set
+        ndfc_effect: inline_config
+        child_template: interface_queuing_service_policy
+        cli: "service-policy type queuing output <policy> no-stats"
+        phase: current
+        evidence_ref: int_routed_host.template#L1032
+      - predicate: value_false_and_queuing_policy_set
+        ndfc_effect: inline_config
+        child_template: interface_queuing_service_policy
+        cli: "service-policy type queuing output <policy>"
+        phase: current
+        evidence_ref: int_routed_host.template#L1032
+      - predicate: queuing_policy_empty
+        ndfc_effect: silent_noop
+        phase: current
+        evidence_ref: int_routed_host.template#L1027
+
+  # ==== Source lot registry_slice_0b_17.yaml (6 of 16 rows) ====
+  # The header of this lot is in registry_slice_port_channel_vpc.yaml.
+
+  # ---------------------------------------------------------------- eth · access
+  - parent_template: int_access_host
+    parent_nvpair: lldpTransmit
+    profile_key: disable_lldp_transmit
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    reset_wire: "false"          # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_access_host.template#L86
+    effect_rules:
+      - predicate: value_true
+        ndfc_effect: inline_config
+        cli: "no lldp transmit"
+        phase: current
+        evidence_ref: int_access_host.template#L568
+
+  - parent_template: int_access_host
+    parent_nvpair: lldpReceive
+    reset_wire: "false"
+    profile_key: disable_lldp_receive
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_access_host.template#L91
+    effect_rules:
+      - predicate: value_true
+        ndfc_effect: inline_config
+        cli: "no lldp receive"
+        phase: current
+        evidence_ref: int_access_host.template#L571
+
+  # ----------------------------------------------------------------- eth · trunk
+  - parent_template: int_trunk_host
+    parent_nvpair: lldpTransmit
+    reset_wire: "false"
+    profile_key: disable_lldp_transmit
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_trunk_host.template#L101
+    effect_rules:
+      - predicate: value_true
+        ndfc_effect: inline_config
+        cli: "no lldp transmit"
+        phase: current
+        evidence_ref: int_trunk_host.template#L636
+
+  - parent_template: int_trunk_host
+    parent_nvpair: lldpReceive
+    reset_wire: "false"
+    profile_key: disable_lldp_receive
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_trunk_host.template#L106
+    effect_rules:
+      - predicate: value_true
+        ndfc_effect: inline_config
+        cli: "no lldp receive"
+        phase: current
+        evidence_ref: int_trunk_host.template#L639
+
+  # ---------------------------------------------------------------- eth · routed
+  - parent_template: int_routed_host
+    parent_nvpair: lldpTransmit
+    profile_key: disable_lldp_transmit
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: "false"         # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_routed_host.template#L88
+    effect_rules:
+      - predicate: value_true
+        ndfc_effect: child_policy
+        child_template: interface_lldp_disable
+        cli: "no lldp transmit"
+        phase: current
+        evidence_ref: int_routed_host.template#L1195
+
+  - parent_template: int_routed_host
+    parent_nvpair: lldpReceive
+    profile_key: disable_lldp_receive
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: "false"         # measured live
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    parent_resolution: desired_parent
+    removal_semantics: preserves_on_absent
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    evidence_ref: int_routed_host.template#L93
+    effect_rules:
+      - predicate: value_true
+        ndfc_effect: child_policy
+        child_template: interface_lldp_disable
+        cli: "no lldp receive"
+        phase: current
+        evidence_ref: int_routed_host.template#L1196
+
+  # ==== Source lot registry_slice_0b_3.yaml (3 of 3 rows) ====
+  # Registry slice 0b_3 — ARP_TIMEOUT (nvPair arpTimeout): 3 bindings, one field on three parents.
+  # Keyed by (parent_template, parent_nvpair). applicable_interface_type/mode from module
+  # pol_types[12]: int_routed_host=eth/routed, int_subif=sub_int/subint, int_vlan=svi/vlan.
+  # int_loopback does NOT declare ARP_TIMEOUT.
+  #
+  # Registration: the generator silently skips any row not in COMMITTED_BINDINGS. Audit of all
+  # slices: the rows still unregistered are intentional — int_fabric_loopback_11_1
+  # ENABLE_OSPF_AUTH_MESSAGE_DIGEST (capability retired; a test asserts it is not registered) and
+  # DISABLE_LLDP on eight parents (nvPair absent from current bodies, replaced by the registered
+  # DISABLE_LLDP_TRANSMIT/RECEIVE).
+  #
+  # mechanism: passthrough (not child_pti). The module writes ARP_TIMEOUT into the PARENT nvPairs;
+  # the parent DSL instantiates `interface_ip_arp_timeout_11_1`. The module does not build the
+  # child (same reasoning as BFD and dampening). effect_rules describe the template's effect, which
+  # is still accurate, not the module's mechanism.
+  #
+  # Range min 60 / max 28800: taken from the declaration, which changed. The earlier body had an
+  # unbounded `integer ARP_TIMEOUT;` (so the old `min: 1` mirrored the DSL check); the current body
+  # has `integer ARP_TIMEOUT { min = 60; max = 28800; }`. Measured by comparing bodies: ARP_TIMEOUT
+  # is the only pre-existing declaration that changed (other 53 of 54 identical), so no other row
+  # is affected. This is why evidence_ref carries the body hash.
+  #   Limits now live in three layers with two thresholds:
+  #     parent declaration  min=60 max=28800
+  #     child declaration   min=60 max=28800
+  #     DSL block           only `int(arpTimeout) <= 0` -> "ARP timeout must be a positive integer."
+  #   The registry follows the declaration (the published input contract). Consequence: the DSL
+  #   rule is unreachable from the module; record it as a skipped stage with reason, not PASS.
+  #   NOT MEASURED: whether the NDFC POST enforces 60..28800 or only the GUI does. If not, the
+  #   registry is the only defense (check: send 30 via the module, must reject, and via the API).
+  #
+  # Measured against the bodies the controller runs, downloaded before reading any attribute:
+  #     int_routed_host.template@65426107b3d1cdcf
+  #     int_subif.template@a66388c2f21c5507
+  #     int_vlan.template@0efb09af7f837b30
+  #     interface_ip_arp_timeout_11_1.template@7272fb1b587be658
+  #   Earlier slices cite int_routed_host@b9b50077cf49f8cb; the difference (PIM BFD templates) does
+  #   not touch any ARP line (empty diff over `grep -i arp`).
+  #
+  # Declaration identical on all three parents, with no defaultValue and no IsShow:
+  #   * no IsShow -> always visible, no gate to open to observe it.
+  #   * no defaultValue -> NDFC returns "" when never set. No engine change needed: exemption (3) of
+  #     gie_validate_binding_value already accepts "" for an integer read from HAVE (same path as
+  #     OSPF_COST); verified by reading the code before registering.
+  # Simplest case in the registry: one field, one child, one line (`ip arp timeout $$ARP_TIMEOUT$$`),
+  # no boolean gate, no cross-field dependency.
+  #
+  # Not native: `arp_timeout` and `ARP_TIMEOUT` have 0 uses in dcnm_interface.py.
+  #
+  # Device support: MEASURED, positive — `ip arp timeout 300` sent through NDFC landed on the
+  # interface. `show running-config all` does NOT expand the documented default `ip arp timeout 1500`,
+  # so absence of the line there proves nothing; presence with our value does.
+  #
+  # Removal, from the template read: the only deleteChildTemplate calls in the three bodies are the
+  # two for redirects; this child is never explicitly removed, and the emit gate is
+  # `if arpTimeout != ""` (the negative-form residue mechanism). Omission preserves by
+  # the explicit_only contract; an EXPLICIT "" is a separate question, so removal_semantics stays
+  # `unresolved`. The per-binding live measurements below show an explicit "" removes the line.
+
+  - parent_template: int_routed_host
+    parent_nvpair: arpTimeout
+    profile_key: arp_timeout
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    # MEASURED LIVE on Ethernet1/22, NDFC 12.6.0.267 / NX-OS 10.5(5). First integer reset in the
+    # registry: an EXPLICIT "" REMOVES. The public integer rejects "" before building a request
+    # ("must be a native integer (range 60..28800), given a string"), so the wire value could not be
+    # measured through a module clear; it was measured with a raw preserving bulk-modify POST (one
+    # DTO, 70 nvPairs from a fresh readback, only ARP_TIMEOUT -> ""): 207 Multi-Status, single
+    # SUCCESS. Readback is EMPTY STRING (not absent, null or a materialized default; all four
+    # distinguished). Other nvPairs identical (84 <-> 84), `ip arp timeout 900` removed, normalized
+    # config equal to baseline, In-Sync.
+    reset_wire: ""
+    min: 60
+    max: 28800
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1467"
+    effect_rules:
+      - predicate: value_present
+        ndfc_effect: create_or_update
+        child_template: interface_ip_arp_timeout_11_1
+        value_bindings:
+          - source_parent_nvpair: arpTimeout
+            target_child_nvpair: ARP_TIMEOUT
+            transform: identity
+        relationship: base
+        phase: current
+        evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L1467"
+
+  - parent_template: int_subif
+    parent_nvpair: arpTimeout
+    profile_key: arp_timeout
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: integer
+    # MEASURED LIVE on int_subif Ethernet1/21.3001, in a context WITHOUT OSPF (subinterface deleted
+    # and recreated, no inherited residue). DTO derived from this parent (56 nvPairs, envelope with
+    # `skipResourceCheck`): 207 Multi-Status, single SUCCESS. Readback EMPTY STRING ("900" -> "").
+    # `ip arp timeout 900` removed, `encapsulation dot1q 3001` kept, no OSPF line appeared, other
+    # nvPairs identical, In-Sync.
+    reset_wire: ""
+    min: 60
+    max: 28800
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@a66388c2f21c5507#L953"
+    effect_rules:
+      - predicate: value_present
+        ndfc_effect: create_or_update
+        child_template: interface_ip_arp_timeout_11_1
+        value_bindings:
+          - source_parent_nvpair: arpTimeout
+            target_child_nvpair: ARP_TIMEOUT
+            transform: identity
+        relationship: base
+        phase: current
+        evidence_ref: "int_subif.template@a66388c2f21c5507#L953"
+
+  - parent_template: int_vlan
+    parent_nvpair: arpTimeout
+    profile_key: arp_timeout
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # MEASURED LIVE on Vlan3784 (int_vlan, SVI without address, VRF default, mtu 9216,
+    # advSubnetInUnderlay 'false'), context WITHOUT OSPF (ENABLE_OSPF 'false'). Raw preserving clear:
+    # only ARP_TIMEOUT -> "". Update 207 with single SUCCESS; deploy 200. Readback MEASURED as EMPTY
+    # STRING ("900" -> ""), not predetermined by the proposal. `ip arp timeout 900` removed; absent
+    # address, mtu and other nvPairs kept. Re-applying restored the configured value (1 update +
+    # 1 deploy, In-Sync). Answers the removal question for this row on THIS parent.
+    reset_wire: ""
+    type: integer
+    min: 60
+    max: 28800
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#L1629"
+    effect_rules:
+      - predicate: value_present
+        ndfc_effect: create_or_update
+        child_template: interface_ip_arp_timeout_11_1
+        value_bindings:
+          - source_parent_nvpair: arpTimeout
+            target_child_nvpair: ARP_TIMEOUT
+            transform: identity
+        relationship: base
+        phase: current
+        evidence_ref: "int_vlan.template@0efb09af7f837b30#L1629"
+
+  # ==== Source lot registry_slice_0b_34_tanda2.yaml (2 of 3 rows) ====
+  # Registry slice 0b_34 — three unrelated bindings on two parents:
+  #
+  #     IPV4_ACL_IN            int_vlan                      string 1..64
+  #     PRIVATE_VLAN_MAPPING   int_vlan                      integerRange -> string
+  #     ENABLE_VPC_PEER_LINK   int_port_channel_trunk_host    boolean, defaultValue=false
+  #
+  # Read from the template bodies installed on the controller:
+  #     int_vlan.template@0efb09af7f837b30
+  #     int_port_channel_trunk_host.template@840029af16a406cf
+  #     interface_ip_access_group_in_11_1.template@617432cc71988a99
+  #
+  # None is native: ipv4_acl_in, private_vlan_mapping and enable_vpc_peer_link have 0 uses in
+  # dcnm_interface.py. ipv4_acl_in reuses the public key already registered for int_routed_host (slice
+  # 0b_16); bindings are keyed by (parent, nvpair).
+  #
+  # 1. IPV4_ACL_IN
+  #   The parent declares `IPV4_ACL_IN` and passes it to the child as `IPV4_ACL`:
+  #       {"INTF_NAME": intfName, "IPV4_ACL": ipv4AclIn}      (int_vlan:1641)
+  #   This row uses the parent name (same pattern as IPv6_LINK_LOCAL and MACsec, slice 0b_33); the child
+  #   name would be stored by NDFC but read by nobody.
+  #   Verification caveat (measured live): NDFC lowercases the ACL name and NX-OS `include` is
+  #   case-sensitive, so searching for the name as written in the playbook finds nothing.
+  #
+  # 2. PRIVATE_VLAN_MAPPING
+  #       integerRange PRIVATE_VLAN_MAPPING { min = 1; max = 4094; }
+  #   `integerRange` is not in _TYPE_TO_VALIDATOR (boolean/enum/string/integer) and would make the binding
+  #   unreachable (fail-closed), like `long` (PIM_DR_PRIORITY) and `ipV6Address` (IPv6_LINK_LOCAL). It is
+  #   registered as `string` because the value is a list or range (template Description: "Secondary VLAN
+  #   IDs for private-vlan mapping. Example: 3194,3196 or 3194-3196"). min/max are NOT carried over: 1..4094
+  #   bounds each VLAN ID inside the list, validated by NDFC. max_length 64 is not declared by the template;
+  #   it matches the other strings on this parent and is revisable.
+  #
+  # 3. ENABLE_VPC_PEER_LINK
+  #   Template rules (int_port_channel_trunk_host:450, :457):
+  #       "vPC peer-link and vPC orphan port cannot both be enabled on the same port-channel."
+  #       "vPC peer-link requires default MTU. Set MTU to default before enabling vPC peer-link."
+  #   Side effect (:653-655): enabling emits two lines, `vpc peer-link` (:686) and
+  #   `spanning-tree port type network`, and displaces the BPDU guard branch:
+  #       if enableVpcPeerLink == "true":
+  #           config_builder.add_config('spanning-tree port type network', ...)
+  #       elif BPDUGUARD_ENABLED == "true":
+  #           ...
+  #   Precedence, not collision (read from the installed template): a later block does
+  #       if enableVpcPeerLink == "true":
+  #           pass                                          # :670
+  #       elif spanningTreePortType != "" and ...:
+  #           add_config('spanning-tree port type {}')
+  #   so an operator `spanning_tree_port_type` (and BPDUFILTER_ENABLED) is silently ignored when
+  #   `enable_vpc_peer_link: true`: changed=True, `network` on the device, no warning. Expected template
+  #   behaviour, not a binding defect.
+  #
+  #   Status: validated live as far as the lab allows:
+  #     - The live vPC pair's peer-link (Po500) carries exactly the two lines this binding produces.
+  #     - NX-OS rejects a second peer-link in the domain and NDFC does not check it:
+  #         ERROR: Operation failed: [vPC Peer-link has already been configured on po500]
+  #       per switch, deploy 500. The device validates coherence, not the controller.
+  #     - The failure is partial: the :654 line lands and :686 does not, so the binding did reach the device.
+  #     - The silent discard is double, measured with a control: peer-link off emits `port type normal` and
+  #       `bpduguard enable`; peer-link true emits neither, `port type network` instead.
+  #     - Not detectable: NDFC stores "normal" and its own pendingConfig emits `network`, so the interface
+  #       is In-Sync with the requested value stored but never applied (measured with forceShowRun=true).
+  #     - Resend gives `replaced: []` (idempotent at the intent layer); omission preserves the stored "true";
+  #       the vPC stayed identical line by line on both peers.
+  #   NOT measurable in the lab: an accepted `vpc peer-link` (the domain already has one and there is a
+  #   single pair). A topology limit, not a binding gap.
+  #
+  #   Parallel to the data-model path (measured): NaC never emits this nvPair. Its `vpc_peers` peer-link uses
+  #   int_vpc_peer_link_po, whose nvPairs lack ENABLE_VPC_PEER_LINK, and the NaC schema only accepts physical
+  #   interfaces (schema.yaml:319,321). The flag lives on user port-channel templates; dcnm_vpc_pair requires
+  #   `templateName` on LANClassic/External fabrics (optional elsewhere), where the peer-link is the
+  #   operator's. So this is a prerequisite for a NaC feature that does not exist yet.
+
+
+  # 1. IPV4_ACL_IN on int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: ipv4AclIn
+    profile_key: ipv4_acl_in
+    reset_wire: ''
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: exact
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#L1636"
+
+  # 2. PRIVATE_VLAN_MAPPING on int_vlan
+  - parent_template: int_vlan
+    parent_nvpair: privateVlanMapping
+    profile_key: private_vlan_mapping
+    # Measured live (not derived from the template or GUI): explicit `private_vlan_mapping: ""` over a
+    # configured '3214,3216' leaves the controller at '' and removes `private-vlan mapping 3214,3216` from
+    # the running-config; primary, secondaries and HSRP intact, leaf In-Sync. The public clear passes
+    # because `""` exits before the `min_length` check.
+    reset_wire: ''
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    # `integerRange` in the template; string because the value is a list or range ("3194,3196" /
+    # "3194-3196"), see header.
+    type: string
+    string_compare: case_irrelevant
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@0efb09af7f837b30#PRIVATE_VLAN_MAPPING"
+
+  # ==== Source lot registry_slice_0b_37_smu017_batch1.yaml (3 of 5 rows) ====
+  # Registry slice 0b_37 -- SMU 4.3.1.0175006017 new interface fields, first increment. Five bindings.
+  #
+  #     int_routed_host  CDP_ENABLE                  enable_cdp
+  #     int_routed_host  evpnMultisiteDciTracking    enable_evpn_multisite_dci_tracking
+  #     int_routed_host  ospfRetransmitInterval      ospf_retransmit_interval
+  #     int_access_host  loggingEventPortLinkStatus  logging_event_port_link_status
+  #     int_subif        pimBfdInstance              enable_pim_bfd_instance
+  #
+  # Sources: the bodies exported from a controller with SMU 4.3.1.0175006017 (template REST API, read only), sha256 of
+  # `content`:
+  #     int_routed_host                          b5345584749288411fa44c5270b204fdffcb04941d70fb4e2daa2d1057b68918
+  #     int_access_host                          103fc249900c...
+  #     int_subif                                1937c6a5f49d...
+  #     cdp_disable_interface_11_1               0c5891e62c22...   ->  no cdp enable
+  #     evpn_multisite_interface                 83814189f859...   ->  evpn multisite $$EVPN_MS_INTF_MODE$$
+  #     ospf_interface_retransmit_interval_11_1  4ee152e3daaf...   ->  ip ospf retransmit-interval $$OSPF_RETRANSMIT_INTERVAL$$
+  #     pim_bfd_instance_interface               58a88c0b4bb8...   ->  ip pim bfd-instance
+  # None of the five nvPairs is declared by the SMU 011 bodies. The module admits only SMU 017 or a numeric ND release
+  # >= 4.4.1 for registered fields; the 4.4.1 bodies were not read, so their support for these nvPairs is unverified.
+  #
+  # NOTHING HERE IS MEASURED LIVE. The reset wires are the template defaults read from the bodies, and the removal paths are
+  # read from the bodies (child deleted or never created, inline line not rendered); removal_semantics stays unresolved on
+  # all five until a controller and a device confirm them.
+  #
+  # PUBLIC NAMES. enable_cdp and enable_pim_bfd_instance reuse existing public keys with the same meaning (enable_cdp is the
+  # native key of the access, trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles; enable_pim_bfd_instance is the
+  # int_routed_host row of slice 0b_31). ospf_retransmit_interval reuses the int_loopback/int_subif/int_vlan rows. The two
+  # fields new to the module take names that state the CLI they enable.
+  #
+  # MECHANISM: passthrough on all five. The module writes the parent nvPair; the template creates, deletes or renders the line.
+
+
+  # ============================================================== int_routed_host CDP_ENABLE
+  #
+  # int_routed_host b5345584:
+  #     boolean CDP_ENABLE { defaultValue=true; }                                   (L102)
+  #     interfaceOptions["CDP_ENABLE"] = normalize(scope.get("CDP_ENABLE", scope.get("cdp", "true")))   (L492)
+  #     if cdpEnable == "false": createOrUpdate(... "cdp_disable_interface_11_1" ...)                  (L1198)
+  #     else: deleteChildTemplate(INTF_NAME, INTF_NAME, "cdp_disable_interface_11_1")                 (L1205)
+  # CDP is on unless the field is false. "true" is both the template default and the value whose branch deletes the
+  # `no cdp enable` child, so it is the reset wire.
+  - parent_template: int_routed_host
+    parent_nvpair: CDP_ENABLE
+    profile_key: enable_cdp
+    reset_wire: 'true'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L1198"
+
+  # ============================================================== int_routed_host evpnMultisiteDciTracking
+  #
+  # int_routed_host b5345584:
+  #     boolean evpnMultisiteDciTracking { defaultValue=false; }                    (L147)
+  #     if evpnMultisiteDciTracking == "true": createOrUpdate(... "evpn_multisite_interface",
+  #                                                           {"EVPN_MS_INTF_MODE": "dci-tracking"})  (L1268)
+  #     else: deleteChildTemplate(INTF_NAME, INTF_NAME, "evpn_multisite_interface")                    (L1276)
+  # No template dependency on the switch role. Whether NX-OS accepts `evpn multisite dci-tracking` on a switch that is
+  # not a multisite border gateway is a device question the template does not answer.
+  - parent_template: int_routed_host
+    parent_nvpair: evpnMultisiteDciTracking
+    profile_key: enable_evpn_multisite_dci_tracking
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L1268"
+
+  # ============================================================== int_access_host loggingEventPortLinkStatus
+  #
+  # int_access_host 103fc249:
+  #     boolean loggingEventPortLinkStatus { defaultValue=false; }                  (L213)
+  #     if loggingEventPortLinkStatus == "true":
+  #         config_builder.add_config('logging event port link-status', ...)        (L576)
+  # Inline (setGeneratedConfig), no child policy: with false the line is not part of the expected stanza and NDFC
+  # compliance negates it, as for the other inline access fields. int_trunk_host does not declare this nvPair. A leaf
+  # reset of an access port holding true to int_trunk_host was measured to remove the line in one policy change (NDFC
+  # 12.6.0.267), so the generator declares that transition for this field (POLICY_CHANGE_CLEARS_INLINE_FIELDS).
+  - parent_template: int_access_host
+    parent_nvpair: loggingEventPortLinkStatus
+    profile_key: logging_event_port_link_status
+    reset_wire: 'false'
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host.template@103fc249#L576"
+
+  # ==== Source lot registry_slice_0b_6.yaml (7 of 7 rows) ====
+  # NOTE (SMU 4.3.1.0175006017, read from the installed bodies, not exercised live): the child interface_dampening cited below no
+  # longer declares the six DAMPENING_* parameters. int_routed_host now instantiates one of interface_dampening_half_life, _full,
+  # _restart or _restart_penalty (or the bare interface_dampening) according to which values are set. The parent nvPairs, the
+  # bounds and the conditional rules below are parent-level and unchanged, so the module's transport is unaffected; the child-level
+  # evidence references (#L55-67, installed body :1186-1196) describe the earlier SMU. Partial combinations (half-life only, restart
+  # without a penalty) now select different children: mapped offline, NOT LIVE TESTED (the dampening CLI is absent on the lab images).
+  #
+  # Registry slice 0b_6 — dampening on int_routed_host (conditional-composition canary).
+  #
+  # Format B: one shared effect + conditional_requirements; designed offline (no engine, no live run).
+  # Unlike BFD, gate=true with no values is valid (required_when_gate: []). The finer rules (verified
+  # in child interface_dampening.template#L55-67 + IsShow/IsMandatory) are expressed as
+  # conditional_requirements. Ranges from the catalog. removal_semantics: unresolved.
+
+  - {parent_template: int_routed_host, parent_nvpair: dampening, profile_key: enable_dampening,
+     applicable_interface_type: eth, applicable_mode: routed, type: boolean, default_template: false,
+     reset_wire: 'false',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: gate, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L790"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningHalfLife, profile_key: dampening_half_life,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 30,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L796"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningReuse, profile_key: dampening_reuse,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L797"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningSuppress, profile_key: dampening_suppress,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L798"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningMaxSuppress, profile_key: dampening_max_suppress,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 255,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L799"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningRestart, profile_key: dampening_restart,
+     applicable_interface_type: eth, applicable_mode: routed, type: boolean, default_template: false,
+     reset_wire: 'false',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L800"}
+
+  - {parent_template: int_routed_host, parent_nvpair: dampeningRestartPenalty, profile_key: dampening_restart_penalty,
+     applicable_interface_type: eth, applicable_mode: routed, type: integer, min: 1, max: 20000,
+     reset_wire: '',
+     presence_model: two_axis, emit_when: explicit_only, mechanism: passthrough, no_log: false,
+     min_ndfc_version: "12.6.0.267", validated_on: "12.6.0.267", parent_resolution: desired_parent,
+     effect_id: dampening@int_routed_host, effect_role: value_source, evidence_ref: "int_routed_host.template@b9b50077cf49f8cb#L801"}
+
+# -------------------------------------------------------------------------------------
+# Mechanism for all seven rows: passthrough (not child_pti)
+# -------------------------------------------------------------------------------------
+# The module writes the values into the PARENT's nvPairs; the int_routed_host DSL instantiates
+# `interface_dampening` from them (installed body :1186-1196). The module does not build the
+# child. Same reasoning as the BFD rows (slices 0b_4/0b_5), which were confirmed live by measuring
+# the device line. Note: the generator silently skips any row not listed in COMMITTED_BINDINGS.
+#
+# That live confirmation is NOT possible here: the `dampening` CLI does not exist on either lab
+# image. Probed through NDFC with the command the child produces, `dampening 10 1500 3000 60`:
+#     nxos64-cs-lite.10.5.5.M  -> CLI command is invalid
+#     nxos64-cs.10.6.2.F       -> CLI command is invalid
+# The full image rejects it too, so the cause is not the lite image: the command is absent from
+# the C9300v NX-OS.
+#
+# Validation scope: device layer IMPOSSIBLE (no value of these seven produces a line here).
+# Controller layer possible: the POST evaluates the template before deploy, so the four dependency
+# rules are exercised and the read-back can be read.
+#
+# Dependency chain (four levels, the deepest in the registry):
+#     ENABLE_DAMPENING                 boolean, defaultValue=false
+#       DAMPENING_HALF_LIFE            1..30      IsShow ENABLE==true
+#         DAMPENING_REUSE              1..20000   IsShow ENABLE && HALF_LIFE!=''
+#         DAMPENING_SUPPRESS           1..20000   same
+#         DAMPENING_MAX_SUPPRESS       1..255     same
+#         DAMPENING_RESTART            boolean    IsShow ENABLE && REUSE!=''
+#           DAMPENING_RESTART_PENALTY  1..20000   IsShow ENABLE && RESTART==true
+#
+# Four template rules, enforced by NDFC on POST (none are ours):
+#     "Dampening half-life is required when reuse, suppress, or max suppress is configured."
+#     "Dampening reuse, suppress, and max suppress must be configured together."
+#     "Dampening restart can only be configured with half-life, reuse, suppress, and max
+#      suppress values."
+#     "Dampening restart penalty requires dampening restart to be enabled."
+# The second ties THREE registered fields together (the first such rule in the registry).
+#
+# Six fields render one line, in five variants (installed child interface_dampening):
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart $RESTART_PENALTY
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS restart
+#     dampening $HALF_LIFE $REUSE $SUPPRESS $MAX_SUPPRESS
+#     dampening $HALF_LIFE
+#     dampening
+# Even on hardware that supports it, counting lines would prove nothing.
+#
+# Only int_routed_host declares dampening; int_subif, int_vlan and int_loopback declare none of the 7.
+
+  # ==== Source lot registry_slice_0b_7.yaml (1 of 2 rows) ====
+  # Registry slice 0b_7 — GUARD_MODE on int_trunk_host and int_port_channel_trunk_host.
+  # CANDIDATE, READY group (no DSL dependency): 2 of the 9 integrable candidates.
+  # VALIDATED_AGAINST_SNAPSHOT — REVALIDATION_REQUIRED_BEFORE_INTEGRATION
+  #
+  # GUARD_MODE carries NO IsShow condition on either parent (verified in the template DSL, not
+  # assumed). It is an unconditional standalone CLI command on the parent.
+  #
+  # mechanism: passthrough, effect_rules: []. Offline, design-only: no engine, no live run (apart
+  # from the live measurement noted on the port-channel row).
+  #
+  # applicable_interface_type/mode are the module's literal argspec values, inverted from
+  # pol_types[12] (dcnm_interface.py#L2180-2203):
+  #   int_trunk_host = eth/trunk   int_port_channel_trunk_host = pc/trunk
+  # argspec choices: type #L101, pc mode #L117, eth mode #L564.
+  #
+  # GUARD_MODE is one of the six mixed-mechanism names. int_vpc_trunk_host::GUARD_MODE is
+  # deliberately NOT included here. The ledger calls it child_pti in the TEMPLATE sense (the parent
+  # hands the value to a child), but the engine's `mechanism` means who owns validation, the
+  # invalid-parent guard, generic prof_spec, carry-forward and wire-form conversion. vPC owns none
+  # of these, so its bindings are registered as `passthrough`, like
+  # int_port_channel_trunk_host::DISABLE_LLDP; verified live, see registry_slice_0b_15.yaml.
+  #
+  # YAML 1.1: bare no/on/off/yes parse as booleans -> every enum value is quoted.
+  # default_template is template metadata ONLY; NEVER emitted when the user omits the field.
+
+
+  - parent_template: int_trunk_host
+    parent_nvpair: GUARD_MODE
+    reset_wire: "no"
+    profile_key: guard_mode
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: enum
+    valid_values: ["root", "none", "loop", "no"]
+    default_template: "no"           # decl int_trunk_host.template#L45 — no IsShow
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_rules: []                 # inline CLI on the parent; no child PTI
+    evidence_ref: "int_trunk_host.template#L603"
+
+  # ==== Source lot registry_slice_0b_8.yaml (2 of 2 rows) ====
+  # Registry slice 0b_8 — DISABLE_LLDP on int_access_host and int_trunk_host (inline parents).
+  # Validated against a snapshot; revalidate before integration.
+  #
+  # No DSL dependency. Neither binding has an IsShow condition (verified in the DSL, not assumed).
+  # The other 6 DISABLE_LLDP bindings (PC/vPC *_member_11_1 templates) are deferred, not registered:
+  # see DEFERRED_pc_vpc_member_lldp.yaml.
+  #
+  # DISABLE_LLDP is rendered inline by these two parents but handed to a child by int_routed_host,
+  # int_vpc_*_host and int_port_channel_*_host. That is the template's view; `mechanism` records who
+  # owns validation, the invalid-parent guard, generic prof_spec, carry-forward and wire-form
+  # conversion. vPC owns none of these, so its bindings are `passthrough` (as is
+  # int_port_channel_trunk_host::DISABLE_LLDP), verified live before registration: see
+  # registry_slice_0b_15.yaml. Mechanism is resolved per binding, never from the parameter name.
+  #
+  # default_template is template metadata only; never emitted when the user omits the field.
+
+
+  - parent_template: int_access_host
+    parent_nvpair: DISABLE_LLDP
+    profile_key: disable_lldp
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    default_template: false          # native boolean; decl int_access_host.template#L86
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_rules: []                 # inline CLI on the parent; no child PTI
+    evidence_ref: "int_access_host.template#L556"
+
+  - parent_template: int_trunk_host
+    parent_nvpair: DISABLE_LLDP
+    profile_key: disable_lldp
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: false          # native boolean; decl int_trunk_host.template#L101
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_rules: []
+    evidence_ref: "int_trunk_host.template#L624"
+
+  # ==== Source lot registry_slice_0b_9.yaml (2 of 5 rows) ====
+  # The header of this lot is in registry_slice_port_channel_vpc.yaml.
+
+  - parent_template: int_access_host
+    parent_nvpair: aclFilter
+    profile_key: acl_filter
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: string
+    string_compare: exact
+    reset_wire: ""          # measured live
+    min_length: 1                    # decl int_access_host.template#L205
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_rules: []
+    evidence_ref: "int_access_host.template#L650"
+
+  - parent_template: int_trunk_host
+    parent_nvpair: aclFilter
+    profile_key: acl_filter
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: string
+    string_compare: exact
+    reset_wire: ""          # measured live
+    min_length: 1                    # decl int_trunk_host.template#L220
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    validated_on: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_rules: []
+    evidence_ref: "int_trunk_host.template#L719"
