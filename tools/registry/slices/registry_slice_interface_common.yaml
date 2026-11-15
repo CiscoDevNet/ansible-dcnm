@@ -1678,3 +1678,230 @@ bindings:
     parent_resolution: desired_parent
     removal_semantics: unresolved
     evidence_ref: "int_l3_port_channel@81c9392e#L399"
+
+  # ==== Source lot a4_4_stp_protection (10 of 23 rows; header in registry_slice_port_channel_vpc.yaml) ====
+  # BPDU filter, spanning-tree link type, ACL-exception error detection and the vPC orphan port on the Ethernet parents.
+  # Inline on the Ethernet stanza. Read from the captured bodies; not measured live; no reset_wire.
+
+  # int_trunk_host ENABLE_ERRDISABLE_ACL -> enable_errdisable_acl. Declared at L111; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: false refused on FEX HIF ports.
+  - parent_template: int_trunk_host
+    parent_nvpair: ENABLE_ERRDISABLE_ACL
+    profile_key: enable_errdisable_acl
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host@99dc8f0a#L111"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_trunk_host@99dc8f0a#L528"
+
+  # int_trunk_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L148; inline on the Ethernet stanza.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_trunk_host
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'no'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host@99dc8f0a#L148"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_trunk_host@99dc8f0a#L604"
+
+  # int_trunk_host LINK_TYPE -> spanning_tree_link_type. Declared at L154; inline on the Ethernet stanza.
+  - parent_template: int_trunk_host
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host@99dc8f0a#L154"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_trunk_host@99dc8f0a#L607"
+
+  # int_access_host ENABLE_ERRDISABLE_ACL -> enable_errdisable_acl. Declared at L106; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: false refused on FEX HIF ports.
+  - parent_template: int_access_host
+    parent_nvpair: ENABLE_ERRDISABLE_ACL
+    profile_key: enable_errdisable_acl
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host@103fc249#L106"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_access_host@103fc249#L470"
+
+  # int_access_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L143; inline on the Ethernet stanza.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_access_host
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'no'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host@103fc249#L143"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_access_host@103fc249#L545"
+
+  # int_access_host LINK_TYPE -> spanning_tree_link_type. Declared at L149; inline on the Ethernet stanza.
+  - parent_template: int_access_host
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host@103fc249#L149"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_access_host@103fc249#L548"
+
+  # int_dot1q_tunnel_host ENABLE_ORPHAN_PORT -> orphan_port. Declared at L71; inline on the Ethernet stanza.
+  # Controller-side rule: controller checks Util.vpcOrphanPortAllowed when true.
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: ENABLE_ORPHAN_PORT
+    profile_key: orphan_port
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L71"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L303"
+
+  # int_dot1q_tunnel_host ENABLE_ERRDISABLE_ACL -> enable_errdisable_acl. Declared at L106; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: false refused on FEX HIF ports.
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: ENABLE_ERRDISABLE_ACL
+    profile_key: enable_errdisable_acl
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L106"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L505"
+
+  # int_dot1q_tunnel_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L136; inline on the Ethernet stanza.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'enable'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L136"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L439"
+
+  # int_dot1q_tunnel_host LINK_TYPE -> spanning_tree_link_type. Declared at L142; inline on the Ethernet stanza.
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L142"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L466"

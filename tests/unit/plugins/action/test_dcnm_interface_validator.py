@@ -143,7 +143,8 @@ def test_r2_coverage_the_checker_invents_no_identity():
     # 78 = 77 + link_transmit_reset_skip (slice rs1). 80 = 78 + enable_qos and qos_policy (slice pl1).
     # 88 = 80 + enable_storm_control, storm_control_action and the six storm-control levels (slice ul1).
     # 91 = 88 + disable_lacp_suspend_individual, lacp_port_priority and lacp_rate (lot a4_3_lacp).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 91
+    # 95 = 91 + bpdu_filter, spanning_tree_link_type, enable_errdisable_acl and orphan_port (lot a4_4_stp_protection).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 95
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():
@@ -250,6 +251,19 @@ A4_ROUTES = sorted([
     # lot a4_3_lacp
     ("int_port_channel_dot1q_tunnel_host", "DISABLE_LACP_SUSPEND"), ("int_port_channel_dot1q_tunnel_host", "LACP_PORT_PRIO"),
     ("int_port_channel_dot1q_tunnel_host", "LACP_RATE"),
+    # lot a4_4_stp_protection
+    ("int_access_host", "BPDUFILTER_ENABLED"), ("int_access_host", "LINK_TYPE"),
+    ("int_dot1q_tunnel_host", "BPDUFILTER_ENABLED"), ("int_dot1q_tunnel_host", "LINK_TYPE"),
+    ("int_port_channel_access_host", "BPDUFILTER_ENABLED"), ("int_port_channel_access_host", "LINK_TYPE"),
+    ("int_port_channel_dot1q_tunnel_host", "BPDUFILTER_ENABLED"), ("int_port_channel_dot1q_tunnel_host", "LINK_TYPE"),
+    ("int_port_channel_trunk_host", "BPDUFILTER_ENABLED"), ("int_port_channel_trunk_host", "LINK_TYPE"),
+    ("int_trunk_host", "BPDUFILTER_ENABLED"), ("int_trunk_host", "LINK_TYPE"),
+    ("int_vpc_access_host", "BPDUFILTER_ENABLED"), ("int_vpc_access_host", "LINK_TYPE"),
+    ("int_vpc_dot1q_tunnel", "BPDUFILTER_ENABLED"), ("int_vpc_dot1q_tunnel", "LINK_TYPE"),
+    ("int_vpc_trunk_host", "BPDUFILTER_ENABLED"), ("int_vpc_trunk_host", "LINK_TYPE"),
+    ("int_access_host", "ENABLE_ERRDISABLE_ACL"), ("int_dot1q_tunnel_host", "ENABLE_ERRDISABLE_ACL"),
+    ("int_trunk_host", "ENABLE_ERRDISABLE_ACL"),
+    ("int_dot1q_tunnel_host", "ENABLE_ORPHAN_PORT"), ("int_port_channel_dot1q_tunnel_host", "ENABLE_ORPHAN_PORT"),
 ])
 
 

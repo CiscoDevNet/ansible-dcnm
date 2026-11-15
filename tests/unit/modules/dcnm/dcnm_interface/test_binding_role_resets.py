@@ -301,7 +301,9 @@ def test_only_the_declared_parents_carry_the_inline_marker():
     marked = {(r["parent_template"], tuple(r["cleared_on_change_to"])) for r in table.BINDING_TABLE if r.get("cleared_on_change_to")}
     # access loggingEventPortLinkStatus also declares int_trunk_host (measured for that field only)
     assert marked == {(h.TRUNK, (h.ROUTED,)), (h.ACCESS, (h.ROUTED,)), (h.ACCESS, (h.ROUTED, h.TRUNK))}
-    assert sum(1 for r in table.BINDING_TABLE if r.get("cleared_on_change_to")) == 18   # + access loggingEventPortLinkStatus (0b_37)
+    # + access loggingEventPortLinkStatus (0b_37); + 6: BPDUFILTER_ENABLED, LINK_TYPE and ENABLE_ERRDISABLE_ACL on the
+    # trunk and access parents (lot a4_4_stp_protection), which inherit their parent's declaration.
+    assert sum(1 for r in table.BINDING_TABLE if r.get("cleared_on_change_to")) == 24
     assert not any(r.get("cleared_on_change_to") and r.get("dropped_on_policy_change") for r in table.BINDING_TABLE)
 
 
@@ -542,8 +544,10 @@ def test_the_lot_is_thirteen_and_the_fixture_matches_the_table():
     thirteen identities on these two parents, and if the table ever carries a fourteenth this case
     fails instead of the count quietly changing underneath the documented claim.
     """
+    # The rows with a measured reset; lot a4_4_stp_protection added bpdu_filter and spanning_tree_link_type on both
+    # parents without one (covered in test_binding_link_aggregation.py).
     in_table = {(r["parent_template"], r["profile_key"]) for r in BINDING_TABLE
-                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
+                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r.get("reset_wire") is not None}
     in_fixture = {(f[0], f[1]) for f in VPC_ROWS}
     assert len(VPC_ROWS) == 13, "the fixture lists {0} rows, not 13".format(len(VPC_ROWS))
     assert in_table == in_fixture, (
@@ -659,7 +663,7 @@ def test_the_previous_lot_is_untouched():
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
-    assert len(BINDING_TABLE) == 324, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_42, rs1, pl1, ul1, a4_1
+    assert len(BINDING_TABLE) == 347, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_42, rs1, pl1, ul1, a4_1
     # 197 integrated + 3 int_vlan rows (test_binding_role_resets.py) = 200, + the six
     # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
@@ -849,7 +853,7 @@ def test_the_arithmetic_is_197_plus_three():
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 228 + six dot1q rows + eleven PVLAN companion rows + one vPC PVLAN row, + slices 0b_37, 0b_38, 0b_39, 0b_40, rs1,
     # pl1, ul1, 0b_41 and 0b_42.
-    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3   # + 6: lot a4_1_discovery
+    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23   # + 6: lot a4_1_discovery
     # 200 + six dot1q resets + int_vlan::privateVlanMapping = 207, + 11 PVLAN companion resets (inferred) = 218, + 1 vPC PVLAN reset = 219.
     # + 5 SMU 017 resets read from the bodies (slice 0b_37) = 224, + 5 loopback EIGRP resets (slice 0b_38) = 229,
     # + 1 routed port-channel PIM BFD reset (slice 0b_39) = 230, + 16 routed port-channel OSPF resets (slice 0b_40) = 246,

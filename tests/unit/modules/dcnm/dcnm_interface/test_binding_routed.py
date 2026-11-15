@@ -989,8 +989,9 @@ def test_combined_case_fails_when_one_source_family_is_removed_in_memory(monkeyp
                 ("int_loopback", ROUTED, "int_subif", "int_vlan")]
         assert len(rows) == 11   # + int_subif pimBfdInstance (slice 0b_37)
     else:
+        # The measured vPC rows; the rows of lot a4_4_stp_protection carry no reset and are not part of this case.
         rows = [row for row in BINDING_TABLE
-                if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK)]
+                if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and "reset_wire" in row]
         assert len(rows) == 13
     with monkeypatch.context() as patcher:
         for row in rows:

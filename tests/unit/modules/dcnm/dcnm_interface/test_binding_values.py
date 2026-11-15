@@ -121,12 +121,12 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 324   # + 6: lot a4_1_discovery; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(BINDING_TABLE) == 347   # + 6: lot a4_1_discovery; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
     # + slice 0b_41 (2) + slice 0b_42 (13)
-    assert len(set(keys)) == 324, "duplicate (parent, nvpair) row"
+    assert len(set(keys)) == 347, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 324, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 347, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -184,7 +184,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 324   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 347   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -216,7 +216,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 324   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 347   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -312,7 +312,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 324   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 347   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
 
 # ------------------------------------------------------------------ positive transport
@@ -554,6 +554,10 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("aclFilter", "acl_filter"),
         ("qosStatsSuppressed", "disable_qos_stats"),
         ("queuingStats", "disable_queuing_stats"),
+        # Lot a4_4_stp_protection.
+        ("BPDUFILTER_ENABLED", "bpdu_filter"),
+        ("LINK_TYPE", "spanning_tree_link_type"),
+        ("ENABLE_ERRDISABLE_ACL", "enable_errdisable_acl"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -567,6 +571,10 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("qosStatsSuppressed", "disable_qos_stats"),
         ("queuingStats", "disable_queuing_stats"),
         ("loggingEventPortLinkStatus", "logging_event_port_link_status"),   # SMU 017, slice 0b_37
+        # Lot a4_4_stp_protection.
+        ("BPDUFILTER_ENABLED", "bpdu_filter"),
+        ("LINK_TYPE", "spanning_tree_link_type"),
+        ("ENABLE_ERRDISABLE_ACL", "enable_errdisable_acl"),
     }
     # The port-channel parents carry every field registered for them.
     assert {
@@ -584,6 +592,9 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("queuingStats", "disable_queuing_stats"),
         # Trunk port-channel reset-skip default, slice rs1.
         ("linkTransmitResetSkip", "link_transmit_reset_skip"),
+        # Lot a4_4_stp_protection.
+        ("BPDUFILTER_ENABLED", "bpdu_filter"),
+        ("LINK_TYPE", "spanning_tree_link_type"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -731,7 +742,12 @@ def test_keymap_carries_every_new_nvpair():
     assert km["DISABLE_LACP_SUSPEND"] == "disable_lacp_suspend_individual"
     assert km["LACP_PORT_PRIO"] == "lacp_port_priority"
     assert km["LACP_RATE"] == "lacp_rate"
-    assert len(km) == 91
+    # Lot a4_4_stp_protection: four nvPairs; ENABLE_ORPHAN_PORT keeps its native name.
+    assert km["BPDUFILTER_ENABLED"] == "bpdu_filter"
+    assert km["LINK_TYPE"] == "spanning_tree_link_type"
+    assert km["ENABLE_ERRDISABLE_ACL"] == "enable_errdisable_acl"
+    assert km["ENABLE_ORPHAN_PORT"] == "orphan_port"
+    assert len(km) == 95
 
 
 def test_all_registered_keys():
@@ -740,6 +756,8 @@ def test_all_registered_keys():
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "link_transmit_reset_skip",
+        # Lot a4_4_stp_protection; orphan_port is native on the trunk and access profiles.
+        "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl", "orphan_port",
         # LACP on the dot1q-tunnel port-channel, lot a4_3_lacp (native on the other port-channel and vPC profiles).
         "disable_lacp_suspend_individual", "lacp_port_priority", "lacp_rate",
         # The peer-link QoS keys, slice pl1 (native on the other Ethernet, port-channel and vPC profiles).
@@ -1025,6 +1043,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         "enable_vpc_peer_link",
         # Trunk port-channel reset-skip default, slice rs1 (int_port_channel_trunk_host).
         "link_transmit_reset_skip",
+        # Lot a4_4_stp_protection: the two boolean keys.
+        "enable_errdisable_acl", "orphan_port",
         # Lot a4_3_lacp: the boolean LACP key on the dot1q-tunnel port-channel.
         "disable_lacp_suspend_individual",
         # Peer-link QoS enable, slice pl1 (int_vpc_peer_link_po); disable_qos_stats is already listed.
@@ -1104,7 +1124,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 146 = 140 + the six CDP/LLDP booleans of lot a4_1_discovery.
     # 148 = 146 + the 2 boolean rows of lot a4_2_l3po_dampening.
     # 149 = 148 + the 1 boolean rows of lot a4_3_lacp.
-    assert len(BOOL_PASSTHROUGH) == 149
+    # 154 = 149 + the 5 boolean rows of lot a4_4_stp_protection.
+    assert len(BOOL_PASSTHROUGH) == 154
 
 
 # ------------------------------------------------------- what the engine emits --

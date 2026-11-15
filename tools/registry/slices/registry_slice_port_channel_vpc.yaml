@@ -1758,3 +1758,314 @@ bindings:
         child_template: int_port_channel_dot1q_tunnel_member_11_1
         phase: current
         evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L681"
+
+  # ==== Source lot a4_4_stp_protection (13 of 23 rows) ====
+  # Spanning-tree and port-protection fields that no profile accepted:
+  #     BPDUFILTER_ENABLED     bpdu_filter              enum enable/disable/no   nine host parents (Ethernet, port-channel, vPC)
+  #     LINK_TYPE              spanning_tree_link_type  enum auto/point-to-point/shared, the same nine
+  #     ENABLE_ERRDISABLE_ACL  enable_errdisable_acl    boolean, the three Ethernet host parents
+  #     ENABLE_ORPHAN_PORT     orphan_port              boolean, the Ethernet and port-channel dot1q-tunnel parents
+  #     (the Ethernet rows are in registry_slice_interface_common.yaml)
+  # bpdu_filter and spanning_tree_link_type follow the spanning_tree_port_type naming; enable_errdisable_acl keeps the
+  # nvPair's polarity (false renders `no errdisable port detect cause acl-exception`). orphan_port is the native key of
+  # the trunk and access profiles (GIE_NATIVE_ELSEWHERE_KEYS).
+  # BPDUFILTER_ENABLED defaults to `enable` on the three dot1q-tunnel parents and to `no` on the other six, and the
+  # Ethernet and port-channel dot1q-tunnel bodies refuse anything but `enable` on an N9K running NX-OS 9.3(5) or later.
+  # That refusal is the controller's; the module transports the value.
+  # The port-channel parents render the value on the port-channel (the dot1q-tunnel one also passes `bpdufilter enable`
+  # to its members); the vPC parents hand it to each peer's _po_11_1 child.
+  # Read from the captured bodies; not measured live; no reset_wire.
+
+  # int_port_channel_trunk_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L42; Po stanza.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'no'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host@25f2582d#L42"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_trunk_host@25f2582d#L645"
+
+  # int_port_channel_trunk_host LINK_TYPE -> spanning_tree_link_type. Declared at L48; Po stanza.
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host@25f2582d#L48"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_trunk_host@25f2582d#L648"
+
+  # int_port_channel_access_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L42; Po stanza.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_port_channel_access_host
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: pc
+    applicable_mode: access
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'no'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_access_host@544f7a8c#L42"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_access_host@544f7a8c#L555"
+
+  # int_port_channel_access_host LINK_TYPE -> spanning_tree_link_type. Declared at L48; Po stanza.
+  - parent_template: int_port_channel_access_host
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: pc
+    applicable_mode: access
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_access_host@544f7a8c#L48"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_access_host@544f7a8c#L558"
+
+  # int_port_channel_dot1q_tunnel_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L42; Po stanza; member inherits 'bpdufilter enable'.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'enable'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L42"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L559"
+
+  # int_port_channel_dot1q_tunnel_host LINK_TYPE -> spanning_tree_link_type. Declared at L48; Po stanza.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L48"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L562"
+
+  # int_port_channel_dot1q_tunnel_host ENABLE_ORPHAN_PORT -> orphan_port. Declared at L114; Po stanza.
+  # Controller-side rule: controller checks Util.vpcOrphanPortAllowed when true.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: ENABLE_ORPHAN_PORT
+    profile_key: orphan_port
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L114"
+
+  # int_vpc_trunk_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L62; per-peer _po_11_1 child.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'no'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host@1e346263#L62"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_trunk_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_trunk_host@1e346263#L811"
+
+  # int_vpc_trunk_host LINK_TYPE -> spanning_tree_link_type. Declared at L68; per-peer _po_11_1 child.
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host@1e346263#L68"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_trunk_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_trunk_host@1e346263#L812"
+
+  # int_vpc_access_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L62; per-peer _po_11_1 child.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_vpc_access_host
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'no'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host@23ba8135#L62"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_access_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_access_host@23ba8135#L677"
+
+  # int_vpc_access_host LINK_TYPE -> spanning_tree_link_type. Declared at L68; per-peer _po_11_1 child.
+  - parent_template: int_vpc_access_host
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host@23ba8135#L68"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_access_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_access_host@23ba8135#L678"
+
+  # int_vpc_dot1q_tunnel BPDUFILTER_ENABLED -> bpdu_filter. Declared at L62; per-peer _po_11_1 child.
+  # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: BPDUFILTER_ENABLED
+    profile_key: bpdu_filter
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['enable', 'disable', 'no']
+    default_template: 'enable'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L62"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_dot1q_tunnel_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L696"
+
+  # int_vpc_dot1q_tunnel LINK_TYPE -> spanning_tree_link_type. Declared at L68; per-peer _po_11_1 child.
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: LINK_TYPE
+    profile_key: spanning_tree_link_type
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['auto', 'point-to-point', 'shared']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L68"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_dot1q_tunnel_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L697"

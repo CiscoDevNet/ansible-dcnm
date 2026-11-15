@@ -909,6 +909,8 @@ def gie_nvpair_keymap():
 #               int_vpc_uplink_access (slice ul1); native on the access, trunk and dot1q-tunnel profiles.
 #   disable_lacp_suspend_individual, lacp_port_priority, lacp_rate: registered on int_port_channel_dot1q_tunnel_host
 #               (lot a4_3_lacp); native on the trunk and access port-channel and the vPC profiles.
+#   orphan_port: registered on int_dot1q_tunnel_host and int_port_channel_dot1q_tunnel_host (lot a4_4_stp_protection);
+#               native on the Ethernet, port-channel and vPC trunk and access profiles.
 GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "enable_cdp",
     "enable_qos",
@@ -924,6 +926,7 @@ GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "disable_lacp_suspend_individual",
     "lacp_port_priority",
     "lacp_rate",
+    "orphan_port",
 })
 
 

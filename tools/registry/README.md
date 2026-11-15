@@ -31,11 +31,11 @@ on. Within a file, the rows keep the order of the original lots, and each lot's 
 |------|--------|-----:|
 | `registry_slice_eigrp.yaml` | EIGRP on the routed, subinterface, SVI, loopback and routed port-channel parents | 65 |
 | `registry_slice_hsrp_ipv6_nd.yaml` | HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay parents | 17 |
-| `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options | 49 |
+| `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options | 59 |
 | `registry_slice_macsec.yaml` | MACsec on the routed parent | 4 |
 | `registry_slice_multicast_bfd.yaml` | PIM and BFD parents | 22 |
 | `registry_slice_ospf.yaml` | OSPF parents, including the routed port-channel | 96 |
-| `registry_slice_port_channel_vpc.yaml` | Port-channel, vPC, peer-link and uplink parents | 68 |
+| `registry_slice_port_channel_vpc.yaml` | Port-channel, vPC, peer-link and uplink parents | 81 |
 | `registry_slice_pvlan.yaml` | Private VLAN companion fields | 12 |
 
 The registry used to be split into 42 files, one per development lot (`registry_slice_0b_22_eigrp.yaml` and so on). Comments in
@@ -88,6 +88,7 @@ lots that follow it.
 | `a4_1_discovery` | `registry_slice_port_channel_vpc.yaml` (4), `registry_slice_interface_common.yaml` (2) |
 | `a4_2_l3po_dampening` | `registry_slice_interface_common.yaml` (7) |
 | `a4_3_lacp` | `registry_slice_port_channel_vpc.yaml` (3) |
+| `a4_4_stp_protection` | `registry_slice_port_channel_vpc.yaml` (13), `registry_slice_interface_common.yaml` (10) |
 | `c1_pvlan_companions` | `registry_slice_pvlan.yaml` (11) |
 | `iq1_vpc_pvlan_qos_stats` | `registry_slice_pvlan.yaml` (1) |
 | `pl1_peer_link` | `registry_slice_port_channel_vpc.yaml` (4) |

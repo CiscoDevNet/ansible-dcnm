@@ -502,6 +502,10 @@ options:
           orphan_port:
             description:
             - interface orphan port behavior when switch is in vPC
+            - In mode C(dot1q) this is a registered field (NOT LIVE TESTED; read from the installed template body)
+              with no default. It needs an approved C(patch_version). The template checks that the switch allows a
+              vPC orphan port before it renders C(vpc orphan-port suspend). No reset is verified there, so
+              'replaced' and 'overridden' refuse to withdraw a stored true; set false explicitly instead.
             type: bool
             default: false
           duplex:
@@ -623,6 +627,23 @@ options:
               1 and 64 characters. Explicit-only, no default; when omitted the
               current controller value is left untouched.
             type: str
+          bpdu_filter:
+            description:
+            - Spanning-tree BPDU filter - C(enable), C(disable), or C(no) for the switch default (the template
+              default is C(enable) in mode C(dot1q) and C(no) in the other modes). Registered field (NOT LIVE
+              TESTED; read from the installed template bodies). It needs an approved C(patch_version); explicit-only,
+              no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but
+              C(enable); that refusal comes from the controller. Under 'merged' an omitted value is kept. No reset
+              is verified, so 'replaced' and 'overridden' refuse to withdraw a stored value that differs from the
+              template default; set the default explicitly instead.
+            type: str
+            choices: ['enable', 'disable', 'no']
+          spanning_tree_link_type:
+            description:
+            - Spanning-tree link type - C(auto) (the template default, which renders nothing), C(point-to-point) or
+              C(shared). Same registration and withdrawal contract as bpdu_filter.
+            type: str
+            choices: ['auto', 'point-to-point', 'shared']
           spanning_tree_port_type:
             description:
             - Spanning-tree port type. This option is applicable only when mode
@@ -986,6 +1007,23 @@ options:
             type: str
             choices: ['normal', 'fast']
             default: normal
+          bpdu_filter:
+            description:
+            - Spanning-tree BPDU filter - C(enable), C(disable), or C(no) for the switch default (the template
+              default is C(enable) in mode C(dot1q) and C(no) in the other modes). Registered field (NOT LIVE
+              TESTED; read from the installed template bodies). It needs an approved C(patch_version); explicit-only,
+              no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but
+              C(enable); that refusal comes from the controller. Under 'merged' an omitted value is kept. No reset
+              is verified, so 'replaced' and 'overridden' refuse to withdraw a stored value that differs from the
+              template default; set the default explicitly instead.
+            type: str
+            choices: ['enable', 'disable', 'no']
+          spanning_tree_link_type:
+            description:
+            - Spanning-tree link type - C(auto) (the template default, which renders nothing), C(point-to-point) or
+              C(shared). Same registration and withdrawal contract as bpdu_filter.
+            type: str
+            choices: ['auto', 'point-to-point', 'shared']
           enable_qos:
             description:
             - Enable QoS on the interface.
@@ -1206,6 +1244,30 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
+          bpdu_filter:
+            description:
+            - Spanning-tree BPDU filter - C(enable), C(disable), or C(no) for the switch default (the template
+              default is C(enable) in mode C(dot1q) and C(no) in the other modes). Registered field (NOT LIVE
+              TESTED; read from the installed template bodies). It needs an approved C(patch_version); explicit-only,
+              no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but
+              C(enable); that refusal comes from the controller. Under 'merged' an omitted value is kept. No reset
+              is verified, so 'replaced' and 'overridden' refuse to withdraw a stored value that differs from the
+              template default; set the default explicitly instead.
+            type: str
+            choices: ['enable', 'disable', 'no']
+          spanning_tree_link_type:
+            description:
+            - Spanning-tree link type - C(auto) (the template default, which renders nothing), C(point-to-point) or
+              C(shared). Same registration and withdrawal contract as bpdu_filter.
+            type: str
+            choices: ['auto', 'point-to-point', 'shared']
+          enable_errdisable_acl:
+            description:
+            - Error detection for access-list installation failures. C(false) renders
+              C(no errdisable port detect cause acl-exception); the template default is true. Modes C(trunk),
+              C(access) and C(dot1q); the template refuses false on a FEX host interface. Same registration and
+              withdrawal contract as bpdu_filter.
+            type: bool
           spanning_tree_port_type:
             description:
             - Spanning-tree port type. This option is applicable only when mode
@@ -1232,6 +1294,10 @@ options:
           orphan_port:
             description:
             - interface orphan port behavior when switch is in vPC
+            - In mode C(dot1q) this is a registered field (NOT LIVE TESTED; read from the installed template body)
+              with no default. It needs an approved C(patch_version). The template checks that the switch allows a
+              vPC orphan port before it renders C(vpc orphan-port suspend). No reset is verified there, so
+              'replaced' and 'overridden' refuse to withdraw a stored true; set false explicitly instead.
             type: bool
             default: false
           duplex:

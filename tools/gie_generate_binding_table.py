@@ -761,6 +761,31 @@ COMMITTED_BINDINGS = {
     ("int_port_channel_dot1q_tunnel_host", "DISABLE_LACP_SUSPEND"): "disable_lacp_suspend_individual",
     ("int_port_channel_dot1q_tunnel_host", "LACP_PORT_PRIO"): "lacp_port_priority",
     ("int_port_channel_dot1q_tunnel_host", "LACP_RATE"): "lacp_rate",
+    # Spanning-tree and port-protection fields (lot a4_4_stp_protection). orphan_port is native on the trunk and access
+    # profiles (GIE_NATIVE_ELSEWHERE_KEYS). Read from the captured bodies; not measured live; no reset_wire.
+    ("int_trunk_host", "ENABLE_ERRDISABLE_ACL"): "enable_errdisable_acl",
+    ("int_trunk_host", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_trunk_host", "LINK_TYPE"): "spanning_tree_link_type",
+    ("int_access_host", "ENABLE_ERRDISABLE_ACL"): "enable_errdisable_acl",
+    ("int_access_host", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_access_host", "LINK_TYPE"): "spanning_tree_link_type",
+    ("int_dot1q_tunnel_host", "ENABLE_ORPHAN_PORT"): "orphan_port",
+    ("int_dot1q_tunnel_host", "ENABLE_ERRDISABLE_ACL"): "enable_errdisable_acl",
+    ("int_dot1q_tunnel_host", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_dot1q_tunnel_host", "LINK_TYPE"): "spanning_tree_link_type",
+    ("int_port_channel_trunk_host", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_port_channel_trunk_host", "LINK_TYPE"): "spanning_tree_link_type",
+    ("int_port_channel_access_host", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_port_channel_access_host", "LINK_TYPE"): "spanning_tree_link_type",
+    ("int_port_channel_dot1q_tunnel_host", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_port_channel_dot1q_tunnel_host", "LINK_TYPE"): "spanning_tree_link_type",
+    ("int_port_channel_dot1q_tunnel_host", "ENABLE_ORPHAN_PORT"): "orphan_port",
+    ("int_vpc_trunk_host", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_vpc_trunk_host", "LINK_TYPE"): "spanning_tree_link_type",
+    ("int_vpc_access_host", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_vpc_access_host", "LINK_TYPE"): "spanning_tree_link_type",
+    ("int_vpc_dot1q_tunnel", "BPDUFILTER_ENABLED"): "bpdu_filter",
+    ("int_vpc_dot1q_tunnel", "LINK_TYPE"): "spanning_tree_link_type",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the

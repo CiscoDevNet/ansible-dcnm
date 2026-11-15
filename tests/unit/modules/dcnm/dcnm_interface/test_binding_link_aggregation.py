@@ -22,12 +22,17 @@ from .helpers.binding_harness import (
     DAMP_FULL_GROUP,
     DAMP_GATE,
     DAMP_WITH_RESTART,
+    ACCESS,
     ETH_DOT1Q,
     NON_ETH_PARENTS,
+    PC_ACCESS,
     PC_DOT1Q,
     PC_L3,
     PC_TRUNK,
+    TRUNK,
     VPC_ACCESS,
+    VPC_DOT1Q,
+    VPC_TRUNK,
     base_for,
     build_have,
     cfg_for,
@@ -72,6 +77,31 @@ ROUTES = {
     (PC_DOT1Q, "DISABLE_LACP_SUSPEND"): ("disable_lacp_suspend_individual", True, False, {}),
     (PC_DOT1Q, "LACP_PORT_PRIO"): ("lacp_port_priority", 100, 32768, {}),
     (PC_DOT1Q, "LACP_RATE"): ("lacp_rate", "fast", "normal", {}),
+    # Lot a4_4_stp_protection. The dot1q-tunnel parents default BPDU filter to enable, the others to no; NOFAST keeps
+    # port type fast off so a non-default link type is a state the controller can hold beside it.
+    (TRUNK, "BPDUFILTER_ENABLED"): ("bpdu_filter", "enable", "no", {}),
+    (TRUNK, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (ACCESS, "BPDUFILTER_ENABLED"): ("bpdu_filter", "enable", "no", {}),
+    (ACCESS, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (ETH_DOT1Q, "BPDUFILTER_ENABLED"): ("bpdu_filter", "disable", "enable", {}),
+    (ETH_DOT1Q, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (PC_TRUNK, "BPDUFILTER_ENABLED"): ("bpdu_filter", "enable", "no", {}),
+    (PC_TRUNK, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (PC_ACCESS, "BPDUFILTER_ENABLED"): ("bpdu_filter", "enable", "no", {}),
+    (PC_ACCESS, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (PC_DOT1Q, "BPDUFILTER_ENABLED"): ("bpdu_filter", "disable", "enable", {}),
+    (PC_DOT1Q, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (VPC_TRUNK, "BPDUFILTER_ENABLED"): ("bpdu_filter", "enable", "no", {}),
+    (VPC_TRUNK, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (VPC_ACCESS, "BPDUFILTER_ENABLED"): ("bpdu_filter", "enable", "no", {}),
+    (VPC_ACCESS, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (VPC_DOT1Q, "BPDUFILTER_ENABLED"): ("bpdu_filter", "disable", "enable", {}),
+    (VPC_DOT1Q, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
+    (TRUNK, "ENABLE_ERRDISABLE_ACL"): ("enable_errdisable_acl", False, True, {}),
+    (ACCESS, "ENABLE_ERRDISABLE_ACL"): ("enable_errdisable_acl", False, True, {}),
+    (ETH_DOT1Q, "ENABLE_ERRDISABLE_ACL"): ("enable_errdisable_acl", False, True, {}),
+    (ETH_DOT1Q, "ENABLE_ORPHAN_PORT"): ("orphan_port", True, False, {}),
+    (PC_DOT1Q, "ENABLE_ORPHAN_PORT"): ("orphan_port", True, False, {}),
 }
 
 ITEMS = [(p, n, k, a, d, e) for (p, n), (k, a, d, e) in sorted(ROUTES.items())]
@@ -114,7 +144,8 @@ def test_merged_explicit_value_reaches_the_parent_request_and_the_diff(parent, n
 @pytest.mark.parametrize("parent,nvpair,key,applied,default,extra", ITEMS, ids=IDS)
 def test_merged_omission_keeps_the_stored_value(parent, nvpair, key, applied, default, extra):
     have = build_have(parent, key, applied, **extra)
-    want = want_omitting(parent, key, **dict(extra, description="changed"))
+    change = {"peer1_description": "changed"} if parent in (VPC_ACCESS, VPC_TRUNK, VPC_DOT1Q) else {"description": "changed"}
+    want = want_omitting(parent, key, **dict(extra, **change))
     result, calls = run(want, "merged", have, **_pkw(parent))
     assert not result.get("failed"), result.get("msg")
     nv = request_nvpairs(calls)
@@ -221,9 +252,16 @@ def test_deleting_the_physical_interface_resets_it_or_names_the_field(parent, nv
     assert len(policies) == 1, "neither a refusal nor exactly one reset request: %r" % (policies,)
     dst = policies[0]["policy"]
     assert dst != parent
+    sent = policies[0]["interfaces"][0]["nvPairs"]
     b = resolve_binding(dst, key)
-    assert b is not None and b.get("reset_wire") is not None, (dst, key)
-    assert policies[0]["interfaces"][0]["nvPairs"].get(nvpair) == b["reset_wire"], (dst, policies[0])
+    if b is not None and b.get("reset_wire") is not None:
+        assert sent.get(nvpair) == b["reset_wire"], (dst, sent.get(nvpair))
+    else:
+        # The source parent renders the field inline and declares that the controller negates its lines for this
+        # destination (cleared_on_change_to, a parent-level declaration); nothing is written into the destination.
+        src = resolve_binding(parent, key)
+        assert dst in (src.get("cleared_on_change_to") or ()), (parent, dst, key)
+        assert nvpair not in sent, (dst, sent.get(nvpair))
 
 
 @pytest.mark.parametrize("parent,key,nvpair,value", [
@@ -309,3 +347,36 @@ def test_the_native_lacp_profiles_are_unchanged(parent):
     assert not result.get("failed"), result.get("msg")
     nv = request_nvpairs(calls)[0]
     assert (nv["LACP_RATE"], wire(nv["LACP_PORT_PRIO"]), wire(nv["DISABLE_LACP_SUSPEND"])) == ("fast", "100", "true")
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS, PC_TRUNK, PC_ACCESS])
+def test_the_native_orphan_port_profiles_are_unchanged(parent):
+    """orphan_port stays native where the module already wrote it (GIE_NATIVE_ELSEWHERE_KEYS, lot a4_4_stp_protection)."""
+    result, calls = run(base_for(parent, orphan_port=True), "merged", **_pkw(parent))
+    assert not result.get("failed"), result.get("msg")
+    assert wire(request_nvpairs(calls)[0]["ENABLE_ORPHAN_PORT"]) == "true"
+
+
+@pytest.mark.parametrize("parent", [ETH_DOT1Q, PC_DOT1Q, VPC_DOT1Q])
+def test_the_dot1q_bpdu_filter_neutral_is_enable(parent):
+    """The dot1q-tunnel bodies default BPDUFILTER_ENABLED to enable; the stored default needs no withdrawal."""
+    from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_binding
+    assert resolve_binding(parent, "bpdu_filter")["default_template"] == "enable"
+    have = build_have(parent, "bpdu_filter", "enable")
+    result, calls = run(base_for(parent), "replaced", have, **_pkw(parent))
+    assert not result.get("failed"), result.get("msg")
+    assert _no_writes(calls)
+
+
+def test_bpdu_filter_and_link_type_are_refused_on_a_parent_that_does_not_declare_them():
+    for key, value in (("bpdu_filter", "enable"), ("spanning_tree_link_type", "shared")):
+        result, calls = run(base_for("int_routed_host", **{key: value}), "merged")
+        assert result.get("failed") is True and key in result["msg"], result.get("msg")
+        assert _no_writes(calls)
+
+
+@pytest.mark.parametrize("key,bad", [("bpdu_filter", "on"), ("bpdu_filter", ""), ("spanning_tree_link_type", "p2p")])
+def test_an_enum_value_outside_the_template_choices_is_refused_before_any_write(key, bad):
+    result, calls = run(base_for(TRUNK, **{key: bad}), "merged")
+    assert result.get("failed") is True and key in result["msg"], result.get("msg")
+    assert _no_writes(calls)
