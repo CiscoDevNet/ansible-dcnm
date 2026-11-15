@@ -15,15 +15,20 @@ ROW_A = '{"customerVlan":"10-20","dot1qTunnel":"true","customerInnerVlan":"","pr
 ROW_B = '{"customerVlan":"40","dot1qTunnel":"true","customerInnerVlan":"","providerVlan":"301"}'
 
 
+# The same two rows in forms the parents cannot read: they load the nvPair with json.loads only.
+LITERAL = str({"vlanMappingEntries": [{"customerVlan": "10-20", "dot1qTunnel": "true", "customerInnerVlan": "",
+                                       "providerVlan": "300"},
+                                      {"customerVlan": "40", "dot1qTunnel": "true", "customerInnerVlan": "",
+                                       "providerVlan": "301"}]})
+CANONICAL = "c=10-20,t=true,i=,p=300;c=40,t=true,i=,p=301"
+
+
 @pytest.mark.parametrize("parent", VM_PARENTS)
 @pytest.mark.parametrize("back", [
     '{"vlanMappingEntries":[%s,%s]}' % (ROW_A, ROW_B),
     '{"vlanMappingEntries":[%s,%s]}' % (ROW_B, ROW_A),                    # any order
-    str({"vlanMappingEntries": [{"customerVlan": "40", "dot1qTunnel": "true", "customerInnerVlan": "",
-                                 "providerVlan": "301"},
-                                {"customerVlan": "10-20", "dot1qTunnel": "true", "customerInnerVlan": "",
-                                 "providerVlan": "300"}]}),               # Python literal, as the vPC child reads it
-], ids=["stored", "reordered", "literal"])
+    '{"vlanMappingEntries": [%s, %s]}' % (ROW_A, ROW_B),                  # JSON spacing
+], ids=["stored", "reordered", "spaced"])
 def test_the_same_rows_pass(tmp_path, parent, back):
     cfg = [r2_cfg(parent, enable_vlan_mapping=True, vlan_mapping_entries=ROWS)]
     res = r2_run(tmp_path, cfg, r2_back(parent, {"enableVlanMapping": "true", "vlanMappingEntries": back}))
@@ -38,10 +43,23 @@ def test_the_same_rows_pass(tmp_path, parent, back):
     '{"vlanMappingEntries":[%s,%s]}' % (ROW_A, ROW_B.replace('"301"', '301')),  # a native integer
     '{"vlanMappingEntries":[%s]}' % ROW_A.replace(',"customerInnerVlan":""', ""),
     "",
-], ids=["missing-row", "repeated-row", "tunnel-off", "native-int", "missing-key", "empty"])
+    LITERAL,                                                                 # the right rows as a Python literal
+    "[%s,%s]" % (ROW_A, ROW_B),                                              # a bare list
+    CANONICAL,                                                               # the checker's own comparison text
+    '{"vlanMappingEntries":[%s,%s]' % (ROW_A, ROW_B),                        # truncated JSON
+    '{"vlanMappingEntries":null}',
+    '{"vlanMappingEntries":[%s,%s],"extra":[]}' % (ROW_A, ROW_B),
+], ids=["missing-row", "repeated-row", "tunnel-off", "native-int", "missing-key", "empty",
+        "literal", "bare-list", "canonical-text", "truncated", "null", "extra-key"])
 def test_different_rows_fail(tmp_path, parent, back):
     cfg = [r2_cfg(parent, vlan_mapping_entries=ROWS)]
     assert r2_run(tmp_path, cfg, r2_back(parent, {"vlanMappingEntries": back}))["failed"] is True
+
+
+@pytest.mark.parametrize("parent", VM_PARENTS)
+def test_a_readback_without_the_entries_fails(tmp_path, parent):
+    cfg = [r2_cfg(parent, enable_vlan_mapping=True, vlan_mapping_entries=ROWS)]
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"enableVlanMapping": "true"}))["failed"] is True
 
 
 @pytest.mark.parametrize("parent", VM_PARENTS)

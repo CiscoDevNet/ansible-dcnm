@@ -86,9 +86,9 @@ rows belong to several families keeps its header in the family that holds most o
 | `0b_6` | `registry_slice_interface_common.yaml` (7) |
 | `0b_7` | `registry_slice_interface_common.yaml` (1), `registry_slice_port_channel_vpc.yaml` (1) |
 | `0b_8` | `registry_slice_interface_common.yaml` (2) |
-| `dr1_dhcp_relay` | `registry_slice_dhcp_relay.yaml` (3) |
 | `0b_9` | `registry_slice_interface_common.yaml` (2), `registry_slice_port_channel_vpc.yaml` (3) |
 | `c1_pvlan_companions` | `registry_slice_pvlan.yaml` (11) |
+| `dr1_dhcp_relay` | `registry_slice_dhcp_relay.yaml` (3) |
 | `iq1_vpc_pvlan_qos_stats` | `registry_slice_pvlan.yaml` (1) |
 | `pl1_peer_link` | `registry_slice_port_channel_vpc.yaml` (4) |
 | `rs1_po_link_transmit_reset_skip` | `registry_slice_port_channel_vpc.yaml` (1) |

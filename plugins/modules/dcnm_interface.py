@@ -5796,8 +5796,8 @@ class DcnmIntf:
                     )
                 except GieBindingError as exc:
                     if resolve_binding(parent, profile_key)["type"] == "struct_list":
-                        # A typed list is refused for a rule of its contract, which the engine message names
-                        # (the item and the rule, never a value).
+                        # A typed list is refused for a rule of its contract. The engine message names the item and
+                        # the rule; only a repeated provider VLAN also gives its VLAN ID.
                         self.module.fail_json(
                             msg="Invalid parameters in playbook: while processing interface {0}, {1}. No "
                             "template metadata was queried.".format(cfg_item.get("name"), exc)

@@ -305,6 +305,54 @@ def test_the_option_on_with_no_entries_is_refused(parent, state):
         assert split_calls(calls)["updates"] == []
 
 
+def _writes(calls):
+    """Every call that is not a read: updates, deploys and anything else."""
+    return [c for c in calls if c["method"] != "GET"]
+
+
+@pytest.mark.parametrize("parent", PARENTS)
+@pytest.mark.parametrize("state", ["merged", "replaced"])
+def test_enabling_on_a_new_interface_without_entries_is_refused(parent, state):
+    # No HAVE and no entries in the request: nothing to render, so the option must not be sent alone.
+    result, calls = run(base_for(parent, **{ENABLE: True}), state, parent=parent)
+    assert result.get("failed") and "vlan_mapping_entries" in result["msg"], result.get("msg")
+    assert _writes(calls) == []
+
+
+@pytest.mark.parametrize("parent", PARENTS)
+@pytest.mark.parametrize("state", ["merged", "replaced"])
+def test_enabling_over_a_stored_interface_without_the_entries_key_is_refused(parent, state):
+    have = copy.deepcopy(_have_with(parent, **{ENABLE: False}))
+    have[0]["interfaces"][0]["nvPairs"].pop("vlanMappingEntries", None)
+    assert "vlanMappingEntries" not in have[0]["interfaces"][0]["nvPairs"]
+    assert have[0]["interfaces"][0]["nvPairs"]["enableVlanMapping"] == "false"
+    result, calls = run(base_for(parent, **{ENABLE: True}), state, have, parent=parent)
+    assert result.get("failed") and "vlan_mapping_entries" in result["msg"], result.get("msg")
+    assert _writes(calls) == []
+
+
+@pytest.mark.parametrize("parent", PARENTS)
+def test_enabling_over_valid_stored_entries_carries_them(parent):
+    have = _set_have_nv(_have_with(parent, **{ENABLE: False}), vlanMappingEntries=TRANSLATION_WIRE)
+    result, calls = run(base_for(parent, **{ENABLE: True}), "merged", have, parent=parent)
+    assert not result.get("failed"), result.get("msg")
+    assert _nv(calls, "enableVlanMapping") == "true"
+    assert _nv(calls, "vlanMappingEntries") == TRANSLATION_WIRE
+
+
+def test_the_engine_counts_a_list_absent_from_both_as_empty_and_leaves_a_scalar_alone():
+    plan = engine.gie_dependency_plan
+    _writes_, conflicts = plan(TRUNK, {"enableVlanMapping": "true"}, {}, {"enableVlanMapping"}, False,
+                               SUPPORTED, SUPPORTED_PATCH)
+    assert [(c["nvpair"], c["reason"]) for c in conflicts] == [("vlanMappingEntries", "empty_while_on")]
+    # A scalar required dependent absent from both is still left to the controller (the OSPF tag).
+    _writes_, conflicts = plan("int_routed_host", {"ospf": "true"}, {}, {"ospf"}, False, SUPPORTED, SUPPORTED_PATCH)
+    assert conflicts == []
+    _writes_, conflicts = plan("int_routed_host", {"ospf": "true"}, {"ospf": "false", "ospfTag": ""}, {"ospf"}, False,
+                               SUPPORTED, SUPPORTED_PATCH)
+    assert [(c["nvpair"], c["reason"]) for c in conflicts] == [("ospfTag", "empty_while_on")]
+
+
 @pytest.mark.parametrize("parent", PARENTS)
 def test_an_invalid_list_is_refused_before_any_request(parent):
     bad = [{"customer_vlan": "10-20", "provider_vlan": 200}]

@@ -505,37 +505,37 @@ def _r2_pvlan_pairs(text):
 
 # One VLAN mapping row as text: customer VLAN(s), selective dot1q-tunnel, customer inner VLAN, provider VLAN.
 _R2_VLAN_MAPPING_ROW = "c=%s,t=%s,i=%s,p=%s"
-_R2_VLAN_MAPPING_CANONICAL = re.compile(r"^c=[0-9,-]+,t=(true|false),i=[0-9]*,p=[0-9]+(;c=[0-9,-]+,t=(true|false),i=[0-9]*,p=[0-9]+)*$")
 _R2_VLAN_MAPPING_WIRE_KEYS = ("customerVlan", "dot1qTunnel", "customerInnerVlan", "providerVlan")
 
 
 def r2_vlan_mapping_from_yaml(rows):
-    """The playbook vlan_mapping_entries list -> canonical text (rows sorted). None when a row is not readable."""
+    """The playbook vlan_mapping_entries list -> the JSON wrapper the parents load, every value a string ("" for an
+    empty list). r2_normalize reads it like a readback. None when a row is not readable."""
     out = []
     for row in rows:
         if not isinstance(row, dict) or row.get("customer_vlan") is None or row.get("provider_vlan") is None:
             return None
         tunnel = row.get("dot1q_tunnel", False)
         inner = row.get("customer_inner_vlan")
-        out.append(_R2_VLAN_MAPPING_ROW % (
-            _r2_native(row["customer_vlan"]), "true" if tunnel is True else "false",
-            "" if inner is None else _r2_native(inner), _r2_native(row["provider_vlan"])))
-    return ";".join(sorted(out))
+        values = (_r2_native(row["customer_vlan"]), "true" if tunnel is True else "false",
+                  "" if inner is None else _r2_native(inner), _r2_native(row["provider_vlan"]))
+        if not all(isinstance(v, str) for v in values):
+            return None
+        out.append(dict(zip(_R2_VLAN_MAPPING_WIRE_KEYS, values)))
+    return json.dumps({"vlanMappingEntries": out}) if out else ""
 
 
 def _r2_vlan_mapping(text):
-    """The stored wrapper ({"vlanMappingEntries": [{customerVlan, dot1qTunnel, customerInnerVlan, providerVlan}]}, JSON
-    or a Python literal, every value a string) -> the canonical text. Anything else is returned marked."""
+    """The stored wrapper ({"vlanMappingEntries": [{customerVlan, dot1qTunnel, customerInnerVlan, providerVlan}]}, every
+    value a string) -> the canonical text (rows sorted). JSON only: the parents read it with json.loads, so a Python
+    literal, a bare list or any other text is returned marked and never equals an expected value."""
     s = str(text).strip()
-    if s == "" or _R2_VLAN_MAPPING_CANONICAL.match(s):
+    if s == "":
         return s
-    data = None
-    for loader in (json.loads, ast.literal_eval):
-        try:
-            data = loader(s)
-            break
-        except (ValueError, SyntaxError):
-            continue
+    try:
+        data = json.loads(s)
+    except ValueError:
+        return "unparsed:" + s
     if not isinstance(data, dict) or set(data) != {"vlanMappingEntries"} or not isinstance(data["vlanMappingEntries"], list):
         return "unparsed:" + s
     out = []
@@ -636,7 +636,7 @@ def r2_normalize(nvpair, value):
 def r2_wire(parent, nvpair, kind, value):
     """The nvPair string a requested YAML value must read back as (independent of the production renderer)."""
     if kind == "vlan_mapping_entries":
-        # A list: its canonical text, which r2_normalize also derives from the readback. None when unreadable.
+        # A list: the JSON wrapper, which r2_normalize reads exactly as it reads the readback. None when unreadable.
         return r2_vlan_mapping_from_yaml(value) if isinstance(value, list) else None
     if kind == "dhcp_servers":
         return r2_dhcp_servers_from_yaml(value) if isinstance(value, list) else None
