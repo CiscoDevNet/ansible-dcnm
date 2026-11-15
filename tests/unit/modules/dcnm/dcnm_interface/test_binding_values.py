@@ -121,12 +121,12 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 384   # + 6: lot a4_1_discovery; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(BINDING_TABLE) == 393   # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
-    # + slice 0b_41 (2) + slice 0b_42 (13)
-    assert len(set(keys)) == 384, "duplicate (parent, nvpair) row"
+    # + slice 0b_41 (2) + slice 0b_42 (13) + lots a4_1 to a4_5 (76) + slice vm1 (6) + slice dr1 (3)
+    assert len(set(keys)) == 393, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 384, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 393, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -184,7 +184,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 384   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 393   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1 and dr1
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -216,7 +216,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 384   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 393   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1 and dr1
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -312,7 +312,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 384   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 393   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1 and dr1
 
 
 # ------------------------------------------------------------------ positive transport
@@ -564,6 +564,8 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("INHERIT_BW", "inherit_bandwidth"),
         ("DEBOUNCE_TIMER", "debounce_timer"),
         ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
+        ("enableVlanMapping", "enable_vlan_mapping"),     # slice vm1
+        ("vlanMappingEntries", "vlan_mapping_entries"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -611,6 +613,8 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("NEGOTIATE_AUTO", "negotiate_auto"),
         ("BANDWIDTH", "bandwidth"),
         ("INHERIT_BW", "inherit_bandwidth"),
+        ("enableVlanMapping", "enable_vlan_mapping"),     # slice vm1
+        ("vlanMappingEntries", "vlan_mapping_entries"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -770,7 +774,11 @@ def test_keymap_carries_every_new_nvpair():
     assert km["INHERIT_BW"] == "inherit_bandwidth"
     assert km["DEBOUNCE_TIMER"] == "debounce_timer"
     assert km["DEBOUNCE_LINKUP_TIMER"] == "debounce_linkup_timer"
-    assert len(km) == 101
+    # 103 = 101 + enableVlanMapping and vlanMappingEntries (slice vm1, the three trunk parents).
+    assert km["enableVlanMapping"] == "enable_vlan_mapping" and km["vlanMappingEntries"] == "vlan_mapping_entries"
+    # 104 = 103 + dhcpServers (slice dr1, three parents).
+    assert km["dhcpServers"] == "dhcp_servers"
+    assert len(km) == 104
 
 
 def test_all_registered_keys():
@@ -872,6 +880,10 @@ def test_all_registered_keys():
         # SMU 017 first increment, slice 0b_37: three new public keys. enable_cdp is registered on
         # int_routed_host and native elsewhere (GIE_NATIVE_ELSEWHERE_KEYS).
         "enable_cdp", "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
+        # VLAN mapping on the three trunk parents, slice vm1. The entries are a typed list.
+        "enable_vlan_mapping", "vlan_mapping_entries",
+        # DHCP relay servers, slice dr1, a typed list.
+        "dhcp_servers",
     }
 
 
@@ -1092,6 +1104,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # There is no eigrp_ipv6_passive: IPv4 declares both the passive and the no-passive
         # field, IPv6 only the no-passive one. The children match -- an ipv6-passive child
         # does not exist either. The asymmetry is the template's.
+        # VLAN mapping enable flag, slice vm1, on the three trunk parents.
+        "enable_vlan_mapping",
     }
     # 80 = the per-parent counts below, which are what the table actually holds. Measured
     # against BINDING_TABLE when slice 0b_22 landed, not carried forward by arithmetic:
@@ -1153,7 +1167,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 149 = 148 + the 1 boolean rows of lot a4_3_lacp.
     # 154 = 149 + the 5 boolean rows of lot a4_4_stp_protection.
     # 163 = 154 + the 9 boolean rows of lot a4_5_link_settings.
-    assert len(BOOL_PASSTHROUGH) == 163
+    # 166 = 163 + enable_vlan_mapping on the three trunk parents (slice vm1).
+    assert len(BOOL_PASSTHROUGH) == 166
 
 
 # ------------------------------------------------------- what the engine emits --

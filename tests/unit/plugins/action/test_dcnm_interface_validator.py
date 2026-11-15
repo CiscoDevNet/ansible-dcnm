@@ -110,6 +110,8 @@ R2_KIND_OF = {"boolean": "bool", "integer": "int", "enum": "enum"}
 
 
 def r2_registry_kind(row):
+    if row["type"] == "struct_list":
+        return row["struct_contract"]
     if row["type"] == "string":
         return "str_exact" if row.get("string_compare") == "exact" else "str_fold"
     return R2_KIND_OF[row["type"]]
@@ -145,7 +147,8 @@ def test_r2_coverage_the_checker_invents_no_identity():
     # 91 = 88 + disable_lacp_suspend_individual, lacp_port_priority and lacp_rate (lot a4_3_lacp).
     # 95 = 91 + bpdu_filter, spanning_tree_link_type, enable_errdisable_acl and orphan_port (lot a4_4_stp_protection).
     # 101 = 95 + negotiate_auto, duplex, bandwidth, inherit_bandwidth, debounce_timer and debounce_linkup_timer (lot a4_5).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 101
+    # 104 = 101 + enable_vlan_mapping and vlan_mapping_entries (slice vm1) + dhcp_servers (slice dr1).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 104
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():
@@ -204,6 +207,8 @@ def r2_row(profile_key, parent):
 
 def r2_values(row):
     """(requested YAML value, the correct readback wire, a wrong readback wire) for one registry row."""
+    if row["type"] == "struct_list":
+        return R2_STRUCT_LIST_VALUES[row["struct_contract"]]
     if row["type"] == "boolean":
         return True, "true", "false"
     if row["type"] == "integer":
@@ -216,6 +221,21 @@ def r2_values(row):
         other = next(v for v in values if v != pick)
         return pick, wv.get(pick, pick), wv.get(other, other)
     return "R2-Value-A", "R2-Value-A", "R2-Value-B"
+
+
+# Typed lists: (requested YAML list, a stored wrapper with the same rows, a stored wrapper whose provider VLAN differs).
+R2_STRUCT_LIST_VALUES = {
+    "vlan_mapping_entries": (
+        [{"customer_vlan": 100, "provider_vlan": 200}],
+        '{"vlanMappingEntries":[{"customerVlan":"100","dot1qTunnel":"false","customerInnerVlan":"","providerVlan":"200"}]}',
+        '{"vlanMappingEntries":[{"customerVlan":"100","dot1qTunnel":"false","customerInnerVlan":"","providerVlan":"201"}]}',
+    ),
+    "dhcp_servers": (
+        [{"srvr_ip": "192.0.2.10", "srvr_vrf": "management"}],
+        '{"dhcpServers":[{"srvrAddr":"192.0.2.10","srvrVrf":"management"}]}',
+        '{"dhcpServers":[{"srvrAddr":"192.0.2.10","srvrVrf":"Management"}]}',
+    ),
+}
 
 
 def r2_registry_parents(profile_key):

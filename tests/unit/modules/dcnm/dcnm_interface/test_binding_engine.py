@@ -536,6 +536,16 @@ UL1_ROWS = {
     ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PPS", "storm_control_unicast_level_pps"),
 }
 
+# VLAN mapping, slice vm1: the enable flag and the typed entry list on the three trunk parents.
+VM1_ROWS = {
+    (parent, nv, key)
+    for parent in ("int_trunk_host", "int_port_channel_trunk_host", "int_vpc_trunk_host")
+    for nv, key in (("enableVlanMapping", "enable_vlan_mapping"), ("vlanMappingEntries", "vlan_mapping_entries"))
+}
+
+# DHCP relay servers, slice dr1: the typed list on the routed Ethernet, routed port-channel and subinterface parents.
+DR1_ROWS = {(parent, "dhcpServers", "dhcp_servers") for parent in ("int_routed_host", "int_l3_port_channel", "int_subif")}
+
 PL1_ROWS = {
     ("int_vpc_peer_link_po", "ENABLE_QOS", "enable_qos"),
     ("int_vpc_peer_link_po", "QOS_POLICY", "qos_policy"),
@@ -628,7 +638,8 @@ def test_package_provenance_and_size():
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
         | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS
-        | A4_DISCOVERY_ROWS | A4_DAMPENING_ROWS | A4_LACP_ROWS | A4_STP_ROWS | A4_LINK_ROWS
+        | A4_DISCOVERY_ROWS | A4_DAMPENING_ROWS | A4_LACP_ROWS | A4_STP_ROWS | A4_LINK_ROWS | VM1_ROWS
+        | DR1_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -636,14 +647,16 @@ def test_package_provenance_and_size():
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
     # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS + RS1_ROWS + PL1_ROWS + UL1_ROWS + L3PO_PIM_ROWS
-    # + L3PO_EIGRP_ROWS
+    # + L3PO_EIGRP_ROWS + VM1_ROWS + DR1_ROWS
     assert len(L3PO_EIGRP_ROWS) == 13
     assert len(A4_DISCOVERY_ROWS) == 6
     assert len(A4_DAMPENING_ROWS) == 7
     assert len(A4_LACP_ROWS) == 3
     assert len(A4_STP_ROWS) == 23
     assert len(A4_LINK_ROWS) == 37
-    assert len(BINDING_TABLE) == len(actual_keys) == 384   # + 6: lot a4_1_discovery
+    assert len(VM1_ROWS) == 6
+    assert len(DR1_ROWS) == 3
+    assert len(BINDING_TABLE) == len(actual_keys) == 393   # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -686,8 +699,8 @@ def test_package_provenance_and_size():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    # + 6: lot a4_1_discovery
-    assert len(rows) == 384   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
+    # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1
+    assert len(rows) == 393   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1, vm1, dr1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -789,6 +802,7 @@ def test_registered_keys_per_parent():
         "disable_qos_stats", "disable_queuing_stats",
         "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl",   # lot a4_4_stp_protection
         "negotiate_auto", "bandwidth", "inherit_bandwidth", "debounce_timer", "debounce_linkup_timer",   # lot a4_5_link_settings
+        "enable_vlan_mapping", "vlan_mapping_entries",   # slice vm1
     }
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
@@ -809,6 +823,7 @@ def test_registered_keys_per_parent():
         # Lot a4_4_stp_protection.
         "bpdu_filter", "spanning_tree_link_type",
         "negotiate_auto", "bandwidth", "inherit_bandwidth",   # lot a4_5_link_settings
+        "enable_vlan_mapping", "vlan_mapping_entries",   # slice vm1
     }
     assert registered_profile_keys(PC_ACCESS) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -881,6 +896,8 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("INHERIT_BW", "inherit_bandwidth"),
         ("DEBOUNCE_TIMER", "debounce_timer"),
         ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
+        ("enableVlanMapping", "enable_vlan_mapping"),     # slice vm1
+        ("vlanMappingEntries", "vlan_mapping_entries"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -1198,6 +1215,10 @@ def test_all_registered_and_guarded_keys():
         "storm_control_broadcast_level_percent", "storm_control_multicast_level_percent",
         "storm_control_unicast_level_percent", "storm_control_broadcast_level_pps",
         "storm_control_multicast_level_pps", "storm_control_unicast_level_pps",
+        # Slice vm1: VLAN mapping on the three trunk parents; the entries are a typed list.
+        "enable_vlan_mapping", "vlan_mapping_entries",
+        # Slice dr1: the DHCP relay server list on the routed, routed port-channel and subinterface parents.
+        "dhcp_servers",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -1294,6 +1315,10 @@ def test_all_registered_and_guarded_keys():
         # SMU 017 slice 0b_37. enable_cdp is registered but NOT guarded: the native spec serves it on other parents.
         # The same holds for enable_qos and qos_policy (slice pl1) and the storm-control keys (slice ul1).
         "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
+        # Slice vm1. Neither key is native on any profile, so both are guarded.
+        "enable_vlan_mapping", "vlan_mapping_entries",
+        # Slice dr1. Not native on any interface profile (the SVI uses the numbered dhcp_server_addr fields).
+        "dhcp_servers",
     }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different

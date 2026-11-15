@@ -180,6 +180,27 @@ options:
       port-channel that C(overridden) leaves out use the existing aggregate removal and member release. C(query) returns
       the parent value as the controller stores it and does not show that the members match it. The module does not
       check whether the device applies the rendered C(link transmit reset-skip) line.
+    - On a trunk Ethernet port, port-channel or vPC (C(mode=trunk)) the C(4.3.1.0175006017) templates declare
+      C(enable_vlan_mapping) (bool) and C(vlan_mapping_entries), a list of items with C(customer_vlan) (a VLAN ID, or,
+      with C(dot1q_tunnel) true, a string of IDs and ranges such as C(10-20,30)), C(provider_vlan) (1-4094),
+      C(dot1q_tunnel) (bool, default false) and C(customer_inner_vlan) (1-4094, only without C(dot1q_tunnel)). NOT
+      LIVE TESTED, read from the installed template bodies. An explicit list is the whole value of the field in every
+      state; item order is not significant. The module refuses a repeated provider or customer VLAN, a range without
+      C(dot1q_tunnel), and both kinds of item on one interface. The template also refuses a customer VLAN equal to the
+      native VLAN, and N9K-C92 models. The entries are required while C(enable_vlan_mapping) is true and ignored while
+      it is false. Neither field has a verified reset. Under C(replaced) and C(overridden), omitting an enabled
+      mapping fails the task before any change is sent, and so does a reset of a leaf trunk port to its role default.
+      An explicit false or an empty list is sent as written; whether the switch removes the lines is not measured.
+    - On a routed Ethernet port (C(mode=routed)), a routed port-channel (C(mode=l3)) and a subinterface the
+      C(4.3.1.0175006017) templates declare C(dhcp_servers), a list of up to 16 DHCP relay servers with C(srvr_ip) (an
+      IPv4 or IPv6 address in canonical form) and C(srvr_vrf) (optional; blank means the interface VRF), the same item
+      shape as C(dhcp_servers) of M(cisco.dcnm.dcnm_network). NOT LIVE TESTED, read from the installed template
+      bodies. An explicit list is the whole value of the field in every state; item order is not significant, and a
+      repeated server and VRF pair is refused. The templates create the relay configuration only from a non-empty list
+      and never remove it, so the module refuses an empty list while the controller holds servers, and an omitted
+      stored list under C(replaced) or C(overridden) also fails the task before any change is sent. A shorter list is
+      sent; whether the switch removes the dropped relay lines is not measured. This list does not replace the
+      numbered DHCP server options of the SVI profile.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -3530,6 +3551,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_fabric_owned_carry_forward,
     gie_have_carry_forward_nvpairs,
     gie_no_log_profile_keys,
+    gie_struct_binding,
+    gie_struct_clear_refused,
+    gie_struct_compare_form,
     gie_validate_binding_value,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import (
@@ -4472,6 +4496,9 @@ class DcnmIntf:
         # Bindings whose required withdrawal cannot be completed. Collected during the
         # comparison pass and raised ONCE by main(), before anything is sent.
         self.withdrawal_blocked = []
+        # Typed lists whose explicit empty value cannot remove the stored entries (gie_struct_clear_refused); raised by
+        # main() before any request.
+        self.struct_clear_blocked = []
         # Dependent fields (inert_when) set against their gate, collected and raised before any request.
         self.dependency_blocked = []
         # Registered fields a reset-to-default (named deleted, overridden) must withdraw but
@@ -5954,7 +5981,14 @@ class DcnmIntf:
                     gie_validate_binding_value(
                         parent, profile_key, profile[profile_key]
                     )
-                except GieBindingError:
+                except GieBindingError as exc:
+                    if resolve_binding(parent, profile_key)["type"] == "struct_list":
+                        # A typed list is refused for a rule of its contract. The engine message names the item and
+                        # the rule; only a repeated provider VLAN also gives its VLAN ID.
+                        self.module.fail_json(
+                            msg="Invalid parameters in playbook: while processing interface {0}, {1}. No "
+                            "template metadata was queried.".format(cfg_item.get("name"), exc)
+                        )
                     # The engine's message deliberately omits the rejected value; this one
                     # names the field, the expected type and the type actually RECEIVED,
                     # without echoing the value either. The received type is what makes the
@@ -8784,7 +8818,7 @@ class DcnmIntf:
         return comb_key
 
     def dcnm_intf_compare_elements(
-        self, name, sno, fabric, ie1, ie2, k, state, exact_string=False
+        self, name, sno, fabric, ie1, ie2, k, state, exact_string=False, struct_binding=None
     ):
 
         # unicode encoded strings must be decoded to get proper strings which is required
@@ -8819,6 +8853,10 @@ class DcnmIntf:
             # Merging of aggregate objects (refer objects in key_translate at the top) should happen only for "merged" state.
             if state == "merged":
                 merge = True
+        elif struct_binding is not None:
+            # A registered typed list: compared by its rows, in any order, with each value's type and case kept.
+            t_e1 = gie_struct_compare_form(struct_binding, e1)
+            t_e2 = gie_struct_compare_form(struct_binding, e2)
         elif exact_string:
             # A registered string whose case is part of the value (a secret, an ACL or other
             # object name -- string_compare 'exact' in the registry). Lower-casing it made a
@@ -13664,6 +13702,15 @@ class DcnmIntf:
                                         # nvPair's case is part of its value. Only 'exact' changes
                                         # the comparison; every other key keeps the legacy one.
                                         exact_nv = gie_string_compare(want.get("policy"), nk) == "exact"
+                                        struct_nv = gie_struct_binding(want.get("policy"), nk)
+                                        if struct_nv is not None and gie_struct_clear_refused(
+                                            struct_nv,
+                                            want[k][0][ik][nk],
+                                            next((intf[ik].get(nk) for intf in d[k] if isinstance(intf.get(ik), dict)), None),
+                                        ):
+                                            self.struct_clear_blocked.append(
+                                                {"interface": name, "parent": want.get("policy"), "field": struct_nv["profile_key"]}
+                                            )
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
                                         # add the interface
@@ -13679,6 +13726,7 @@ class DcnmIntf:
                                                 # requested, not copied back from HAVE.
                                                 "replaced" if nk in _d_written else state,
                                                 exact_string=exact_nv,
+                                                struct_binding=struct_nv,
                                             )
                                             if res == "dont_add":
                                                 break
@@ -17001,6 +17049,19 @@ def main():
             "to the value you want, or use state 'merged' to preserve it."
         )
         module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
+
+    if dcnm_intf.struct_clear_blocked:
+        cleared = sorted(
+            {(b["interface"], b["parent"], b["field"]) for b in dcnm_intf.struct_clear_blocked}
+        )
+        module.fail_json(
+            msg="These lists are requested empty while the controller holds entries, and on this parent an "
+            "empty list does not remove the configuration the entries created: {0}. No configuration or "
+            "deployment request was sent. Keep at least one entry.".format(
+                ", ".join("{2} on {0}, parent {1}".format(*b) for b in cleared)
+            ),
+            **dcnm_intf.result
+        )
 
     if dcnm_intf.default_reset_blocked:
         # A reset to the role default that cannot withdraw every registered field it must.

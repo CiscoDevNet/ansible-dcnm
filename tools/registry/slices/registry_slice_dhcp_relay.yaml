@@ -1,0 +1,84 @@
+# Registry source: DHCP relay servers on the routed Ethernet, routed port-channel and subinterface parents.
+#
+# Compiled by tools/gie_generate_binding_table.py with the other registry_slice_*.yaml files; see
+# tools/registry/README.md.
+
+shared_effects: []
+
+bindings:
+
+  # ==== Source lot dr1_dhcp_relay (3 rows) ====
+  # Read from the SMU 4.3.1.0175006017 bodies; not measured live.
+  #
+  #     int_routed_host      body b5345584...  dhcpServers L151-161, parser L470-484, checks L635-660, child L1278-1285
+  #     int_l3_port_channel  body 81c9392e...  dhcpServers L160-170, parser L467-483, checks L636-661, child L1222-1229
+  #     int_subif            body 1937c6a5...  dhcpServers L109-119, parser L358-374, checks L480-504, child L849-856
+  #     interface_dhcp_relay_internal (child, TEMPLATE_CLI)
+  #
+  # The three parents declare the same item, "DHCP relay server information (max 16)", IsFabricInstance=true:
+  #
+  #     ipAddress srvrAddr (IPv4 or IPv6)   string srvrVrf (^[a-zA-Z0-9:_-]*$, 0-32; blank = the interface VRF)
+  #
+  # The parents read the value with parseDhcpServers: ast.literal_eval of the text, then a list, or the "dhcpServers"
+  # key of a wrapper. They refuse more than 16 items and an item without srvrAddr. When the list is not empty they
+  # create or update the child interface_dhcp_relay_internal with INTF_NAME, INTF_VRF and the value unchanged; the
+  # child renders, per item, `ip dhcp relay address <srvrAddr>` (`ipv6 ...` when the address contains ":"), with
+  # `use-vrf <srvrVrf>` when srvrVrf is set and differs, ignoring case, from the interface VRF.
+  #
+  # The parents never delete that child: there is no deleteChildTemplate call for it, unlike the CDP, redirect, PIM
+  # BFD and multisite children. An empty list therefore leaves the relay lines of the previous list in place, so the
+  # list contract refuses an explicit empty list over a stored one, and no reset exists (removal_semantics
+  # unresolved): an omitted stored list under replaced or overridden is refused. A shorter non-empty list updates the
+  # child; whether the switch then removes the dropped lines is not measured. int_routed_host deletes every
+  # interface-scoped child when its policy is replaced (POLICY_CHANGE_DROPS_CHILDREN in the generator).
+  #
+  # The meaning of IsFabricInstance=true for an interface field was not established. This list does not replace the
+  # numbered DHCP server fields of int_vlan.
+
+  - parent_template: int_routed_host
+    parent_nvpair: dhcpServers
+    profile_key: dhcp_servers
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: struct_list
+    struct_contract: dhcp_servers
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b534558474928841#L161"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: dhcpServers
+    profile_key: dhcp_servers
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: struct_list
+    struct_contract: dhcp_servers
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e92a48897#L170"
+
+  - parent_template: int_subif
+    parent_nvpair: dhcpServers
+    profile_key: dhcp_servers
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: struct_list
+    struct_contract: dhcp_servers
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@1937c6a5f49d0d48#L119"

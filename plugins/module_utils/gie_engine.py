@@ -30,6 +30,17 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
     profile_keys_by_mechanism,
     registered_profile_keys,
     resolve_binding,
+    resolve_by_nvpair,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.interface_struct_lists import (
+    STRUCT_LIST_TYPE,
+    StructListError,
+    struct_clear_allowed,
+    struct_compare_form,
+    struct_is_empty,
+    struct_read,
+    struct_to_wire,
+    struct_validate_input,
 )
 
 # nvPair transport mechanisms understood by the engine.
@@ -178,12 +189,14 @@ _TYPE_TO_VALIDATOR = {
     "enum": "str",
     "string": "str",
     "integer": "int",
+    STRUCT_LIST_TYPE: "list",
 }
 
 _VALIDATOR_TO_NATIVE_TYPE = {
     "bool": bool,
     "str": str,
     "int": int,
+    "list": list,
 }
 
 
@@ -336,6 +349,24 @@ def gie_validate_binding_value(
         )
     validator_type = gie_validator_type(binding["type"])
     native_type = _VALIDATOR_TO_NATIVE_TYPE[validator_type]
+    if binding["type"] == STRUCT_LIST_TYPE:
+        # A typed list has its own contract (interface_struct_lists): the playbook list is checked item
+        # by item, and a controller value has to be in the form the parent template reads. Nothing below
+        # applies to it.
+        if value_source == "have":
+            if struct_read(binding["struct_contract"], value) is None:
+                raise GieBindingError(
+                    "{0} for {1!r} on parent {2!r} is not a list the template can read; no change "
+                    "was sent".format(source_label, profile_key, parent_template)
+                )
+            return value
+        try:
+            struct_validate_input(binding["struct_contract"], profile_key, value)
+        except StructListError as exc:
+            raise GieBindingError(
+                "{0} on parent {1!r}; no change was sent".format(exc, parent_template)
+            )
+        return value
     if value_source == "have":
         # (1) NDFC returns booleans as strings, and "" for one that was never set.
         #
@@ -683,6 +714,10 @@ def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version
         # never had. Neither: it is not in scope.
         return GIE_WITHDRAW_INAPPLICABLE, None
 
+    if binding["type"] == STRUCT_LIST_TYPE and struct_is_empty(binding["struct_contract"], have_value):
+        # An empty wrapper is the empty list, like "": nothing to withdraw.
+        return GIE_WITHDRAW_NONE, None
+
     have_wire = _have_comparison_wire(have_value)
 
     reset = binding.get("reset_wire")
@@ -776,7 +811,8 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
                            (the template refuses it). An explicit `clear` field is the caller's own
                            value and is sent as given; only an omitted one is cleared.
           "empty_while_on": a `required` dependent set to "" while its gate ends on, or left empty in HAVE
-                           while this call turns its gate on (enabling OSPF requires a tag).
+                           while this call turns its gate on (enabling OSPF requires a tag). A typed list
+                           absent from both WANT and HAVE counts as empty.
     A gate whose state cannot be established (absent, or "" for a non-empty inert value) is not judged.
     A gate with `unless` whose other nvPair holds one of its values leaves the dependent live: it is neither
     neutralized nor judged as set while off; an absent other nvPair is not judged either.
@@ -856,11 +892,17 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
                 continue
         if gate.get("required") and gate_state(b) == "on":
             # An explicit empty value, or a gate this call turns on over a value the controller holds empty
-            # (a key cleared by an earlier disable). A field absent from both is not judged here: a new
-            # interface without a tag is left to the controller, as before.
+            # (a key cleared by an earlier disable). A scalar field absent from both is not judged here: a new
+            # interface without a tag is left to the controller, as before. A typed list absent from both, or
+            # stored as its empty wrapper, is an empty list: the template renders nothing for it.
             explicit_empty = nvpair in explicit_nvpairs and want_nvpairs.get(nvpair) in ("", None)
+            stored = have_nvpairs.get(nvpair, _GIE_ABSENT)
             stored_empty = (gate["nvpair"] in explicit_nvpairs and nvpair not in explicit_nvpairs
-                            and nvpair not in want_nvpairs and have_nvpairs.get(nvpair, _GIE_ABSENT) in ("", None))
+                            and nvpair not in want_nvpairs
+                            and (stored in ("", None)
+                                 or (b["type"] == STRUCT_LIST_TYPE
+                                     and (stored is _GIE_ABSENT
+                                          or struct_is_empty(b["struct_contract"], stored)))))
             if explicit_empty or stored_empty:
                 conflicts.append(dict(entry, reason="empty_while_on"))
     return writes, conflicts
@@ -1145,7 +1187,9 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
         # Supported version: the engine resolves the binding and transports the value, in the
         # nvPair wire form for passthrough and native for child_pti.
         value = profile_dict[pk]
-        if b.get("mechanism") == GIE_MECH_PASSTHROUGH:
+        if b.get("mechanism") == GIE_MECH_PASSTHROUGH and b["type"] == STRUCT_LIST_TYPE:
+            value = struct_to_wire(b["struct_contract"], pk, b["parent_nvpair"], value)
+        elif b.get("mechanism") == GIE_MECH_PASSTHROUGH:
             value = _to_nvpair_wire(value)
             # Enum vocabulary, only for bindings that declare one. Applied AFTER validation so
             # the public contract is what an operator is held to, and only here, so a value can
@@ -1153,6 +1197,34 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
             value = gie_wire_value(b, value)
         add[b["parent_nvpair"]] = value
     return add, None
+
+
+def gie_struct_binding(parent_template, parent_nvpair):
+    """The registered `struct_list` binding of this exact (parent, nvPair), else None."""
+    binding = resolve_by_nvpair(parent_template, parent_nvpair) if parent_template else None
+    if binding is None or binding["type"] != STRUCT_LIST_TYPE:
+        return None
+    return binding
+
+
+def gie_struct_compare_form(binding, value):
+    """A WANT or HAVE value of a `struct_list` binding in comparable form (see struct_compare_form)."""
+    return struct_compare_form(binding["struct_contract"], value)
+
+
+def gie_struct_clear_refused(binding, want_value, have_value):
+    """True when WANT empties a list that HAVE holds and the contract cannot remove it that way.
+
+    An absent HAVE value holds nothing. An unreadable one is treated as holding entries: an empty list
+    is never sent over a value nobody can show to be empty.
+    """
+    contract = binding["struct_contract"]
+    return (
+        not struct_clear_allowed(contract)
+        and struct_is_empty(contract, want_value)
+        and have_value is not None
+        and not struct_is_empty(contract, have_value)
+    )
 
 
 def gie_carry_forward_bindings(parent_template):

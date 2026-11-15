@@ -281,7 +281,9 @@ def test_the_parent_is_registered_exactly_once_per_nvpair():
     # owns them. Widening it to a subset check would have retired the guard instead of scoping it.
     eigrp = {b["parent_nvpair"] for b in BINDING_TABLE
              if "eigrp" in b["parent_nvpair"].lower()}
-    assert set(names) - eigrp == {nvpair for nvpair, _native in EXPECTED.values()}
+    # dhcpServers is the DHCP relay list of slice dr1, owned by test_binding_dhcp_servers.py.
+    assert set(names) - eigrp - {"dhcpServers"} == {nvpair for nvpair, _native in EXPECTED.values()}
+    assert "dhcpServers" in names
     assert len(eigrp & set(names)) == 13, "int_routed_host should carry 13 EIGRP rows"
 
 
@@ -989,7 +991,8 @@ def test_combined_case_fails_when_one_source_family_is_removed_in_memory(monkeyp
                 ("int_loopback", ROUTED, "int_subif", "int_vlan")]
         assert len(rows) == 11   # + int_subif pimBfdInstance (slice 0b_37)
     else:
-        # The measured vPC rows; the rows of lot a4_4_stp_protection carry no reset and are not part of this case.
+        # The measured vPC rows; the rows of lot a4_4_stp_protection and the VLAN mapping rows of slice vm1 on
+        # int_vpc_trunk_host carry no reset and are not part of this case.
         rows = [row for row in BINDING_TABLE
                 if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and "reset_wire" in row]
         assert len(rows) == 13

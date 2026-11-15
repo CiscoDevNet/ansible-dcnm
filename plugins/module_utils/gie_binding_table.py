@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 9dcaf4c5e809f16409e2fa605ec25aa86c8190d49b5fdd09e3c9a3ea20b16484
+# provenance_sha256 = aa5ae723e7a3576d1a4bb358a5311c127807b88d00641340ffcd71674a91aeb8
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "9dcaf4c5e809f16409e2fa605ec25aa86c8190d49b5fdd09e3c9a3ea20b16484"
+PROVENANCE_SHA256 = "aa5ae723e7a3576d1a4bb358a5311c127807b88d00641340ffcd71674a91aeb8"
 
 BINDING_TABLE = (
     {
@@ -562,6 +562,18 @@ BINDING_TABLE = (
         'min_value': 1,
         'max_value': 20000,
         'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dhcpServers',
+        'profile_key': 'dhcp_servers',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'struct_contract': 'dhcp_servers',
     },
     {
         'parent_template': 'int_l3_port_channel',
@@ -1991,6 +2003,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_port_channel_trunk_host',
+        'parent_nvpair': 'enableVlanMapping',
+        'profile_key': 'enable_vlan_mapping',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'trunk',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_port_channel_trunk_host',
         'parent_nvpair': 'linkTransmitResetSkip',
         'profile_key': 'link_transmit_reset_skip',
         'applicable_interface_type': 'pc',
@@ -2065,6 +2089,19 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+    },
+    {
+        'parent_template': 'int_port_channel_trunk_host',
+        'parent_nvpair': 'vlanMappingEntries',
+        'profile_key': 'vlan_mapping_entries',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'trunk',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'inert_when': {'nvpair': 'enableVlanMapping', 'value': 'false', 'required': True},
+        'struct_contract': 'vlan_mapping_entries',
     },
     {
         'parent_template': 'int_pvlan_host',
@@ -2315,6 +2352,19 @@ BINDING_TABLE = (
         'max_value': 20000,
         'no_log': False,
         'dropped_on_policy_change': True,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'dhcpServers',
+        'profile_key': 'dhcp_servers',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'dropped_on_policy_change': True,
+        'struct_contract': 'dhcp_servers',
     },
     {
         'parent_template': 'int_routed_host',
@@ -3113,6 +3163,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_subif',
+        'parent_nvpair': 'dhcpServers',
+        'profile_key': 'dhcp_servers',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'struct_contract': 'dhcp_servers',
+    },
+    {
+        'parent_template': 'int_subif',
         'parent_nvpair': 'eigrpBfd',
         'profile_key': 'enable_eigrp_bfd',
         'applicable_interface_type': 'sub_int',
@@ -3726,6 +3788,19 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_trunk_host',
+        'parent_nvpair': 'enableVlanMapping',
+        'profile_key': 'enable_vlan_mapping',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'trunk',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'cleared_on_change_to': ('int_routed_host',),
+    },
+    {
+        'parent_template': 'int_trunk_host',
         'parent_nvpair': 'flowcontrolReceive',
         'profile_key': 'flowcontrol_receive',
         'applicable_interface_type': 'eth',
@@ -3824,6 +3899,20 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
         'cleared_on_change_to': ('int_routed_host',),
+    },
+    {
+        'parent_template': 'int_trunk_host',
+        'parent_nvpair': 'vlanMappingEntries',
+        'profile_key': 'vlan_mapping_entries',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'trunk',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'inert_when': {'nvpair': 'enableVlanMapping', 'value': 'false', 'required': True},
+        'cleared_on_change_to': ('int_routed_host',),
+        'struct_contract': 'vlan_mapping_entries',
     },
     {
         'parent_template': 'int_vlan',
@@ -5090,6 +5179,18 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_vpc_trunk_host',
+        'parent_nvpair': 'enableVlanMapping',
+        'profile_key': 'enable_vlan_mapping',
+        'applicable_interface_type': 'vpc',
+        'applicable_mode': 'trunk',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_trunk_host',
         'parent_nvpair': 'lldpReceive',
         'profile_key': 'disable_lldp_receive',
         'applicable_interface_type': 'vpc',
@@ -5150,6 +5251,19 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+    },
+    {
+        'parent_template': 'int_vpc_trunk_host',
+        'parent_nvpair': 'vlanMappingEntries',
+        'profile_key': 'vlan_mapping_entries',
+        'applicable_interface_type': 'vpc',
+        'applicable_mode': 'trunk',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'inert_when': {'nvpair': 'enableVlanMapping', 'value': 'false', 'required': True},
+        'struct_contract': 'vlan_mapping_entries',
     },
     {
         'parent_template': 'int_vpc_uplink_access',

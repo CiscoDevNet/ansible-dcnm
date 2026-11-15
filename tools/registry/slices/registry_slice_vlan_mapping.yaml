@@ -1,0 +1,146 @@
+# Registry source: VLAN mapping on the Ethernet, port-channel and vPC trunk parents.
+#
+# Compiled by tools/gie_generate_binding_table.py with the other registry_slice_*.yaml files; see
+# tools/registry/README.md.
+
+shared_effects: []
+
+bindings:
+
+  # ==== Source lot vm1_vlan_mapping (6 rows) ====
+  # Read from the SMU 4.3.1.0175006017 bodies; not measured live.
+  #
+  #     int_trunk_host               body 99dc8f0a...  enableVlanMapping L231, vlanMappingEntries L235-254
+  #     int_port_channel_trunk_host  body 25f2582d...  enableVlanMapping L231, vlanMappingEntries L235-254
+  #     int_vpc_trunk_host           body 1e346263...  enableVlanMapping L261, vlanMappingEntries L265-284
+  #
+  # The three parents declare the same item:
+  #
+  #     integerRange customerVlan (1-4094)   boolean dot1qTunnel
+  #     integer customerInnerVlan (1-4094, IsShow dot1qTunnel != true)   integer providerVlan (1-4094)
+  #
+  # The value is a JSON object string that wraps the list: the parents run json.loads(vlanMappingEntries) and read
+  # ["vlanMappingEntries"], only when enableVlanMapping == "true" and the value is not "". They hand the list to
+  # interface_utility.validateVlanMappingCmds and then getVlanMappingCmds, which render, per item:
+  #
+  #     switchport vlan mapping <customerVlan> dot1q-tunnel <providerVlan>       (dot1qTunnel "true")
+  #     switchport vlan mapping enable                                           (once, before the first other item)
+  #     switchport vlan mapping <customerVlan> [inner <customerInnerVlan>] <providerVlan>
+  #
+  # The validator refuses a repeated provider VLAN, a repeated customer VLAN, a customer VLAN equal to the native VLAN,
+  # a range without dot1qTunnel, both kinds of item on one interface, and N9K-C92* models. It compares dot1qTunnel with
+  # "true" and customerInnerVlan with "", so each row carries the four keys as strings. Both calls run inside
+  # `try: ... except: pass`: an item the validator cannot read renders nothing and reports no error. The list contract
+  # (interface_struct_lists) refuses that input before a request; the native-VLAN and model checks stay with the
+  # template, which reports them.
+  #
+  # Ethernet and port-channel trunk render the lines inline in the parent's own configuration. The port-channel member
+  # template declares neither nvPair. int_vpc_trunk_host validates the list once per peer, against that peer's native
+  # VLAN, and passes enableVlanMapping and vlanMappingEntries to both per-peer int_vpc_trunk_po_11_1 children, which
+  # parse the value with ast.literal_eval and render the same lines; with the option off it passes "false" and "".
+  #
+  # No reset is established for either field (removal_semantics unresolved): the removal of the rendered lines was not
+  # measured. Omitting an enabled mapping under replaced or overridden, and a reset to the role default, are refused.
+  # An explicit enable_vlan_mapping false or an explicit empty list is transported as written.
+  #
+  # The entries are inert while the option is off (the parents read them only when enableVlanMapping == "true"), and
+  # required while it is on (IsMandatory="enableVlanMapping==true").
+
+  - parent_template: int_trunk_host
+    parent_nvpair: enableVlanMapping
+    profile_key: enable_vlan_mapping
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host.template@99dc8f0a788d4aab#L231"
+
+  - parent_template: int_trunk_host
+    parent_nvpair: vlanMappingEntries
+    profile_key: vlan_mapping_entries
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: struct_list
+    struct_contract: vlan_mapping_entries
+    inert_when: {nvpair: enableVlanMapping, value: "false", required: true}
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host.template@99dc8f0a788d4aab#L254"
+
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: enableVlanMapping
+    profile_key: enable_vlan_mapping
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host.template@25f2582dcc5af275#L231"
+
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: vlanMappingEntries
+    profile_key: vlan_mapping_entries
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: struct_list
+    struct_contract: vlan_mapping_entries
+    inert_when: {nvpair: enableVlanMapping, value: "false", required: true}
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host.template@25f2582dcc5af275#L254"
+
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: enableVlanMapping
+    profile_key: enable_vlan_mapping
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host.template@1e346263ab97d7fc#L261"
+
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: vlanMappingEntries
+    profile_key: vlan_mapping_entries
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: struct_list
+    struct_contract: vlan_mapping_entries
+    inert_when: {nvpair: enableVlanMapping, value: "false", required: true}
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host.template@1e346263ab97d7fc#L284"

@@ -92,7 +92,8 @@ def expand_interface_name(name):
 # test_dcnm_interface_validator_r2.py compares it with the registry (names, parents, kinds) so a drift fails a unit test.
 # Kinds: bool / int / enum (case-insensitive tokens), str_exact (secrets and case-sensitive names: compared as written),
 # str_fold (IPv6 text, numeric or dotted text, and the process tags whose case semantics are unverified: compared
-# case-insensitively, as the module does).
+# case-insensitively, as the module does), and one kind per typed list (vlan_mapping_entries, dhcp_servers), compared
+# by its rows in any order.
 R2_REGISTERED_BINDINGS = {
     "acl_filter": ("aclFilter", "str_exact", (
         "int_access_host",
@@ -110,6 +111,8 @@ R2_REGISTERED_BINDINGS = {
     "bfd_multiplier": ("bfdMultiplier", "int", ("int_subif", "int_vlan")),
     "bfd_tx_interval": ("bfdTxInterval", "int", ("int_subif", "int_vlan")),
     "dampening_half_life": ("dampeningHalfLife", "int", ("int_l3_port_channel", "int_routed_host")),
+    # DHCP relay servers (slice dr1), a typed list: kind dhcp_servers.
+    "dhcp_servers": ("dhcpServers", "dhcp_servers", ("int_l3_port_channel", "int_routed_host", "int_subif")),
     "dampening_max_suppress": ("dampeningMaxSuppress", "int", ("int_l3_port_channel", "int_routed_host")),
     "dampening_restart": ("dampeningRestart", "bool", ("int_l3_port_channel", "int_routed_host")),
     "dampening_restart_penalty": ("dampeningRestartPenalty", "int", ("int_l3_port_channel", "int_routed_host")),
@@ -296,6 +299,13 @@ R2_REGISTERED_BINDINGS = {
         "int_port_channel_dot1q_tunnel_host",
         "int_vpc_access_host",
         "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    # VLAN mapping on the trunk parents (slice vm1). The entries are a typed list: kind vlan_mapping_entries.
+    "enable_vlan_mapping": ("enableVlanMapping", "bool", ("int_port_channel_trunk_host", "int_trunk_host", "int_vpc_trunk_host")),
+    "vlan_mapping_entries": ("vlanMappingEntries", "vlan_mapping_entries", (
+        "int_port_channel_trunk_host",
+        "int_trunk_host",
         "int_vpc_trunk_host",
     )),
     # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
@@ -582,6 +592,91 @@ def _r2_pvlan_pairs(text):
     return r2_pairs_canonical(pairs)
 
 
+# One VLAN mapping row as text: customer VLAN(s), selective dot1q-tunnel, customer inner VLAN, provider VLAN.
+_R2_VLAN_MAPPING_ROW = "c=%s,t=%s,i=%s,p=%s"
+_R2_VLAN_MAPPING_WIRE_KEYS = ("customerVlan", "dot1qTunnel", "customerInnerVlan", "providerVlan")
+
+
+def r2_vlan_mapping_from_yaml(rows):
+    """The playbook vlan_mapping_entries list -> the JSON wrapper the parents load, every value a string ("" for an
+    empty list). r2_normalize reads it like a readback. None when a row is not readable."""
+    out = []
+    for row in rows:
+        if not isinstance(row, dict) or row.get("customer_vlan") is None or row.get("provider_vlan") is None:
+            return None
+        tunnel = row.get("dot1q_tunnel", False)
+        inner = row.get("customer_inner_vlan")
+        values = (_r2_native(row["customer_vlan"]), "true" if tunnel is True else "false",
+                  "" if inner is None else _r2_native(inner), _r2_native(row["provider_vlan"]))
+        if not all(isinstance(v, str) for v in values):
+            return None
+        out.append(dict(zip(_R2_VLAN_MAPPING_WIRE_KEYS, values)))
+    return json.dumps({"vlanMappingEntries": out}) if out else ""
+
+
+def _r2_vlan_mapping(text):
+    """The stored wrapper ({"vlanMappingEntries": [{customerVlan, dot1qTunnel, customerInnerVlan, providerVlan}]}, every
+    value a string) -> the canonical text (rows sorted). JSON only: the parents read it with json.loads, so a Python
+    literal, a bare list or any other text is returned marked and never equals an expected value."""
+    s = str(text).strip()
+    if s == "":
+        return s
+    try:
+        data = json.loads(s)
+    except ValueError:
+        return "unparsed:" + s
+    if not isinstance(data, dict) or set(data) != {"vlanMappingEntries"} or not isinstance(data["vlanMappingEntries"], list):
+        return "unparsed:" + s
+    out = []
+    for row in data["vlanMappingEntries"]:
+        if not isinstance(row, dict) or set(row) != set(_R2_VLAN_MAPPING_WIRE_KEYS):
+            return "unparsed:" + s
+        if not all(isinstance(row[k], str) for k in _R2_VLAN_MAPPING_WIRE_KEYS):
+            return "unparsed:" + s
+        out.append(_R2_VLAN_MAPPING_ROW % tuple(row[k] for k in _R2_VLAN_MAPPING_WIRE_KEYS))
+    return ";".join(sorted(out))
+
+
+# One DHCP relay row as text: server address and VRF, as written (the module compares both exactly).
+_R2_DHCP_ROW = "a=%s,v=%s"
+_R2_DHCP_CANONICAL = re.compile(r"^a=[0-9a-fA-F.:]+,v=[a-zA-Z0-9:_-]*(;a=[0-9a-fA-F.:]+,v=[a-zA-Z0-9:_-]*)*$")
+
+
+def r2_dhcp_servers_from_yaml(rows):
+    """The playbook dhcp_servers list -> canonical text (rows sorted). None when a row is not readable."""
+    out = []
+    for row in rows:
+        if not isinstance(row, dict) or not isinstance(row.get("srvr_ip"), str):
+            return None
+        out.append(_R2_DHCP_ROW % (row["srvr_ip"], row.get("srvr_vrf") or ""))
+    return ";".join(sorted(out))
+
+
+def _r2_dhcp_servers(text):
+    """The stored wrapper ({"dhcpServers": [{srvrAddr, srvrVrf}]}, JSON or a Python literal, string values) -> the
+    canonical text. Anything else is returned marked."""
+    s = str(text).strip()
+    if s == "" or _R2_DHCP_CANONICAL.match(s):
+        return s
+    data = None
+    for loader in (json.loads, ast.literal_eval):
+        try:
+            data = loader(s)
+            break
+        except (ValueError, SyntaxError):
+            continue
+    if not isinstance(data, dict) or set(data) != {"dhcpServers"} or not isinstance(data["dhcpServers"], list):
+        return "unparsed:" + s
+    out = []
+    for row in data["dhcpServers"]:
+        if not isinstance(row, dict) or set(row) != {"srvrAddr", "srvrVrf"}:
+            return "unparsed:" + s
+        if not all(isinstance(row[k], str) for k in ("srvrAddr", "srvrVrf")):
+            return "unparsed:" + s
+        out.append(_R2_DHCP_ROW % (row["srvrAddr"], row["srvrVrf"]))
+    return ";".join(sorted(out))
+
+
 _R2_MEMBER_PORT = re.compile(r"^(?:ethernet|eth|e)(\d+/\d+(?:/\d+)?)$", re.IGNORECASE)
 
 
@@ -620,11 +715,20 @@ def r2_normalize(nvpair, value):
         return _r2_vlan_set(s)
     if kind == "members":
         return _r2_members(s)
+    if kind == "vlan_mapping_entries":
+        return _r2_vlan_mapping(s)
+    if kind == "dhcp_servers":
+        return _r2_dhcp_servers(s)
     return s
 
 
 def r2_wire(parent, nvpair, kind, value):
     """The nvPair string a requested YAML value must read back as (independent of the production renderer)."""
+    if kind == "vlan_mapping_entries":
+        # A list: the JSON wrapper, which r2_normalize reads exactly as it reads the readback. None when unreadable.
+        return r2_vlan_mapping_from_yaml(value) if isinstance(value, list) else None
+    if kind == "dhcp_servers":
+        return r2_dhcp_servers_from_yaml(value) if isinstance(value, list) else None
     value = _r2_native(value)
     value = str(value)
     if kind == "enum":
@@ -1279,7 +1383,11 @@ class DcnmInterfaceQuerySchema(BaseModel):
                         else "the expected parent of type '%s' mode '%s' is unknown" % (interface_type, mode))
                     problems.append("%s: '%s' (%s) cannot be validated - %s" % (expanded_name, key, nvpair, reason))
                     continue
-                intf_dict["nvPairs"][nvpair] = r2_wire(parent, nvpair, kind, val)
+                wire = r2_wire(parent, nvpair, kind, val)
+                if wire is None:
+                    problems.append("%s: '%s' (%s) cannot be validated - a list row is not readable" % (expanded_name, key, nvpair))
+                    continue
+                intf_dict["nvPairs"][nvpair] = wire
 
             # Native PVLAN fields of the PVLAN parents
             if mode == "pvlan":
