@@ -121,12 +121,12 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 347   # + 6: lot a4_1_discovery; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(BINDING_TABLE) == 384   # + 6: lot a4_1_discovery; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
     # + slice 0b_41 (2) + slice 0b_42 (13)
-    assert len(set(keys)) == 347, "duplicate (parent, nvpair) row"
+    assert len(set(keys)) == 384, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 347, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 384, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -184,7 +184,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 347   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 384   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -216,7 +216,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 347   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 384   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -312,7 +312,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 347   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 384   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
 
 # ------------------------------------------------------------------ positive transport
@@ -558,6 +558,12 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("BPDUFILTER_ENABLED", "bpdu_filter"),
         ("LINK_TYPE", "spanning_tree_link_type"),
         ("ENABLE_ERRDISABLE_ACL", "enable_errdisable_acl"),
+        # Lot a4_5_link_settings.
+        ("NEGOTIATE_AUTO", "negotiate_auto"),
+        ("BANDWIDTH", "bandwidth"),
+        ("INHERIT_BW", "inherit_bandwidth"),
+        ("DEBOUNCE_TIMER", "debounce_timer"),
+        ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -575,6 +581,12 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("BPDUFILTER_ENABLED", "bpdu_filter"),
         ("LINK_TYPE", "spanning_tree_link_type"),
         ("ENABLE_ERRDISABLE_ACL", "enable_errdisable_acl"),
+        # Lot a4_5_link_settings.
+        ("NEGOTIATE_AUTO", "negotiate_auto"),
+        ("BANDWIDTH", "bandwidth"),
+        ("INHERIT_BW", "inherit_bandwidth"),
+        ("DEBOUNCE_TIMER", "debounce_timer"),
+        ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
     }
     # The port-channel parents carry every field registered for them.
     assert {
@@ -595,6 +607,10 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         # Lot a4_4_stp_protection.
         ("BPDUFILTER_ENABLED", "bpdu_filter"),
         ("LINK_TYPE", "spanning_tree_link_type"),
+        # Lot a4_5_link_settings.
+        ("NEGOTIATE_AUTO", "negotiate_auto"),
+        ("BANDWIDTH", "bandwidth"),
+        ("INHERIT_BW", "inherit_bandwidth"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -747,7 +763,14 @@ def test_keymap_carries_every_new_nvpair():
     assert km["LINK_TYPE"] == "spanning_tree_link_type"
     assert km["ENABLE_ERRDISABLE_ACL"] == "enable_errdisable_acl"
     assert km["ENABLE_ORPHAN_PORT"] == "orphan_port"
-    assert len(km) == 95
+    # Lot a4_5_link_settings: six nvPairs; PORT_DUPLEX_MODE keeps its native name.
+    assert km["NEGOTIATE_AUTO"] == "negotiate_auto"
+    assert km["PORT_DUPLEX_MODE"] == "duplex"
+    assert km["BANDWIDTH"] == "bandwidth"
+    assert km["INHERIT_BW"] == "inherit_bandwidth"
+    assert km["DEBOUNCE_TIMER"] == "debounce_timer"
+    assert km["DEBOUNCE_LINKUP_TIMER"] == "debounce_linkup_timer"
+    assert len(km) == 101
 
 
 def test_all_registered_keys():
@@ -756,6 +779,8 @@ def test_all_registered_keys():
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "link_transmit_reset_skip",
+        # Lot a4_5_link_settings; duplex is native on the other profiles.
+        "negotiate_auto", "duplex", "bandwidth", "inherit_bandwidth", "debounce_timer", "debounce_linkup_timer",
         # Lot a4_4_stp_protection; orphan_port is native on the trunk and access profiles.
         "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl", "orphan_port",
         # LACP on the dot1q-tunnel port-channel, lot a4_3_lacp (native on the other port-channel and vPC profiles).
@@ -1043,6 +1068,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         "enable_vpc_peer_link",
         # Trunk port-channel reset-skip default, slice rs1 (int_port_channel_trunk_host).
         "link_transmit_reset_skip",
+        # Lot a4_5_link_settings: its boolean key.
+        "negotiate_auto",
         # Lot a4_4_stp_protection: the two boolean keys.
         "enable_errdisable_acl", "orphan_port",
         # Lot a4_3_lacp: the boolean LACP key on the dot1q-tunnel port-channel.
@@ -1125,7 +1152,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 148 = 146 + the 2 boolean rows of lot a4_2_l3po_dampening.
     # 149 = 148 + the 1 boolean rows of lot a4_3_lacp.
     # 154 = 149 + the 5 boolean rows of lot a4_4_stp_protection.
-    assert len(BOOL_PASSTHROUGH) == 154
+    # 163 = 154 + the 9 boolean rows of lot a4_5_link_settings.
+    assert len(BOOL_PASSTHROUGH) == 163
 
 
 # ------------------------------------------------------- what the engine emits --

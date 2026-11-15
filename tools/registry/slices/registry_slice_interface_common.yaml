@@ -1905,3 +1905,349 @@ bindings:
       - ndfc_effect: inline_config
         phase: current
         evidence_ref: "int_dot1q_tunnel_host@33684a76#L466"
+
+  # ==== Source lot a4_5_link_settings (15 of 37 rows; header in registry_slice_port_channel_vpc.yaml) ====
+  # Auto-negotiation, bandwidth and link debounce on the trunk, access and dot1q-tunnel Ethernet parents, inline on the
+  # Ethernet stanza. Read from the captured bodies; not measured live; no reset_wire.
+
+  # int_trunk_host NEGOTIATE_AUTO -> negotiate_auto. Declared at L56; inline on the Ethernet stanza.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_trunk_host
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host@99dc8f0a#L56"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_trunk_host@99dc8f0a#L586"
+
+  # int_trunk_host BANDWIDTH -> bandwidth. Declared at L86; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_trunk_host
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host@99dc8f0a#L86"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_trunk_host@99dc8f0a#L643"
+
+  # int_trunk_host INHERIT_BW -> inherit_bandwidth. Declared at L92; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_trunk_host
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host@99dc8f0a#L92"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_trunk_host@99dc8f0a#L646"
+
+  # int_trunk_host DEBOUNCE_TIMER -> debounce_timer. Declared at L98; inline on the Ethernet stanza.
+  - parent_template: int_trunk_host
+    parent_nvpair: DEBOUNCE_TIMER
+    profile_key: debounce_timer
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: integer
+    min: 0
+    max: 20000
+    default_template: 100
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host@99dc8f0a#L98"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_trunk_host@99dc8f0a#L649"
+
+  # int_trunk_host DEBOUNCE_LINKUP_TIMER -> debounce_linkup_timer. Declared at L105; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_trunk_host
+    parent_nvpair: DEBOUNCE_LINKUP_TIMER
+    profile_key: debounce_linkup_timer
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: integer
+    min: 1000
+    max: 10000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host@99dc8f0a#L105"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_trunk_host@99dc8f0a#L652"
+
+  # int_access_host NEGOTIATE_AUTO -> negotiate_auto. Declared at L51; inline on the Ethernet stanza.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_access_host
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host@103fc249#L51"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_access_host@103fc249#L527"
+
+  # int_access_host BANDWIDTH -> bandwidth. Declared at L81; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_access_host
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host@103fc249#L81"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_access_host@103fc249#L592"
+
+  # int_access_host INHERIT_BW -> inherit_bandwidth. Declared at L87; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_access_host
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host@103fc249#L87"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_access_host@103fc249#L595"
+
+  # int_access_host DEBOUNCE_TIMER -> debounce_timer. Declared at L93; inline on the Ethernet stanza.
+  - parent_template: int_access_host
+    parent_nvpair: DEBOUNCE_TIMER
+    profile_key: debounce_timer
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: integer
+    min: 0
+    max: 20000
+    default_template: 100
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host@103fc249#L93"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_access_host@103fc249#L598"
+
+  # int_access_host DEBOUNCE_LINKUP_TIMER -> debounce_linkup_timer. Declared at L100; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_access_host
+    parent_nvpair: DEBOUNCE_LINKUP_TIMER
+    profile_key: debounce_linkup_timer
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: integer
+    min: 1000
+    max: 10000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host@103fc249#L100"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_access_host@103fc249#L601"
+
+  # int_dot1q_tunnel_host NEGOTIATE_AUTO -> negotiate_auto. Declared at L51; inline on the Ethernet stanza.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L51"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L454"
+
+  # int_dot1q_tunnel_host BANDWIDTH -> bandwidth. Declared at L81; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L81"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L494"
+
+  # int_dot1q_tunnel_host INHERIT_BW -> inherit_bandwidth. Declared at L87; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L87"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L497"
+
+  # int_dot1q_tunnel_host DEBOUNCE_TIMER -> debounce_timer. Declared at L93; inline on the Ethernet stanza.
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: DEBOUNCE_TIMER
+    profile_key: debounce_timer
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: integer
+    min: 0
+    max: 20000
+    default_template: 100
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L93"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L500"
+
+  # int_dot1q_tunnel_host DEBOUNCE_LINKUP_TIMER -> debounce_linkup_timer. Declared at L100; inline on the Ethernet stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: DEBOUNCE_LINKUP_TIMER
+    profile_key: debounce_linkup_timer
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: integer
+    min: 1000
+    max: 10000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host@33684a76#L100"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_dot1q_tunnel_host@33684a76#L503"

@@ -2069,3 +2069,518 @@ bindings:
         child_template: int_vpc_dot1q_tunnel_po_11_1
         phase: current
         evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L697"
+
+  # ==== Source lot a4_5_link_settings (22 of 37 rows) ====
+  # Link settings that no profile accepted:
+  #     NEGOTIATE_AUTO         negotiate_auto         boolean, default true   nine host parents
+  #     PORT_DUPLEX_MODE       duplex                 enum auto/full/half     dot1q-tunnel port-channel and the three vPC
+  #     BANDWIDTH              bandwidth              1-100000000, no default nine host parents
+  #     INHERIT_BW             inherit_bandwidth      1-100000000, no default nine host parents
+  #     DEBOUNCE_TIMER         debounce_timer         0-20000, default 100    the three Ethernet host parents
+  #     DEBOUNCE_LINKUP_TIMER  debounce_linkup_timer  1000-10000, no default  the three Ethernet host parents
+  #     (the Ethernet rows are in registry_slice_interface_common.yaml)
+  # The nine are the trunk, access and dot1q-tunnel parents of the Ethernet, port-channel and vPC families. duplex is
+  # the native key of the other profiles (GIE_NATIVE_ELSEWHERE_KEYS); the other five are new public keys.
+  # NEGOTIATE_AUTO is checked by the template against the speed's auto-negotiation capability
+  # (Util.getPortSpeedAutoNeg), and a mismatch is an error report; duplex other than auto needs a fixed speed. Both are
+  # the controller's rules. A port-channel renders negotiate and duplex on the port-channel and passes them to its
+  # members as inherited commands; a vPC parent hands every field to each peer's _po_11_1 child. The Ethernet templates
+  # refuse bandwidth, inherit bandwidth and the link-up debounce on a FEX host interface.
+  # The integers without a template default have no clear: the public input refuses "", and no reset is measured.
+  # Read from the captured bodies; not measured live; no reset_wire.
+
+  # int_port_channel_trunk_host NEGOTIATE_AUTO -> negotiate_auto. Declared at L105; Po stanza + member inherited commands.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host@25f2582d#L105"
+
+  # int_port_channel_trunk_host BANDWIDTH -> bandwidth. Declared at L140; Po stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host@25f2582d#L140"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_trunk_host@25f2582d#L671"
+
+  # int_port_channel_trunk_host INHERIT_BW -> inherit_bandwidth. Declared at L146; Po stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host@25f2582d#L146"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_trunk_host@25f2582d#L674"
+
+  # int_port_channel_access_host NEGOTIATE_AUTO -> negotiate_auto. Declared at L94; Po stanza + member inherited commands.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_port_channel_access_host
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: pc
+    applicable_mode: access
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_access_host@544f7a8c#L94"
+
+  # int_port_channel_access_host BANDWIDTH -> bandwidth. Declared at L124; Po stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_port_channel_access_host
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: pc
+    applicable_mode: access
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_access_host@544f7a8c#L124"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_access_host@544f7a8c#L579"
+
+  # int_port_channel_access_host INHERIT_BW -> inherit_bandwidth. Declared at L130; Po stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_port_channel_access_host
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: pc
+    applicable_mode: access
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_access_host@544f7a8c#L130"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_access_host@544f7a8c#L582"
+
+  # int_port_channel_dot1q_tunnel_host NEGOTIATE_AUTO -> negotiate_auto. Declared at L94; Po stanza + member inherited commands.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L94"
+
+  # int_port_channel_dot1q_tunnel_host PORT_DUPLEX_MODE -> duplex. Declared at L119; Po stanza + member inherited commands.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: PORT_DUPLEX_MODE
+    profile_key: duplex
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['auto', 'full', 'half']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L119"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L580"
+
+  # int_port_channel_dot1q_tunnel_host BANDWIDTH -> bandwidth. Declared at L124; Po stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L124"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L583"
+
+  # int_port_channel_dot1q_tunnel_host INHERIT_BW -> inherit_bandwidth. Declared at L130; Po stanza.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L130"
+    effect_rules:
+      - ndfc_effect: inline_config
+        phase: current
+        evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L586"
+
+  # int_vpc_trunk_host NEGOTIATE_AUTO -> negotiate_auto. Declared at L142; per-peer _po_11_1 child + member inherited commands.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host@1e346263#L142"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_trunk_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_trunk_host@1e346263#L822"
+
+  # int_vpc_trunk_host PORT_DUPLEX_MODE -> duplex. Declared at L162; per-peer _po_11_1 child + member inherited commands.
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: PORT_DUPLEX_MODE
+    profile_key: duplex
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: enum
+    valid_values: ['auto', 'full', 'half']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host@1e346263#L162"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_trunk_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_trunk_host@1e346263#L821"
+
+  # int_vpc_trunk_host BANDWIDTH -> bandwidth. Declared at L167; per-peer _po_11_1 child.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host@1e346263#L167"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_trunk_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_trunk_host@1e346263#L823"
+
+  # int_vpc_trunk_host INHERIT_BW -> inherit_bandwidth. Declared at L173; per-peer _po_11_1 child.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host@1e346263#L173"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_trunk_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_trunk_host@1e346263#L824"
+
+  # int_vpc_access_host NEGOTIATE_AUTO -> negotiate_auto. Declared at L126; per-peer _po_11_1 child + member inherited commands.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_vpc_access_host
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host@23ba8135#L126"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_access_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_access_host@23ba8135#L686"
+
+  # int_vpc_access_host PORT_DUPLEX_MODE -> duplex. Declared at L146; per-peer _po_11_1 child + member inherited commands.
+  - parent_template: int_vpc_access_host
+    parent_nvpair: PORT_DUPLEX_MODE
+    profile_key: duplex
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: enum
+    valid_values: ['auto', 'full', 'half']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host@23ba8135#L146"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_access_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_access_host@23ba8135#L685"
+
+  # int_vpc_access_host BANDWIDTH -> bandwidth. Declared at L151; per-peer _po_11_1 child.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_vpc_access_host
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host@23ba8135#L151"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_access_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_access_host@23ba8135#L687"
+
+  # int_vpc_access_host INHERIT_BW -> inherit_bandwidth. Declared at L157; per-peer _po_11_1 child.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_vpc_access_host
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host@23ba8135#L157"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_access_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_access_host@23ba8135#L688"
+
+  # int_vpc_dot1q_tunnel NEGOTIATE_AUTO -> negotiate_auto. Declared at L126; per-peer _po_11_1 child + member inherited commands.
+  # Controller-side rule: controller refuses a value that contradicts the speed's auto-negotiation capability (Util.getPortSpeedAutoNeg).
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: NEGOTIATE_AUTO
+    profile_key: negotiate_auto
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L126"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_dot1q_tunnel_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L705"
+
+  # int_vpc_dot1q_tunnel PORT_DUPLEX_MODE -> duplex. Declared at L146; per-peer _po_11_1 child + member inherited commands.
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: PORT_DUPLEX_MODE
+    profile_key: duplex
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['auto', 'full', 'half']
+    default_template: 'auto'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L146"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_dot1q_tunnel_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L704"
+
+  # int_vpc_dot1q_tunnel BANDWIDTH -> bandwidth. Declared at L151; per-peer _po_11_1 child.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: BANDWIDTH
+    profile_key: bandwidth
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L151"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_dot1q_tunnel_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L706"
+
+  # int_vpc_dot1q_tunnel INHERIT_BW -> inherit_bandwidth. Declared at L157; per-peer _po_11_1 child.
+  # Controller-side rule: Ethernet: refused on FEX HIF ports.
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: INHERIT_BW
+    profile_key: inherit_bandwidth
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: integer
+    min: 1
+    max: 100000000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L157"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_vpc_dot1q_tunnel_po_11_1
+        phase: current
+        evidence_ref: "int_vpc_dot1q_tunnel@1eb7a8b6#L707"

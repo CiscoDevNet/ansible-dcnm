@@ -511,6 +511,8 @@ options:
           duplex:
             description:
             - Duplex of the interface. Speed must be set to use duplex.
+            - In mode C(dot1q) this is a registered field (NOT LIVE TESTED) with no default; same contract as
+              negotiate_auto. The template passes the value to the members as an inherited command.
             type: str
             choices: ['auto', 'full', 'half']
             default: auto
@@ -627,6 +629,25 @@ options:
               1 and 64 characters. Explicit-only, no default; when omitted the
               current controller value is left untouched.
             type: str
+          negotiate_auto:
+            description:
+            - Link auto-negotiation; the template default is true. Registered field (NOT LIVE TESTED; read from
+              the installed template bodies). It needs an approved C(patch_version); explicit-only, no default. The
+              controller checks the value against the auto-negotiation capability of the configured speed and
+              refuses a mismatch. Under 'merged' an omitted value is kept. No reset is verified, so 'replaced' and
+              'overridden' refuse to withdraw a stored false; set true explicitly instead.
+            type: bool
+          bandwidth:
+            description:
+            - Interface bandwidth in kilobits (1-100000000). Same registration contract as negotiate_auto. The
+              template has no default and renders nothing without a value; there is no supported clear, so
+              'replaced' and 'overridden' refuse to withdraw a stored value.
+            type: int
+          inherit_bandwidth:
+            description:
+            - Bandwidth in kilobits (1-100000000) that the subinterfaces inherit (C(bandwidth inherit)). Same
+              contract as bandwidth.
+            type: int
           bpdu_filter:
             description:
             - Spanning-tree BPDU filter - C(enable), C(disable), or C(no) for the switch default (the template
@@ -1007,6 +1028,32 @@ options:
             type: str
             choices: ['normal', 'fast']
             default: normal
+          negotiate_auto:
+            description:
+            - Link auto-negotiation; the template default is true. Registered field (NOT LIVE TESTED; read from
+              the installed template bodies). It needs an approved C(patch_version); explicit-only, no default. The
+              controller checks the value against the auto-negotiation capability of the configured speed and
+              refuses a mismatch. Under 'merged' an omitted value is kept. No reset is verified, so 'replaced' and
+              'overridden' refuse to withdraw a stored false; set true explicitly instead.
+            type: bool
+          bandwidth:
+            description:
+            - Interface bandwidth in kilobits (1-100000000). Same registration contract as negotiate_auto. The
+              template has no default and renders nothing without a value; there is no supported clear, so
+              'replaced' and 'overridden' refuse to withdraw a stored value.
+            type: int
+          inherit_bandwidth:
+            description:
+            - Bandwidth in kilobits (1-100000000) that the subinterfaces inherit (C(bandwidth inherit)). Same
+              contract as bandwidth.
+            type: int
+          duplex:
+            description:
+            - Port duplex mode - C(auto), C(full) or C(half); the template default C(auto) renders nothing. A
+              registered field on the vPC profiles (NOT LIVE TESTED); same contract as negotiate_auto. A value other
+              than C(auto) needs a fixed speed.
+            type: str
+            choices: ['auto', 'full', 'half']
           bpdu_filter:
             description:
             - Spanning-tree BPDU filter - C(enable), C(disable), or C(no) for the switch default (the template
@@ -1244,6 +1291,35 @@ options:
               This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
+          negotiate_auto:
+            description:
+            - Link auto-negotiation; the template default is true. Registered field (NOT LIVE TESTED; read from
+              the installed template bodies). It needs an approved C(patch_version); explicit-only, no default. The
+              controller checks the value against the auto-negotiation capability of the configured speed and
+              refuses a mismatch. Under 'merged' an omitted value is kept. No reset is verified, so 'replaced' and
+              'overridden' refuse to withdraw a stored false; set true explicitly instead.
+            type: bool
+          bandwidth:
+            description:
+            - Interface bandwidth in kilobits (1-100000000). Same registration contract as negotiate_auto. The
+              template has no default and renders nothing without a value; there is no supported clear, so
+              'replaced' and 'overridden' refuse to withdraw a stored value.
+            type: int
+          inherit_bandwidth:
+            description:
+            - Bandwidth in kilobits (1-100000000) that the subinterfaces inherit (C(bandwidth inherit)). Same
+              contract as bandwidth.
+            type: int
+          debounce_timer:
+            description:
+            - Link debounce timer in milliseconds (0-20000); the template default 100 renders nothing. Same
+              registration and withdrawal contract as negotiate_auto; 100 is the explicit neutral value.
+            type: int
+          debounce_linkup_timer:
+            description:
+            - Link-up debounce timer in milliseconds (1000-10000). Same contract as bandwidth. The template refuses
+              it, bandwidth and inherit_bandwidth on a FEX host interface.
+            type: int
           bpdu_filter:
             description:
             - Spanning-tree BPDU filter - C(enable), C(disable), or C(no) for the switch default (the template

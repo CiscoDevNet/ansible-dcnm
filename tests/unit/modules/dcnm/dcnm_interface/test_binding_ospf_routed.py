@@ -304,6 +304,32 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         # Lot a4_3_lacp: LACP_PORT_PRIO on the dot1q-tunnel port-channel, the native integer of the other port-channel
         # profiles; same string representation from the endpoint that feeds HAVE.
         ("int_port_channel_dot1q_tunnel_host", "LACP_PORT_PRIO"),
+        # Lot a4_5_link_settings: bandwidth, inherited bandwidth and the two debounce timers. Integers, returned as
+        # strings ("" when unset) by the endpoint that feeds HAVE; the same exemption applies.
+        ("int_trunk_host", "BANDWIDTH"),
+        ("int_trunk_host", "INHERIT_BW"),
+        ("int_access_host", "BANDWIDTH"),
+        ("int_access_host", "INHERIT_BW"),
+        ("int_dot1q_tunnel_host", "BANDWIDTH"),
+        ("int_dot1q_tunnel_host", "INHERIT_BW"),
+        ("int_port_channel_trunk_host", "BANDWIDTH"),
+        ("int_port_channel_trunk_host", "INHERIT_BW"),
+        ("int_port_channel_access_host", "BANDWIDTH"),
+        ("int_port_channel_access_host", "INHERIT_BW"),
+        ("int_port_channel_dot1q_tunnel_host", "BANDWIDTH"),
+        ("int_port_channel_dot1q_tunnel_host", "INHERIT_BW"),
+        ("int_vpc_trunk_host", "BANDWIDTH"),
+        ("int_vpc_trunk_host", "INHERIT_BW"),
+        ("int_vpc_access_host", "BANDWIDTH"),
+        ("int_vpc_access_host", "INHERIT_BW"),
+        ("int_vpc_dot1q_tunnel", "BANDWIDTH"),
+        ("int_vpc_dot1q_tunnel", "INHERIT_BW"),
+        ("int_trunk_host", "DEBOUNCE_TIMER"),
+        ("int_trunk_host", "DEBOUNCE_LINKUP_TIMER"),
+        ("int_access_host", "DEBOUNCE_TIMER"),
+        ("int_access_host", "DEBOUNCE_LINKUP_TIMER"),
+        ("int_dot1q_tunnel_host", "DEBOUNCE_TIMER"),
+        ("int_dot1q_tunnel_host", "DEBOUNCE_LINKUP_TIMER"),
         # The six BFD intervals, committed. Reviewed individually, not generated
         # into this list: each was read off the installed template (tx and min_rx 50-999,
         # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC

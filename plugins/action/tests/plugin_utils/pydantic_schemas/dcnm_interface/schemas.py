@@ -256,6 +256,48 @@ R2_REGISTERED_BINDINGS = {
     )),
     "enable_errdisable_acl": ("ENABLE_ERRDISABLE_ACL", "bool", ("int_access_host", "int_dot1q_tunnel_host", "int_trunk_host")),
     "orphan_port": ("ENABLE_ORPHAN_PORT", "bool", ("int_dot1q_tunnel_host", "int_port_channel_dot1q_tunnel_host")),
+    # Link settings (lot a4_5_link_settings). duplex is native on the other profiles (R2_NATIVE_ELSEWHERE_KEYS).
+    "negotiate_auto": ("NEGOTIATE_AUTO", "bool", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_trunk_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "bandwidth": ("BANDWIDTH", "int", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_trunk_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "inherit_bandwidth": ("INHERIT_BW", "int", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_trunk_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "debounce_timer": ("DEBOUNCE_TIMER", "int", ("int_access_host", "int_dot1q_tunnel_host", "int_trunk_host")),
+    "debounce_linkup_timer": ("DEBOUNCE_LINKUP_TIMER", "int", ("int_access_host", "int_dot1q_tunnel_host", "int_trunk_host")),
+    "duplex": ("PORT_DUPLEX_MODE", "enum", (
+        "int_port_channel_dot1q_tunnel_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
     # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
     # (R2_NATIVE_QOS_PARENTS).
     "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
@@ -439,7 +481,7 @@ R2_NATIVE_CDP_PARENTS = frozenset((
 ))
 
 # Registered keys that the module also accepts natively on other profiles (the LACP keys of lot a4_3_lacp and
-# orphan_port of lot a4_4_stp_protection). Before
+# orphan_port of lot a4_4_stp_protection, duplex of lot a4_5_link_settings). Before
 # they were registered the checker did not compare them on any parent; on a parent that does not register them it
 # still does not, so a native playbook is neither newly diagnosed nor newly compared.
 R2_NATIVE_ELSEWHERE_KEYS = frozenset((
@@ -447,6 +489,7 @@ R2_NATIVE_ELSEWHERE_KEYS = frozenset((
     "lacp_port_priority",
     "lacp_rate",
     "orphan_port",
+    "duplex",
 ))
 
 R2_NVPAIR_KIND = dict((nv, kind) for nv, kind, _parents in R2_REGISTERED_BINDINGS.values())

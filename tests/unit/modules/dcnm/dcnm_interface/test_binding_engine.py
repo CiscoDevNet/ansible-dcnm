@@ -606,6 +606,17 @@ A4_STP_ROWS = (
        ("int_port_channel_dot1q_tunnel_host", "ENABLE_ORPHAN_PORT", "orphan_port")}
 )
 
+# Link settings (lot a4_5_link_settings).
+A4_LINK_ROWS = (
+    {(p, "NEGOTIATE_AUTO", "negotiate_auto") for p in A4_STP_HOSTS}
+    | {(p, "BANDWIDTH", "bandwidth") for p in A4_STP_HOSTS}
+    | {(p, "INHERIT_BW", "inherit_bandwidth") for p in A4_STP_HOSTS}
+    | {(p, "DEBOUNCE_TIMER", "debounce_timer") for p in A4_STP_HOSTS[:3]}
+    | {(p, "DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer") for p in A4_STP_HOSTS[:3]}
+    | {(p, "PORT_DUPLEX_MODE", "duplex") for p in ("int_port_channel_dot1q_tunnel_host", "int_vpc_trunk_host",
+                                                    "int_vpc_access_host", "int_vpc_dot1q_tunnel")}
+)
+
 
 # ---- binding package runtime contract ----
 def test_package_provenance_and_size():
@@ -617,7 +628,7 @@ def test_package_provenance_and_size():
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
         | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS
-        | A4_DISCOVERY_ROWS | A4_DAMPENING_ROWS | A4_LACP_ROWS | A4_STP_ROWS
+        | A4_DISCOVERY_ROWS | A4_DAMPENING_ROWS | A4_LACP_ROWS | A4_STP_ROWS | A4_LINK_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -631,7 +642,8 @@ def test_package_provenance_and_size():
     assert len(A4_DAMPENING_ROWS) == 7
     assert len(A4_LACP_ROWS) == 3
     assert len(A4_STP_ROWS) == 23
-    assert len(BINDING_TABLE) == len(actual_keys) == 347   # + 6: lot a4_1_discovery
+    assert len(A4_LINK_ROWS) == 37
+    assert len(BINDING_TABLE) == len(actual_keys) == 384   # + 6: lot a4_1_discovery
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -675,7 +687,7 @@ def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
     # + 6: lot a4_1_discovery
-    assert len(rows) == 347   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
+    assert len(rows) == 384   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -776,6 +788,7 @@ def test_registered_keys_per_parent():
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl",   # lot a4_4_stp_protection
+        "negotiate_auto", "bandwidth", "inherit_bandwidth", "debounce_timer", "debounce_linkup_timer",   # lot a4_5_link_settings
     }
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
@@ -783,6 +796,7 @@ def test_registered_keys_per_parent():
         "disable_qos_stats", "disable_queuing_stats",
         "logging_event_port_link_status",   # SMU 017, slice 0b_37
         "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl",   # lot a4_4_stp_protection
+        "negotiate_auto", "bandwidth", "inherit_bandwidth", "debounce_timer", "debounce_linkup_timer",   # lot a4_5_link_settings
     }
     assert registered_profile_keys(PC_TRUNK) == {
         "guard_mode", "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -794,12 +808,14 @@ def test_registered_keys_per_parent():
         "link_transmit_reset_skip",
         # Lot a4_4_stp_protection.
         "bpdu_filter", "spanning_tree_link_type",
+        "negotiate_auto", "bandwidth", "inherit_bandwidth",   # lot a4_5_link_settings
     }
     assert registered_profile_keys(PC_ACCESS) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
         "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
         # Lot a4_4_stp_protection.
         "bpdu_filter", "spanning_tree_link_type",
+        "negotiate_auto", "bandwidth", "inherit_bandwidth",   # lot a4_5_link_settings
     }
     assert registered_profile_keys(PC_DOT1Q) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -810,6 +826,8 @@ def test_registered_keys_per_parent():
         "disable_lacp_suspend_individual", "lacp_port_priority", "lacp_rate",
         # Lot a4_4_stp_protection.
         "bpdu_filter", "spanning_tree_link_type", "orphan_port",
+        "negotiate_auto", "bandwidth", "inherit_bandwidth",   # lot a4_5_link_settings
+        "duplex",
     }
     # GUARD_MODE is NOT registered on access parents.
     assert "guard_mode" not in registered_profile_keys(ACCESS)
@@ -857,6 +875,12 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("BPDUFILTER_ENABLED", "bpdu_filter"),
         ("LINK_TYPE", "spanning_tree_link_type"),
         ("ENABLE_ERRDISABLE_ACL", "enable_errdisable_acl"),
+        # Lot a4_5_link_settings.
+        ("NEGOTIATE_AUTO", "negotiate_auto"),
+        ("BANDWIDTH", "bandwidth"),
+        ("INHERIT_BW", "inherit_bandwidth"),
+        ("DEBOUNCE_TIMER", "debounce_timer"),
+        ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -874,6 +898,12 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("BPDUFILTER_ENABLED", "bpdu_filter"),
         ("LINK_TYPE", "spanning_tree_link_type"),
         ("ENABLE_ERRDISABLE_ACL", "enable_errdisable_acl"),
+        # Lot a4_5_link_settings.
+        ("NEGOTIATE_AUTO", "negotiate_auto"),
+        ("BANDWIDTH", "bandwidth"),
+        ("INHERIT_BW", "inherit_bandwidth"),
+        ("DEBOUNCE_TIMER", "debounce_timer"),
+        ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -1070,6 +1100,8 @@ def test_all_registered_and_guarded_keys():
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
+        # Lot a4_5_link_settings; duplex is native on the other profiles.
+        "negotiate_auto", "duplex", "bandwidth", "inherit_bandwidth", "debounce_timer", "debounce_linkup_timer",
         "link_transmit_reset_skip",
         # Lot a4_4_stp_protection; orphan_port is native on the trunk and access profiles.
         "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl", "orphan_port",
@@ -1177,6 +1209,8 @@ def test_all_registered_and_guarded_keys():
         "disable_qos_stats", "disable_queuing_stats",
         # Lot a4_4_stp_protection: new public keys, guarded; orphan_port is native elsewhere and is not.
         "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl",
+        # Lot a4_5_link_settings: new public keys, guarded; duplex is native elsewhere and is not.
+        "negotiate_auto", "bandwidth", "inherit_bandwidth", "debounce_timer", "debounce_linkup_timer",
         "link_transmit_reset_skip",
         # The routed OSPF slice is passthrough, so the generic guard owns it -- unlike the
         # fabric-loopback OSPF-MD trio asserted out of this set just below. Delegating to a
@@ -1266,7 +1300,7 @@ def test_all_registered_and_guarded_keys():
     # message.
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
     # Lot a4_3_lacp: registered on the dot1q-tunnel port-channel, native elsewhere, so not guarded.
-    assert not {"disable_lacp_suspend_individual", "lacp_port_priority", "lacp_rate", "orphan_port"} & gie_guarded_keys()
+    assert not {"disable_lacp_suspend_individual", "lacp_port_priority", "lacp_rate", "orphan_port", "duplex"} & gie_guarded_keys()
 
     # INVERTED. These two used to assert the opposite, and the reason they did is gone.
     #

@@ -144,7 +144,8 @@ def test_r2_coverage_the_checker_invents_no_identity():
     # 88 = 80 + enable_storm_control, storm_control_action and the six storm-control levels (slice ul1).
     # 91 = 88 + disable_lacp_suspend_individual, lacp_port_priority and lacp_rate (lot a4_3_lacp).
     # 95 = 91 + bpdu_filter, spanning_tree_link_type, enable_errdisable_acl and orphan_port (lot a4_4_stp_protection).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 95
+    # 101 = 95 + negotiate_auto, duplex, bandwidth, inherit_bandwidth, debounce_timer and debounce_linkup_timer (lot a4_5).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 101
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():
@@ -264,6 +265,24 @@ A4_ROUTES = sorted([
     ("int_access_host", "ENABLE_ERRDISABLE_ACL"), ("int_dot1q_tunnel_host", "ENABLE_ERRDISABLE_ACL"),
     ("int_trunk_host", "ENABLE_ERRDISABLE_ACL"),
     ("int_dot1q_tunnel_host", "ENABLE_ORPHAN_PORT"), ("int_port_channel_dot1q_tunnel_host", "ENABLE_ORPHAN_PORT"),
+    # lot a4_5_link_settings
+    ("int_trunk_host", "NEGOTIATE_AUTO"), ("int_trunk_host", "BANDWIDTH"), ("int_trunk_host", "INHERIT_BW"),
+    ("int_access_host", "NEGOTIATE_AUTO"), ("int_access_host", "BANDWIDTH"), ("int_access_host", "INHERIT_BW"),
+    ("int_dot1q_tunnel_host", "NEGOTIATE_AUTO"), ("int_dot1q_tunnel_host", "BANDWIDTH"), ("int_dot1q_tunnel_host", "INHERIT_BW"),
+    ("int_port_channel_trunk_host", "NEGOTIATE_AUTO"), ("int_port_channel_trunk_host", "BANDWIDTH"), ("int_port_channel_trunk_host", "INHERIT_BW"),
+    ("int_port_channel_access_host", "NEGOTIATE_AUTO"), ("int_port_channel_access_host", "BANDWIDTH"), ("int_port_channel_access_host", "INHERIT_BW"),
+    ("int_port_channel_dot1q_tunnel_host", "NEGOTIATE_AUTO"), ("int_port_channel_dot1q_tunnel_host", "BANDWIDTH"),
+    ("int_port_channel_dot1q_tunnel_host", "INHERIT_BW"),
+    ("int_vpc_trunk_host", "NEGOTIATE_AUTO"), ("int_vpc_trunk_host", "BANDWIDTH"), ("int_vpc_trunk_host", "INHERIT_BW"),
+    ("int_vpc_access_host", "NEGOTIATE_AUTO"), ("int_vpc_access_host", "BANDWIDTH"), ("int_vpc_access_host", "INHERIT_BW"),
+    ("int_vpc_dot1q_tunnel", "NEGOTIATE_AUTO"), ("int_vpc_dot1q_tunnel", "BANDWIDTH"), ("int_vpc_dot1q_tunnel", "INHERIT_BW"),
+    ("int_trunk_host", "DEBOUNCE_TIMER"), ("int_trunk_host", "DEBOUNCE_LINKUP_TIMER"),
+    ("int_access_host", "DEBOUNCE_TIMER"), ("int_access_host", "DEBOUNCE_LINKUP_TIMER"),
+    ("int_dot1q_tunnel_host", "DEBOUNCE_TIMER"), ("int_dot1q_tunnel_host", "DEBOUNCE_LINKUP_TIMER"),
+    ("int_port_channel_dot1q_tunnel_host", "PORT_DUPLEX_MODE"),
+    ("int_vpc_trunk_host", "PORT_DUPLEX_MODE"),
+    ("int_vpc_access_host", "PORT_DUPLEX_MODE"),
+    ("int_vpc_dot1q_tunnel", "PORT_DUPLEX_MODE"),
 ])
 
 

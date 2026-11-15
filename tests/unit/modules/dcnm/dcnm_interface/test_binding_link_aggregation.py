@@ -102,6 +102,45 @@ ROUTES = {
     (ETH_DOT1Q, "ENABLE_ERRDISABLE_ACL"): ("enable_errdisable_acl", False, True, {}),
     (ETH_DOT1Q, "ENABLE_ORPHAN_PORT"): ("orphan_port", True, False, {}),
     (PC_DOT1Q, "ENABLE_ORPHAN_PORT"): ("orphan_port", True, False, {}),
+    # Lot a4_5_link_settings. The speed's auto-negotiation capability and the fixed speed duplex needs are the
+    # controller's checks; the module transports the values.
+    (TRUNK, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (TRUNK, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (TRUNK, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (ACCESS, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (ACCESS, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (ACCESS, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (ETH_DOT1Q, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (ETH_DOT1Q, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (ETH_DOT1Q, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (PC_TRUNK, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (PC_TRUNK, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (PC_TRUNK, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (PC_ACCESS, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (PC_ACCESS, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (PC_ACCESS, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (PC_DOT1Q, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (PC_DOT1Q, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (PC_DOT1Q, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (VPC_TRUNK, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (VPC_TRUNK, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (VPC_TRUNK, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (VPC_ACCESS, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (VPC_ACCESS, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (VPC_ACCESS, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (VPC_DOT1Q, "NEGOTIATE_AUTO"): ("negotiate_auto", False, True, {}),
+    (VPC_DOT1Q, "BANDWIDTH"): ("bandwidth", 1000000, None, {}),
+    (VPC_DOT1Q, "INHERIT_BW"): ("inherit_bandwidth", 500000, None, {}),
+    (TRUNK, "DEBOUNCE_TIMER"): ("debounce_timer", 500, 100, {}),
+    (TRUNK, "DEBOUNCE_LINKUP_TIMER"): ("debounce_linkup_timer", 2000, None, {}),
+    (ACCESS, "DEBOUNCE_TIMER"): ("debounce_timer", 500, 100, {}),
+    (ACCESS, "DEBOUNCE_LINKUP_TIMER"): ("debounce_linkup_timer", 2000, None, {}),
+    (ETH_DOT1Q, "DEBOUNCE_TIMER"): ("debounce_timer", 500, 100, {}),
+    (ETH_DOT1Q, "DEBOUNCE_LINKUP_TIMER"): ("debounce_linkup_timer", 2000, None, {}),
+    (PC_DOT1Q, "PORT_DUPLEX_MODE"): ("duplex", "full", "auto", {}),
+    (VPC_TRUNK, "PORT_DUPLEX_MODE"): ("duplex", "full", "auto", {}),
+    (VPC_ACCESS, "PORT_DUPLEX_MODE"): ("duplex", "full", "auto", {}),
+    (VPC_DOT1Q, "PORT_DUPLEX_MODE"): ("duplex", "full", "auto", {}),
 }
 
 ITEMS = [(p, n, k, a, d, e) for (p, n), (k, a, d, e) in sorted(ROUTES.items())]
@@ -380,3 +419,35 @@ def test_an_enum_value_outside_the_template_choices_is_refused_before_any_write(
     result, calls = run(base_for(TRUNK, **{key: bad}), "merged")
     assert result.get("failed") is True and key in result["msg"], result.get("msg")
     assert _no_writes(calls)
+
+
+@pytest.mark.parametrize("parent", [TRUNK, ACCESS, ETH_DOT1Q, PC_TRUNK, PC_ACCESS])
+def test_the_native_duplex_profiles_are_unchanged(parent):
+    """duplex stays native where the module already wrote it (GIE_NATIVE_ELSEWHERE_KEYS, lot a4_5_link_settings)."""
+    result, calls = run(base_for(parent, duplex="full"), "merged", **_pkw(parent))
+    assert not result.get("failed"), result.get("msg")
+    assert request_nvpairs(calls)[0]["PORT_DUPLEX_MODE"] == "full"
+
+
+@pytest.mark.parametrize("key,bad", [("bandwidth", 0), ("bandwidth", 100000001), ("inherit_bandwidth", 0),
+                                     ("debounce_timer", -1), ("debounce_timer", 20001),
+                                     ("debounce_linkup_timer", 999), ("debounce_linkup_timer", 10001)])
+def test_an_integer_outside_the_template_bounds_is_refused_before_any_write(key, bad):
+    result, calls = run(base_for(TRUNK, **{key: bad}), "merged")
+    assert result.get("failed") is True and key in result["msg"], result.get("msg")
+    assert _no_writes(calls)
+
+
+@pytest.mark.parametrize("key", ["bandwidth", "inherit_bandwidth", "debounce_linkup_timer"])
+def test_an_integer_without_a_template_default_cannot_be_cleared_with_an_empty_string(key):
+    """No clear is established: the public input refuses "", and replaced refuses to withdraw a stored value."""
+    result, calls = run(base_for(TRUNK, **{key: ""}), "merged")
+    assert result.get("failed") is True and key in result["msg"], result.get("msg")
+    assert _no_writes(calls)
+
+
+def test_link_settings_are_refused_on_a_parent_that_does_not_declare_them():
+    for key, value in (("negotiate_auto", False), ("bandwidth", 1000), ("debounce_timer", 500)):
+        result, calls = run(base_for("int_routed_host", **{key: value}), "merged")
+        assert result.get("failed") is True and key in result["msg"], (key, result.get("msg"))
+        assert _no_writes(calls)
