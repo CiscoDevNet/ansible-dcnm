@@ -503,6 +503,45 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bandwidth</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Interface bandwidth in kilobits (1-100000000). Same registration contract as negotiate_auto. The template has no default and renders nothing without a value; there is no supported clear, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bpdu_filter</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>enable</li>
+                                    <li>disable</li>
+                                    <li>no</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree BPDU filter - <code>enable</code>, <code>disable</code>, or <code>no</code> for the switch default (the template default is <code>enable</code> in mode <code>dot1q</code> and <code>no</code> in the other modes). Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but <code>enable</code>; that refusal comes from the controller. Under &#x27;merged&#x27; an omitted value is kept. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; set the default explicitly instead.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>bpdu_guard</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -539,6 +578,40 @@ Parameters
                 <td>
                         <div>Commands to be included in the configuration under this interface</div>
                         <div>In <code>mode=pvlan</code> a text is also accepted, one command per line; a text with a comma is refused.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>debounce_linkup_timer</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Link-up debounce timer in milliseconds (1000-10000). Same contract as bandwidth. The template refuses it, bandwidth and inherit_bandwidth on a FEX host interface.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>debounce_timer</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Link debounce timer in milliseconds (0-20000); the template default 100 renders nothing. Same registration and withdrawal contract as negotiate_auto; 100 is the explicit neutral value.</div>
                 </td>
             </tr>
             <tr>
@@ -599,6 +672,7 @@ Parameters
                 </td>
                 <td>
                         <div>Disable LLDP transmit on the interface. Replaces the earlier disable_lldp, which acted on both directions at once; the two directions are now independent. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                        <div>Also accepted in mode &#x27;dot1q&#x27; (NOT LIVE TESTED there). On that policy no reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored &#x27;true&#x27;; set &#x27;false&#x27; explicitly instead. The same applies to disable_lldp_receive.</div>
                 </td>
             </tr>
             <tr>
@@ -689,6 +763,27 @@ Parameters
                 </td>
                 <td>
                         <div>State of CDP protocol on the interface</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enable_errdisable_acl</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Error detection for access-list installation failures. <code>false</code> renders <code>no errdisable port detect cause acl-exception</code>; the template default is true. Modes <code>trunk</code>, <code>access</code> and <code>dot1q</code>; the template refuses false on a FEX host interface. Same registration and withdrawal contract as bpdu_filter.</div>
                 </td>
             </tr>
             <tr>
@@ -819,6 +914,23 @@ Parameters
                 </td>
                 <td>
                         <div>Spanning-tree guard mode. This option is applicable only when mode is trunk. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>inherit_bandwidth</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Bandwidth in kilobits (1-100000000) that the subinterfaces inherit (<code>bandwidth inherit</code>). Same contract as bandwidth.</div>
                 </td>
             </tr>
             <tr>
@@ -988,6 +1100,27 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>negotiate_auto</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Link auto-negotiation; the template default is true. Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. The controller checks the value against the auto-negotiation capability of the configured speed and refuses a mismatch. Under &#x27;merged&#x27; an omitted value is kept. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored false; set true explicitly instead.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>orphan_port</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -1002,6 +1135,7 @@ Parameters
                 </td>
                 <td>
                         <div>interface orphan port behavior when switch is in vPC</div>
+                        <div>In mode <code>dot1q</code> this is a registered field (NOT LIVE TESTED; read from the installed template body) with no default. It needs an approved <code>patch_version</code>. The template checks that the switch allows a vPC orphan port before it renders <code>vpc orphan-port suspend</code>. No reset is verified there, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored true; set false explicitly instead.</div>
                 </td>
             </tr>
             <tr>
@@ -1225,6 +1359,28 @@ Parameters
                 </td>
                 <td>
                         <div>Route tag associated with the interface IP. This object is applicable only if the &#x27;mode&#x27; is &#x27;routed&#x27; or &#x27;epl_routed&#x27;</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>spanning_tree_link_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>auto</li>
+                                    <li>point-to-point</li>
+                                    <li>shared</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree link type - <code>auto</code> (the template default, which renders nothing), <code>point-to-point</code> or <code>shared</code>. Same registration and withdrawal contract as bpdu_filter.</div>
                 </td>
             </tr>
             <tr>
@@ -1543,6 +1699,45 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bandwidth</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Interface bandwidth in kilobits (1-100000000). Same registration contract as negotiate_auto. The template has no default and renders nothing without a value; there is no supported clear, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bpdu_filter</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>enable</li>
+                                    <li>disable</li>
+                                    <li>no</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree BPDU filter - <code>enable</code>, <code>disable</code>, or <code>no</code> for the switch default (the template default is <code>enable</code> in mode <code>dot1q</code> and <code>no</code> in the other modes). Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but <code>enable</code>; that refusal comes from the controller. Under &#x27;merged&#x27; an omitted value is kept. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; set the default explicitly instead.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>cmds</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -1622,6 +1817,48 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_lldp_receive</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable LLDP receive on the members. Same contract as disable_lldp_transmit.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>disable_lldp_transmit</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Disable LLDP transmit on the members of a routed port-channel (mode &#x27;l3&#x27;) or of the port-channel modes that already registered it. Registered field (NOT LIVE TESTED in mode &#x27;l3&#x27;); needs an approved <code>patch_version</code>; explicit-only, no default. The template sends the value to each member policy. In mode &#x27;l3&#x27;, &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored &#x27;true&#x27;; set &#x27;false&#x27; explicitly instead.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>disable_qos_stats</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -1683,6 +1920,7 @@ Parameters
                 </td>
                 <td>
                         <div>Duplex of the interface. Speed must be set to use duplex.</div>
+                        <div>In mode <code>dot1q</code> this is a registered field (NOT LIVE TESTED) with no default; same contract as negotiate_auto. The template passes the value to the members as an inherited command.</div>
                 </td>
             </tr>
             <tr>
@@ -1704,6 +1942,30 @@ Parameters
                 </td>
                 <td>
                         <div>State of CDP protocol on the interface</div>
+                        <div>In modes &#x27;l3&#x27; and &#x27;dot1q&#x27; this is a registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>, has no default, and the template sends it to each member policy, where &#x27;false&#x27; renders <code>no cdp enable</code>. &#x27;merged&#x27; keeps an omitted value. &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored &#x27;false&#x27;, because no reset is verified on these policies; set &#x27;true&#x27; explicitly instead.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>enable_dampening</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Interface dampening on a routed port-channel (mode &#x27;l3&#x27;). Registered field with the int_routed_host contract (NOT LIVE TESTED; NX-OSv rejects <code>dampening</code>, so it cannot be validated on that platform). Needs an approved <code>patch_version</code>; explicit-only, no default. The template creates one interface_dampening child on the port-channel.</div>
+                        <div>The companions are dampening_half_life (1-30), dampening_reuse, dampening_suppress (1-20000), dampening_max_suppress (1-255), dampening_restart (bool) and dampening_restart_penalty (1-20000). The template requires the gate for any value, reuse, suppress and max suppress together and after half-life, the full group for restart and restart for the penalty; the controller refuses a request that breaks a rule.</div>
+                        <div>Under &#x27;merged&#x27; an omitted value is kept. No reset is verified on this policy, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value; set the gate to false explicitly to remove dampening.</div>
                 </td>
             </tr>
             <tr>
@@ -1767,6 +2029,7 @@ Parameters
                 </td>
                 <td>
                         <div>Enable QoS on the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27;, &#x27;access&#x27;, or &#x27;l3&#x27;</div>
+                        <div>In mode &#x27;peer_link&#x27; it is explicit-only, with no default, and needs an approved <code>patch_version</code>. See &#x27;mode&#x27; for the QoS restrictions of that mode.</div>
                 </td>
             </tr>
             <tr>
@@ -1790,6 +2053,23 @@ Parameters
                 </td>
                 <td>
                         <div>Spanning-tree guard mode. This option is applicable only when mode is trunk. Explicit-only, no default; when omitted the current controller value is left untouched.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>inherit_bandwidth</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Bandwidth in kilobits (1-100000000) that the subinterfaces inherit (<code>bandwidth inherit</code>). Same contract as bandwidth.</div>
                 </td>
             </tr>
             <tr>
@@ -1884,6 +2164,7 @@ Parameters
                 </td>
                 <td>
                         <div>Set the rate at which LACP control packets are sent to an LACP-supported interface. Normal rate (30 seconds), fast rate (1 second), rate is set on member interfaces, default is normal</div>
+                        <div>In mode &#x27;dot1q&#x27;, disable_lacp_suspend_individual, lacp_port_priority and lacp_rate are registered fields (NOT LIVE TESTED; read from the installed template body). They need an approved <code>patch_version</code> and have no default there. Under &#x27;merged&#x27; an omitted value is kept; no reset is verified on that policy, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; false, 32768 and normal are the explicit neutral values.</div>
                 </td>
             </tr>
             <tr>
@@ -1963,6 +2244,27 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>negotiate_auto</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Link auto-negotiation; the template default is true. Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. The controller checks the value against the auto-negotiation capability of the configured speed and refuses a mismatch. Under &#x27;merged&#x27; an omitted value is kept. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored false; set true explicitly instead.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>orphan_port</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -1977,6 +2279,7 @@ Parameters
                 </td>
                 <td>
                         <div>interface orphan port behavior when switch is in vPC</div>
+                        <div>In mode <code>dot1q</code> this is a registered field (NOT LIVE TESTED; read from the installed template body) with no default. It needs an approved <code>patch_version</code>. The template checks that the switch allows a vPC orphan port before it renders <code>vpc orphan-port suspend</code>. No reset is verified there, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored true; set false explicitly instead.</div>
                 </td>
             </tr>
             <tr>
@@ -2093,6 +2396,28 @@ Parameters
                 </td>
                 <td>
                         <div>Route tag associated with the interface IP. This object is applicable only if the &#x27;mode&#x27; is &#x27;l3&#x27;</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>spanning_tree_link_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>auto</li>
+                                    <li>point-to-point</li>
+                                    <li>shared</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree link type - <code>auto</code> (the template default, which renders nothing), <code>point-to-point</code> or <code>shared</code>. Same registration and withdrawal contract as bpdu_filter.</div>
                 </td>
             </tr>
             <tr>
@@ -3259,6 +3584,45 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bandwidth</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Interface bandwidth in kilobits (1-100000000). Same registration contract as negotiate_auto. The template has no default and renders nothing without a value; there is no supported clear, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bpdu_filter</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>enable</li>
+                                    <li>disable</li>
+                                    <li>no</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree BPDU filter - <code>enable</code>, <code>disable</code>, or <code>no</code> for the switch default (the template default is <code>enable</code> in mode <code>dot1q</code> and <code>no</code> in the other modes). Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but <code>enable</code>; that refusal comes from the controller. Under &#x27;merged&#x27; an omitted value is kept. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; set the default explicitly instead.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>bpdu_guard</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -3324,6 +3688,28 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>duplex</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>auto</li>
+                                    <li>full</li>
+                                    <li>half</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Port duplex mode - <code>auto</code>, <code>full</code> or <code>half</code>; the template default <code>auto</code> renders nothing. A registered field on the vPC profiles (NOT LIVE TESTED); same contract as negotiate_auto. A value other than <code>auto</code> needs a fixed speed.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>enable_lacp_vpc_convergence</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -3338,6 +3724,7 @@ Parameters
                 </td>
                 <td>
                         <div>Enable lacp convergence for vPC port-channels</div>
+                        <div>The four LACP options are accepted in modes &#x27;trunk&#x27;, &#x27;access&#x27; and &#x27;dot1q&#x27;. They are native, with the defaults shown, on all three; mode &#x27;access&#x27; accepts them since this release (the module already sent the defaults for it). Under &#x27;merged&#x27; an omitted option keeps the stored value.</div>
                 </td>
             </tr>
             <tr>
@@ -3360,6 +3747,23 @@ Parameters
                 <td>
                         <div>Enable QoS on the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27; or &#x27;access&#x27;</div>
                         <div>In mode &#x27;uplink_access&#x27; it is explicit-only, with no default, and needs an approved <code>patch_version</code>. See &#x27;mode&#x27; for the QoS rules of that mode.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>inherit_bandwidth</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Bandwidth in kilobits (1-100000000) that the subinterfaces inherit (<code>bandwidth inherit</code>). Same contract as bandwidth.</div>
                 </td>
             </tr>
             <tr>
@@ -3453,6 +3857,27 @@ Parameters
                 </td>
                 <td>
                         <div>Interface MTU</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>negotiate_auto</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Link auto-negotiation; the template default is true. Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. The controller checks the value against the auto-negotiation capability of the configured speed and refuses a mismatch. Under &#x27;merged&#x27; an omitted value is kept. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored false; set true explicitly instead.</div>
                 </td>
             </tr>
             <tr>
@@ -3860,6 +4285,28 @@ Parameters
                 </td>
                 <td>
                         <div>Queuing policy name to apply to the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;trunk&#x27; or &#x27;access&#x27;</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>spanning_tree_link_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>auto</li>
+                                    <li>point-to-point</li>
+                                    <li>shared</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Spanning-tree link type - <code>auto</code> (the template default, which renders nothing), <code>point-to-point</code> or <code>shared</code>. Same registration and withdrawal contract as bpdu_filter.</div>
                 </td>
             </tr>
 
