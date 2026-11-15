@@ -30,7 +30,7 @@ on. Within a file, the rows keep the order of the original lots, and each lot's 
 | File | Family | Rows |
 |------|--------|-----:|
 | `registry_slice_eigrp.yaml` | EIGRP on the routed, subinterface, SVI, loopback and routed port-channel parents | 65 |
-| `registry_slice_hsrp_ipv6_nd.yaml` | HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay parents | 17 |
+| `registry_slice_hsrp_ipv6_nd.yaml` | HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay and routed port-channel parents | 24 |
 | `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback, SVI and routed port-channel parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options | 42 |
 | `registry_slice_macsec.yaml` | MACsec on the routed Ethernet and routed port-channel parents | 8 |
 | `registry_slice_multicast_bfd.yaml` | PIM and BFD parents | 23 |
@@ -89,6 +89,7 @@ rows belong to several families keeps its header in the family that holds most o
 | `pl1_peer_link` | `registry_slice_port_channel_vpc.yaml` (4) |
 | `rp1_l3po_l3_controls` | `registry_slice_interface_common.yaml` (2), `registry_slice_multicast_bfd.yaml` (1) |
 | `rp2_l3po_macsec` | `registry_slice_macsec.yaml` (4) |
+| `rp3_l3po_ipv6_redirects` | `registry_slice_hsrp_ipv6_nd.yaml` (7) |
 | `rs1_po_link_transmit_reset_skip` | `registry_slice_port_channel_vpc.yaml` (1) |
 | `ul1_uplink_access` | `registry_slice_port_channel_vpc.yaml` (12) |
 

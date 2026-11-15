@@ -117,8 +117,8 @@ R2_REGISTERED_BINDINGS = {
     "dampening_suppress": ("dampeningSuppress", "int", ("int_routed_host",)),
     "disable_bfd_echo": ("bfdEcho", "bool", ("int_l3_port_channel", "int_routed_host", "int_vlan")),
     "disable_eigrp_bfd": ("eigrpBfdDisable", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
-    "disable_ipv4_redirects": ("ipv4Redirects", "bool", ("int_routed_host", "int_subif", "int_vlan")),
-    "disable_ipv6_redirects": ("ipv6Redirects", "bool", ("int_routed_host", "int_subif", "int_vlan")),
+    "disable_ipv4_redirects": ("ipv4Redirects", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
+    "disable_ipv6_redirects": ("ipv6Redirects", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
     "disable_lldp_receive": ("lldpReceive", "bool", (
         "int_access_host",
         "int_port_channel_access_host",
@@ -221,6 +221,12 @@ R2_REGISTERED_BINDINGS = {
     # on R2_NATIVE_CDP_PARENTS.
     "enable_cdp": ("CDP_ENABLE", "bool", ("int_routed_host",)),
     "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "bool", ("int_routed_host",)),
+    # The routed port-channel IPv6 pair and combined redirect option (lot rp3). ipv6_addr and ipv6_mask_len are also
+    # mapped natively for every parent (interface_nvpairs_fields); disable_ip_redirects is native on the SVI profile and
+    # not checked there (R2_NATIVE_UNCHECKED_KEYS).
+    "ipv6_addr": ("IPv6", "str_fold", ("int_l3_port_channel",)),
+    "ipv6_mask_len": ("IPv6_PREFIX", "int", ("int_l3_port_channel",)),
+    "disable_ip_redirects": ("DISABLE_IP_REDIRECTS", "bool", ("int_l3_port_channel",)),
     # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
     # (R2_NATIVE_QOS_PARENTS).
     "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
@@ -246,8 +252,8 @@ R2_REGISTERED_BINDINGS = {
     "hsrp_priority_forwarding_threshold_upper": ("hsrpPriorityForwardingThresholdUpper", "int", ("int_vlan",)),
     "hsrp_vipv6": ("HSRP_VIPv6", "str_fold", ("int_vlan",)),
     "ipv4_acl_in": ("ipv4AclIn", "str_exact", ("int_l3_port_channel", "int_routed_host", "int_vlan")),
-    "ipv6_link_local": ("ipv6LinkLocal", "str_fold", ("int_routed_host", "int_subif", "int_vlan")),
-    "ipv6_nd_suppress_ra": ("ipv6NdSuppressRa", "bool", ("int_routed_host", "int_subif", "int_vlan")),
+    "ipv6_link_local": ("ipv6LinkLocal", "str_fold", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
+    "ipv6_nd_suppress_ra": ("ipv6NdSuppressRa", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
     "link_transmit_reset_skip": ("linkTransmitResetSkip", "bool", ("int_port_channel_trunk_host",)),
     "macsec_fallback_key_chain_name": ("macsecFallbackKeyChainName", "str_exact", ("int_l3_port_channel", "int_routed_host")),
     "macsec_key_chain_name": ("macsecKeyChainName", "str_exact", ("int_l3_port_channel", "int_routed_host")),
@@ -385,6 +391,11 @@ R2_NATIVE_QOS_KEYS = ("enable_qos", "qos_policy")
 # The PVLAN builders (interface_pvlan reconcile / reconcile_vpc) take an omitted enable_qos from the stored parent under
 # merged and send the policy name; they refuse a name with an explicit enable_qos false.
 R2_NATIVE_QOS_STORED_ENABLE_PARENTS = frozenset(("int_pvlan_host", "int_vpc_pvlan_host"))
+
+# Registered keys that the module also serves natively on parents outside their registry rows, where this checker has no
+# mapping for them. On those parents they are not validated, as before they were registered:
+#   disable_ip_redirects: native on the SVI profile (DISABLE_IP_REDIRECTS).
+R2_NATIVE_UNCHECKED_KEYS = frozenset(("disable_ip_redirects",))
 
 # Parents whose module payload carries CDP_ENABLE natively (not a registry row): the eth trunk, access and dot1q
 # payloads, the pc trunk and access payloads, the vpc trunk, access and dot1q payload, and the PVLAN companions of
@@ -1182,6 +1193,8 @@ class DcnmInterfaceQuerySchema(BaseModel):
                     continue  # registered on the peer-link and uplink parents, native here (r2_native_qos above)
                 if parent in R2_NATIVE_CDP_PARENTS and key == "enable_cdp":
                     continue  # registered on the routed parent, native here (above)
+                if parent is not None and parent not in parents and key in R2_NATIVE_UNCHECKED_KEYS:
+                    continue  # native on this parent and not checked here, as before it was registered elsewhere
                 if parent is None or parent not in parents:
                     reason = R2_EXCEPTIONS.get((parent, nvpair)) or (
                         "not a registered field of the expected parent %s" % parent if parent

@@ -288,6 +288,8 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_l3_port_channel", "OSPF_AUTH_KEY_ID"),
         # Lot rp1: the int_routed_host ARP_TIMEOUT contract on an identical declaration; same exemption.
         ("int_l3_port_channel", "arpTimeout"),
+        # Lot rp3: the IPv6 prefix, returned as a string ("" when unset) like the other integers; same exemption.
+        ("int_l3_port_channel", "IPv6_PREFIX"),
         # Slice 0b_41: the int_routed_host PIM_DR_PRIORITY contract on an identical declaration; same exemption.
         ("int_l3_port_channel", "PIM_DR_PRIORITY"),
         ("int_l3_port_channel", "ospfCost"),

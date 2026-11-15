@@ -496,6 +496,17 @@ RP2_ROWS = {
     ("int_l3_port_channel", "macsecFallbackKeyChainName", "macsec_fallback_key_chain_name"),
 }
 
+# IPv6 addressing, link-local, ND suppress-RA and redirects on the routed port-channel, lot rp3.
+RP3_ROWS = {
+    ("int_l3_port_channel", "IPv6", "ipv6_addr"),
+    ("int_l3_port_channel", "IPv6_PREFIX", "ipv6_mask_len"),
+    ("int_l3_port_channel", "ipv6LinkLocal", "ipv6_link_local"),
+    ("int_l3_port_channel", "ipv6NdSuppressRa", "ipv6_nd_suppress_ra"),
+    ("int_l3_port_channel", "DISABLE_IP_REDIRECTS", "disable_ip_redirects"),
+    ("int_l3_port_channel", "ipv4Redirects", "disable_ipv4_redirects"),
+    ("int_l3_port_channel", "ipv6Redirects", "disable_ipv6_redirects"),
+}
+
 # The routed port-channel OSPF family, slice 0b_40.
 L3PO_OSPF_ROWS = {
     ("int_l3_port_channel", "ospf", "enable_ospf"),
@@ -588,7 +599,7 @@ def test_package_provenance_and_size():
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
-        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS | RP1_ROWS | RP2_ROWS
+        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS | RP1_ROWS | RP2_ROWS | RP3_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -600,7 +611,8 @@ def test_package_provenance_and_size():
     assert len(L3PO_EIGRP_ROWS) == 13
     assert len(RP1_ROWS) == 3
     assert len(RP2_ROWS) == 4
-    assert len(BINDING_TABLE) == len(actual_keys) == 315
+    assert len(RP3_ROWS) == 7
+    assert len(BINDING_TABLE) == len(actual_keys) == 322
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -643,7 +655,7 @@ def test_package_provenance_and_size():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 315   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
+    assert len(rows) == 322   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -1110,6 +1122,8 @@ def test_all_registered_and_guarded_keys():
         "storm_control_broadcast_level_percent", "storm_control_multicast_level_percent",
         "storm_control_unicast_level_percent", "storm_control_broadcast_level_pps",
         "storm_control_multicast_level_pps", "storm_control_unicast_level_pps",
+        # Lot rp3: the routed port-channel IPv6 pair and combined redirect option, native elsewhere.
+        "ipv6_addr", "ipv6_mask_len", "disable_ip_redirects",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns

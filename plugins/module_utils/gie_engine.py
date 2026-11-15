@@ -756,6 +756,16 @@ def gie_binding_neutral_wires(binding):
 
 _GIE_ABSENT = object()
 
+# Couplings between two registered nvPairs that `inert_when` cannot state, each read from one template body.
+#   GIE_PAIRED_NVPAIRS: (parent, first, second). The template requires `second` while `first` is set and renders
+#       the line only when both are set (int_l3_port_channel IPv6 and IPv6_PREFIX). A request that sets either
+#       one must end with both set or both empty.
+#   GIE_SUPERSEDING_ALIASES: (parent, alias, wire, dependents). While `alias` holds `wire` the template blanks the
+#       dependents (int_l3_port_channel DISABLE_IP_REDIRECTS over the split redirect options), so an explicit
+#       dependent "false" asks for a line the template does not render.
+GIE_PAIRED_NVPAIRS = (("int_l3_port_channel", "IPv6", "IPv6_PREFIX"),)
+GIE_SUPERSEDING_ALIASES = (("int_l3_port_channel", "DISABLE_IP_REDIRECTS", "true", ("ipv4Redirects", "ipv6Redirects")),)
+
 
 def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nvpairs, neutralize,
                         ndfc_version, patch_version=None):
@@ -776,7 +786,12 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
                            (the template refuses it). An explicit `clear` field is the caller's own
                            value and is sent as given; only an omitted one is cleared.
           "empty_while_on": a `required` dependent set to "" while its gate ends on, or left empty in HAVE
-                           while this call turns its gate on (enabling OSPF requires a tag).
+                           while this call turns its gate on (enabling OSPF requires a tag). Also a
+                           GIE_PAIRED_NVPAIRS second value left empty while the first ends set.
+          "set_while_off": also a GIE_PAIRED_NVPAIRS second value left set while the first ends empty.
+          "superseded":    an explicit "false" for a GIE_SUPERSEDING_ALIASES dependent while its alias
+                           ends at the superseding value.
+    A pair is judged only when the request sets one of its two nvPairs; an absent value counts as empty.
     A gate whose state cannot be established (absent, or "" for a non-empty inert value) is not judged.
     A gate with `unless` whose other nvPair holds one of its values leaves the dependent live: it is neither
     neutralized nor judged as set while off; an absent other nvPair is not judged either.
@@ -863,6 +878,35 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
                             and nvpair not in want_nvpairs and have_nvpairs.get(nvpair, _GIE_ABSENT) in ("", None))
             if explicit_empty or stored_empty:
                 conflicts.append(dict(entry, reason="empty_while_on"))
+
+    def carried(nvpair):
+        b = by_nvpair.get(nvpair)
+        return b if b is not None and applicable(b) else None
+
+    for parent, first, second in GIE_PAIRED_NVPAIRS:
+        b1, b2 = carried(first), carried(second)
+        if parent != parent_template or b1 is None or b2 is None:
+            continue
+        if first not in explicit_nvpairs and second not in explicit_nvpairs:
+            continue
+        set1 = current(first) not in (_GIE_ABSENT, None, "")
+        set2 = current(second) not in (_GIE_ABSENT, None, "")
+        if set1 != set2:
+            conflicts.append({"field": b2["profile_key"], "nvpair": second, "gate": b1["profile_key"],
+                              "reason": "empty_while_on" if set1 else "set_while_off"})
+
+    for parent, alias, wire, dependents in GIE_SUPERSEDING_ALIASES:
+        b_alias = carried(alias)
+        if parent != parent_template or b_alias is None:
+            continue
+        value = current(alias)
+        if value is _GIE_ABSENT or value is None or _have_comparison_wire(value) != wire:
+            continue
+        for nvpair in dependents:
+            b = carried(nvpair)
+            if b is not None and nvpair in explicit_nvpairs and _have_comparison_wire(want_nvpairs.get(nvpair)) == "false":
+                conflicts.append({"field": b["profile_key"], "nvpair": nvpair, "gate": b_alias["profile_key"],
+                                  "reason": "superseded"})
     return writes, conflicts
 
 
@@ -907,6 +951,9 @@ def gie_nvpair_keymap():
 #               (slice ul1); native on the Ethernet, port-channel and vPC profiles.
 #   enable_storm_control, storm_control_action, storm_control_*_level_percent/_pps: registered on
 #               int_vpc_uplink_access (slice ul1); native on the access, trunk and dot1q-tunnel profiles.
+#   ipv6_addr, ipv6_mask_len: registered on int_l3_port_channel (lot rp3); native on the routed, EPL routed,
+#               subinterface, loopback and SVI profiles.
+#   disable_ip_redirects: registered on int_l3_port_channel (lot rp3); native on the SVI profile, with its own default.
 GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "enable_cdp",
     "enable_qos",
@@ -919,6 +966,9 @@ GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "storm_control_multicast_level_pps",
     "storm_control_unicast_level_percent",
     "storm_control_unicast_level_pps",
+    "ipv6_addr",
+    "ipv6_mask_len",
+    "disable_ip_redirects",
 })
 
 

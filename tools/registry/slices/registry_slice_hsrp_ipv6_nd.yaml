@@ -1,4 +1,4 @@
-# Registry source: HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay parents.
+# Registry source: HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay and routed port-channel parents.
 #
 # Compiled by tools/gie_generate_binding_table.py with the other registry_slice_*.yaml files; see
 # tools/registry/README.md. Each section below is one original source lot. Its header is the original
@@ -525,3 +525,164 @@ bindings:
     parent_resolution: desired_parent
     removal_semantics: unresolved
     evidence_ref: "int_vlan.template@0efb09af7f837b30#L1340"
+
+  # ==== Source lot rp3_l3po_ipv6_redirects (7 of 7 rows) ====
+  # Registry lot rp3 -- IPv6 addressing, link-local address, ND suppress-RA and redirects on the routed port-channel
+  # (int_l3_port_channel, `type: pc`, `mode: l3`).
+  #
+  # Source: the int_l3_port_channel body of the supported patch release (template REST API, read only), sha256 of
+  # `content` 81c9392e92a488977d2a5c22fd2f79797fa826ff28b89d536d087fc8f9afe655.
+  #
+  # ADDRESS AND PREFIX. IPv6 (ipV6Address, L50-L51) and IPv6_PREFIX (integer 1..127, L53-L57, IsMandatory and IsShow
+  # "IPv6!=null"). The body renders interface_ipv6_11_1, or interface_ipv6_tag_11_1 with the routing tag, only when both
+  # are non-empty (L1066-L1088). The public keys are the native ones of the routed Ethernet, subinterface, loopback and
+  # SVI profiles (ipv6_addr, ipv6_mask_len), which is why both are listed in GIE_NATIVE_ELSEWHERE_KEYS. The address is a
+  # `string` row with max_length 45, as for the link-local address: _TYPE_TO_VALIDATOR has no ipV6Address type, and NDFC
+  # validates the format. The pair rule (GIE_PAIRED_NVPAIRS) refuses a request that ends with one of the two set and the
+  # other empty. The prefix is inert while the address is empty, so a merged address clear also clears the stored prefix,
+  # as the native routed Ethernet resolver does. There is no public clear of the integer prefix by itself. The resets are
+  # the empty values the body reads when the pair is absent; the routed Ethernet native path sends the same empty pair for
+  # an interface without an address.
+  #
+  # LINK-LOCAL AND ND. ipv6LinkLocal (L59-L60, child interface_ipv6_link_local_address_11_1 at L1090) and ipv6NdSuppressRa
+  # (L62-L65, child interface_ipv6_nd_suppress_ra_11_1 at L1097). The int_routed_host contracts of lots 0b_32 and 0b_28.
+  # The body renders them whether or not an IPv6 address is set; whether NX-OS accepts them without one is a device
+  # question.
+  #
+  # REDIRECTS. DISABLE_IP_REDIRECTS (boolean, defaultValue false, L109-L112) is described as the backward-compatible option
+  # for both families. ipv4Redirects and ipv6Redirects (boolean without a default, L114-L118) carry IsShow
+  # "DISABLE_IP_REDIRECTS!=true". The body (L595-L611) blanks both split values when DISABLE_IP_REDIRECTS is "true" and
+  # renders routed_interface_redirects_disable with each family disabled when the combined option or its own option is
+  # "true" (L1182-L1192); otherwise it deletes that child. Disposition: three public options. The split ones keep the
+  # int_routed_host contracts. The combined option uses the native SVI key disable_ip_redirects, with this parent's
+  # default false, not the SVI default true. An explicit split "false" while the combined option ends "true" (sent or
+  # stored) is refused before any request (GIE_SUPERSEDING_ALIASES), because the template would not render it. A split
+  # "true" alongside it is redundant and sent.
+  #
+  # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42). Nothing
+  # here is measured live: validated_on is absent and removal_semantics stays unresolved. The link-local, ND and split
+  # redirect resets these rows copy were measured live on int_routed_host.
+
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: IPv6
+    profile_key: ipv6_addr
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: casefold
+    reset_wire: ''
+    max_length: 45
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L51"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: IPv6_PREFIX
+    profile_key: ipv6_mask_len
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    reset_wire: ''
+    min: 1
+    max: 127
+    inert_when:
+      nvpair: IPv6
+      value: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L54"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ipv6LinkLocal
+    profile_key: ipv6_link_local
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: casefold
+    reset_wire: ''
+    max_length: 45
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L60"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ipv6NdSuppressRa
+    profile_key: ipv6_nd_suppress_ra
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L63"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: DISABLE_IP_REDIRECTS
+    profile_key: disable_ip_redirects
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L110"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ipv4Redirects
+    profile_key: disable_ipv4_redirects
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L115"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ipv6Redirects
+    profile_key: disable_ipv6_redirects
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L118"

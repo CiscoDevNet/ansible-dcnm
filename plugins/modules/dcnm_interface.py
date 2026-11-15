@@ -180,6 +180,15 @@ options:
       policy without a key chain and a policy name; the module does not check it. Under C(replaced) and C(overridden) an
       omitted key is reset to false or empty. Only the fallback key chain can be removed on its own. The module never
       creates key chains or policies. NOT LIVE TESTED; MACsec sessions are not tested.
+    - The routed port-channel also accepts C(ipv6_addr) and C(ipv6_mask_len) (1-127), the IPv6 address keys of the
+      routed Ethernet profile. The template renders the address only with both set and requires the prefix with the
+      address, so the module refuses a request that would leave one of them set and the other empty; under C(merged)
+      clearing C(ipv6_addr) to an empty string also clears the stored prefix. C(ipv6_link_local) and
+      C(ipv6_nd_suppress_ra) have the routed Ethernet meaning. Redirects are C(disable_ipv4_redirects),
+      C(disable_ipv6_redirects) and the combined C(disable_ip_redirects) (default false here). While the combined
+      option is true the template ignores the other two, so an explicit false for either one is refused unless the
+      same task sets the combined option to false. Under C(replaced) and C(overridden) an omitted key is reset to false
+      or empty. NOT LIVE TESTED.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
       when it joins the port-channel. A member that already exists keeps its stored value when the option is raised or
@@ -16764,6 +16773,13 @@ def main():
                 if b["reason"] == "empty_while_on"
             }
         )
+        superseded = sorted(
+            {
+                (b["interface"], b["parent"], b["field"], b["gate"])
+                for b in dcnm_intf.dependency_blocked
+                if b["reason"] == "superseded"
+            }
+        )
         parts = []
         if set_off:
             parts.append(
@@ -16778,6 +16794,13 @@ def main():
                 "These fields are required while the option they depend on is enabled, and this request "
                 "leaves them empty: {0}. Set the field, or disable the option.".format(
                     ", ".join("{2} (with {3} enabled) on {0}, parent {1}".format(*b) for b in empty_on)
+                )
+            )
+        if superseded:
+            parts.append(
+                "These fields are false while an option that overrides them is true, and the template ignores "
+                "them then: {0}. Set the overriding option to false in the same task, or omit the field.".format(
+                    ", ".join("{2} (overridden by {3}) on {0}, parent {1}".format(*b) for b in superseded)
                 )
             )
         parts.append("No configuration or deployment request was sent.")

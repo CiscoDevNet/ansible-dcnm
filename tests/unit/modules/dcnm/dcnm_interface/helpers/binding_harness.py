@@ -922,6 +922,13 @@ PILOT = {
     (PC_L3, "macsecKeyChainName"): ("macsec_key_chain_name", "PILOT-KC", "", dict(MACSEC_OFF)),
     (PC_L3, "macsecPolicyName"): ("macsec_policy_name", "PILOT-POL", "", dict(MACSEC_OFF)),
     (PC_L3, "macsecFallbackKeyChainName"): ("macsec_fallback_key_chain_name", "PILOT-FBKC", "", dict(MACSEC_FB_CTX)),
+    # Lot rp3: link-local, ND suppress-RA and the three redirect options. The address and prefix are a pair, covered as
+    # one in test_binding_l3po_ipv6_redirects.py (GROUPED_ONLY_NO_PER_ROW_FIXTURE). Read from the body, not measured live.
+    (PC_L3, "ipv6LinkLocal"): ("ipv6_link_local", "fe80::31", "", {}),
+    (PC_L3, "ipv6NdSuppressRa"): ("ipv6_nd_suppress_ra", True, "false", {}),
+    (PC_L3, "DISABLE_IP_REDIRECTS"): ("disable_ip_redirects", True, "false", {}),
+    (PC_L3, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", {}),
+    (PC_L3, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", {}),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became
@@ -950,6 +957,10 @@ GROUPED_ONLY_NO_PER_ROW_FIXTURE = {
     # `test_binding_role_resets.py`.
     (SVI, "hsrpPriorityForwardingThresholdLower"): "coordinated pair with the upper threshold",
     (SVI, "hsrpPriorityForwardingThresholdUpper"): "coordinated pair with the lower threshold",
+    # The routed port-channel IPv6 address and prefix: the pair rule refuses one without the other, so a per-row omission
+    # describes a refused request. Covered as a pair in `test_binding_l3po_ipv6_redirects.py`.
+    (PC_L3, "IPv6"): "pair with IPv6_PREFIX",
+    (PC_L3, "IPv6_PREFIX"): "pair with IPv6",
 }
 
 PILOT_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT]

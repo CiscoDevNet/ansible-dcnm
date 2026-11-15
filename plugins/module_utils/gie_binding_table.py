@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = e3c22b570f0261b0076e6a9e15a1097018216db572fb64284d361e80fa014bdf
+# provenance_sha256 = d195d9eef1895347cd3a2b71d4ec862755f1273660c33580725e75f5936194cf
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "e3c22b570f0261b0076e6a9e15a1097018216db572fb64284d361e80fa014bdf"
+PROVENANCE_SHA256 = "d195d9eef1895347cd3a2b71d4ec862755f1273660c33580725e75f5936194cf"
 
 BINDING_TABLE = (
     {
@@ -141,6 +141,19 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'DISABLE_IP_REDIRECTS',
+        'profile_key': 'disable_ip_redirects',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
         'parent_nvpair': 'ENABLE_PIM_SPARSE',
         'profile_key': 'enable_pim_sparse',
         'applicable_interface_type': 'pc',
@@ -151,6 +164,35 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'IPv6',
+        'profile_key': 'ipv6_addr',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 45,
+        'no_log': False,
+        'string_compare': 'casefold',
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'IPv6_PREFIX',
+        'profile_key': 'ipv6_mask_len',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'integer',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 127,
+        'no_log': False,
+        'inert_when': {'nvpair': 'IPv6', 'value': ''},
     },
     {
         'parent_template': 'int_l3_port_channel',
@@ -424,6 +466,57 @@ BINDING_TABLE = (
         'max_length': 64,
         'no_log': False,
         'string_compare': 'exact',
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'ipv4Redirects',
+        'profile_key': 'disable_ipv4_redirects',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'ipv6LinkLocal',
+        'profile_key': 'ipv6_link_local',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'max_length': 45,
+        'no_log': False,
+        'string_compare': 'casefold',
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'ipv6NdSuppressRa',
+        'profile_key': 'ipv6_nd_suppress_ra',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'ipv6Redirects',
+        'profile_key': 'disable_ipv6_redirects',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_l3_port_channel',

@@ -730,6 +730,16 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "macsecKeyChainName"): "macsec_key_chain_name",
     ("int_l3_port_channel", "macsecPolicyName"): "macsec_policy_name",
     ("int_l3_port_channel", "macsecFallbackKeyChainName"): "macsec_fallback_key_chain_name",
+    # IPv6 addressing, link-local, ND suppress-RA and redirects on the routed port-channel (lot rp3). The address pair
+    # and the combined redirect option reuse native public keys (GIE_NATIVE_ELSEWHERE_KEYS) and carry the rules in
+    # GIE_PAIRED_NVPAIRS and GIE_SUPERSEDING_ALIASES. Read from the patched body; not measured live.
+    ("int_l3_port_channel", "IPv6"): "ipv6_addr",
+    ("int_l3_port_channel", "IPv6_PREFIX"): "ipv6_mask_len",
+    ("int_l3_port_channel", "ipv6LinkLocal"): "ipv6_link_local",
+    ("int_l3_port_channel", "ipv6NdSuppressRa"): "ipv6_nd_suppress_ra",
+    ("int_l3_port_channel", "DISABLE_IP_REDIRECTS"): "disable_ip_redirects",
+    ("int_l3_port_channel", "ipv4Redirects"): "disable_ipv4_redirects",
+    ("int_l3_port_channel", "ipv6Redirects"): "disable_ipv6_redirects",
     # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
     ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
     # Existing vPC peer-link parent (slice pl1). Read from the 017 body; not measured live.
