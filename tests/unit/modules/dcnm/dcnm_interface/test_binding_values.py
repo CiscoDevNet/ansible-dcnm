@@ -121,7 +121,9 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 393   # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row; + 76: lots a4_1 to a4_5;
+    # + 9: slices vm1, dr1
+    assert len(BINDING_TABLE) == 393
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
     # + slice 0b_41 (2) + slice 0b_42 (13) + lots a4_1 to a4_5 (76) + slice vm1 (6) + slice dr1 (3)
     assert len(set(keys)) == 393, "duplicate (parent, nvpair) row"

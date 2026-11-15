@@ -666,7 +666,8 @@ def test_the_previous_lot_is_untouched():
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
-    assert len(BINDING_TABLE) == 393, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_42, rs1, pl1, ul1, a4_1 to a4_5, vm1, dr1
+    # + slices 0b_37 to 0b_42, rs1, pl1, ul1, a4_1 to a4_5, vm1, dr1
+    assert len(BINDING_TABLE) == 393, "the table has {0} identities".format(len(BINDING_TABLE))
     # 197 integrated + 3 int_vlan rows (test_binding_role_resets.py) = 200, + the six
     # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
