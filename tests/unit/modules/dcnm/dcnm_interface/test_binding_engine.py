@@ -536,6 +536,13 @@ UL1_ROWS = {
     ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PPS", "storm_control_unicast_level_pps"),
 }
 
+# VLAN mapping, slice vm1: the enable flag and the typed entry list on the three trunk parents.
+VM1_ROWS = {
+    (parent, nv, key)
+    for parent in ("int_trunk_host", "int_port_channel_trunk_host", "int_vpc_trunk_host")
+    for nv, key in (("enableVlanMapping", "enable_vlan_mapping"), ("vlanMappingEntries", "vlan_mapping_entries"))
+}
+
 PL1_ROWS = {
     ("int_vpc_peer_link_po", "ENABLE_QOS", "enable_qos"),
     ("int_vpc_peer_link_po", "QOS_POLICY", "qos_policy"),
@@ -573,7 +580,7 @@ def test_package_provenance_and_size():
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
-        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS
+        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS | VM1_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -581,9 +588,10 @@ def test_package_provenance_and_size():
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
     # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS + RS1_ROWS + PL1_ROWS + UL1_ROWS + L3PO_PIM_ROWS
-    # + L3PO_EIGRP_ROWS
+    # + L3PO_EIGRP_ROWS + VM1_ROWS
     assert len(L3PO_EIGRP_ROWS) == 13
-    assert len(BINDING_TABLE) == len(actual_keys) == 308
+    assert len(VM1_ROWS) == 6
+    assert len(BINDING_TABLE) == len(actual_keys) == 314
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -626,7 +634,7 @@ def test_package_provenance_and_size():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 308   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
+    assert len(rows) == 314   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1, vm1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -726,6 +734,7 @@ def test_registered_keys_per_parent():
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
+        "enable_vlan_mapping", "vlan_mapping_entries",   # slice vm1
     }
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
@@ -741,6 +750,7 @@ def test_registered_keys_per_parent():
         "enable_vpc_peer_link",
         # The member default of the trunk port-channel reset-skip, slice rs1.
         "link_transmit_reset_skip",
+        "enable_vlan_mapping", "vlan_mapping_entries",   # slice vm1
     }
     assert registered_profile_keys(PC_ACCESS) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -792,6 +802,8 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("aclFilter", "acl_filter"),
         ("qosStatsSuppressed", "disable_qos_stats"),
         ("queuingStats", "disable_queuing_stats"),
+        ("enableVlanMapping", "enable_vlan_mapping"),     # slice vm1
+        ("vlanMappingEntries", "vlan_mapping_entries"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -1093,6 +1105,8 @@ def test_all_registered_and_guarded_keys():
         "storm_control_broadcast_level_percent", "storm_control_multicast_level_percent",
         "storm_control_unicast_level_percent", "storm_control_broadcast_level_pps",
         "storm_control_multicast_level_pps", "storm_control_unicast_level_pps",
+        # Slice vm1: VLAN mapping on the three trunk parents; the entries are a typed list.
+        "enable_vlan_mapping", "vlan_mapping_entries",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -1185,6 +1199,8 @@ def test_all_registered_and_guarded_keys():
         # SMU 017 slice 0b_37. enable_cdp is registered but NOT guarded: the native spec serves it on other parents.
         # The same holds for enable_qos and qos_policy (slice pl1) and the storm-control keys (slice ul1).
         "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
+        # Slice vm1. Neither key is native on any profile, so both are guarded.
+        "enable_vlan_mapping", "vlan_mapping_entries",
     }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different

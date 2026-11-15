@@ -989,8 +989,10 @@ def test_combined_case_fails_when_one_source_family_is_removed_in_memory(monkeyp
                 ("int_loopback", ROUTED, "int_subif", "int_vlan")]
         assert len(rows) == 11   # + int_subif pimBfdInstance (slice 0b_37)
     else:
+        # The VLAN mapping rows of slice vm1 on int_vpc_trunk_host are another lot, with no reset to remove.
         rows = [row for row in BINDING_TABLE
-                if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK)]
+                if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK)
+                and row["profile_key"] not in ("enable_vlan_mapping", "vlan_mapping_entries")]
         assert len(rows) == 13
     with monkeypatch.context() as patcher:
         for row in rows:

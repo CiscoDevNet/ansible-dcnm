@@ -30,6 +30,16 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
     profile_keys_by_mechanism,
     registered_profile_keys,
     resolve_binding,
+    resolve_by_nvpair,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.interface_struct_lists import (
+    STRUCT_LIST_TYPE,
+    StructListError,
+    struct_compare_form,
+    struct_is_empty,
+    struct_read,
+    struct_to_wire,
+    struct_validate_input,
 )
 
 # nvPair transport mechanisms understood by the engine.
@@ -178,12 +188,14 @@ _TYPE_TO_VALIDATOR = {
     "enum": "str",
     "string": "str",
     "integer": "int",
+    STRUCT_LIST_TYPE: "list",
 }
 
 _VALIDATOR_TO_NATIVE_TYPE = {
     "bool": bool,
     "str": str,
     "int": int,
+    "list": list,
 }
 
 
@@ -336,6 +348,24 @@ def gie_validate_binding_value(
         )
     validator_type = gie_validator_type(binding["type"])
     native_type = _VALIDATOR_TO_NATIVE_TYPE[validator_type]
+    if binding["type"] == STRUCT_LIST_TYPE:
+        # A typed list has its own contract (interface_struct_lists): the playbook list is checked item
+        # by item, and a controller value has to be in the form the parent template reads. Nothing below
+        # applies to it.
+        if value_source == "have":
+            if struct_read(binding["struct_contract"], value) is None:
+                raise GieBindingError(
+                    "{0} for {1!r} on parent {2!r} is not a list the template can read; no change "
+                    "was sent".format(source_label, profile_key, parent_template)
+                )
+            return value
+        try:
+            struct_validate_input(binding["struct_contract"], profile_key, value)
+        except StructListError as exc:
+            raise GieBindingError(
+                "{0} on parent {1!r}; no change was sent".format(exc, parent_template)
+            )
+        return value
     if value_source == "have":
         # (1) NDFC returns booleans as strings, and "" for one that was never set.
         #
@@ -682,6 +712,10 @@ def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version
         # would reject a run over a field this controller (or this capability context)
         # never had. Neither: it is not in scope.
         return GIE_WITHDRAW_INAPPLICABLE, None
+
+    if binding["type"] == STRUCT_LIST_TYPE and struct_is_empty(binding["struct_contract"], have_value):
+        # An empty wrapper is the empty list, like "": nothing to withdraw.
+        return GIE_WITHDRAW_NONE, None
 
     have_wire = _have_comparison_wire(have_value)
 
@@ -1134,7 +1168,9 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
         # Supported version: the engine resolves the binding and transports the value, in the
         # nvPair wire form for passthrough and native for child_pti.
         value = profile_dict[pk]
-        if b.get("mechanism") == GIE_MECH_PASSTHROUGH:
+        if b.get("mechanism") == GIE_MECH_PASSTHROUGH and b["type"] == STRUCT_LIST_TYPE:
+            value = struct_to_wire(b["struct_contract"], pk, b["parent_nvpair"], value)
+        elif b.get("mechanism") == GIE_MECH_PASSTHROUGH:
             value = _to_nvpair_wire(value)
             # Enum vocabulary, only for bindings that declare one. Applied AFTER validation so
             # the public contract is what an operator is held to, and only here, so a value can
@@ -1142,6 +1178,19 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
             value = gie_wire_value(b, value)
         add[b["parent_nvpair"]] = value
     return add, None
+
+
+def gie_struct_binding(parent_template, parent_nvpair):
+    """The registered `struct_list` binding of this exact (parent, nvPair), else None."""
+    binding = resolve_by_nvpair(parent_template, parent_nvpair) if parent_template else None
+    if binding is None or binding["type"] != STRUCT_LIST_TYPE:
+        return None
+    return binding
+
+
+def gie_struct_compare_form(binding, value):
+    """A WANT or HAVE value of a `struct_list` binding in comparable form (see struct_compare_form)."""
+    return struct_compare_form(binding["struct_contract"], value)
 
 
 def gie_carry_forward_bindings(parent_template):

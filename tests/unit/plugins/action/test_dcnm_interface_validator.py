@@ -110,6 +110,8 @@ R2_KIND_OF = {"boolean": "bool", "integer": "int", "enum": "enum"}
 
 
 def r2_registry_kind(row):
+    if row["type"] == "struct_list":
+        return row["struct_contract"]
     if row["type"] == "string":
         return "str_exact" if row.get("string_compare") == "exact" else "str_fold"
     return R2_KIND_OF[row["type"]]
@@ -142,7 +144,8 @@ def test_r2_coverage_the_checker_invents_no_identity():
     # 77 = 74 + enable_cdp, enable_evpn_multisite_dci_tracking and logging_event_port_link_status (SMU 017, slice 0b_37).
     # 78 = 77 + link_transmit_reset_skip (slice rs1). 80 = 78 + enable_qos and qos_policy (slice pl1).
     # 88 = 80 + enable_storm_control, storm_control_action and the six storm-control levels (slice ul1).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 88
+    # 90 = 88 + enable_vlan_mapping and vlan_mapping_entries (slice vm1).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 90
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():
@@ -201,6 +204,8 @@ def r2_row(profile_key, parent):
 
 def r2_values(row):
     """(requested YAML value, the correct readback wire, a wrong readback wire) for one registry row."""
+    if row["type"] == "struct_list":
+        return R2_STRUCT_LIST_VALUES[row["struct_contract"]]
     if row["type"] == "boolean":
         return True, "true", "false"
     if row["type"] == "integer":
@@ -213,6 +218,16 @@ def r2_values(row):
         other = next(v for v in values if v != pick)
         return pick, wv.get(pick, pick), wv.get(other, other)
     return "R2-Value-A", "R2-Value-A", "R2-Value-B"
+
+
+# Typed lists: (requested YAML list, a stored wrapper with the same rows, a stored wrapper whose provider VLAN differs).
+R2_STRUCT_LIST_VALUES = {
+    "vlan_mapping_entries": (
+        [{"customer_vlan": 100, "provider_vlan": 200}],
+        '{"vlanMappingEntries":[{"customerVlan":"100","dot1qTunnel":"false","customerInnerVlan":"","providerVlan":"200"}]}',
+        '{"vlanMappingEntries":[{"customerVlan":"100","dot1qTunnel":"false","customerInnerVlan":"","providerVlan":"201"}]}',
+    ),
+}
 
 
 def r2_registry_parents(profile_key):

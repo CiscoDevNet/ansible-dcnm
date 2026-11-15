@@ -276,6 +276,16 @@ SAMPLE_VALUE = {
     "enum": None,          # taken from valid_values
 }
 
+# A typed list (struct_list) per contract: (playbook list, the nvPair text the reviewed template declaration expects).
+# Written by hand from the int_trunk_host body (json.loads of a wrapper whose rows carry the four keys as strings), not
+# produced by the list contract.
+SAMPLE_STRUCT_LIST = {
+    "vlan_mapping_entries": (
+        [{"customer_vlan": 100, "provider_vlan": 200}],
+        '{"vlanMappingEntries":[{"customerVlan":"100","dot1qTunnel":"false","customerInnerVlan":"","providerVlan":"200"}]}',
+    ),
+}
+
 NDFC_VERSION = "12.6.0.267"
 # Declared explicitly, read from the engine's own policy, for every
 # positive fixture in this file.
@@ -314,12 +324,16 @@ REVIEWED_WIRE_ENUM = {
 
 def _reviewed_wire(binding, value):
     """The nvPair value this binding must emit for `value`, from the reviewed table above."""
+    if binding["type"] == "struct_list":
+        return SAMPLE_STRUCT_LIST[binding["struct_contract"]][1]
     if "wire_values" in binding and isinstance(value, str):
         return REVIEWED_WIRE_ENUM.get(value, value)
     return str(value)
 
 
 def _sample_for(binding):
+    if binding["type"] == "struct_list":
+        return SAMPLE_STRUCT_LIST[binding["struct_contract"]][0]
     if binding["type"] == "enum":
         return binding["valid_values"][0]
     if binding["type"] == "string":

@@ -739,6 +739,13 @@ COMMITTED_BINDINGS = {
     ("int_vpc_uplink_access", "STORM_CONTROL_BCAST_LEVEL_PPS"): "storm_control_broadcast_level_pps",
     ("int_vpc_uplink_access", "STORM_CONTROL_MCAST_LEVEL_PPS"): "storm_control_multicast_level_pps",
     ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PPS"): "storm_control_unicast_level_pps",
+    # VLAN mapping on the three trunk parents (slice vm1). The entries are a typed list (struct_list).
+    ("int_trunk_host", "enableVlanMapping"): "enable_vlan_mapping",
+    ("int_trunk_host", "vlanMappingEntries"): "vlan_mapping_entries",
+    ("int_port_channel_trunk_host", "enableVlanMapping"): "enable_vlan_mapping",
+    ("int_port_channel_trunk_host", "vlanMappingEntries"): "vlan_mapping_entries",
+    ("int_vpc_trunk_host", "enableVlanMapping"): "enable_vlan_mapping",
+    ("int_vpc_trunk_host", "vlanMappingEntries"): "vlan_mapping_entries",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the
@@ -895,7 +902,11 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
           "applicable_mode", "type", "valid_values", "default_template", "reset_wire",
           "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
           "max_value", "no_log", "wire_values", "smu_unsupported", "string_compare",
-          "inert_when", "dropped_on_policy_change", "cleared_on_change_to"]
+          "inert_when", "dropped_on_policy_change", "cleared_on_change_to", "struct_contract"]
+
+# `struct_contract` -- required on a `type: struct_list` row and forbidden on any other: the name of the
+# list contract in plugins/module_utils/interface_struct_lists.py that validates, serializes and compares
+# the value. STRUCT_CONTRACTS is this generator's own copy of those names; a unit test compares the two.
 
 # `smu_unsupported` -- this identity has NO counterpart in the installed SMU build. The
 # row is KEPT so its history and provenance survive; the engine refuses explicit input for
@@ -1026,7 +1037,9 @@ SCHEMA_REQUIRED_FIELDS = (
     "parent_resolution",
 )
 
-SCHEMA_TYPES = frozenset({"boolean", "integer", "string", "enum"})
+SCHEMA_TYPES = frozenset({"boolean", "integer", "string", "enum", "struct_list"})
+
+STRUCT_CONTRACTS = frozenset({"vlan_mapping_entries"})
 
 # Parents whose delete() removes every interface-scoped child policy (PTIWrapper.delete(serial,
 # "INTERFACE", INTF_NAME, INTF_NAME)) and whose children are all created with entity and source =
@@ -1172,6 +1185,23 @@ def _check_registry_schema(r, key):
     elif "string_compare" in r:
         raise ValueError(
             "binding {0!r} declares string_compare on type {1!r}; it applies to string "
+            "bindings only".format(key, r["type"])
+        )
+    if r["type"] == "struct_list":
+        if r.get("struct_contract") not in STRUCT_CONTRACTS:
+            raise ValueError(
+                "binding {0!r} is a struct_list binding with struct_contract {1!r}; known contracts are "
+                "{2}".format(key, r.get("struct_contract"), sorted(STRUCT_CONTRACTS))
+            )
+        scalar = sorted(f for f in ("valid_values", "wire_values", "min_length", "max_length", "min", "max") if f in r)
+        if scalar:
+            raise ValueError(
+                "binding {0!r} declares {1} on a struct_list binding; its contract owns the value "
+                "rules".format(key, scalar)
+            )
+    elif "struct_contract" in r:
+        raise ValueError(
+            "binding {0!r} declares struct_contract on type {1!r}; it applies to struct_list "
             "bindings only".format(key, r["type"])
         )
     if "smu_unsupported" in r and r["smu_unsupported"] is not True:

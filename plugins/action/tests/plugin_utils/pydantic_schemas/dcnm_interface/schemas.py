@@ -92,7 +92,8 @@ def expand_interface_name(name):
 # test_dcnm_interface_validator_r2.py compares it with the registry (names, parents, kinds) so a drift fails a unit test.
 # Kinds: bool / int / enum (case-insensitive tokens), str_exact (secrets and case-sensitive names: compared as written),
 # str_fold (IPv6 text, numeric or dotted text, and the process tags whose case semantics are unverified: compared
-# case-insensitively, as the module does).
+# case-insensitively, as the module does), and one kind per typed list (vlan_mapping_entries), compared by its rows in
+# any order.
 R2_REGISTERED_BINDINGS = {
     "acl_filter": ("aclFilter", "str_exact", (
         "int_access_host",
@@ -221,6 +222,13 @@ R2_REGISTERED_BINDINGS = {
     # on R2_NATIVE_CDP_PARENTS.
     "enable_cdp": ("CDP_ENABLE", "bool", ("int_routed_host",)),
     "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "bool", ("int_routed_host",)),
+    # VLAN mapping on the trunk parents (slice vm1). The entries are a typed list: kind vlan_mapping_entries.
+    "enable_vlan_mapping": ("enableVlanMapping", "bool", ("int_port_channel_trunk_host", "int_trunk_host", "int_vpc_trunk_host")),
+    "vlan_mapping_entries": ("vlanMappingEntries", "vlan_mapping_entries", (
+        "int_port_channel_trunk_host",
+        "int_trunk_host",
+        "int_vpc_trunk_host",
+    )),
     # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
     # (R2_NATIVE_QOS_PARENTS).
     "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
@@ -493,6 +501,51 @@ def _r2_pvlan_pairs(text):
     return r2_pairs_canonical(pairs)
 
 
+# One VLAN mapping row as text: customer VLAN(s), selective dot1q-tunnel, customer inner VLAN, provider VLAN.
+_R2_VLAN_MAPPING_ROW = "c=%s,t=%s,i=%s,p=%s"
+_R2_VLAN_MAPPING_CANONICAL = re.compile(r"^c=[0-9,-]+,t=(true|false),i=[0-9]*,p=[0-9]+(;c=[0-9,-]+,t=(true|false),i=[0-9]*,p=[0-9]+)*$")
+_R2_VLAN_MAPPING_WIRE_KEYS = ("customerVlan", "dot1qTunnel", "customerInnerVlan", "providerVlan")
+
+
+def r2_vlan_mapping_from_yaml(rows):
+    """The playbook vlan_mapping_entries list -> canonical text (rows sorted). None when a row is not readable."""
+    out = []
+    for row in rows:
+        if not isinstance(row, dict) or row.get("customer_vlan") is None or row.get("provider_vlan") is None:
+            return None
+        tunnel = row.get("dot1q_tunnel", False)
+        inner = row.get("customer_inner_vlan")
+        out.append(_R2_VLAN_MAPPING_ROW % (
+            _r2_native(row["customer_vlan"]), "true" if tunnel is True else "false",
+            "" if inner is None else _r2_native(inner), _r2_native(row["provider_vlan"])))
+    return ";".join(sorted(out))
+
+
+def _r2_vlan_mapping(text):
+    """The stored wrapper ({"vlanMappingEntries": [{customerVlan, dot1qTunnel, customerInnerVlan, providerVlan}]}, JSON
+    or a Python literal, every value a string) -> the canonical text. Anything else is returned marked."""
+    s = str(text).strip()
+    if s == "" or _R2_VLAN_MAPPING_CANONICAL.match(s):
+        return s
+    data = None
+    for loader in (json.loads, ast.literal_eval):
+        try:
+            data = loader(s)
+            break
+        except (ValueError, SyntaxError):
+            continue
+    if not isinstance(data, dict) or set(data) != {"vlanMappingEntries"} or not isinstance(data["vlanMappingEntries"], list):
+        return "unparsed:" + s
+    out = []
+    for row in data["vlanMappingEntries"]:
+        if not isinstance(row, dict) or set(row) != set(_R2_VLAN_MAPPING_WIRE_KEYS):
+            return "unparsed:" + s
+        if not all(isinstance(row[k], str) for k in _R2_VLAN_MAPPING_WIRE_KEYS):
+            return "unparsed:" + s
+        out.append(_R2_VLAN_MAPPING_ROW % tuple(row[k] for k in _R2_VLAN_MAPPING_WIRE_KEYS))
+    return ";".join(sorted(out))
+
+
 _R2_MEMBER_PORT = re.compile(r"^(?:ethernet|eth|e)(\d+/\d+(?:/\d+)?)$", re.IGNORECASE)
 
 
@@ -531,11 +584,16 @@ def r2_normalize(nvpair, value):
         return _r2_vlan_set(s)
     if kind == "members":
         return _r2_members(s)
+    if kind == "vlan_mapping_entries":
+        return _r2_vlan_mapping(s)
     return s
 
 
 def r2_wire(parent, nvpair, kind, value):
     """The nvPair string a requested YAML value must read back as (independent of the production renderer)."""
+    if kind == "vlan_mapping_entries":
+        # A list: its canonical text, which r2_normalize also derives from the readback. None when unreadable.
+        return r2_vlan_mapping_from_yaml(value) if isinstance(value, list) else None
     value = _r2_native(value)
     value = str(value)
     if kind == "enum":
@@ -1188,7 +1246,11 @@ class DcnmInterfaceQuerySchema(BaseModel):
                         else "the expected parent of type '%s' mode '%s' is unknown" % (interface_type, mode))
                     problems.append("%s: '%s' (%s) cannot be validated - %s" % (expanded_name, key, nvpair, reason))
                     continue
-                intf_dict["nvPairs"][nvpair] = r2_wire(parent, nvpair, kind, val)
+                wire = r2_wire(parent, nvpair, kind, val)
+                if wire is None:
+                    problems.append("%s: '%s' (%s) cannot be validated - a list row is not readable" % (expanded_name, key, nvpair))
+                    continue
+                intf_dict["nvPairs"][nvpair] = wire
 
             # Native PVLAN fields of the PVLAN parents
             if mode == "pvlan":

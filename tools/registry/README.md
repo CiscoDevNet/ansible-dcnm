@@ -9,7 +9,7 @@ registry sources in `tools/registry/slices/` (`registry_slice_*.yaml`), one file
 | Path | Role | Used at runtime by the module? |
 |------|------|--------------------------------|
 | `plugins/module_utils/gie_binding_table.py` | Compiled, versioned table (`BINDING_TABLE`, `PROVENANCE_SHA256`) | Yes. This is the only artifact the module imports. |
-| `tools/registry/slices/*.yaml` | Canonical registry sources (eight family files) | No. Development tooling. |
+| `tools/registry/slices/*.yaml` | Canonical registry sources (one file per family) | No. Development tooling. |
 | `tools/gie_generate_binding_table.py` | Deterministic generator and `--check` | No. Development tooling. |
 | `tests/unit/modules/dcnm/dcnm_interface/test_binding_registry_sources.py` | Regeneration, determinism, divergence and hygiene tests | Tests only. |
 
@@ -37,12 +37,14 @@ on. Within a file, the rows keep the order of the original lots, and each lot's 
 | `registry_slice_ospf.yaml` | OSPF parents, including the routed port-channel | 96 |
 | `registry_slice_port_channel_vpc.yaml` | Port-channel, vPC, peer-link and uplink parents | 61 |
 | `registry_slice_pvlan.yaml` | Private VLAN companion fields | 12 |
+| `registry_slice_vlan_mapping.yaml` | VLAN mapping on the Ethernet, port-channel and vPC trunk parents | 6 |
 
 The registry used to be split into 42 files, one per development lot (`registry_slice_0b_22_eigrp.yaml` and so on). Comments in
 the sources, in the generator and in the tests still cite those lot names, such as "slice 0b_22". Each lot is now a section of
 a family file, introduced by a `# ==== Source lot ... ====` comment, so a lot name can be found with a text search. A lot whose
 rows belong to several families keeps its header in the family that holds most of its rows. The other families point to it. Lot
-`0b_42_l3po_eigrp` came after the grouping and was added directly as a section of its family file.
+`0b_42_l3po_eigrp` came after the grouping and was added directly as a section of its family file. Lot `vm1_vlan_mapping` came
+later still and has a family file of its own.
 
 | Original lot | Family files (rows) |
 |--------------|---------------------|
@@ -89,6 +91,7 @@ rows belong to several families keeps its header in the family that holds most o
 | `pl1_peer_link` | `registry_slice_port_channel_vpc.yaml` (4) |
 | `rs1_po_link_transmit_reset_skip` | `registry_slice_port_channel_vpc.yaml` (1) |
 | `ul1_uplink_access` | `registry_slice_port_channel_vpc.yaml` (12) |
+| `vm1_vlan_mapping` | `registry_slice_vlan_mapping.yaml` (6) |
 
 ## Commands (run from the repository root, or from anywhere: paths are relative to the script)
 
@@ -128,6 +131,15 @@ The compiled fields are the ones in `FIELDS` in the generator (`reset_wire`, `de
 Other keys in a slice (for example `removal_semantics`, and the comments) are **documentation of the contract and its provenance**
 and are not compiled. In particular, how an omitted binding is withdrawn under `replaced` / `overridden` is decided by the engine
 from the compiled `reset_wire` and `default_template` (`gie_withdrawal_action`), not by `removal_semantics`.
+
+## Typed lists
+
+A `type: struct_list` row is a template `struct[]` field. It names a `struct_contract` defined in
+`plugins/module_utils/interface_struct_lists.py`. The contract validates the playbook list and writes the nvPair as a JSON
+object string that wraps the list under the nvPair name (`""` for an empty list). It reads a controller value only in the
+form the parent template reads, and compares two values by their rows in any order. Such a row may not declare
+`valid_values`, `wire_values`, lengths or numeric bounds: the contract owns the value rules. The generator keeps its own copy
+of the contract names (`STRUCT_CONTRACTS`), and a unit test compares the two.
 
 ## Sanitization policy for the sources
 
