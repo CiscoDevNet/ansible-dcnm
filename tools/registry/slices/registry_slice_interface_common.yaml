@@ -1490,10 +1490,12 @@ bindings:
   #     when arpTimeout is not empty (L1430), interface_ip_access_group_in_11_1 with IPV4_ACL when ipv4AclIn is not
   #     empty (L1437). Parent and child spellings differ for the ACL, as on int_routed_host: the rows use the parent
   #     names.
-  # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42), so a
-  # reset to "false" or "" leaves the child out. Inferred from the body; nothing here is measured live, so
-  # validated_on is absent and removal_semantics stays unresolved. The int_routed_host resets these rows copy were
-  # measured live on that parent (lots 0b_16 and 0b_3).
+  # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42), so an
+  # explicit "false" or "" would leave the child out. Inferred from the body; nothing here is measured live, so
+  # validated_on is absent, removal_semantics stays unresolved and no row declares a reset_wire: an omitted non-default
+  # value is refused under replaced and overridden. arp_timeout has no public clear. Evidence for a later measurement on
+  # this parent: class X for arpTimeout (its int_routed_host reset was measured live), class P for bfdEcho and ipv4AclIn
+  # (int_routed_host rows whose reset is not annotated as measured).
   #
   # Prerequisites, not checked by the module: `feature bfd` for the echo line, and an existing IPv4 access list. On
   # another parent NDFC was measured to store the ACL name lowercased; the case of a port-channel readback is not
@@ -1505,7 +1507,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: integer
-    reset_wire: ""
     min: 60
     max: 28800
     presence_model: two_axis
@@ -1524,7 +1525,6 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: exact
-    reset_wire: ''
     min_length: 1
     max_length: 64
     presence_model: two_axis
@@ -1559,15 +1559,19 @@ bindings:
   # `service-policy type qos input <QOS_POLICY>` when ENABLE_QOS is "true", falling back to QOS_CLASSIFICATION when the
   # policy is empty and the fabric enables AI/ML QoS, and `service-policy type queuing output <QUEUING_POLICY>` when it is
   # set (L550-L563). Public keys and meaning as on the native Ethernet trunk and access profiles; queuing_policy joins
-  # GIE_NATIVE_ELSEWHERE_KEYS. qos_policy is inert while ENABLE_QOS is false, so a merged disable also clears the stored
-  # name, as the native builders send an empty name with QoS disabled. Policy names keep the legacy comparison
+  # GIE_NATIVE_ELSEWHERE_KEYS. qos_policy is inert while ENABLE_QOS is false, so a merged disable keeps the stored name
+  # (it has no reset) and replaced keeps it while QoS ends disabled. Policy names keep the legacy comparison
   # (`unverified`), as on the peer-link and uplink rows. The policies must already exist; the module never creates them.
   #
   # qosStatsSuppressed and queuingStats on int_l3_port_channel (L441-L452), the int_routed_host contracts: each appends
   # `no-stats` to the service-policy line of its own policy (L1485, L1500).
   #
-  # int_dot1q_tunnel_host renders inline (setGeneratedConfig), so a reset relies on NDFC negating a line that is no longer
-  # expected. Nothing here is measured live: validated_on is absent and removal_semantics stays unresolved.
+  # int_dot1q_tunnel_host renders inline (setGeneratedConfig), so an explicit disable relies on NDFC negating a line that
+  # is no longer expected. Nothing here is measured live: validated_on is absent, removal_semantics stays unresolved and
+  # no row declares a reset_wire: an omitted non-default value is refused under replaced and overridden. Evidence for a
+  # later measurement on these parents: class D for ENABLE_PFC (7 rows) and QUEUING_POLICY; class P for ENABLE_QOS and
+  # QOS_POLICY (lot ul1 rows whose reset is not annotated as measured); class X for qosStatsSuppressed and queuingStats
+  # (their int_routed_host resets were measured live).
 
 
   - parent_template: int_routed_host
@@ -1576,7 +1580,6 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: routed
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1593,7 +1596,6 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: dot1q
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1610,7 +1612,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1627,7 +1628,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: dot1q
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1644,7 +1644,6 @@ bindings:
     applicable_interface_type: vpc
     applicable_mode: trunk
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1661,7 +1660,6 @@ bindings:
     applicable_interface_type: vpc
     applicable_mode: access
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1678,7 +1676,6 @@ bindings:
     applicable_interface_type: vpc
     applicable_mode: dot1q
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1695,7 +1692,6 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: dot1q
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1713,7 +1709,6 @@ bindings:
     applicable_mode: dot1q
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_QOS
       value: 'false'
@@ -1733,7 +1728,6 @@ bindings:
     applicable_mode: dot1q
     type: string
     string_compare: unverified
-    reset_wire: ''
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1749,7 +1743,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1766,7 +1759,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1801,14 +1793,16 @@ bindings:
   #
   # Contracts: enable_netflow and netflow_monitor reuse the native SVI and FEX keys (GIE_NATIVE_ELSEWHERE_KEYS);
   # netflow_sampler is new. The monitor is required while NetFlow is enabled; monitor and sampler are inert while it is
-  # disabled, so a merged disable also clears them, as the native SVI builder does for the monitor. On int_vlan the
+  # disabled, so a merged disable keeps them (they have no reset) and replaced keeps them while NetFlow ends disabled; a
+  # later enable without a monitor uses the stored one. On int_vlan the
   # sampler has no inert_when: its gate is a native field, not a registry row. Names keep the legacy comparison
   # (`unverified`); their case handling by NDFC is not measured.
   #
   # Prerequisites, not checked by the module: NetFlow enabled in the fabric settings and the referenced monitor (and
   # sampler) defined there. The module never creates them. The sampler is described for N7K only; no N9K or virtual
-  # platform behavior is claimed. Nothing here is measured live: validated_on is absent and removal_semantics stays
-  # unresolved.
+  # platform behavior is claimed. Nothing here is measured live: validated_on is absent, removal_semantics stays
+  # unresolved and no row declares a reset_wire: an omitted non-default value is refused under replaced and overridden.
+  # Evidence class D for all 37 rows: no measured NetFlow withdrawal on any parent.
 
 
   - parent_template: int_trunk_host
@@ -1817,7 +1811,6 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: trunk
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1835,7 +1828,6 @@ bindings:
     applicable_mode: trunk
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -1856,7 +1848,6 @@ bindings:
     applicable_mode: trunk
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -1875,7 +1866,6 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: access
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1893,7 +1883,6 @@ bindings:
     applicable_mode: access
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -1914,7 +1903,6 @@ bindings:
     applicable_mode: access
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -1933,7 +1921,6 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: routed
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -1951,7 +1938,6 @@ bindings:
     applicable_mode: routed
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -1972,7 +1958,6 @@ bindings:
     applicable_mode: routed
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -1991,7 +1976,6 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: dot1q
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2009,7 +1993,6 @@ bindings:
     applicable_mode: dot1q
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2030,7 +2013,6 @@ bindings:
     applicable_mode: dot1q
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2049,7 +2031,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: trunk
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2067,7 +2048,6 @@ bindings:
     applicable_mode: trunk
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2088,7 +2068,6 @@ bindings:
     applicable_mode: trunk
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2107,7 +2086,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: access
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2125,7 +2103,6 @@ bindings:
     applicable_mode: access
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2146,7 +2123,6 @@ bindings:
     applicable_mode: access
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2165,7 +2141,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2183,7 +2158,6 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2204,7 +2178,6 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2223,7 +2196,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: dot1q
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2241,7 +2213,6 @@ bindings:
     applicable_mode: dot1q
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2262,7 +2233,6 @@ bindings:
     applicable_mode: dot1q
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2281,7 +2251,6 @@ bindings:
     applicable_interface_type: vpc
     applicable_mode: trunk
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2299,7 +2268,6 @@ bindings:
     applicable_mode: trunk
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2320,7 +2288,6 @@ bindings:
     applicable_mode: trunk
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2339,7 +2306,6 @@ bindings:
     applicable_interface_type: vpc
     applicable_mode: access
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2357,7 +2323,6 @@ bindings:
     applicable_mode: access
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2378,7 +2343,6 @@ bindings:
     applicable_mode: access
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2397,7 +2361,6 @@ bindings:
     applicable_interface_type: vpc
     applicable_mode: dot1q
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2415,7 +2378,6 @@ bindings:
     applicable_mode: dot1q
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2436,7 +2398,6 @@ bindings:
     applicable_mode: dot1q
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2455,7 +2416,6 @@ bindings:
     applicable_interface_type: sub_int
     applicable_mode: subint
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -2473,7 +2433,6 @@ bindings:
     applicable_mode: subint
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2494,7 +2453,6 @@ bindings:
     applicable_mode: subint
     type: string
     string_compare: unverified
-    reset_wire: ''
     inert_when:
       nvpair: ENABLE_NETFLOW
       value: 'false'
@@ -2514,7 +2472,6 @@ bindings:
     applicable_mode: vlan
     type: string
     string_compare: unverified
-    reset_wire: ''
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

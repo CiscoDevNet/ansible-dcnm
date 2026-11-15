@@ -690,7 +690,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only

@@ -237,9 +237,9 @@ def test_check_mode_plans_a_native_change_and_sends_nothing():
 
 
 def test_the_six_resets_are_this_parents_own_rows():
-    rows = {r["profile_key"]: r for r in BINDING_TABLE if r["parent_template"] == VPC_DOT1Q}
-    later = {"enable_pfc", "enable_netflow", "netflow_monitor", "netflow_sampler"}   # lots rp4 and rp5, pinned in their suites
-    assert {k: r.get("reset_wire") for k, r in rows.items() if k not in later} == RESETS
+    # Lots rp4 and rp5 added PFC and NetFlow here without a reset (test_binding_rp_omission.py); this case is about the six.
+    rows = {r["profile_key"]: r for r in BINDING_TABLE if r["parent_template"] == VPC_DOT1Q and "reset_wire" in r}
+    assert {k: r.get("reset_wire") for k, r in rows.items()} == RESETS
     assert all(isinstance(r["reset_wire"], str) for r in rows.values())
 
 

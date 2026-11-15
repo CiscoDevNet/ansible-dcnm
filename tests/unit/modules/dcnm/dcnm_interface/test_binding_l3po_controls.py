@@ -2,8 +2,10 @@
 
 The int_l3_port_channel body of the supported patch release declares bfdEcho, arpTimeout and ipv4AclIn with the types, bounds and
 defaults of int_routed_host and renders the same three children. The rows reuse the int_routed_host public keys and
-contracts. Replaced and overridden withdrawal of each row runs in test_binding_withdrawal.py through the shared
-fixture matrix.
+contracts except the reset: the int_routed_host resets are not measured on this parent, so these rows declare none.
+Under replaced and overridden an omitted value that differs from the default is refused before any write; the
+per-route cases are in test_binding_rp_omission.py. ARP timeout has no public clear (an empty value is refused): once
+set it can be changed within 60..28800 or removed with the port-channel.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -19,12 +21,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_by_nvpair
 
 from .helpers import binding_harness as h
-from .test_binding_smu017 import L3PO, MARK, DEPLOY, MEM_A, MODIFY, PO_A
+from .test_binding_smu017 import L3PO, MARK, DEPLOY, MEM_A, PO_A
 from .test_binding_smu017 import _identities, _l3po_pim_bfd_as_have, _l3po_pim_bfd_have, _l3po_pim_bfd_query_transport
 from .test_binding_smu017 import _l3po_pim_bfd_run, _member_have, _only, _paths, _po
 from unittest.mock import patch
 
-# (public key, nvPair, applied public value, applied wire value, reset wire)
+# (public key, nvPair, applied public value, applied wire value, neutral HAVE wire)
 ROWS = [
     ("disable_bfd_echo", "bfdEcho", True, "true", "false"),
     ("arp_timeout", "arpTimeout", 900, "900", ""),
@@ -35,7 +37,7 @@ NVPAIRS = [r[1] for r in ROWS]
 BASE = dict(h.BASE_PC_L3)
 SET = {**BASE, **{r[0]: r[2] for r in ROWS}}
 SET_WIRE = {r[1]: r[3] for r in ROWS}
-RESET_WIRE = {r[1]: r[4] for r in ROWS}
+NEUTRAL_WIRE = {r[1]: r[4] for r in ROWS}
 OTHERS = {"enable_ospf": True, "ospf_tag": "PILOT-OSPF", "ospf_area_id": "0.0.0.0", "enable_pim_sparse": True,
           "eigrp_process_tag": "PILOT-EIGRP", "enable_eigrp_routing": True}
 KEPT_NV = ("MEMBER_INTERFACES", "IP", "PREFIX", "INTF_VRF", "MTU", "ospf", "ospfTag", "ENABLE_PIM_SPARSE",
@@ -57,18 +59,20 @@ def _routed_nv(profile):
 
 
 # ------------------------------------------------------------------ the rows are the routed Ethernet contracts
-@pytest.mark.parametrize("key,nvpair,applied,wire,reset", ROWS, ids=IDS)
-def test_the_row_reuses_the_routed_ethernet_contract(key, nvpair, applied, wire, reset):
+@pytest.mark.parametrize("key,nvpair,applied,wire,neutral", ROWS, ids=IDS)
+def test_the_row_reuses_the_routed_ethernet_contract_without_its_reset(key, nvpair, applied, wire, neutral):
     b = resolve_binding(L3PO, key)
     assert b is not None, "%s is not registered on int_l3_port_channel" % key
     assert (b["parent_nvpair"], b["mechanism"]) == (nvpair, "passthrough")
     assert (b["applicable_interface_type"], b["applicable_mode"]) == ("pc", "l3")
     assert resolve_by_nvpair(L3PO, nvpair) is b
-    assert b["reset_wire"] == reset and "inert_when" not in b
+    assert "reset_wire" not in b and "inert_when" not in b
     routed = resolve_binding(h.ROUTED, key)
-    for field in ("parent_nvpair", "type", "reset_wire", "default_template", "min_value", "max_value", "min_length",
+    for field in ("parent_nvpair", "type", "default_template", "min_value", "max_value", "min_length",
                   "max_length", "valid_values", "string_compare", "min_ndfc_version", "no_log"):
         assert b.get(field) == routed.get(field), (key, field)
+    # The routed reset stays the evidence for a later measurement on this parent; it is not used here.
+    assert routed.get("reset_wire") == neutral
 
 
 # ------------------------------------------------------------------ merged create and update
@@ -82,8 +86,8 @@ def test_merged_create_sends_the_three_fields_with_the_native_profile_and_deploy
     assert _sel(nv) == _sel(_routed_nv({r[0]: r[2] for r in ROWS})), "same keys, same nvPairs as routed Ethernet"
 
 
-@pytest.mark.parametrize("key,nvpair,applied,wire,reset", ROWS, ids=IDS)
-def test_each_field_alone_reaches_its_nvpair(key, nvpair, applied, wire, reset):
+@pytest.mark.parametrize("key,nvpair,applied,wire,neutral", ROWS, ids=IDS)
+def test_each_field_alone_reaches_its_nvpair(key, nvpair, applied, wire, neutral):
     result, calls = h.run_configs([_po({**BASE, key: applied})], "merged", [])
     assert not result.get("failed"), result.get("msg")
     nv = _only(calls)
@@ -149,18 +153,39 @@ def test_the_bounds_are_accepted():
 
 
 # ------------------------------------------------------------------ replaced, overridden, deleted, query, check mode
-def test_replaced_omission_resets_the_three_and_keeps_the_other_families():
+def test_replaced_omission_of_the_three_is_refused_before_any_write():
     have = _l3po_pim_bfd_have({**SET, **OTHERS})
     result, calls = h.run_configs([_po({**BASE, **OTHERS})], "replaced", have)
+    assert result.get("failed") is True
+    for key in IDS:
+        assert "%s on %s" % (key, L3PO) in result["msg"], result["msg"]
+    assert "PILOT-ACL" not in result["msg"] and "900" not in result["msg"], "the refusal named a value"
+    assert h.writes(calls) == []
+
+
+def test_replaced_with_the_explicit_default_and_clear_sends_them():
+    """The explicit default (BFD echo) and the explicit empty ACL are sent as requested; the ARP timeout keeps its
+    stored value because it is given again. Sending them does not prove the device lines are removed."""
+    have = _l3po_pim_bfd_have({**SET, **OTHERS})
+    profile = {**BASE, **OTHERS, "disable_bfd_echo": False, "ipv4_acl_in": "", "arp_timeout": 900}
+    result, calls = h.run_configs([_po(profile)], "replaced", have)
     assert not result.get("failed"), result.get("msg")
     nv = _only(calls)
-    assert _sel(nv) == RESET_WIRE
+    assert _sel(nv) == {"bfdEcho": "false", "arpTimeout": "900", "ipv4AclIn": ""}
     assert _sel(nv, KEPT_NV) == _sel(have[0]["interfaces"][0]["nvPairs"], KEPT_NV)
-    reset = _l3po_pim_bfd_as_have(nv)
+    stored = _l3po_pim_bfd_as_have(nv)
+    result, calls = h.run_configs([_po(profile)], "replaced", stored)
+    assert not result.get("failed"), result.get("msg")
+    assert h.writes(calls) == [], "the state the module produced converges"
+
+
+def test_replaced_omission_at_the_neutral_values_writes_nothing():
+    have = _l3po_pim_bfd_have({**BASE, **OTHERS})
+    have[0]["interfaces"][0]["nvPairs"].update(NEUTRAL_WIRE)
     for state in ("replaced", "merged"):
-        result, calls = h.run_configs([_po({**BASE, **OTHERS})], state, reset)
+        result, calls = h.run_configs([_po({**BASE, **OTHERS})], state, have)
         assert not result.get("failed"), result.get("msg")
-        assert h.writes(calls) == [], "the state the module produced converges"
+        assert h.writes(calls) == [], state
 
 
 def test_deleted_removes_the_port_channel_and_a_repeat_writes_nothing():
@@ -174,12 +199,12 @@ def test_deleted_removes_the_port_channel_and_a_repeat_writes_nothing():
     assert _identities(calls) == []
 
 
-def test_overridden_retained_port_channel_resets_the_three():
+def test_overridden_retained_port_channel_refuses_the_same_withdrawal():
     have = _l3po_pim_bfd_have({**SET, "members": [MEM_A]}) + _member_have(MEM_A, PO_A)
     result, calls = _l3po_pim_bfd_run([_po({**BASE, "members": [MEM_A]})], "overridden", have)
-    assert not result.get("failed"), result.get("msg")
-    assert _identities(calls) == [(MODIFY, [[h.SERIAL, PO_A, L3PO]]), (DEPLOY, [[h.SERIAL, PO_A]])]
-    assert _sel(_only(calls)) == RESET_WIRE
+    assert result.get("failed") is True
+    assert all("%s on %s" % (key, L3PO) in result["msg"] for key in IDS), result["msg"]
+    assert _identities(calls) == [] and h.writes(calls) == []
 
 
 def test_query_returns_the_controller_values_unchanged():
@@ -193,18 +218,22 @@ def test_query_returns_the_controller_values_unchanged():
     assert _sel(result["response"][0]["interfaces"][0]["nvPairs"]) == SET_WIRE
 
 
-@pytest.mark.parametrize("state,profile", [("merged", {**SET, "arp_timeout": 1800}), ("replaced", BASE)],
-                         ids=["merged", "replaced"])
-def test_check_mode_reports_the_change_and_writes_nothing(state, profile):
-    result, calls = h.run_configs([_po(profile)], state, _l3po_pim_bfd_have(SET), check_mode=True)
+def test_check_mode_reports_the_change_and_writes_nothing():
+    result, calls = h.run_configs([_po({**SET, "arp_timeout": 1800})], "merged", _l3po_pim_bfd_have(SET), check_mode=True)
     assert not result.get("failed"), result.get("msg")
     assert h.writes(calls) == [] and result.get("changed") is True
 
 
+def test_check_mode_refuses_the_replaced_omission():
+    result, calls = h.run_configs([_po(BASE)], "replaced", _l3po_pim_bfd_have(SET), check_mode=True)
+    assert result.get("failed") is True
+    assert h.writes(calls) == []
+
+
 # ------------------------------------------------------------------ version gate and scope
 @pytest.mark.parametrize("patch_version", [None, h.UNSUPPORTED_PATCH], ids=["no_patch_version", "unsupported_patch"])
-@pytest.mark.parametrize("key,nvpair,applied,wire,reset", ROWS, ids=IDS)
-def test_each_field_needs_an_approved_patch_version(patch_version, key, nvpair, applied, wire, reset):
+@pytest.mark.parametrize("key,nvpair,applied,wire,neutral", ROWS, ids=IDS)
+def test_each_field_needs_an_approved_patch_version(patch_version, key, nvpair, applied, wire, neutral):
     result, calls = h.run_configs([_po({**BASE, key: applied})], "merged", [], patch_version=patch_version)
     assert result.get("failed") and key in result.get("msg", ""), result.get("msg")
     assert h.writes(calls) == []
@@ -235,8 +264,8 @@ def test_a_plain_l3_port_channel_carries_none_of_the_three():
 
 
 @pytest.mark.parametrize("parent", [h.PC_TRUNK, h.PC_ACCESS, h.PC_DOT1Q])
-@pytest.mark.parametrize("key,nvpair,applied,wire,reset", ROWS, ids=IDS)
-def test_the_keys_stay_refused_on_the_layer2_port_channels(parent, key, nvpair, applied, wire, reset):
+@pytest.mark.parametrize("key,nvpair,applied,wire,neutral", ROWS, ids=IDS)
+def test_the_keys_stay_refused_on_the_layer2_port_channels(parent, key, nvpair, applied, wire, neutral):
     result, calls = h.run_configs([h.cfg_for(parent, {**h.base_for(parent), key: applied})], "merged", [])
     assert result.get("failed") and key in result.get("msg", ""), result.get("msg")
     assert h.writes(calls) == []

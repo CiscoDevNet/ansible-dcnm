@@ -196,8 +196,10 @@ bindings:
   #     int_l3_port_channel_member for every member (L1549-L1552), and the member body selects interface_macsec, or
   #     interface_macsec_fallback when a fallback key chain is set. The CLI therefore lands on each member Ethernet port.
   # The module writes only the port-channel nvPairs; it never writes a member. Nothing here is measured live:
-  # validated_on is absent and removal_semantics stays unresolved. The routed resets these rows copy were measured live on
-  # that parent, with the coordinated removal described in lot 0b_33.
+  # validated_on is absent, removal_semantics stays unresolved and no row declares a reset_wire: an omitted MACsec value
+  # is refused under replaced and overridden. Evidence class X for a later measurement: the int_routed_host resets were
+  # measured live on that parent, with the coordinated removal described in lot 0b_33, but that parent renders MACsec
+  # inline and this one on the members.
   #
   # The key chains and the policy are names on the switch, not secrets (`no_log: false`). The module never creates them.
   # Operation needs MACsec-capable member ports, a peer and key material; none of that is established by this registry.
@@ -208,7 +210,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: "false"
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -226,7 +227,6 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: exact
-    reset_wire: ''
     min_length: 1
     max_length: 64
     presence_model: two_axis
@@ -245,7 +245,6 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: exact
-    reset_wire: ''
     min_length: 1
     max_length: 64
     presence_model: two_axis
@@ -264,7 +263,6 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: exact
-    reset_wire: ''
     min_length: 1
     max_length: 64
     presence_model: two_axis

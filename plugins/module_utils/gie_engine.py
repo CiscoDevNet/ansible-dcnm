@@ -759,12 +759,32 @@ _GIE_ABSENT = object()
 # Couplings between two registered nvPairs that `inert_when` cannot state, each read from one template body.
 #   GIE_PAIRED_NVPAIRS: (parent, first, second). The template requires `second` while `first` is set and renders
 #       the line only when both are set (int_l3_port_channel IPv6 and IPv6_PREFIX). A request that sets either
-#       one must end with both set or both empty.
+#       one must end with both set or both empty. Neither has a reset, and the integer `second` has no public
+#       clear, so clearing `first` over a stored `second` is refused rather than sent half done.
 #   GIE_SUPERSEDING_ALIASES: (parent, alias, wire, dependents). While `alias` holds `wire` the template blanks the
 #       dependents (int_l3_port_channel DISABLE_IP_REDIRECTS over the split redirect options), so an explicit
-#       dependent "false" asks for a line the template does not render.
+#       dependent "false" asks for a line the template does not render, and a stored dependent configures nothing.
 GIE_PAIRED_NVPAIRS = (("int_l3_port_channel", "IPv6", "IPv6_PREFIX"),)
 GIE_SUPERSEDING_ALIASES = (("int_l3_port_channel", "DISABLE_IP_REDIRECTS", "true", ("ipv4Redirects", "ipv6Redirects")),)
+
+
+def gie_superseding_alias(parent_template, nvpair):
+    """(alias, wire) when `nvpair` is a GIE_SUPERSEDING_ALIASES dependent on this parent, else None."""
+    for parent, alias, wire, dependents in GIE_SUPERSEDING_ALIASES:
+        if parent == parent_template and nvpair in dependents:
+            return alias, wire
+    return None
+
+
+def gie_superseded(parent_template, nvpair, nvpairs):
+    """True when `nvpairs` holds the alias that supersedes `nvpair` at its superseding value.
+
+    The template blanks the dependent then, so a stored value configures nothing and is not a withdrawal target. An
+    absent alias proves nothing."""
+    found = gie_superseding_alias(parent_template, nvpair)
+    if found is None or not isinstance(nvpairs, dict) or nvpairs.get(found[0]) is None:
+        return False
+    return _have_comparison_wire(nvpairs[found[0]]) == found[1]
 
 
 def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nvpairs, neutralize,
@@ -780,7 +800,8 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
     Returns (writes, conflicts):
       * writes -- {nvpair: wire}. Merged only, for dependents of a gate this call turned off,
         including chained gates (disabling OSPF disables message-digest authentication, which clears
-        its key). A dependent with no neutral value (ospf_tag) is kept as stored: it configures nothing.
+        its key). A dependent with neither a reset_wire nor a clear (ospf_tag, the NetFlow monitor) is kept as stored:
+        it configures nothing while its gate is off.
       * conflicts -- dicts with field, nvpair, gate and reason, never a value:
           "set_while_off": an explicit non-neutral value for a `strict` dependent whose gate ends off
                            (the template refuses it). An explicit `clear` field is the caller's own
@@ -788,7 +809,8 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
           "empty_while_on": a `required` dependent set to "" while its gate ends on, or left empty in HAVE
                            while this call turns its gate on (enabling OSPF requires a tag). Also a
                            GIE_PAIRED_NVPAIRS second value left empty while the first ends set.
-          "set_while_off": also a GIE_PAIRED_NVPAIRS second value left set while the first ends empty.
+          "set_while_off": also an explicit GIE_PAIRED_NVPAIRS second value while the first ends empty.
+          "no_paired_clear": the first value of a GIE_PAIRED_NVPAIRS pair cleared while the second stays stored.
           "superseded":    an explicit "false" for a GIE_SUPERSEDING_ALIASES dependent while its alias
                            ends at the superseding value.
     A pair is judged only when the request sets one of its two nvPairs; an absent value counts as empty.
@@ -891,9 +913,17 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
             continue
         set1 = current(first) not in (_GIE_ABSENT, None, "")
         set2 = current(second) not in (_GIE_ABSENT, None, "")
-        if set1 != set2:
+        if set1 == set2:
+            continue
+        if set1:
             conflicts.append({"field": b2["profile_key"], "nvpair": second, "gate": b1["profile_key"],
-                              "reason": "empty_while_on" if set1 else "set_while_off"})
+                              "reason": "empty_while_on"})
+        elif second in explicit_nvpairs:
+            conflicts.append({"field": b2["profile_key"], "nvpair": second, "gate": b1["profile_key"],
+                              "reason": "set_while_off"})
+        else:
+            conflicts.append({"field": b1["profile_key"], "nvpair": first, "gate": b2["profile_key"],
+                              "reason": "no_paired_clear"})
 
     for parent, alias, wire, dependents in GIE_SUPERSEDING_ALIASES:
         b_alias = carried(alias)

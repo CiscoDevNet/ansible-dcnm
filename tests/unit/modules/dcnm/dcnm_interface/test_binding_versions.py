@@ -326,7 +326,7 @@ class TestPV09InventoryInvariants:
         assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3 + 4 + 7 + 12 + 37
         # + 0b_37 to 0b_42, rs1, pl1, ul1
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
-            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7 + 12 + 37)
+            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10)
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -370,8 +370,9 @@ class TestPV09InventoryInvariants:
         # The routed port-channel IPv6 and redirect rows of lot rp3 (was e3c22b57...).
         # The priority flow control, Ethernet dot1q-tunnel QoS and routed port-channel statistics rows of lot rp4 (was d195d9ee...).
         # The NetFlow rows of lot rp5 (was 5b3bfb79...).
+        # The rows of lots rp1 to rp5 without a reset_wire (was 9eac40d2...).
         assert PROVENANCE_SHA256 == (
-            "9eac40d22867cd49633299757e09ee3c2c477631d9f7887c2895f0fe57af529d"
+            "34e33e5b9e21d5e2f8dd633968fa108255b6a4ede96a2d3b2e4c9f61c888bfee"
         )
 
 

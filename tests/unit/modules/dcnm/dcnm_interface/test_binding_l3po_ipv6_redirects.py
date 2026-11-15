@@ -5,7 +5,12 @@ the address is set and renders the address only when both are set. It blanks the
 DISABLE_IP_REDIRECTS is true. The address pair reuses the native public keys of the other routed profiles, and so does
 the combined redirect option (the SVI key), with this parent's default. The engine refuses a request that ends with one
 half of the address pair, and an explicit split redirect false while the combined option ends true. Link-local, ND and
-the split redirects reuse the int_routed_host contracts; their per-row withdrawal also runs in test_binding_withdrawal.py.
+the split redirects reuse the int_routed_host contracts except the reset. None of the seven rows declares a reset, so
+under replaced and overridden an omitted value that differs from the default is refused before any write (per route in
+test_binding_rp_omission.py). The integer prefix has no public clear, so clearing the address while a prefix is stored
+is refused too: the address is removed only with the port-channel. A split option stored while the combined option
+ends true configures nothing and is kept. The split options declare no default, so a stored "false" is not neutral
+either and an omission over it is refused.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -22,7 +27,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import resolve_by_nvpair
 
 from .helpers import binding_harness as h
-from .test_binding_smu017 import L3PO, MARK, DEPLOY, MEM_A, MODIFY, PO_A
+from .test_binding_smu017 import L3PO, MARK, DEPLOY, MEM_A, PO_A
 from .test_binding_smu017 import _identities, _l3po_pim_bfd_as_have, _l3po_pim_bfd_have, _l3po_pim_bfd_query_transport
 from .test_binding_smu017 import _l3po_pim_bfd_run, _member_have, _only, _paths, _po
 from unittest.mock import patch
@@ -42,8 +47,10 @@ SET = {**BASE, **ADDR, "ipv6_link_local": "fe80::31", "ipv6_nd_suppress_ra": Tru
        "disable_ipv6_redirects": False}
 SET_WIRE = {**ADDR_WIRE, "ipv6LinkLocal": "fe80::31", "ipv6NdSuppressRa": "true", "ipv4Redirects": "true",
             "ipv6Redirects": "false"}
-RESET_WIRE = {"IPv6": "", "IPv6_PREFIX": "", "ipv6LinkLocal": "", "ipv6NdSuppressRa": "false",
-              "DISABLE_IP_REDIRECTS": "false", "ipv4Redirects": "false", "ipv6Redirects": "false"}
+# The keys of SET that replaced and overridden cannot withdraw. disable_ipv6_redirects is stored "false", which is not
+# a declared default.
+REFUSED_KEYS = ("ipv6_addr", "ipv6_mask_len", "ipv6_link_local", "ipv6_nd_suppress_ra", "disable_ipv4_redirects",
+                "disable_ipv6_redirects")
 KEPT_NV = ("MEMBER_INTERFACES", "IP", "PREFIX", "INTF_VRF", "MTU", "DESC")
 
 
@@ -76,27 +83,31 @@ def test_link_local_nd_and_split_redirects_reuse_the_routed_ethernet_contract(ke
     assert b is not None and (b["parent_nvpair"], b["mechanism"]) == (nvpair, "passthrough")
     assert (b["applicable_interface_type"], b["applicable_mode"]) == ("pc", "l3")
     assert resolve_by_nvpair(L3PO, nvpair) is b
+    assert "reset_wire" not in b
     routed = resolve_binding(h.ROUTED, key)
-    for field in ("parent_nvpair", "type", "reset_wire", "default_template", "max_length", "string_compare",
+    for field in ("parent_nvpair", "type", "default_template", "max_length", "string_compare",
                   "min_ndfc_version", "no_log", "inert_when"):
         assert b.get(field) == routed.get(field), (key, field)
+    # The routed reset stays the evidence for a later measurement on this parent; it is not used here.
+    assert routed.get("reset_wire") is not None
 
 
 def test_the_address_pair_uses_the_native_public_keys_and_the_template_bounds():
     addr, prefix = resolve_binding(L3PO, "ipv6_addr"), resolve_binding(L3PO, "ipv6_mask_len")
-    assert (addr["parent_nvpair"], addr["type"], addr["max_length"], addr["string_compare"], addr["reset_wire"]) == (
-        "IPv6", "string", 45, "casefold", "")
-    assert (prefix["parent_nvpair"], prefix["type"], prefix["min_value"], prefix["max_value"], prefix["reset_wire"]) == (
-        "IPv6_PREFIX", "integer", 1, 127, "")
-    assert prefix["inert_when"] == {"nvpair": "IPv6", "value": ""}
+    assert (addr["parent_nvpair"], addr["type"], addr["max_length"], addr["string_compare"]) == (
+        "IPv6", "string", 45, "casefold")
+    assert (prefix["parent_nvpair"], prefix["type"], prefix["min_value"], prefix["max_value"]) == (
+        "IPv6_PREFIX", "integer", 1, 127)
+    for b in (addr, prefix):
+        assert not {"reset_wire", "default_template", "inert_when"} & set(b), b
     assert ("int_l3_port_channel", "IPv6", "IPv6_PREFIX") in gie_engine.GIE_PAIRED_NVPAIRS
     assert {"ipv6_addr", "ipv6_mask_len", "disable_ip_redirects"} <= gie_engine.GIE_NATIVE_ELSEWHERE_KEYS
 
 
 def test_the_combined_redirect_option_has_this_parents_default_not_the_svi_default():
     b = resolve_binding(L3PO, "disable_ip_redirects")
-    assert (b["parent_nvpair"], b["type"], b["default_template"], b["reset_wire"]) == (
-        "DISABLE_IP_REDIRECTS", "boolean", False, "false")
+    assert (b["parent_nvpair"], b["type"], b["default_template"]) == ("DISABLE_IP_REDIRECTS", "boolean", False)
+    assert "reset_wire" not in b
     assert resolve_binding(h.SVI, "disable_ip_redirects") is None, "the SVI keeps its native field"
     assert gie_engine.GIE_SUPERSEDING_ALIASES == (
         ("int_l3_port_channel", "DISABLE_IP_REDIRECTS", "true", ("ipv4Redirects", "ipv6Redirects")),)
@@ -162,15 +173,24 @@ def test_merged_address_change_keeps_the_stored_prefix():
     assert _sel(_only(calls), ["IPv6", "IPv6_PREFIX"]) == {"IPv6": "2001:db8::32", "IPv6_PREFIX": "64"}
 
 
-def test_merged_address_clear_also_clears_the_stored_prefix():
+@pytest.mark.parametrize("state", ["merged", "replaced"])
+def test_an_address_clear_over_a_stored_prefix_is_refused_before_any_write(state):
+    """The prefix has no reset and no public clear, so the request cannot end with both empty; it is not sent half
+    done. The empty prefix is refused as input as well."""
     have = _l3po_pim_bfd_have({**BASE, **ADDR})
+    result, calls = h.run_configs([_po({**BASE, "ipv6_addr": ""})], state, have)
+    msg = _refused(result, calls, "ipv6_addr (paired with ipv6_mask_len)", "no supported clear")
+    assert "2001:db8::31" not in msg and "64" not in msg.replace("Port-channel", ""), "the refusal named a value"
+    result, calls = h.run_configs([_po({**BASE, "ipv6_addr": "", "ipv6_mask_len": ""})], state, have)
+    _refused(result, calls, "ipv6_mask_len")
+
+
+def test_an_address_clear_without_a_stored_pair_writes_nothing():
+    have = _l3po_pim_bfd_have(BASE)
+    have[0]["interfaces"][0]["nvPairs"].update({"IPv6": "", "IPv6_PREFIX": ""})
     result, calls = h.run_configs([_po({**BASE, "ipv6_addr": ""})], "merged", have)
     assert not result.get("failed"), result.get("msg")
-    nv = _only(calls)
-    assert _sel(nv, ["IPv6", "IPv6_PREFIX"]) == {"IPv6": "", "IPv6_PREFIX": ""}
-    result, calls = h.run_configs([_po({**BASE, "ipv6_addr": ""})], "merged", _l3po_pim_bfd_as_have(nv))
-    assert not result.get("failed"), result.get("msg")
-    assert h.writes(calls) == [], "the cleared pair converges"
+    assert h.writes(calls) == []
 
 
 def test_merged_prefix_on_a_port_channel_without_an_address_is_refused():
@@ -184,22 +204,24 @@ def test_merged_address_on_a_port_channel_without_a_prefix_is_refused():
 
 
 def test_replaced_address_without_the_prefix_is_refused_even_with_a_stored_prefix():
-    """Replaced resets an omitted prefix, so the request would end with the address alone."""
+    """Replaced would have to withdraw the omitted prefix, and the prefix has no reset."""
     result, calls = h.run_configs([_po({**BASE, "ipv6_addr": "2001:db8::31"})], "replaced",
                                   _l3po_pim_bfd_have({**BASE, **ADDR}))
     _refused(result, calls, "ipv6_mask_len")
 
 
-def test_replaced_without_the_pair_withdraws_both_in_one_request():
+def test_replaced_without_the_pair_is_refused_before_any_write():
     have = _l3po_pim_bfd_have({**BASE, **ADDR})
     result, calls = h.run_configs([_po(BASE)], "replaced", have)
+    _refused(result, calls, "ipv6_addr on %s" % L3PO, "ipv6_mask_len on %s" % L3PO)
+
+
+def test_replaced_without_the_pair_over_an_empty_pair_writes_nothing():
+    have = _l3po_pim_bfd_have(BASE)
+    have[0]["interfaces"][0]["nvPairs"].update({"IPv6": "", "IPv6_PREFIX": ""})
+    result, calls = h.run_configs([_po(BASE)], "replaced", have)
     assert not result.get("failed"), result.get("msg")
-    nv = _only(calls)
-    assert _sel(nv, ["IPv6", "IPv6_PREFIX"]) == {"IPv6": "", "IPv6_PREFIX": ""}
-    for state in ("replaced", "merged"):
-        result, calls = h.run_configs([_po(BASE)], state, _l3po_pim_bfd_as_have(nv))
-        assert not result.get("failed"), result.get("msg")
-        assert h.writes(calls) == []
+    assert h.writes(calls) == []
 
 
 def test_an_unrelated_change_is_not_judged_by_the_pair_rule():
@@ -245,12 +267,11 @@ def test_clearing_the_combined_option_in_the_same_task_lets_the_split_false_thro
     assert _sel(_only(calls)) == {"DISABLE_IP_REDIRECTS": "false", "ipv4Redirects": "false", "ipv6Redirects": "true"}
 
 
-def test_replaced_resets_an_omitted_combined_option_so_the_split_false_is_accepted():
+def test_replaced_split_false_with_an_omitted_stored_combined_true_is_refused():
+    """The omitted combined option cannot be withdrawn (no reset), so it ends true and supersedes the split false."""
     have = _l3po_pim_bfd_have({**BASE, "disable_ip_redirects": True})
     result, calls = h.run_configs([_po({**BASE, "disable_ipv4_redirects": False})], "replaced", have)
-    assert not result.get("failed"), result.get("msg")
-    nv = _only(calls)
-    assert (nv["DISABLE_IP_REDIRECTS"], nv["ipv4Redirects"]) == ("false", "false")
+    _refused(result, calls, "disable_ipv4_redirects (overridden by disable_ip_redirects)")
 
 
 def test_a_split_true_beside_the_combined_true_is_redundant_and_sent():
@@ -260,35 +281,55 @@ def test_a_split_true_beside_the_combined_true_is_redundant_and_sent():
     assert _sel(_only(calls)) == {"DISABLE_IP_REDIRECTS": "true", "ipv4Redirects": "true"}
 
 
-def test_replaced_with_the_combined_true_resets_the_omitted_split_options():
+def test_replaced_with_the_combined_true_keeps_the_superseded_split_options():
+    """The template blanks the split options while the combined option is true, so the stored values configure nothing
+    and nothing is sent for them: no false is written over a value the template ignores."""
     have = _l3po_pim_bfd_have({**BASE, "disable_ipv4_redirects": True, "disable_ipv6_redirects": True})
     result, calls = h.run_configs([_po({**BASE, "disable_ip_redirects": True})], "replaced", have)
     assert not result.get("failed"), result.get("msg")
-    assert _sel(_only(calls)) == {"DISABLE_IP_REDIRECTS": "true", "ipv4Redirects": "false", "ipv6Redirects": "false"}
+    nv = _only(calls)
+    assert nv["DISABLE_IP_REDIRECTS"] == "true"
+    assert (nv.get("ipv4Redirects", "true"), nv.get("ipv6Redirects", "true")) == ("true", "true"), nv
+    result, calls = h.run_configs([_po({**BASE, "disable_ip_redirects": True})], "replaced", _l3po_pim_bfd_as_have(nv))
+    assert not result.get("failed"), result.get("msg")
+    assert h.writes(calls) == [], "the state the module produced converges"
+
+
+def test_replaced_with_a_stored_combined_true_kept_and_a_stored_split_false_writes_nothing():
+    have = _l3po_pim_bfd_have({**BASE, "disable_ipv4_redirects": False})
+    have[0]["interfaces"][0]["nvPairs"]["DISABLE_IP_REDIRECTS"] = "true"
+    result, calls = h.run_configs([_po({**BASE, "disable_ip_redirects": True})], "replaced", have)
+    assert not result.get("failed"), result.get("msg")
+    assert h.writes(calls) == []
+
+
+def test_replaced_omitting_a_live_split_option_is_refused():
+    """With the combined option at its default the split option is live, and it has no reset."""
+    have = _l3po_pim_bfd_have({**BASE, "disable_ip_redirects": False, "disable_ipv4_redirects": True})
+    result, calls = h.run_configs([_po({**BASE, "disable_ip_redirects": False})], "replaced", have)
+    _refused(result, calls, "disable_ipv4_redirects on %s" % L3PO)
 
 
 # ------------------------------------------------------------------ replaced, overridden, deleted, query, check mode
-def test_replaced_omission_resets_all_seven():
+def test_replaced_omission_is_refused_for_every_stored_value_and_names_no_value():
     have = _l3po_pim_bfd_have({**SET, "disable_ip_redirects": False})
     result, calls = h.run_configs([_po(BASE)], "replaced", have)
-    assert not result.get("failed"), result.get("msg")
-    nv = _only(calls)
-    assert _sel(nv) == RESET_WIRE
-    assert _sel(nv, KEPT_NV) == _sel(have[0]["interfaces"][0]["nvPairs"], KEPT_NV)
+    msg = _refused(result, calls, *("%s on %s" % (k, L3PO) for k in REFUSED_KEYS))
+    assert "disable_ip_redirects on" not in msg, "the combined option is stored at its default"
+    assert "2001:db8::31" not in msg and "fe80::31" not in msg
 
 
-def test_overridden_retained_port_channel_resets_all_seven():
+def test_overridden_retained_port_channel_refuses_the_same_withdrawal():
     have = _l3po_pim_bfd_have({**SET, "disable_ip_redirects": False, "members": [MEM_A]}) + _member_have(MEM_A, PO_A)
     result, calls = _l3po_pim_bfd_run([_po({**BASE, "members": [MEM_A]})], "overridden", have)
-    assert not result.get("failed"), result.get("msg")
-    assert _identities(calls) == [(MODIFY, [[h.SERIAL, PO_A, L3PO]]), (DEPLOY, [[h.SERIAL, PO_A]])]
-    assert _sel(_only(calls)) == RESET_WIRE
+    _refused(result, calls, *("%s on %s" % (k, L3PO) for k in REFUSED_KEYS))
+    assert _identities(calls) == []
 
 
 def test_overridden_with_half_of_the_pair_is_refused():
     have = _l3po_pim_bfd_have({**SET, "members": [MEM_A]}) + _member_have(MEM_A, PO_A)
     result, calls = _l3po_pim_bfd_run([_po({**BASE, "members": [MEM_A], "ipv6_mask_len": 64})], "overridden", have)
-    assert result.get("failed") and "ipv6_mask_len" in str(result.get("msg"))
+    assert result.get("failed") and "ipv6_addr" in str(result.get("msg"))
     assert _identities(calls) == []
 
 
@@ -313,12 +354,15 @@ def test_query_returns_the_controller_values_unchanged():
     assert result["response"] == target and _sel(result["response"][0]["interfaces"][0]["nvPairs"]) == SET_WIRE
 
 
-@pytest.mark.parametrize("state,profile", [("merged", {**SET, "ipv6_mask_len": 80}), ("replaced", BASE)],
-                         ids=["merged", "replaced"])
-def test_check_mode_reports_the_change_and_writes_nothing(state, profile):
-    result, calls = h.run_configs([_po(profile)], state, _l3po_pim_bfd_have(SET), check_mode=True)
+def test_check_mode_reports_the_change_and_writes_nothing():
+    result, calls = h.run_configs([_po({**SET, "ipv6_mask_len": 80})], "merged", _l3po_pim_bfd_have(SET), check_mode=True)
     assert not result.get("failed"), result.get("msg")
     assert h.writes(calls) == [] and result.get("changed") is True
+
+
+def test_check_mode_refuses_the_replaced_omission():
+    result, calls = h.run_configs([_po(BASE)], "replaced", _l3po_pim_bfd_have(SET), check_mode=True)
+    _refused(result, calls, "ipv6_addr on %s" % L3PO)
 
 
 def test_check_mode_also_refuses_half_of_the_pair():
@@ -410,3 +454,30 @@ def test_the_svi_native_combined_redirect_option_is_unchanged(value, wire):
     found = []
     h._collect_policies([c["payload"] for c in h.writes(calls)], found)
     assert found[0]["policy"] == h.SVI and found[0]["interfaces"][0]["nvPairs"]["DISABLE_IP_REDIRECTS"] == wire
+
+
+# ------------------------------------------------------------------ helper level (not integration coverage)
+@pytest.mark.parametrize("want,have,explicit,reason", [
+    ({"IPv6": ""}, {"IPv6": "2001:db8::31", "IPv6_PREFIX": "64"}, {"IPv6"}, "no_paired_clear"),
+    ({"IPv6_PREFIX": "64"}, {"IPv6": ""}, {"IPv6_PREFIX"}, "set_while_off"),
+    ({"IPv6": "2001:db8::31"}, {"IPv6_PREFIX": ""}, {"IPv6"}, "empty_while_on"),
+    ({"IPv6": "", "IPv6_PREFIX": ""}, {}, {"IPv6"}, None),
+    ({"IPv6": ""}, {"IPv6": "", "IPv6_PREFIX": ""}, {"IPv6"}, None),
+], ids=["clear_over_stored_prefix", "prefix_without_address", "address_without_prefix", "both_empty", "already_empty"])
+def test_helper_pair_rule_reasons(want, have, explicit, reason):
+    _writes, conflicts = gie_engine.gie_dependency_plan(L3PO, want, have, explicit, True, "12.6.0.267", h.SUPPORTED_PATCH)
+    assert [c["reason"] for c in conflicts] == ([reason] if reason else []), conflicts
+
+
+@pytest.mark.parametrize("nvpairs,superseded", [
+    ({"DISABLE_IP_REDIRECTS": "true"}, True),
+    ({"DISABLE_IP_REDIRECTS": True}, True),
+    ({"DISABLE_IP_REDIRECTS": "false"}, False),
+    ({}, False),
+    ({"DISABLE_IP_REDIRECTS": None}, False),
+], ids=["wire_true", "native_true", "false", "absent", "null"])
+def test_helper_superseded_reads_the_alias_value(nvpairs, superseded):
+    for nvpair in ("ipv4Redirects", "ipv6Redirects"):
+        assert gie_engine.gie_superseded(L3PO, nvpair, nvpairs) is superseded
+    assert gie_engine.gie_superseded(h.ROUTED, "ipv4Redirects", {"DISABLE_IP_REDIRECTS": "true"}) is False
+    assert gie_engine.gie_superseded(L3PO, "DISABLE_IP_REDIRECTS", {"DISABLE_IP_REDIRECTS": "true"}) is False

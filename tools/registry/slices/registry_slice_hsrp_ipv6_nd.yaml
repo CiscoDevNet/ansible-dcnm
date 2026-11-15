@@ -539,10 +539,9 @@ bindings:
   # SVI profiles (ipv6_addr, ipv6_mask_len), which is why both are listed in GIE_NATIVE_ELSEWHERE_KEYS. The address is a
   # `string` row with max_length 45, as for the link-local address: _TYPE_TO_VALIDATOR has no ipV6Address type, and NDFC
   # validates the format. The pair rule (GIE_PAIRED_NVPAIRS) refuses a request that ends with one of the two set and the
-  # other empty. The prefix is inert while the address is empty, so a merged address clear also clears the stored prefix,
-  # as the native routed Ethernet resolver does. There is no public clear of the integer prefix by itself. The resets are
-  # the empty values the body reads when the pair is absent; the routed Ethernet native path sends the same empty pair for
-  # an interface without an address.
+  # other empty. Neither row has a reset or a declared default, and the integer prefix has no public clear, so the pair
+  # rule also refuses clearing the address while a prefix is stored (no_paired_clear): the address leaves with the
+  # port-channel. Evidence class D: no measured withdrawal of the pair on any parent.
   #
   # LINK-LOCAL AND ND. ipv6LinkLocal (L59-L60, child interface_ipv6_link_local_address_11_1 at L1090) and ipv6NdSuppressRa
   # (L62-L65, child interface_ipv6_nd_suppress_ra_11_1 at L1097). The int_routed_host contracts of lots 0b_32 and 0b_28.
@@ -559,9 +558,14 @@ bindings:
   # stored) is refused before any request (GIE_SUPERSEDING_ALIASES), because the template would not render it. A split
   # "true" alongside it is redundant and sent.
   #
+  # While the combined option ends "true" a stored split value configures nothing, so replaced and overridden keep it.
+  #
   # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42). Nothing
-  # here is measured live: validated_on is absent and removal_semantics stays unresolved. The link-local, ND and split
-  # redirect resets these rows copy were measured live on int_routed_host.
+  # here is measured live: validated_on is absent and removal_semantics stays unresolved. No row declares a reset_wire: an
+  # omitted non-default value is refused under replaced and overridden. Evidence for a later measurement on this parent:
+  # class X for link-local, ND and the split redirects (their int_routed_host resets were measured live on that parent);
+  # class D for DISABLE_IP_REDIRECTS (template default only). The split options declare no default, so a stored "false"
+  # is refused as well.
 
 
   - parent_template: int_l3_port_channel
@@ -571,7 +575,6 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: casefold
-    reset_wire: ''
     max_length: 45
     presence_model: two_axis
     emit_when: explicit_only
@@ -588,12 +591,8 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: integer
-    reset_wire: ''
     min: 1
     max: 127
-    inert_when:
-      nvpair: IPv6
-      value: ''
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -610,7 +609,6 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: casefold
-    reset_wire: ''
     max_length: 45
     presence_model: two_axis
     emit_when: explicit_only
@@ -627,7 +625,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -644,7 +641,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     default_template: false
     presence_model: two_axis
     emit_when: explicit_only
@@ -661,7 +657,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -677,7 +672,6 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
-    reset_wire: 'false'
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

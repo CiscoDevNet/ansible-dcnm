@@ -234,11 +234,6 @@ MACSEC_FB_CTX = {"enable_macsec_interface_policy": True,
 
 # PIM stays enabled while its dependent rows are cleared.
 PIM_ON = {"enable_pim_sparse": True}
-
-# NetFlow contexts (lot rp5). The monitor is withdrawn without a NetFlow value in the request or HAVE, where an empty
-# monitor is valid (an explicit false would itself clear it under merged); the sampler with NetFlow on and its monitor kept.
-NETFLOW_MONITOR_ONLY = {"netflow_monitor": "PILOT-FM"}
-NETFLOW_ON = {"enable_netflow": True, "netflow_monitor": "PILOT-FM"}
 # HSRP on the SVI parent. The installed body rejects every advanced HSRP field unless HSRP is
 # enabled with a primary IPv4 VIP, and the preempt delay additionally needs `preempt: true`; the
 # native argspec requires `hsrp_vip` and `hsrp_group` whenever `enable_hsrp` is true. Priority 120
@@ -917,55 +912,6 @@ PILOT = {
     (PC_L3, "eigrpBfd"): ("enable_eigrp_bfd", True, "false", dict(EIGRP_CTX)),
     (PC_L3, "eigrpBfdDisable"): ("disable_eigrp_bfd", True, "false", dict(EIGRP_CTX)),
     (PC_L3, "eigrpProcessTag"): ("eigrp_process_tag", "PILOT-EIGRP", "", dict(EIGRP_TAG_CTX)),
-    # Lot rp1: BFD echo, ARP timeout and inbound ACL with the applied values of int_routed_host. Read from the body,
-    # not measured live.
-    (PC_L3, "bfdEcho"): ("disable_bfd_echo", True, "false", {}),
-    (PC_L3, "arpTimeout"): ("arp_timeout", 900, "", {}),
-    (PC_L3, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
-    # Lot rp2: MACsec with the contexts of int_routed_host. The enabler, key chain and policy can only be withdrawn together
-    # there; the fallback alone. Read from the body, not measured live.
-    (PC_L3, "macsecInterfacePolicy"): ("enable_macsec_interface_policy", True, "false", dict(MACSEC_NAMES)),
-    (PC_L3, "macsecKeyChainName"): ("macsec_key_chain_name", "PILOT-KC", "", dict(MACSEC_OFF)),
-    (PC_L3, "macsecPolicyName"): ("macsec_policy_name", "PILOT-POL", "", dict(MACSEC_OFF)),
-    (PC_L3, "macsecFallbackKeyChainName"): ("macsec_fallback_key_chain_name", "PILOT-FBKC", "", dict(MACSEC_FB_CTX)),
-    # Lot rp3: link-local, ND suppress-RA and the three redirect options. The address and prefix are a pair, covered as
-    # one in test_binding_l3po_ipv6_redirects.py (GROUPED_ONLY_NO_PER_ROW_FIXTURE). Read from the body, not measured live.
-    (PC_L3, "ipv6LinkLocal"): ("ipv6_link_local", "fe80::31", "", {}),
-    (PC_L3, "ipv6NdSuppressRa"): ("ipv6_nd_suppress_ra", True, "false", {}),
-    (PC_L3, "DISABLE_IP_REDIRECTS"): ("disable_ip_redirects", True, "false", {}),
-    (PC_L3, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", {}),
-    (PC_L3, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", {}),
-    # Lot rp4: priority flow control, the Ethernet dot1q-tunnel QoS and queuing policies, and the routed port-channel
-    # policy statistics with the int_routed_host contexts. Read from the bodies, not measured live.
-    (ROUTED, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
-    (ETH_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
-    (ETH_DOT1Q, "ENABLE_QOS"): ("enable_qos", True, "false", {"qos_policy": "pilot_qos"}),
-    (ETH_DOT1Q, "QOS_POLICY"): ("qos_policy", "pilot_qos", "", {"enable_qos": True}),
-    (ETH_DOT1Q, "QUEUING_POLICY"): ("queuing_policy", "pilot_queue", "", {}),
-    (PC_L3, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
-    (PC_L3, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
-    (PC_L3, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
-    # Lot rp5: NetFlow on the Ethernet, routed port-channel and subinterface parents, and the sampler on the SVI.
-    # Read from the bodies, not measured live.
-    (TRUNK, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (TRUNK, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (TRUNK, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (ACCESS, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (ACCESS, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (ACCESS, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (ROUTED, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (ROUTED, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (ROUTED, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (ETH_DOT1Q, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (ETH_DOT1Q, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (ETH_DOT1Q, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (PC_L3, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (PC_L3, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (PC_L3, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (SUBIF, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (SUBIF, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (SUBIF, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (SVI, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became
@@ -994,10 +940,6 @@ GROUPED_ONLY_NO_PER_ROW_FIXTURE = {
     # `test_binding_role_resets.py`.
     (SVI, "hsrpPriorityForwardingThresholdLower"): "coordinated pair with the upper threshold",
     (SVI, "hsrpPriorityForwardingThresholdUpper"): "coordinated pair with the lower threshold",
-    # The routed port-channel IPv6 address and prefix: the pair rule refuses one without the other, so a per-row omission
-    # describes a refused request. Covered as a pair in `test_binding_l3po_ipv6_redirects.py`.
-    (PC_L3, "IPv6"): "pair with IPv6_PREFIX",
-    (PC_L3, "IPv6_PREFIX"): "pair with IPv6",
 }
 
 PILOT_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT]
@@ -1038,18 +980,6 @@ PILOT_PC = {
     (PC_DOT1Q, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
     (PC_DOT1Q, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (PC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
-    # Lot rp4: priority flow control. Read from the body, not measured live.
-    (PC_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
-    # Lot rp5: NetFlow. Read from the bodies, not measured live.
-    (PC_ACCESS, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (PC_ACCESS, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (PC_ACCESS, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (PC_TRUNK, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (PC_TRUNK, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (PC_TRUNK, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (PC_DOT1Q, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (PC_DOT1Q, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (PC_DOT1Q, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
 }
 PILOT_PC_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT_PC]
 PILOT_PC_ITEMS = [(p, n, k, applied, reset, extra)
@@ -1080,20 +1010,6 @@ PILOT_VPC = {
     (VPC_DOT1Q, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", {}),
     (VPC_DOT1Q, "queuingStats"): ("disable_queuing_stats", True, "false", {}),
     (VPC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", {}),
-    # Lot rp4: priority flow control on the three vPC parents. Read from the bodies, not measured live.
-    (VPC_ACCESS, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
-    (VPC_TRUNK, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
-    (VPC_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
-    # Lot rp5: NetFlow on the three vPC parents. Read from the bodies, not measured live.
-    (VPC_ACCESS, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (VPC_ACCESS, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (VPC_ACCESS, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (VPC_TRUNK, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (VPC_TRUNK, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (VPC_TRUNK, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
-    (VPC_DOT1Q, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
-    (VPC_DOT1Q, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
-    (VPC_DOT1Q, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
 }
 
 # The combined matrix. Tests parametrized over this cover ethernet and port-channel in one

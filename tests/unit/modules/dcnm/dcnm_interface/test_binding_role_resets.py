@@ -530,10 +530,6 @@ VPC_ROWS = [
     (VPC_TRUNK, "guard_mode", "GUARD_MODE", "enum", "no", "root"),
 ]
 
-# Public keys of later lots on the same two parents, pinned in their own suites: lot rp4 (test_binding_qos_pfc.py) and
-# lot rp5 (test_binding_netflow.py).
-LATER_LOT_KEYS = frozenset(("enable_pfc", "enable_netflow", "netflow_monitor", "netflow_sampler"))
-
 VPC_CASES = [pytest.param(*f, id="{0}-{1}".format(f[0].replace("int_vpc_", "").replace("_host", ""), f[1]))
              for f in VPC_ROWS]
 
@@ -548,7 +544,7 @@ def test_the_lot_is_thirteen_and_the_fixture_matches_the_table():
     fails instead of the count quietly changing underneath the documented claim.
     """
     in_table = {(r["parent_template"], r["profile_key"]) for r in BINDING_TABLE
-                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r["profile_key"] not in LATER_LOT_KEYS}
+                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r.get("reset_wire") is not None}
     in_fixture = {(f[0], f[1]) for f in VPC_ROWS}
     assert len(VPC_ROWS) == 13, "the fixture lists {0} rows, not 13".format(len(VPC_ROWS))
     assert in_table == in_fixture, (
@@ -675,10 +671,10 @@ def test_the_previous_lot_is_untouched():
     # + 1 trunk port-channel reset-skip reset (slice rs1) = 247, + 2 peer-link resets (slice pl1) = 249,
     # + 12 uplink resets (slice ul1) = 261, + 2 routed port-channel PIM resets (slice 0b_41) = 263,
     # + 10 routed port-channel EIGRP resets (slice 0b_42) = 273.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7 + 12 + 37, (
-        "the integrated table carries {0} resets, expected 336".format(len(with_reset)))
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10, (
+        "the integrated table carries {0} resets, expected 273".format(len(with_reset)))
     lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset
-                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r["profile_key"] not in LATER_LOT_KEYS}
+                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r.get("reset_wire") is not None}
     assert lot_rows == {(f[0], f[1]) for f in VPC_ROWS}
     for parent in (VPC_ACCESS, VPC_TRUNK):
         neighbour = resolve_binding(parent, "disable_lldp")
@@ -861,8 +857,8 @@ def test_the_arithmetic_is_197_plus_three():
     # + 1 trunk port-channel reset-skip reset (slice rs1) = 247, + 2 peer-link resets (slice pl1) = 249,
     # + 12 uplink resets (slice ul1) = 261, + 2 routed port-channel PIM resets (slice 0b_41) = 263,
     # + 10 routed port-channel EIGRP resets (slice 0b_42) = 273.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7 + 12 + 37, (
-        "the table carries %d resets, expected 336" % len(with_reset))
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10, (
+        "the table carries %d resets, expected 273" % len(with_reset))
     hsrp = {r["profile_key"] for r in with_reset
             if r["parent_template"] == SVI and r["profile_key"].startswith("hsrp")}
     assert hsrp == set(IDS), sorted(hsrp)

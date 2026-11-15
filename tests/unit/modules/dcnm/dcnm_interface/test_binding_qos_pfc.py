@@ -4,7 +4,9 @@ ENABLE_PFC is registered on the seven parents that declare it without a native f
 dot1q-tunnel, routed port-channel, dot1q-tunnel port-channel and the three vPC host parents. The Ethernet and
 port-channel trunk and access profiles keep their native enable_pfc. The Ethernet dot1q-tunnel parent also takes the
 native QoS keys of the other Ethernet modes, and the routed port-channel the routed Ethernet statistics options.
-Replaced and overridden withdrawal of each row runs in test_binding_withdrawal.py through the shared fixture matrix.
+None of the twelve rows declares a reset, so under replaced and overridden an omitted value that differs from the
+default is refused before any write (per route in test_binding_rp_omission.py). A merged QoS disable sends
+ENABLE_QOS false and keeps the stored policy name, which the template ignores while QoS is off.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -26,6 +28,7 @@ NATIVE_PFC_PARENTS = (h.ACCESS, h.TRUNK, h.PC_ACCESS, h.PC_TRUNK)
 QOS_NV = ("ENABLE_QOS", "QOS_POLICY", "QUEUING_POLICY")
 DOT1Q_QOS = {"enable_qos": True, "qos_policy": "pilot_qos", "queuing_policy": "pilot_queue"}
 DOT1Q_QOS_WIRE = {"ENABLE_QOS": "true", "QOS_POLICY": "pilot_qos", "QUEUING_POLICY": "pilot_queue"}
+DOT1Q_QOS_DISABLED = {**DOT1Q_QOS, "enable_qos": False}
 
 
 def _emitted(calls):
@@ -70,9 +73,9 @@ def _sel(nv, keys):
 def test_enable_pfc_is_one_contract_on_every_registered_parent(parent):
     b = resolve_binding(parent, "enable_pfc")
     assert b is not None, parent
-    assert (b["parent_nvpair"], b["type"], b["default_template"], b["reset_wire"], b["mechanism"]) == (
-        "ENABLE_PFC", "boolean", False, "false", "passthrough")
-    assert "inert_when" not in b
+    assert (b["parent_nvpair"], b["type"], b["default_template"], b["mechanism"]) == (
+        "ENABLE_PFC", "boolean", False, "passthrough")
+    assert "inert_when" not in b and "reset_wire" not in b
 
 
 @pytest.mark.parametrize("parent", NATIVE_PFC_PARENTS)
@@ -83,19 +86,22 @@ def test_the_native_pfc_parents_have_no_row(parent):
 
 def test_the_dot1q_tunnel_qos_rows_use_the_native_keys():
     eq, qp, qu = (resolve_binding(h.ETH_DOT1Q, k) for k in ("enable_qos", "qos_policy", "queuing_policy"))
-    assert (eq["parent_nvpair"], eq["type"], eq["reset_wire"]) == ("ENABLE_QOS", "boolean", "false")
-    assert (qp["parent_nvpair"], qp["type"], qp["reset_wire"]) == ("QOS_POLICY", "string", "")
+    assert (eq["parent_nvpair"], eq["type"], eq["default_template"]) == ("ENABLE_QOS", "boolean", False)
+    assert (qp["parent_nvpair"], qp["type"]) == ("QOS_POLICY", "string")
     assert qp["string_compare"] == "unverified"
     assert qp["inert_when"] == {"nvpair": "ENABLE_QOS", "value": "false"} and "max_length" not in qp
-    assert (qu["parent_nvpair"], qu["reset_wire"], qu["string_compare"]) == ("QUEUING_POLICY", "", "unverified")
+    assert (qu["parent_nvpair"], qu["string_compare"]) == ("QUEUING_POLICY", "unverified")
     assert "inert_when" not in qu
+    assert not any("reset_wire" in b for b in (eq, qp, qu))
 
 
 @pytest.mark.parametrize("key", ["disable_qos_stats", "disable_queuing_stats"])
 def test_the_routed_port_channel_statistics_reuse_the_routed_ethernet_contract(key):
     b, routed = resolve_binding(h.PC_L3, key), resolve_binding(h.ROUTED, key)
-    for field in ("parent_nvpair", "type", "reset_wire", "default_template", "min_ndfc_version", "no_log", "inert_when"):
+    for field in ("parent_nvpair", "type", "default_template", "min_ndfc_version", "no_log", "inert_when"):
         assert b.get(field) == routed.get(field), field
+    # The routed reset stays the evidence for a later measurement on this parent; it is not used here.
+    assert "reset_wire" not in b and routed.get("reset_wire") == "false"
 
 
 # ------------------------------------------------------------------ priority flow control
@@ -172,12 +178,32 @@ def test_dot1q_tunnel_qos_without_a_policy_is_transported():
     assert _sel(_nv(calls, h.ETH_DOT1Q), QOS_NV) == {"ENABLE_QOS": "true"}
 
 
-def test_dot1q_tunnel_merged_qos_disable_also_clears_the_stored_policy():
+def test_dot1q_tunnel_merged_qos_disable_keeps_the_inert_policy():
+    """No reset is established for QOS_POLICY on this parent, so the disable sends ENABLE_QOS false and the stored name
+    stays: the template neither validates nor renders it while QoS is off. Whether the controller removes the
+    service-policy line on deploy is not measured."""
     have = _have(h.ETH_DOT1Q, **DOT1Q_QOS)
     result, calls = _run(h.ETH_DOT1Q, h.base_for(h.ETH_DOT1Q, enable_qos=False), "merged", have)
     assert not result.get("failed"), result.get("msg")
-    expected = {"ENABLE_QOS": "false", "QOS_POLICY": "", "QUEUING_POLICY": "pilot_queue"}
-    assert _sel(_nv(calls, h.ETH_DOT1Q), QOS_NV) == expected
+    nv = _nv(calls, h.ETH_DOT1Q)
+    assert {k: v for k, v in _sel(nv, QOS_NV).items() if k != "QOS_POLICY"} == {
+        "ENABLE_QOS": "false", "QUEUING_POLICY": "pilot_queue"}
+    assert nv.get("QOS_POLICY", "pilot_qos") == "pilot_qos", nv.get("QOS_POLICY")
+    stored = _have(h.ETH_DOT1Q, **DOT1Q_QOS_DISABLED)
+    for state in ("merged", "replaced"):
+        result, calls = _run(h.ETH_DOT1Q, h.base_for(h.ETH_DOT1Q, enable_qos=False, queuing_policy="pilot_queue"), state,
+                             stored)
+        assert not result.get("failed"), (state, result.get("msg"))
+        assert h.writes(calls) == [], "the inert policy is not a withdrawal target"
+
+
+def test_dot1q_tunnel_explicit_qos_clear_is_sent_as_requested():
+    have = _have(h.ETH_DOT1Q, **DOT1Q_QOS)
+    profile = h.base_for(h.ETH_DOT1Q, enable_qos=False, qos_policy="", queuing_policy="")
+    for state in ("merged", "replaced"):
+        result, calls = _run(h.ETH_DOT1Q, profile, state, have)
+        assert not result.get("failed"), (state, result.get("msg"))
+        assert _sel(_nv(calls, h.ETH_DOT1Q), QOS_NV) == {"ENABLE_QOS": "false", "QOS_POLICY": "", "QUEUING_POLICY": ""}
 
 
 def test_dot1q_tunnel_merged_queuing_clear_differs_from_omission():
@@ -201,11 +227,14 @@ def test_dot1q_tunnel_policy_change_is_sent_and_a_repeat_writes_nothing(state):
     assert h.writes(calls) == []
 
 
-def test_dot1q_tunnel_replaced_without_qos_resets_the_three():
+def test_dot1q_tunnel_replaced_without_qos_is_refused_before_any_write():
     have = _have(h.ETH_DOT1Q, **DOT1Q_QOS)
     result, calls = _run(h.ETH_DOT1Q, h.base_for(h.ETH_DOT1Q), "replaced", have)
-    assert not result.get("failed"), result.get("msg")
-    assert _sel(_nv(calls, h.ETH_DOT1Q), QOS_NV) == {"ENABLE_QOS": "false", "QOS_POLICY": "", "QUEUING_POLICY": ""}
+    assert result.get("failed") is True
+    for key in ("enable_qos", "qos_policy", "queuing_policy"):
+        assert "%s on %s" % (key, h.ETH_DOT1Q) in result["msg"], result["msg"]
+    assert "pilot_q" not in result["msg"]
+    assert h.writes(calls) == []
 
 
 @pytest.mark.parametrize("patch_version", [None, h.UNSUPPORTED_PATCH], ids=["no_patch_version", "unsupported_patch"])
@@ -216,11 +245,11 @@ def test_dot1q_tunnel_qos_needs_an_approved_patch_version(key, value, patch_vers
     assert h.writes(calls) == []
 
 
-def test_dot1q_tunnel_check_mode_reports_the_change_and_writes_nothing():
+def test_dot1q_tunnel_check_mode_refuses_the_same_withdrawal():
     have = _have(h.ETH_DOT1Q, **DOT1Q_QOS)
     result, calls = _run(h.ETH_DOT1Q, h.base_for(h.ETH_DOT1Q), "replaced", have, check_mode=True)
-    assert not result.get("failed"), result.get("msg")
-    assert h.writes(calls) == [] and result.get("changed") is True
+    assert result.get("failed") is True
+    assert h.writes(calls) == []
 
 
 @pytest.mark.parametrize("parent", [h.ACCESS, h.TRUNK, h.PC_DOT1Q, h.VPC_DOT1Q])
@@ -242,9 +271,14 @@ def test_routed_port_channel_statistics_append_to_their_own_policies():
         "queuingStats": "true"}
 
 
-def test_routed_port_channel_statistics_replaced_omission_resets_both_and_keeps_the_policies():
+def test_routed_port_channel_statistics_replaced_omission_is_refused_and_the_explicit_default_is_sent():
     have = _have(h.PC_L3, **h.QOS, **h.QUEUE, disable_qos_stats=True, disable_queuing_stats=True)
     result, calls = _run(h.PC_L3, h.base_for(h.PC_L3, **h.QOS, **h.QUEUE), "replaced", have)
+    assert result.get("failed") is True
+    assert all("%s on %s" % (k, h.PC_L3) in result["msg"] for k in ("disable_qos_stats", "disable_queuing_stats"))
+    assert h.writes(calls) == []
+    profile = h.base_for(h.PC_L3, **h.QOS, **h.QUEUE, disable_qos_stats=False, disable_queuing_stats=False)
+    result, calls = _run(h.PC_L3, profile, "replaced", have)
     assert not result.get("failed"), result.get("msg")
     nv = _nv(calls, h.PC_L3)
     assert (nv["qosStatsSuppressed"], nv["queuingStats"], nv["QOS_POLICY"], nv["QUEUING_POLICY"]) == (

@@ -4,7 +4,10 @@ The bodies of the supported patch release declare ENABLE_NETFLOW, NETFLOW_MONITO
 and NETFLOW_SAMPLER (shown while NetFlow is enabled, described for N7K only) on the Ethernet trunk, access, routed and
 dot1q-tunnel parents, the four port-channel parents, the three vPC host parents and the subinterface. The SVI parent
 declares the sampler beside its native NetFlow fields. enable_netflow and netflow_monitor reuse the native SVI keys.
-Replaced and overridden withdrawal of each row runs in test_binding_withdrawal.py through the shared fixture matrix.
+None of the 37 rows declares a reset. Under replaced and overridden an omitted value that differs from the default is
+refused before any write (per route in test_binding_rp_omission.py); the explicit disable and the explicit empty names
+are sent as requested. A merged disable sends ENABLE_NETFLOW false and keeps the stored monitor and sampler, which the
+template ignores while NetFlow is off; a later enable without a monitor uses the stored one.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -29,6 +32,9 @@ FULL = {**ON, "netflow_sampler": "PILOT-FS"}
 ON_WIRE = {"ENABLE_NETFLOW": "true", "NETFLOW_MONITOR": "PILOT-FM"}
 FULL_WIRE = {**ON_WIRE, "NETFLOW_SAMPLER": "PILOT-FS"}
 OFF_WIRE = {"ENABLE_NETFLOW": "false", "NETFLOW_MONITOR": "", "NETFLOW_SAMPLER": ""}
+OFF = {"enable_netflow": False, "netflow_monitor": "", "netflow_sampler": ""}
+FULL_DISABLED = {**FULL, "enable_netflow": False}
+FULL_OTHER_SAMPLER = {**FULL, "netflow_sampler": "PILOT-FS-B"}
 
 
 def _base(parent, **extra):
@@ -82,13 +88,11 @@ def _refused(result, calls, *needles):
 @pytest.mark.parametrize("parent", PARENTS)
 def test_the_three_rows_are_one_contract_on_every_parent(parent):
     en, mon, smp = (resolve_binding(parent, k) for k in ("enable_netflow", "netflow_monitor", "netflow_sampler"))
-    assert (en["parent_nvpair"], en["type"], en["default_template"], en["reset_wire"]) == (
-        "ENABLE_NETFLOW", "boolean", False, "false")
-    assert (mon["parent_nvpair"], mon["type"], mon["reset_wire"], mon["string_compare"]) == (
-        "NETFLOW_MONITOR", "string", "", "unverified")
+    assert (en["parent_nvpair"], en["type"], en["default_template"]) == ("ENABLE_NETFLOW", "boolean", False)
+    assert (mon["parent_nvpair"], mon["type"], mon["string_compare"]) == ("NETFLOW_MONITOR", "string", "unverified")
     assert mon["inert_when"] == {"nvpair": "ENABLE_NETFLOW", "value": "false", "required": True}
-    assert (smp["parent_nvpair"], smp["type"], smp["reset_wire"], smp["string_compare"]) == (
-        "NETFLOW_SAMPLER", "string", "", "unverified")
+    assert (smp["parent_nvpair"], smp["type"], smp["string_compare"]) == ("NETFLOW_SAMPLER", "string", "unverified")
+    assert not any("reset_wire" in b for b in (en, mon, smp))
     assert smp["inert_when"] == {"nvpair": "ENABLE_NETFLOW", "value": "false"}
     assert all(b["mechanism"] == "passthrough" and "max_length" not in b for b in (en, mon, smp))
 
@@ -96,7 +100,7 @@ def test_the_three_rows_are_one_contract_on_every_parent(parent):
 def test_the_svi_carries_only_the_sampler_and_keeps_its_native_fields():
     assert resolve_binding(h.SVI, "enable_netflow") is None and resolve_binding(h.SVI, "netflow_monitor") is None
     smp = resolve_binding(h.SVI, "netflow_sampler")
-    assert (smp["parent_nvpair"], smp["reset_wire"], smp["string_compare"]) == ("NETFLOW_SAMPLER", "", "unverified")
+    assert (smp["parent_nvpair"], smp["string_compare"]) == ("NETFLOW_SAMPLER", "unverified") and "reset_wire" not in smp
     assert "inert_when" not in smp, "its gate is a native field, not a registry row"
     assert {"enable_netflow", "netflow_monitor"} <= gie_engine.GIE_NATIVE_ELSEWHERE_KEYS
 
@@ -118,9 +122,29 @@ def test_a_plain_profile_carries_no_netflow_nvpair(parent):
 
 
 @pytest.mark.parametrize("parent", PARENTS)
-def test_merged_disable_also_clears_the_stored_monitor_and_sampler(parent):
+def test_merged_disable_keeps_the_inert_monitor_and_sampler(parent):
+    """Only ENABLE_NETFLOW false is sent. Whether the controller removes the flow monitor line on deploy is not
+    measured; a body exception may also leave NetFlow unrendered without an error."""
     have = _have(parent, **FULL)
     result, calls = _run(parent, _base(parent, enable_netflow=False), "merged", have)
+    assert not result.get("failed"), result.get("msg")
+    nv = _nv(calls, parent)
+    assert nv["ENABLE_NETFLOW"] == "false"
+    assert (nv.get("NETFLOW_MONITOR", "PILOT-FM"), nv.get("NETFLOW_SAMPLER", "PILOT-FS")) == ("PILOT-FM", "PILOT-FS")
+    stored = _have(parent, **FULL_DISABLED)
+    for state in ("merged", "replaced"):
+        result, calls = _run(parent, _base(parent, enable_netflow=False), state, stored)
+        assert not result.get("failed"), (state, result.get("msg"))
+        assert h.writes(calls) == [], "the inert monitor and sampler are not a withdrawal target"
+    result, calls = _run(parent, _base(parent, enable_netflow=True), "merged", stored)
+    assert not result.get("failed"), result.get("msg")
+    assert _sel(_nv(calls, parent)) == {**FULL_WIRE}, "the enable reuses the stored monitor"
+
+
+@pytest.mark.parametrize("state", ["merged", "replaced"])
+@pytest.mark.parametrize("parent", PARENTS)
+def test_the_explicit_disable_and_empty_names_are_sent_as_requested(parent, state):
+    result, calls = _run(parent, _base(parent, **OFF), state, _have(parent, **FULL))
     assert not result.get("failed"), result.get("msg")
     assert _sel(_nv(calls, parent)) == OFF_WIRE
 
@@ -146,11 +170,11 @@ def test_merged_sampler_clear_differs_from_omission(parent):
 
 
 @pytest.mark.parametrize("parent", PARENTS)
-def test_replaced_without_netflow_resets_the_three(parent):
+def test_replaced_without_netflow_is_refused_before_any_write(parent):
     have = _have(parent, **FULL)
     result, calls = _run(parent, _base(parent), "replaced", have)
-    assert not result.get("failed"), result.get("msg")
-    assert _sel(_nv(calls, parent)) == OFF_WIRE
+    _refused(result, calls, *("%s on %s" % (k, parent) for k in ("enable_netflow", "netflow_monitor", "netflow_sampler")))
+    assert "PILOT-F" not in result["msg"]
 
 
 # ------------------------------------------------------------------ the monitor is required while NetFlow is on
@@ -201,9 +225,11 @@ def test_the_svi_native_netflow_fields_are_unchanged():
     assert str(_nv(calls, h.SVI)["ENABLE_NETFLOW"]).lower() == "false", "the native default is still sent"
 
 
-def test_the_svi_sampler_replaced_omission_resets_it():
+def test_the_svi_sampler_replaced_omission_is_refused_and_the_explicit_clear_is_sent():
     have = h.build_have(h.SVI, **{k: v for k, v in h.base_for(h.SVI, **FULL).items() if k != "mode"})
     result, calls = _run(h.SVI, h.base_for(h.SVI, **ON), "replaced", have)
+    _refused(result, calls, "netflow_sampler on %s" % h.SVI)
+    result, calls = _run(h.SVI, h.base_for(h.SVI, **ON, netflow_sampler=""), "replaced", have)
     assert not result.get("failed"), result.get("msg")
     assert _nv(calls, h.SVI)["NETFLOW_SAMPLER"] == ""
 
@@ -228,9 +254,17 @@ def test_enable_netflow_needs_an_approved_patch_version(parent, patch_version):
 
 @pytest.mark.parametrize("parent", [h.TRUNK, h.PC_L3, h.VPC_ACCESS, h.SUBIF])
 def test_check_mode_reports_the_change_and_writes_nothing(parent):
-    result, calls = _run(parent, _base(parent), "replaced", _have(parent, **FULL), check_mode=True)
+    result, calls = _run(parent, _base(parent, **FULL_OTHER_SAMPLER), "merged",
+                         _have(parent, **FULL), check_mode=True)
     assert not result.get("failed"), result.get("msg")
     assert h.writes(calls) == [] and result.get("changed") is True
+
+
+@pytest.mark.parametrize("parent", [h.TRUNK, h.PC_L3, h.VPC_ACCESS, h.SUBIF])
+def test_check_mode_refuses_the_replaced_omission(parent):
+    result, calls = _run(parent, _base(parent), "replaced", _have(parent, **FULL), check_mode=True)
+    assert result.get("failed") is True
+    assert h.writes(calls) == []
 
 
 @pytest.mark.parametrize("parent", PARENTS)
