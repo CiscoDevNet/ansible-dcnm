@@ -91,15 +91,17 @@ options:
       or later is an assumption of the shared selector, not an observation). When an SVI's stored values
       carry the other body's names, setting, clearing or (replaced/overridden) resetting these fields is
       refused before any change is sent.
-    - Accepts the exact SMU string C(4.3.1.0175006017) or a numeric Nexus Dashboard
+    - Accepts the exact SMU strings C(4.3.1.0175006017) and C(4.3.1.0175006018) or a numeric Nexus Dashboard
       release C(4.4.1) or later, matching the version policy of C(dcnm_network).
       ND release strings require at least three dot-separated numeric components;
       additional build components must also be numeric. The first three components are
       compared numerically. No whitespace or suffixes are accepted. For example,
       C(4.4.1.10) and C(4.10.0) are supported, while C(4.4.0), C(4.4),
       C(4.4.1-rc1) and adjacent unapproved C(4.3.1) SMU builds are rejected.
-    - The only SMU build this module supports is C(4.3.1.0175006017). The earlier C(4.3.1.0175006011) is not
-      accepted, because its interface templates declare different OSPF nvPair names.
+    - The supported SMU builds are C(4.3.1.0175006017) and C(4.3.1.0175006018). Support for C(4.3.1.0175006018)
+      assumes that it leaves the C(4.3.1.0175006017) interface templates unchanged; its templates were not
+      compared as a whole. Declare the SMU that is installed. The earlier C(4.3.1.0175006011)
+      is not accepted, because its interface templates declare different OSPF nvPair names.
     - On loopbacks and subinterfaces, C(ospf_bfd_mode) (C(no_change), C(enable), C(disable)) and, on subinterfaces,
       C(ospf_passive_mode) (C(no_change), C(passive), C(no_passive)) carry the OSPF BFD and passive settings, as on
       routed interfaces and SVIs. The earlier boolean inputs C(ospf_bfd) and C(ospf_passive_interface) are still accepted as
@@ -3493,9 +3495,9 @@ SVI_DHCP4_FIELDS = (
 #   0efb09af7f837b30b7a5dde37e7d4e7604fdd2fc4ca92ff6338e227802fde1a3  dhcpServerAddr4      DHCP_RELAY_SRC_INTF       (the legacy tuple above)
 #   f32ef5863d8757759154f5992eba9f009ecdf68425f8be9d58e5a0bb416313e4  dhcpServerAddress4   dhcpRelaySourceInterface  (the tuple below)
 # vrfDhcp4 is unchanged. NDFC reports 12.6.0.267 for both bodies, so the controller version cannot choose; the body that carries the activated SMU
-# 4.3.1.0175006011 (the ND upgrade history lists it with fixDetails naming dcnm-configtemplate) is f32ef586. SMU 4.3.1.0175006017, the only SMU this
-# candidate supports, declares the same two names (read from its int_vlan body), and the existing patch_version
-# capability (gie_patch_supported: that SMU, or a numeric ND release >= 4.4.1 -- the latter is an assumption of the existing selector, not an
+# 4.3.1.0175006011 (the ND upgrade history lists it with fixDetails naming dcnm-configtemplate) is f32ef586. SMU 4.3.1.0175006017
+# declares the same two names (read from its int_vlan body); SMU 4.3.1.0175006018 is accepted as keeping that body. The existing patch_version
+# capability (gie_patch_supported: those SMUs, or a numeric ND release >= 4.4.1 -- the latter is an assumption of the existing selector, not an
 # observation) is what already selects the SMU-schema names of the registered int_vlan fields. The same selector chooses these names. A missing or
 # unapproved patch keeps the legacy names, as for every native field; the module never sends both and never probes the controller.
 SVI_DHCP4_FIELDS_SMU = (
@@ -14506,8 +14508,8 @@ class DcnmIntf:
             )
         if not gie_patch_supported(getattr(self, "patch_version", None)):
             self.module.fail_json(
-                msg="Interface {0}: mode 'peer_link' requires caller-supplied patch_version 4.3.1.0175006017 "
-                "or numeric ND 4.4.1 or later. No change was sent.".format(ifname)
+                msg="Interface {0}: mode 'peer_link' requires caller-supplied patch_version 4.3.1.0175006017, "
+                "4.3.1.0175006018 or numeric ND 4.4.1 or later. No change was sent.".format(ifname)
             )
         seen = self.__dict__.setdefault("peer_link_items", {})
         if seen.setdefault((str(ifname).lower(), pairs[0]), id(cfg)) != id(cfg):
