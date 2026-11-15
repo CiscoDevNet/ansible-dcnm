@@ -35,6 +35,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table impor
 from ansible_collections.cisco.dcnm.plugins.module_utils.interface_struct_lists import (
     STRUCT_LIST_TYPE,
     StructListError,
+    struct_clear_allowed,
     struct_compare_form,
     struct_is_empty,
     struct_read,
@@ -1191,6 +1192,21 @@ def gie_struct_binding(parent_template, parent_nvpair):
 def gie_struct_compare_form(binding, value):
     """A WANT or HAVE value of a `struct_list` binding in comparable form (see struct_compare_form)."""
     return struct_compare_form(binding["struct_contract"], value)
+
+
+def gie_struct_clear_refused(binding, want_value, have_value):
+    """True when WANT empties a list that HAVE holds and the contract cannot remove it that way.
+
+    An absent HAVE value holds nothing. An unreadable one is treated as holding entries: an empty list
+    is never sent over a value nobody can show to be empty.
+    """
+    contract = binding["struct_contract"]
+    return (
+        not struct_clear_allowed(contract)
+        and struct_is_empty(contract, want_value)
+        and have_value is not None
+        and not struct_is_empty(contract, have_value)
+    )
 
 
 def gie_carry_forward_bindings(parent_template):

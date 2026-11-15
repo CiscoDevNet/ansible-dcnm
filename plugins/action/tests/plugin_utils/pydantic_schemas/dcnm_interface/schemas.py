@@ -92,8 +92,8 @@ def expand_interface_name(name):
 # test_dcnm_interface_validator_r2.py compares it with the registry (names, parents, kinds) so a drift fails a unit test.
 # Kinds: bool / int / enum (case-insensitive tokens), str_exact (secrets and case-sensitive names: compared as written),
 # str_fold (IPv6 text, numeric or dotted text, and the process tags whose case semantics are unverified: compared
-# case-insensitively, as the module does), and one kind per typed list (vlan_mapping_entries), compared by its rows in
-# any order.
+# case-insensitively, as the module does), and one kind per typed list (vlan_mapping_entries, dhcp_servers), compared
+# by its rows in any order.
 R2_REGISTERED_BINDINGS = {
     "acl_filter": ("aclFilter", "str_exact", (
         "int_access_host",
@@ -111,6 +111,8 @@ R2_REGISTERED_BINDINGS = {
     "bfd_multiplier": ("bfdMultiplier", "int", ("int_subif", "int_vlan")),
     "bfd_tx_interval": ("bfdTxInterval", "int", ("int_subif", "int_vlan")),
     "dampening_half_life": ("dampeningHalfLife", "int", ("int_routed_host",)),
+    # DHCP relay servers (slice dr1), a typed list: kind dhcp_servers.
+    "dhcp_servers": ("dhcpServers", "dhcp_servers", ("int_l3_port_channel", "int_routed_host", "int_subif")),
     "dampening_max_suppress": ("dampeningMaxSuppress", "int", ("int_routed_host",)),
     "dampening_restart": ("dampeningRestart", "bool", ("int_routed_host",)),
     "dampening_restart_penalty": ("dampeningRestartPenalty", "int", ("int_routed_host",)),
@@ -546,6 +548,46 @@ def _r2_vlan_mapping(text):
     return ";".join(sorted(out))
 
 
+# One DHCP relay row as text: server address and VRF, as written (the module compares both exactly).
+_R2_DHCP_ROW = "a=%s,v=%s"
+_R2_DHCP_CANONICAL = re.compile(r"^a=[0-9a-fA-F.:]+,v=[a-zA-Z0-9:_-]*(;a=[0-9a-fA-F.:]+,v=[a-zA-Z0-9:_-]*)*$")
+
+
+def r2_dhcp_servers_from_yaml(rows):
+    """The playbook dhcp_servers list -> canonical text (rows sorted). None when a row is not readable."""
+    out = []
+    for row in rows:
+        if not isinstance(row, dict) or not isinstance(row.get("srvr_ip"), str):
+            return None
+        out.append(_R2_DHCP_ROW % (row["srvr_ip"], row.get("srvr_vrf") or ""))
+    return ";".join(sorted(out))
+
+
+def _r2_dhcp_servers(text):
+    """The stored wrapper ({"dhcpServers": [{srvrAddr, srvrVrf}]}, JSON or a Python literal, string values) -> the
+    canonical text. Anything else is returned marked."""
+    s = str(text).strip()
+    if s == "" or _R2_DHCP_CANONICAL.match(s):
+        return s
+    data = None
+    for loader in (json.loads, ast.literal_eval):
+        try:
+            data = loader(s)
+            break
+        except (ValueError, SyntaxError):
+            continue
+    if not isinstance(data, dict) or set(data) != {"dhcpServers"} or not isinstance(data["dhcpServers"], list):
+        return "unparsed:" + s
+    out = []
+    for row in data["dhcpServers"]:
+        if not isinstance(row, dict) or set(row) != {"srvrAddr", "srvrVrf"}:
+            return "unparsed:" + s
+        if not all(isinstance(row[k], str) for k in ("srvrAddr", "srvrVrf")):
+            return "unparsed:" + s
+        out.append(_R2_DHCP_ROW % (row["srvrAddr"], row["srvrVrf"]))
+    return ";".join(sorted(out))
+
+
 _R2_MEMBER_PORT = re.compile(r"^(?:ethernet|eth|e)(\d+/\d+(?:/\d+)?)$", re.IGNORECASE)
 
 
@@ -586,6 +628,8 @@ def r2_normalize(nvpair, value):
         return _r2_members(s)
     if kind == "vlan_mapping_entries":
         return _r2_vlan_mapping(s)
+    if kind == "dhcp_servers":
+        return _r2_dhcp_servers(s)
     return s
 
 
@@ -594,6 +638,8 @@ def r2_wire(parent, nvpair, kind, value):
     if kind == "vlan_mapping_entries":
         # A list: its canonical text, which r2_normalize also derives from the readback. None when unreadable.
         return r2_vlan_mapping_from_yaml(value) if isinstance(value, list) else None
+    if kind == "dhcp_servers":
+        return r2_dhcp_servers_from_yaml(value) if isinstance(value, list) else None
     value = _r2_native(value)
     value = str(value)
     if kind == "enum":

@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = cb3d077b258623144a5faf84330439e34588f847b2a6a226f73f8e7f39a3a672
+# provenance_sha256 = c7cda915ac0afb42a88178ea6a54957651f6e01e0cd28751ef3829e0cc9bfb1f
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "cb3d077b258623144a5faf84330439e34588f847b2a6a226f73f8e7f39a3a672"
+PROVENANCE_SHA256 = "c7cda915ac0afb42a88178ea6a54957651f6e01e0cd28751ef3829e0cc9bfb1f"
 
 BINDING_TABLE = (
     {
@@ -211,6 +211,18 @@ BINDING_TABLE = (
         'min_value': 1,
         'max_value': 4294967295,
         'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dhcpServers',
+        'profile_key': 'dhcp_servers',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'struct_contract': 'dhcp_servers',
     },
     {
         'parent_template': 'int_l3_port_channel',
@@ -1700,6 +1712,19 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_routed_host',
+        'parent_nvpair': 'dhcpServers',
+        'profile_key': 'dhcp_servers',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'dropped_on_policy_change': True,
+        'struct_contract': 'dhcp_servers',
+    },
+    {
+        'parent_template': 'int_routed_host',
         'parent_nvpair': 'eigrpBfd',
         'profile_key': 'enable_eigrp_bfd',
         'applicable_interface_type': 'eth',
@@ -2492,6 +2517,18 @@ BINDING_TABLE = (
         'min_value': 50,
         'max_value': 999,
         'no_log': False,
+    },
+    {
+        'parent_template': 'int_subif',
+        'parent_nvpair': 'dhcpServers',
+        'profile_key': 'dhcp_servers',
+        'applicable_interface_type': 'sub_int',
+        'applicable_mode': 'subint',
+        'type': 'struct_list',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'struct_contract': 'dhcp_servers',
     },
     {
         'parent_template': 'int_subif',

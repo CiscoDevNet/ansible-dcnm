@@ -281,7 +281,9 @@ def test_the_parent_is_registered_exactly_once_per_nvpair():
     # owns them. Widening it to a subset check would have retired the guard instead of scoping it.
     eigrp = {b["parent_nvpair"] for b in BINDING_TABLE
              if "eigrp" in b["parent_nvpair"].lower()}
-    assert set(names) - eigrp == {nvpair for nvpair, _native in EXPECTED.values()}
+    # dhcpServers is the DHCP relay list of slice dr1, owned by test_binding_dhcp_servers.py.
+    assert set(names) - eigrp - {"dhcpServers"} == {nvpair for nvpair, _native in EXPECTED.values()}
+    assert "dhcpServers" in names
     assert len(eigrp & set(names)) == 13, "int_routed_host should carry 13 EIGRP rows"
 
 

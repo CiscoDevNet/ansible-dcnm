@@ -1,4 +1,4 @@
-"""The readback checker for typed list fields (vlan_mapping_entries), through the real ActionModule.run()."""
+"""The readback checker for typed list fields (vlan_mapping_entries, dhcp_servers), through the real ActionModule.run()."""
 
 from __future__ import absolute_import, division, print_function
 
@@ -57,3 +57,33 @@ def test_an_unreadable_requested_row_is_diagnosed(tmp_path):
     cfg = [r2_cfg("int_trunk_host", vlan_mapping_entries=[{"provider_vlan": 300}])]
     res = r2_run(tmp_path, cfg, r2_back("int_trunk_host", {"vlanMappingEntries": ""}))
     assert res["failed"] is True and "a list row is not readable" in res["msg"]
+
+
+DR_PARENTS = ("int_routed_host", "int_l3_port_channel", "int_subif")
+SERVERS = [{"srvr_ip": "192.0.2.10"}, {"srvr_ip": "2001:db8::10", "srvr_vrf": "Mgmt-1"}]
+SRV_A = '{"srvrAddr":"192.0.2.10","srvrVrf":""}'
+SRV_B = '{"srvrAddr":"2001:db8::10","srvrVrf":"Mgmt-1"}'
+
+
+@pytest.mark.parametrize("parent", DR_PARENTS)
+@pytest.mark.parametrize("back", [
+    '{"dhcpServers":[%s,%s]}' % (SRV_A, SRV_B),
+    '{"dhcpServers":[%s,%s]}' % (SRV_B, SRV_A),
+    str({"dhcpServers": [{"srvrAddr": "2001:db8::10", "srvrVrf": "Mgmt-1"}, {"srvrAddr": "192.0.2.10", "srvrVrf": ""}]}),
+], ids=["stored", "reordered", "literal"])
+def test_the_same_servers_pass(tmp_path, parent, back):
+    cfg = [r2_cfg(parent, dhcp_servers=SERVERS)]
+    res = r2_run(tmp_path, cfg, r2_back(parent, {"dhcpServers": back}))
+    assert res["failed"] is False, res["msg"]
+
+
+@pytest.mark.parametrize("parent", DR_PARENTS)
+@pytest.mark.parametrize("back", [
+    '{"dhcpServers":[%s]}' % SRV_A,
+    '{"dhcpServers":[%s,%s]}' % (SRV_A, SRV_B.replace("Mgmt-1", "mgmt-1")),   # the VRF case is part of the value
+    '[%s,%s]' % (SRV_A, SRV_B),                                              # a bare list
+    "",
+], ids=["missing-row", "vrf-case", "bare-list", "empty"])
+def test_different_servers_fail(tmp_path, parent, back):
+    cfg = [r2_cfg(parent, dhcp_servers=SERVERS)]
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"dhcpServers": back}))["failed"] is True

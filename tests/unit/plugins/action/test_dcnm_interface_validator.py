@@ -144,8 +144,8 @@ def test_r2_coverage_the_checker_invents_no_identity():
     # 77 = 74 + enable_cdp, enable_evpn_multisite_dci_tracking and logging_event_port_link_status (SMU 017, slice 0b_37).
     # 78 = 77 + link_transmit_reset_skip (slice rs1). 80 = 78 + enable_qos and qos_policy (slice pl1).
     # 88 = 80 + enable_storm_control, storm_control_action and the six storm-control levels (slice ul1).
-    # 90 = 88 + enable_vlan_mapping and vlan_mapping_entries (slice vm1).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 90
+    # 90 = 88 + enable_vlan_mapping and vlan_mapping_entries (slice vm1). 91 = 90 + dhcp_servers (slice dr1).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 91
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():
@@ -226,6 +226,11 @@ R2_STRUCT_LIST_VALUES = {
         [{"customer_vlan": 100, "provider_vlan": 200}],
         '{"vlanMappingEntries":[{"customerVlan":"100","dot1qTunnel":"false","customerInnerVlan":"","providerVlan":"200"}]}',
         '{"vlanMappingEntries":[{"customerVlan":"100","dot1qTunnel":"false","customerInnerVlan":"","providerVlan":"201"}]}',
+    ),
+    "dhcp_servers": (
+        [{"srvr_ip": "192.0.2.10", "srvr_vrf": "management"}],
+        '{"dhcpServers":[{"srvrAddr":"192.0.2.10","srvrVrf":"management"}]}',
+        '{"dhcpServers":[{"srvrAddr":"192.0.2.10","srvrVrf":"Management"}]}',
     ),
 }
 

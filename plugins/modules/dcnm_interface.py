@@ -191,6 +191,16 @@ options:
       it is false. Neither field has a verified reset. Under C(replaced) and C(overridden), omitting an enabled
       mapping fails the task before any change is sent, and so does a reset of a leaf trunk port to its role default.
       An explicit false or an empty list is sent as written; whether the switch removes the lines is not measured.
+    - On a routed Ethernet port (C(mode=routed)), a routed port-channel (C(mode=l3)) and a subinterface the
+      C(4.3.1.0175006017) templates declare C(dhcp_servers), a list of up to 16 DHCP relay servers with C(srvr_ip) (an
+      IPv4 or IPv6 address in canonical form) and C(srvr_vrf) (optional; blank means the interface VRF), the same item
+      shape as C(dhcp_servers) of M(cisco.dcnm.dcnm_network). NOT LIVE TESTED, read from the installed template
+      bodies. An explicit list is the whole value of the field in every state; item order is not significant, and a
+      repeated server and VRF pair is refused. The templates create the relay configuration only from a non-empty list
+      and never remove it, so the module refuses an empty list while the controller holds servers, and an omitted
+      stored list under C(replaced) or C(overridden) also fails the task before any change is sent. A shorter list is
+      sent; whether the switch removes the dropped relay lines is not measured. This list does not replace the
+      numbered DHCP server options of the SVI profile.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -3356,6 +3366,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_have_carry_forward_nvpairs,
     gie_no_log_profile_keys,
     gie_struct_binding,
+    gie_struct_clear_refused,
     gie_struct_compare_form,
     gie_validate_binding_value,
 )
@@ -4299,6 +4310,9 @@ class DcnmIntf:
         # Bindings whose required withdrawal cannot be completed. Collected during the
         # comparison pass and raised ONCE by main(), before anything is sent.
         self.withdrawal_blocked = []
+        # Typed lists whose explicit empty value cannot remove the stored entries (gie_struct_clear_refused); raised by
+        # main() before any request.
+        self.struct_clear_blocked = []
         # Dependent fields (inert_when) set against their gate, collected and raised before any request.
         self.dependency_blocked = []
         # Registered fields a reset-to-default (named deleted, overridden) must withdraw but
@@ -13499,6 +13513,14 @@ class DcnmIntf:
                                         # the comparison; every other key keeps the legacy one.
                                         exact_nv = gie_string_compare(want.get("policy"), nk) == "exact"
                                         struct_nv = gie_struct_binding(want.get("policy"), nk)
+                                        if struct_nv is not None and gie_struct_clear_refused(
+                                            struct_nv,
+                                            want[k][0][ik][nk],
+                                            next((intf[ik].get(nk) for intf in d[k] if isinstance(intf.get(ik), dict)), None),
+                                        ):
+                                            self.struct_clear_blocked.append(
+                                                {"interface": name, "parent": want.get("policy"), "field": struct_nv["profile_key"]}
+                                            )
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
                                         # add the interface
@@ -16837,6 +16859,19 @@ def main():
             "to the value you want, or use state 'merged' to preserve it."
         )
         module.fail_json(msg=" ".join(parts), **dcnm_intf.result)
+
+    if dcnm_intf.struct_clear_blocked:
+        cleared = sorted(
+            {(b["interface"], b["parent"], b["field"]) for b in dcnm_intf.struct_clear_blocked}
+        )
+        module.fail_json(
+            msg="These lists are requested empty while the controller holds entries, and on this parent an "
+            "empty list does not remove the configuration the entries created: {0}. No configuration or "
+            "deployment request was sent. Keep at least one entry.".format(
+                ", ".join("{2} on {0}, parent {1}".format(*b) for b in cleared)
+            ),
+            **dcnm_intf.result
+        )
 
     if dcnm_intf.default_reset_blocked:
         # A reset to the role default that cannot withdraw every registered field it must.

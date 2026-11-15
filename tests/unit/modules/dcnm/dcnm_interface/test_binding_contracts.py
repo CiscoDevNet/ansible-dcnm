@@ -277,12 +277,17 @@ SAMPLE_VALUE = {
 }
 
 # A typed list (struct_list) per contract: (playbook list, the nvPair text the reviewed template declaration expects).
-# Written by hand from the int_trunk_host body (json.loads of a wrapper whose rows carry the four keys as strings), not
-# produced by the list contract.
+# Written by hand from the template bodies, not produced by the list contract. VLAN mapping, from the int_trunk_host body:
+# json.loads of a wrapper whose rows carry the four keys as strings.
 SAMPLE_STRUCT_LIST = {
     "vlan_mapping_entries": (
         [{"customer_vlan": 100, "provider_vlan": 200}],
         '{"vlanMappingEntries":[{"customerVlan":"100","dot1qTunnel":"false","customerInnerVlan":"","providerVlan":"200"}]}',
+    ),
+    # From the int_routed_host body: ast.literal_eval of a wrapper whose rows carry srvrAddr and srvrVrf.
+    "dhcp_servers": (
+        [{"srvr_ip": "192.0.2.10"}],
+        '{"dhcpServers":[{"srvrAddr":"192.0.2.10","srvrVrf":""}]}',
     ),
 }
 

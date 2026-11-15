@@ -746,6 +746,10 @@ COMMITTED_BINDINGS = {
     ("int_port_channel_trunk_host", "vlanMappingEntries"): "vlan_mapping_entries",
     ("int_vpc_trunk_host", "enableVlanMapping"): "enable_vlan_mapping",
     ("int_vpc_trunk_host", "vlanMappingEntries"): "vlan_mapping_entries",
+    # DHCP relay servers on the routed Ethernet, routed port-channel and subinterface parents (slice dr1), a typed list.
+    ("int_routed_host", "dhcpServers"): "dhcp_servers",
+    ("int_l3_port_channel", "dhcpServers"): "dhcp_servers",
+    ("int_subif", "dhcpServers"): "dhcp_servers",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the
@@ -1039,7 +1043,7 @@ SCHEMA_REQUIRED_FIELDS = (
 
 SCHEMA_TYPES = frozenset({"boolean", "integer", "string", "enum", "struct_list"})
 
-STRUCT_CONTRACTS = frozenset({"vlan_mapping_entries"})
+STRUCT_CONTRACTS = frozenset({"vlan_mapping_entries", "dhcp_servers"})
 
 # Parents whose delete() removes every interface-scoped child policy (PTIWrapper.delete(serial,
 # "INTERFACE", INTF_NAME, INTF_NAME)) and whose children are all created with entity and source =

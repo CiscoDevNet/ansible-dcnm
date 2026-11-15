@@ -662,7 +662,7 @@ def test_the_previous_lot_is_untouched():
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
-    assert len(BINDING_TABLE) == 314, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_42, rs1, pl1, ul1, vm1
+    assert len(BINDING_TABLE) == 317, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_42, rs1, pl1, ul1, vm1, dr1
     # 197 integrated + 3 int_vlan rows (test_binding_role_resets.py) = 200, + the six
     # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
@@ -851,8 +851,8 @@ def test_the_arithmetic_is_197_plus_three():
     """246 identities, 219 resets, and these three are the only int_vlan HSRP rows with one."""
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 228 + six dot1q rows + eleven PVLAN companion rows + one vPC PVLAN row, + slices 0b_37, 0b_38, 0b_39, 0b_40, rs1,
-    # pl1, ul1, 0b_41, 0b_42 and vm1 (vm1 declares no reset).
-    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6
+    # pl1, ul1, 0b_41, 0b_42, vm1 and dr1 (vm1 and dr1 declare no reset).
+    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 3
     # 200 + six dot1q resets + int_vlan::privateVlanMapping = 207, + 11 PVLAN companion resets (inferred) = 218, + 1 vPC PVLAN reset = 219.
     # + 5 SMU 017 resets read from the bodies (slice 0b_37) = 224, + 5 loopback EIGRP resets (slice 0b_38) = 229,
     # + 1 routed port-channel PIM BFD reset (slice 0b_39) = 230, + 16 routed port-channel OSPF resets (slice 0b_40) = 246,

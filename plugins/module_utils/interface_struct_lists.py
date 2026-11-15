@@ -19,12 +19,15 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import ast
+import ipaddress
 import json
 import re
 
 STRUCT_LIST_TYPE = "struct_list"
 
 CONTRACT_VLAN_MAPPING = "vlan_mapping_entries"
+CONTRACT_DHCP_SERVERS = "dhcp_servers"
 
 _VLAN_MIN = 1
 _VLAN_MAX = 4094
@@ -148,11 +151,67 @@ def _vlan_mapping_read(raw):
     return data["vlanMappingEntries"] if isinstance(data, dict) and set(data) == {"vlanMappingEntries"} else None
 
 
+# ------------------------------------------------------------------ DHCP relay servers
+# int_routed_host, int_l3_port_channel and int_subif declare the same item, at most 16 of them:
+#
+#     ipAddress srvrAddr (IPv4 or IPv6)   string srvrVrf (^[a-zA-Z0-9:_-]*$, 0-32; blank = the interface VRF)
+#
+# The parents parse the value with ast.literal_eval (parseDhcpServers), refuse more than 16 items or an empty
+# address, and hand the value unchanged to the child policy interface_dhcp_relay_internal, which renders one
+# `ip dhcp relay address` (or `ipv6 dhcp relay address`) line per item, with `use-vrf` when srvrVrf is set and
+# differs, ignoring case, from the interface VRF. The parents create that child only while the list is not empty
+# and never delete it, so an empty list leaves the relay lines of the previous list in place: an explicit empty
+# list over a stored one is refused (clear_allowed False).
+_DHCP_SERVER_KEYS = ("srvr_ip", "srvr_vrf")
+_DHCP_SERVERS_MAX = 16
+_VRF_TEXT = re.compile(r"^[a-zA-Z0-9:_-]*$")
+
+
+def _dhcp_server_rows(field, value):
+    if isinstance(value, list) and len(value) > _DHCP_SERVERS_MAX:
+        raise StructListError("'{0}' allows at most {1} servers".format(field, _DHCP_SERVERS_MAX))
+    rows = []
+    seen = set()
+    for where, item in _items(field, value, _DHCP_SERVER_KEYS):
+        address = item.get("srvr_ip")
+        if not isinstance(address, str) or address == "":
+            raise StructListError("{0} requires 'srvr_ip' as an IPv4 or IPv6 address string".format(where))
+        try:
+            parsed = ipaddress.ip_address(address)
+        except ValueError:
+            raise StructListError("{0} 'srvr_ip' is not an IPv4 or IPv6 address".format(where))
+        if str(parsed) != address:
+            raise StructListError(
+                "{0} 'srvr_ip' is not in canonical form (dotted IPv4, or compressed lowercase IPv6)".format(where)
+            )
+        vrf = item.get("srvr_vrf", "")
+        if vrf is None:
+            vrf = ""
+        if not isinstance(vrf, str) or not _VRF_TEXT.match(vrf) or len(vrf) > 32:
+            raise StructListError(
+                "{0} 'srvr_vrf' must be a VRF name of up to 32 letters, digits, ':', '_' or '-'".format(where)
+            )
+        if (address, vrf) in seen:
+            raise StructListError("{0} repeats the server and VRF of an earlier item".format(where))
+        seen.add((address, vrf))
+        rows.append({"srvrAddr": address, "srvrVrf": vrf})
+    return rows
+
+
+def _dhcp_server_read(raw):
+    """The parents read the value with ast.literal_eval. Only the wrapper is accepted here: the child policy receives
+    the value unchanged, and how it iterates a bare list is not established."""
+    data = ast.literal_eval(raw)
+    return data["dhcpServers"] if isinstance(data, dict) and set(data) == {"dhcpServers"} else None
+
+
 # ------------------------------------------------------------------ contract table
-# rows: (field, playbook list) -> list of wire rows; raises StructListError
-# read: wire text -> list of rows, None when it is not the template's form; may raise
+# rows:          (field, playbook list) -> list of wire rows; raises StructListError
+# read:          wire text -> list of rows, None when it is not the template's form; may raise
+# clear_allowed: an explicit empty list may replace a stored non-empty one
 _CONTRACTS = {
-    CONTRACT_VLAN_MAPPING: {"rows": _vlan_mapping_rows, "read": _vlan_mapping_read},
+    CONTRACT_VLAN_MAPPING: {"rows": _vlan_mapping_rows, "read": _vlan_mapping_read, "clear_allowed": True},
+    CONTRACT_DHCP_SERVERS: {"rows": _dhcp_server_rows, "read": _dhcp_server_read, "clear_allowed": False},
 }
 
 
@@ -193,7 +252,7 @@ def struct_read(contract, raw):
         return None
     try:
         rows = _contract(contract)["read"](raw)
-    except (ValueError, SyntaxError, TypeError, KeyError):
+    except (ValueError, SyntaxError, TypeError, KeyError, MemoryError, RecursionError):
         return None
     if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
         return None
@@ -217,3 +276,8 @@ def struct_compare_form(contract, raw):
 def struct_is_empty(contract, raw):
     """True when the value is readable and holds no row."""
     return struct_read(contract, raw) == []
+
+
+def struct_clear_allowed(contract):
+    """False when an empty list cannot remove what a stored list configured (see the contract's comment)."""
+    return _contract(contract)["clear_allowed"]

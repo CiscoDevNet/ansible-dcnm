@@ -29,6 +29,7 @@ on. Within a file, the rows keep the order of the original lots, and each lot's 
 
 | File | Family | Rows |
 |------|--------|-----:|
+| `registry_slice_dhcp_relay.yaml` | DHCP relay servers on the routed Ethernet, routed port-channel and subinterface parents | 3 |
 | `registry_slice_eigrp.yaml` | EIGRP on the routed, subinterface, SVI, loopback and routed port-channel parents | 65 |
 | `registry_slice_hsrp_ipv6_nd.yaml` | HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay parents | 17 |
 | `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options | 40 |
@@ -43,8 +44,8 @@ The registry used to be split into 42 files, one per development lot (`registry_
 the sources, in the generator and in the tests still cite those lot names, such as "slice 0b_22". Each lot is now a section of
 a family file, introduced by a `# ==== Source lot ... ====` comment, so a lot name can be found with a text search. A lot whose
 rows belong to several families keeps its header in the family that holds most of its rows. The other families point to it. Lot
-`0b_42_l3po_eigrp` came after the grouping and was added directly as a section of its family file. Lot `vm1_vlan_mapping` came
-later still and has a family file of its own.
+`0b_42_l3po_eigrp` came after the grouping and was added directly as a section of its family file. Lots `vm1_vlan_mapping` and
+`dr1_dhcp_relay` came later still and each has a family file of its own.
 
 | Original lot | Family files (rows) |
 |--------------|---------------------|
@@ -85,6 +86,7 @@ later still and has a family file of its own.
 | `0b_6` | `registry_slice_interface_common.yaml` (7) |
 | `0b_7` | `registry_slice_interface_common.yaml` (1), `registry_slice_port_channel_vpc.yaml` (1) |
 | `0b_8` | `registry_slice_interface_common.yaml` (2) |
+| `dr1_dhcp_relay` | `registry_slice_dhcp_relay.yaml` (3) |
 | `0b_9` | `registry_slice_interface_common.yaml` (2), `registry_slice_port_channel_vpc.yaml` (3) |
 | `c1_pvlan_companions` | `registry_slice_pvlan.yaml` (11) |
 | `iq1_vpc_pvlan_qos_stats` | `registry_slice_pvlan.yaml` (1) |
