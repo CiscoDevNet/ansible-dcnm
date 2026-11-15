@@ -1183,6 +1183,9 @@ BUILDERS = {
         # engine. Its own omission contract (merged keeps HAVE, replaced follows the withdrawal classifier) is pinned
         # through the real main() in test_pvlan_companions.py.
         "int_pvlan_host",
+        # The dot1q-tunnel mode shares the builder too; its hand-written nvPairs follow the method-level contribution
+        # and none of them is a registry nvPair.
+        "int_dot1q_tunnel_host",
     ),
     "dcnm_intf_get_pc_payload": (
         "int_port_channel_access_host",
@@ -1240,6 +1243,15 @@ EARLY_RETURN_BRANCHES = {
     "int_vpc_uplink_access": 'if delem[profile]["mode"] == "uplink_access":',
 }
 
+# Hand-written nvPairs of a shared builder that a registered parent also carries, where every assignment sits inside the
+# branch of another mode. Keyed by parent: (the modes whose branches may assign them, the nvPairs). The collision check
+# skips these nvPairs for that parent, and the test requires each assignment to be inside one of those branches.
+MODE_SCOPED_HAND_WRITES = {
+    # The Ethernet builder writes the QoS trio in its trunk, access and routed branches; the dot1q-tunnel mode gets
+    # them from the engine (lot rp4).
+    "int_dot1q_tunnel_host": (("trunk", "access", "routed"), ("ENABLE_QOS", "QOS_POLICY", "QUEUING_POLICY")),
+}
+MODE_OPENER = re.compile(r'^\s*if delem\[profile\]\["mode"\] == "(\w+)":')
 ASSIGN = re.compile(r'nvPairs"\]\["([A-Z0-9_]+)"\]\s*=')
 UPDATE_LITERAL = re.compile(r'nvPairs"\]\.update\(\{"([A-Z0-9_]+)"')
 
@@ -1265,6 +1277,25 @@ def _early_return_branch(body, opener):
     return body[start:end]
 
 
+def _mode_of_each_assignment(body, nvpairs):
+    """The mode of the nearest enclosing `if delem[profile]["mode"] == ...` branch of every assignment of `nvpairs`."""
+    lines = body.split("\n")
+    modes = []
+    for n, line in enumerate(lines):
+        m = ASSIGN.search(line)
+        if not m or m.group(1) not in nvpairs:
+            continue
+        indent = len(line) - len(line.lstrip())
+        mode = None
+        for k in range(n - 1, -1, -1):
+            opener = MODE_OPENER.match(lines[k])
+            if lines[k].strip() and len(lines[k]) - len(lines[k].lstrip()) < indent and opener:
+                mode = opener.group(1)
+                break
+        modes.append((m.group(1), mode))
+    return modes
+
+
 def _legacy_nvpairs(body):
     """nvPair names the builder writes by hand, excluding the engine's own update()."""
     return set(ASSIGN.findall(body)) | set(UPDATE_LITERAL.findall(body))
@@ -1277,9 +1308,14 @@ def test_no_registered_nvpair_is_also_written_by_hand(builder, parents, source):
         branch = _early_return_branch(body, EARLY_RETURN_BRANCHES[parent])
         own = {b["parent_nvpair"] for b in BINDING_TABLE if b["parent_template"] == parent}
         assert not _legacy_nvpairs(branch) & own, (builder, parent, sorted(_legacy_nvpairs(branch) & own))
+    for parent in [p for p in parents if p in MODE_SCOPED_HAND_WRITES]:
+        modes, scoped = MODE_SCOPED_HAND_WRITES[parent]
+        found = _mode_of_each_assignment(body, scoped)
+        assert found and all(mode in modes for _nv, mode in found), (builder, parent, found)
     parents = tuple(p for p in parents if p not in EARLY_RETURN_BRANCHES)
     legacy = _legacy_nvpairs(body)
-    engine = {b["parent_nvpair"] for b in BINDING_TABLE if b["parent_template"] in parents}
+    engine = {b["parent_nvpair"] for b in BINDING_TABLE if b["parent_template"] in parents
+              and b["parent_nvpair"] not in MODE_SCOPED_HAND_WRITES.get(b["parent_template"], ((), ()))[1]}
 
     collision = legacy & engine
     assert not collision, (

@@ -281,7 +281,10 @@ def test_the_parent_is_registered_exactly_once_per_nvpair():
     # owns them. Widening it to a subset check would have retired the guard instead of scoping it.
     eigrp = {b["parent_nvpair"] for b in BINDING_TABLE
              if "eigrp" in b["parent_nvpair"].lower()}
-    assert set(names) - eigrp == {nvpair for nvpair, _native in EXPECTED.values()}
+    # Later lots on this parent, pinned in their own suites: lot rp4 (test_binding_qos_pfc.py).
+    later = {"ENABLE_PFC"}
+    assert set(names) - eigrp - later == {nvpair for nvpair, _native in EXPECTED.values()}
+    assert later <= set(names)
     assert len(eigrp & set(names)) == 13, "int_routed_host should carry 13 EIGRP rows"
 
 
@@ -990,8 +993,8 @@ def test_combined_case_fails_when_one_source_family_is_removed_in_memory(monkeyp
         assert len(rows) == 11   # + int_subif pimBfdInstance (slice 0b_37)
     else:
         rows = [row for row in BINDING_TABLE
-                if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK)]
-        assert len(rows) == 13
+                if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and row["parent_nvpair"] != "ENABLE_PFC"]
+        assert len(rows) == 13   # ENABLE_PFC (lot rp4) is not part of this combined case
     with monkeypatch.context() as patcher:
         for row in rows:
             patcher.delitem(row, "reset_wire")

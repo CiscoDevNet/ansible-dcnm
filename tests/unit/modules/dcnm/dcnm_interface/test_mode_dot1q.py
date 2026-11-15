@@ -238,7 +238,8 @@ def test_check_mode_plans_a_native_change_and_sends_nothing():
 
 def test_the_six_resets_are_this_parents_own_rows():
     rows = {r["profile_key"]: r for r in BINDING_TABLE if r["parent_template"] == VPC_DOT1Q}
-    assert {k: r.get("reset_wire") for k, r in rows.items()} == RESETS
+    later = {"enable_pfc"}   # lot rp4, pinned in test_binding_qos_pfc.py
+    assert {k: r.get("reset_wire") for k, r in rows.items() if k not in later} == RESETS
     assert all(isinstance(r["reset_wire"], str) for r in rows.values())
 
 

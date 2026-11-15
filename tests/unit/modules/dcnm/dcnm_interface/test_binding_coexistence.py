@@ -90,8 +90,10 @@ UNION_RESET_TOTAL = 74
 # Routed port-channel BFD echo, ARP timeout and inbound ACL (RP1_ADDITIONS, lot rp1), the routed resets on identical
 # declarations, not measured on this parent: 273 + 3 = 276. Routed port-channel MACsec (RP2_ADDITIONS, lot rp2), the
 # routed resets on identical declarations, not measured on this parent: 276 + 4 = 280. Routed port-channel IPv6 and
-# redirects (RP3_ADDITIONS, lot rp3), resets read from the body, not measured on this parent: 280 + 7 = 287.
-CANDIDATE_RESET_TOTAL = 287
+# redirects (RP3_ADDITIONS, lot rp3), resets read from the body, not measured on this parent: 280 + 7 = 287. Priority
+# flow control, Ethernet dot1q-tunnel QoS and routed port-channel statistics (RP4_ADDITIONS, lot rp4), resets read from
+# the bodies, not measured: 287 + 12 = 299.
+CANDIDATE_RESET_TOTAL = 299
 
 # The additions this candidate is allowed to carry, and nothing else: four
 # `int_routed_host` and four `int_subif` rows, plus two `int_loopback` and four
@@ -620,6 +622,24 @@ RP3_ADDITIONS = (
 )
 RP3_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in RP3_ADDITIONS)
 
+# Priority flow control on seven parents, the Ethernet dot1q-tunnel QoS and queuing policies and the routed port-channel
+# policy statistics (lot rp4).
+RP4_ADDITIONS = (
+    ("int_routed_host", "ENABLE_PFC", "enable_pfc", "false"),
+    ("int_dot1q_tunnel_host", "ENABLE_PFC", "enable_pfc", "false"),
+    ("int_l3_port_channel", "ENABLE_PFC", "enable_pfc", "false"),
+    ("int_port_channel_dot1q_tunnel_host", "ENABLE_PFC", "enable_pfc", "false"),
+    ("int_vpc_trunk_host", "ENABLE_PFC", "enable_pfc", "false"),
+    ("int_vpc_access_host", "ENABLE_PFC", "enable_pfc", "false"),
+    ("int_vpc_dot1q_tunnel", "ENABLE_PFC", "enable_pfc", "false"),
+    ("int_dot1q_tunnel_host", "ENABLE_QOS", "enable_qos", "false"),
+    ("int_dot1q_tunnel_host", "QOS_POLICY", "qos_policy", ""),
+    ("int_dot1q_tunnel_host", "QUEUING_POLICY", "queuing_policy", ""),
+    ("int_l3_port_channel", "qosStatsSuppressed", "disable_qos_stats", "false"),
+    ("int_l3_port_channel", "queuingStats", "disable_queuing_stats", "false"),
+)
+RP4_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in RP4_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
@@ -629,14 +649,14 @@ ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS + BATCH017_ADDITIONS
                  + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS + L3PO_OSPF_ADDITIONS + RS1_ADDITIONS + PL1_ADDITIONS
                  + UL1_ADDITIONS + L3PO_PIM_ADDITIONS + L3PO_EIGRP_ADDITIONS + RP1_ADDITIONS
-                 + RP2_ADDITIONS + RP3_ADDITIONS)
+                 + RP2_ADDITIONS + RP3_ADDITIONS + RP4_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
                         | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
                         | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES | BATCH017_IDENTITIES
                         | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES
                         | PL1_IDENTITIES | UL1_IDENTITIES | L3PO_PIM_IDENTITIES | L3PO_EIGRP_IDENTITIES
-                        | RP1_IDENTITIES | RP2_IDENTITIES | RP3_IDENTITIES)
+                        | RP1_IDENTITIES | RP2_IDENTITIES | RP3_IDENTITIES | RP4_IDENTITIES)
 
 
 def _rows():
@@ -804,9 +824,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # 74 + 199 = 273. + 3 routed port-channel BFD echo, ARP timeout and ACL rows (RP1_ADDITIONS, lot rp1) = 202, and
     # 74 + 202 = 276. + 4 routed port-channel MACsec rows (RP2_ADDITIONS, lot rp2) = 206, and 74 + 206 = 280.
     # + 7 routed port-channel IPv6 and redirect rows (RP3_ADDITIONS, lot rp3) = 213, and 74 + 213 = 287.
+    # + 12 PFC, QoS and statistics rows (RP4_ADDITIONS, lot rp4) = 225, and 74 + 225 = 299.
     assert len(ALL_ADDED_IDENTITIES) == (54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2
-                                         + 10 + 3 + 4 + 7) == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 213"
+                                         + 10 + 3 + 4 + 7 + 12) == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 225"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -932,7 +953,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               # routed port-channel MACsec, lot rp2: routed resets on identical declarations, NOT measured live
               ("routed port-channel MACsec RP2/from template", set(RP2_IDENTITIES), 4),
               # routed port-channel IPv6 and redirects, lot rp3: resets read from the body, NOT measured live
-              ("routed port-channel IPv6 and redirects RP3/from template", set(RP3_IDENTITIES), 7))
+              ("routed port-channel IPv6 and redirects RP3/from template", set(RP3_IDENTITIES), 7),
+              # PFC, Ethernet dot1q-tunnel QoS and routed port-channel statistics, lot rp4: resets read from the bodies,
+              # NOT measured live
+              ("PFC, QoS and statistics RP4/from template", set(RP4_IDENTITIES), 12))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -946,20 +970,21 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
              | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES
              | BATCH017_IDENTITIES | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES
              | PL1_IDENTITIES | UL1_IDENTITIES | L3PO_PIM_IDENTITIES | L3PO_EIGRP_IDENTITIES | RP1_IDENTITIES
-             | RP2_IDENTITIES | RP3_IDENTITIES)
+             | RP2_IDENTITIES | RP3_IDENTITIES | RP4_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 213, (
+    assert len(union) == 225, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
         "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN + 11 PVLAN companions + 1 IQ1 "
         "+ 5 SMU017 batch 1 + 5 SMU017 loopback EIGRP + 1 SMU017 routed port-channel PIM BFD "
         "+ 16 routed port-channel OSPF + 1 trunk port-channel reset-skip + 2 peer-link + 12 uplink "
         "+ 2 routed port-channel PIM + 10 routed port-channel EIGRP + 3 routed port-channel L3 controls "
-        "+ 4 routed port-channel MACsec + 7 routed port-channel IPv6 and redirects = 213, and 74 + 213 = 287"
+        "+ 4 routed port-channel MACsec + 7 routed port-channel IPv6 and redirects "
+        "+ 12 PFC, QoS and statistics = 225, and 74 + 225 = 299"
         % len(union))
 
 

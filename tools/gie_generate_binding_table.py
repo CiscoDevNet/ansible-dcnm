@@ -740,6 +740,21 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "DISABLE_IP_REDIRECTS"): "disable_ip_redirects",
     ("int_l3_port_channel", "ipv4Redirects"): "disable_ipv4_redirects",
     ("int_l3_port_channel", "ipv6Redirects"): "disable_ipv6_redirects",
+    # Priority flow control on seven parents, the QoS and queuing policies of the Ethernet dot1q-tunnel parent and the
+    # routed port-channel policy statistics (lot rp4). enable_pfc and queuing_policy are native elsewhere
+    # (GIE_NATIVE_ELSEWHERE_KEYS). Read from the patched bodies; not measured live.
+    ("int_routed_host", "ENABLE_PFC"): "enable_pfc",
+    ("int_dot1q_tunnel_host", "ENABLE_PFC"): "enable_pfc",
+    ("int_l3_port_channel", "ENABLE_PFC"): "enable_pfc",
+    ("int_port_channel_dot1q_tunnel_host", "ENABLE_PFC"): "enable_pfc",
+    ("int_vpc_trunk_host", "ENABLE_PFC"): "enable_pfc",
+    ("int_vpc_access_host", "ENABLE_PFC"): "enable_pfc",
+    ("int_vpc_dot1q_tunnel", "ENABLE_PFC"): "enable_pfc",
+    ("int_dot1q_tunnel_host", "ENABLE_QOS"): "enable_qos",
+    ("int_dot1q_tunnel_host", "QOS_POLICY"): "qos_policy",
+    ("int_dot1q_tunnel_host", "QUEUING_POLICY"): "queuing_policy",
+    ("int_l3_port_channel", "qosStatsSuppressed"): "disable_qos_stats",
+    ("int_l3_port_channel", "queuingStats"): "disable_queuing_stats",
     # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
     ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
     # Existing vPC peer-link parent (slice pl1). Read from the 017 body; not measured live.

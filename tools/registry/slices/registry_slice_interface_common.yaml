@@ -1,4 +1,4 @@
-# Registry source: Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options.
+# Registry source: Fields shared by Ethernet, routed, loopback, SVI, port-channel and vPC parents: LLDP, QoS, PFC, ACL, flow control, dampening, ARP and related options.
 #
 # Compiled by tools/gie_generate_binding_table.py with the other registry_slice_*.yaml files; see
 # tools/registry/README.md. Each section below is one original source lot. Its header is the original
@@ -1535,3 +1535,244 @@ bindings:
     parent_resolution: desired_parent
     removal_semantics: unresolved
     evidence_ref: "int_l3_port_channel.template@81c9392e#L359"
+
+  # ==== Source lot rp4_qos_pfc_stats (12 of 12 rows) ====
+  # Registry lot rp4 -- priority flow control on seven parents, the QoS and queuing policies on the Ethernet dot1q-tunnel
+  # parent, and the two policy-statistics options on the routed port-channel.
+  #
+  # Sources, each the body the supported patch release serves (template REST API, read only), sha256 of `content`:
+  # int_routed_host b5345584..., int_l3_port_channel 81c9392e..., int_port_channel_dot1q_tunnel_host b17631cd...,
+  # int_vpc_trunk_host 1e346263...; and int_dot1q_tunnel_host 33684a76..., int_vpc_access_host 23ba8135...,
+  # int_vpc_dot1q_tunnel 1eb7a8b6..., which the patch left byte-identical to the earlier release.
+  #
+  # ENABLE_PFC (boolean, defaultValue false, no gate) on every listed parent. The public key is the native one of the
+  # Ethernet and port-channel trunk and access profiles, listed in GIE_NATIVE_ELSEWHERE_KEYS; those profiles keep their
+  # native field. Rendering, when "true": int_routed_host and int_l3_port_channel create interface_pfc, or
+  # interface_pfc_mode on an N9K-C98 model; int_dot1q_tunnel_host renders `priority-flow-control mode on` inline and,
+  # except on N9K-C98, `priority-flow-control watch-dog-interval on`; the vPC parents forward ENABLE_PFC to each peer's
+  # port-channel; the dot1q port-channel forwards it to its members. Each body wraps this in a try block whose exception
+  # is ignored, so an unexpected model read renders nothing without an error. Whether a platform accepts PFC on the
+  # interface is a device question.
+  #
+  # ENABLE_QOS (boolean, defaultValue false), QOS_POLICY (string, IsShow "ENABLE_QOS==true", no bounds) and
+  # QUEUING_POLICY (string, no gate, no bounds) on int_dot1q_tunnel_host (L169-L177). The body renders
+  # `service-policy type qos input <QOS_POLICY>` when ENABLE_QOS is "true", falling back to QOS_CLASSIFICATION when the
+  # policy is empty and the fabric enables AI/ML QoS, and `service-policy type queuing output <QUEUING_POLICY>` when it is
+  # set (L550-L563). Public keys and meaning as on the native Ethernet trunk and access profiles; queuing_policy joins
+  # GIE_NATIVE_ELSEWHERE_KEYS. qos_policy is inert while ENABLE_QOS is false, so a merged disable also clears the stored
+  # name, as the native builders send an empty name with QoS disabled. Policy names keep the legacy comparison
+  # (`unverified`), as on the peer-link and uplink rows. The policies must already exist; the module never creates them.
+  #
+  # qosStatsSuppressed and queuingStats on int_l3_port_channel (L441-L452), the int_routed_host contracts: each appends
+  # `no-stats` to the service-policy line of its own policy (L1485, L1500).
+  #
+  # int_dot1q_tunnel_host renders inline (setGeneratedConfig), so a reset relies on NDFC negating a line that is no longer
+  # expected. Nothing here is measured live: validated_on is absent and removal_semantics stays unresolved.
+
+
+  - parent_template: int_routed_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L426"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L164"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L429"
+
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host.template@b17631cd#L177"
+
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host.template@1e346263#L228"
+
+  - parent_template: int_vpc_access_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host.template@23ba8135#L212"
+
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel.template@1eb7a8b6#L212"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: ENABLE_QOS
+    profile_key: enable_qos
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L169"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: QOS_POLICY
+    profile_key: qos_policy
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    reset_wire: ''
+    inert_when:
+      nvpair: ENABLE_QOS
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L174"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: QUEUING_POLICY
+    profile_key: queuing_policy
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    reset_wire: ''
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L177"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: qosStatsSuppressed
+    profile_key: disable_qos_stats
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L442"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: queuingStats
+    profile_key: disable_queuing_stats
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: 'false'
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L450"

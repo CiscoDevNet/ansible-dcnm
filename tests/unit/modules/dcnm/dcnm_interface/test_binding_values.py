@@ -121,12 +121,12 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 322   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(BINDING_TABLE) == 334   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
     # + slice 0b_41 (2) + slice 0b_42 (13)
-    assert len(set(keys)) == 322, "duplicate (parent, nvpair) row"
+    assert len(set(keys)) == 334, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 322, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 334, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -184,7 +184,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 322   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
+    assert len(gen.compile_rows(rows)) == 334   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -216,7 +216,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 322   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
+    assert len(gen.compile_rows(rows)) == 334   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -312,7 +312,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 322   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
+    assert len(gen.compile_rows(rows)) == 334   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
 
 
 # ------------------------------------------------------------------ positive transport
@@ -729,7 +729,9 @@ def test_keymap_carries_every_new_nvpair():
     assert km["STORM_CONTROL_BCAST_LEVEL_PPS"] == "storm_control_broadcast_level_pps"
     # 91 = 88 + IPv6, IPv6_PREFIX and DISABLE_IP_REDIRECTS (lot rp3, int_l3_port_channel), with their native names.
     assert (km["IPv6"], km["IPv6_PREFIX"], km["DISABLE_IP_REDIRECTS"]) == ("ipv6_addr", "ipv6_mask_len", "disable_ip_redirects")
-    assert len(km) == 91
+    # 93 = 91 + ENABLE_PFC and QUEUING_POLICY (lot rp4), with their native names; ENABLE_QOS was mapped.
+    assert (km["ENABLE_PFC"], km["QUEUING_POLICY"]) == ("enable_pfc", "queuing_policy")
+    assert len(km) == 93
 
 
 def test_all_registered_keys():
@@ -828,6 +830,8 @@ def test_all_registered_keys():
         # Lot rp3: the routed port-channel IPv6 pair and combined redirect option, native elsewhere
         # (GIE_NATIVE_ELSEWHERE_KEYS).
         "ipv6_addr", "ipv6_mask_len", "disable_ip_redirects",
+        # Lot rp4: priority flow control and the queuing policy, native elsewhere (GIE_NATIVE_ELSEWHERE_KEYS).
+        "enable_pfc", "queuing_policy",
     }
 
 
@@ -1044,6 +1048,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # does not exist either. The asymmetry is the template's.
         # Lot rp3: the combined redirect option of the routed port-channel.
         "disable_ip_redirects",
+        # Lot rp4: priority flow control on seven parents (enable_qos is already listed).
+        "enable_pfc",
     }
     # 80 = the per-parent counts below, which are what the table actually holds. Measured
     # against BINDING_TABLE when slice 0b_22 landed, not carried forward by arithmetic:
@@ -1100,7 +1106,7 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 131 = 128 + enable_qos, disable_qos_stats and enable_storm_control on int_vpc_uplink_access (slice ul1).
     # 132 = 131 + enable_pim_sparse on int_l3_port_channel (slice 0b_41).
     # 140 = 132 + the eight EIGRP booleans on int_l3_port_channel (slice 0b_42).
-    assert len(BOOL_PASSTHROUGH) == 146
+    assert len(BOOL_PASSTHROUGH) == 156
 
 
 # ------------------------------------------------------- what the engine emits --
@@ -1548,7 +1554,7 @@ def test_every_registered_string_binding_declares_a_comparison_category():
     # ospfAuthenticationKey on int_l3_port_channel (slice 0b_40). 52 = 51 + QOS_POLICY on int_vpc_peer_link_po (slice pl1).
     # 56 = 52 + QOS_POLICY and the three storm-control percent levels on int_vpc_uplink_access (slice ul1).
     # 59 = 56 + the EIGRP process tag and the two prefix lists on int_l3_port_channel (slice 0b_42).
-    assert len(strings) == 65
+    assert len(strings) == 67
     assert {b["string_compare"] for b in strings} == {"exact", "casefold", "case_irrelevant", "unverified"}
     assert not [b for b in table.BINDING_TABLE if b["type"] != "string" and "string_compare" in b]
 

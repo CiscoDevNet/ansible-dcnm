@@ -954,6 +954,8 @@ def gie_nvpair_keymap():
 #   ipv6_addr, ipv6_mask_len: registered on int_l3_port_channel (lot rp3); native on the routed, EPL routed,
 #               subinterface, loopback and SVI profiles.
 #   disable_ip_redirects: registered on int_l3_port_channel (lot rp3); native on the SVI profile, with its own default.
+#   enable_pfc: registered on seven parents (lot rp4); native on the Ethernet and port-channel trunk and access profiles.
+#   queuing_policy: registered on int_dot1q_tunnel_host (lot rp4); native on the Ethernet, port-channel and vPC profiles.
 GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "enable_cdp",
     "enable_qos",
@@ -969,6 +971,8 @@ GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "ipv6_addr",
     "ipv6_mask_len",
     "disable_ip_redirects",
+    "enable_pfc",
+    "queuing_policy",
 })
 
 

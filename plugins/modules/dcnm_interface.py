@@ -189,6 +189,14 @@ options:
       option is true the template ignores the other two, so an explicit false for either one is refused unless the
       same task sets the combined option to false. Under C(replaced) and C(overridden) an omitted key is reset to false
       or empty. NOT LIVE TESTED.
+    - C(enable_pfc) (bool) is also accepted on the routed Ethernet, Ethernet dot1q-tunnel, routed port-channel,
+      dot1q-tunnel port-channel and vPC trunk, access and dot1q-tunnel profiles, with the meaning it has on the trunk
+      and access profiles. On these profiles an omitted value is kept under C(merged) and reset to false under
+      C(replaced) and C(overridden); the trunk and access profiles keep their native default. The Ethernet
+      dot1q-tunnel profile also accepts C(enable_qos), C(qos_policy) and C(queuing_policy) as the other Ethernet modes
+      do; disabling QoS under C(merged) also clears the stored policy name. The routed port-channel also accepts
+      C(disable_qos_stats) and C(disable_queuing_stats) with the routed Ethernet meaning. The module never creates the
+      policies, and whether a platform accepts priority flow control is not checked. NOT LIVE TESTED.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
       when it joins the port-channel. A member that already exists keeps its stored value when the option is raised or
@@ -6160,6 +6168,9 @@ class DcnmIntf:
         gie_extend_prof_spec(eth_prof_spec_access, "int_access_host", cfg[0]["profile"])
         gie_extend_prof_spec(
             eth_prof_spec_routed_host, "int_routed_host", cfg[0]["profile"]
+        )
+        gie_extend_prof_spec(
+            eth_prof_spec_dot1q_tunnel_host, "int_dot1q_tunnel_host", cfg[0]["profile"]
         )
 
         if "trunk" == cfg[0]["profile"]["mode"]:

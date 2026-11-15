@@ -149,6 +149,7 @@ R2_REGISTERED_BINDINGS = {
     )),
     "disable_qos_stats": ("qosStatsSuppressed", "bool", (
         "int_access_host",
+        "int_l3_port_channel",
         "int_port_channel_access_host",
         "int_port_channel_dot1q_tunnel_host",
         "int_port_channel_trunk_host",
@@ -163,6 +164,7 @@ R2_REGISTERED_BINDINGS = {
     )),
     "disable_queuing_stats": ("queuingStats", "bool", (
         "int_access_host",
+        "int_l3_port_channel",
         "int_port_channel_access_host",
         "int_port_channel_dot1q_tunnel_host",
         "int_port_channel_pvlan_host",
@@ -229,8 +231,20 @@ R2_REGISTERED_BINDINGS = {
     "disable_ip_redirects": ("DISABLE_IP_REDIRECTS", "bool", ("int_l3_port_channel",)),
     # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
     # (R2_NATIVE_QOS_PARENTS).
-    "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
-    "qos_policy": ("QOS_POLICY", "str_fold", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
+    "enable_qos": ("ENABLE_QOS", "bool", ("int_dot1q_tunnel_host", "int_vpc_peer_link_po", "int_vpc_uplink_access")),
+    "qos_policy": ("QOS_POLICY", "str_fold", ("int_dot1q_tunnel_host", "int_vpc_peer_link_po", "int_vpc_uplink_access")),
+    # Lot rp4: priority flow control and the Ethernet dot1q-tunnel queuing policy; native and not checked on the
+    # Ethernet, port-channel and vPC profiles that already carry them (R2_NATIVE_UNCHECKED_KEYS).
+    "enable_pfc": ("ENABLE_PFC", "bool", (
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_routed_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "queuing_policy": ("QUEUING_POLICY", "str_fold", ("int_dot1q_tunnel_host",)),
     # The ToR-uplink storm-control keys (slice ul1), registered on int_vpc_uplink_access only and native on the access,
     # trunk and dot1q-tunnel profiles.
     "enable_storm_control": ("ENABLE_STORM_CONTROL", "bool", ("int_vpc_uplink_access",)),
@@ -395,7 +409,9 @@ R2_NATIVE_QOS_STORED_ENABLE_PARENTS = frozenset(("int_pvlan_host", "int_vpc_pvla
 # Registered keys that the module also serves natively on parents outside their registry rows, where this checker has no
 # mapping for them. On those parents they are not validated, as before they were registered:
 #   disable_ip_redirects: native on the SVI profile (DISABLE_IP_REDIRECTS).
-R2_NATIVE_UNCHECKED_KEYS = frozenset(("disable_ip_redirects",))
+#   enable_pfc: native on the Ethernet and port-channel trunk and access profiles (ENABLE_PFC).
+#   queuing_policy: native on the Ethernet, port-channel and vPC profiles (QUEUING_POLICY).
+R2_NATIVE_UNCHECKED_KEYS = frozenset(("disable_ip_redirects", "enable_pfc", "queuing_policy"))
 
 # Parents whose module payload carries CDP_ENABLE natively (not a registry row): the eth trunk, access and dot1q
 # payloads, the pc trunk and access payloads, the vpc trunk, access and dot1q payload, and the PVLAN companions of

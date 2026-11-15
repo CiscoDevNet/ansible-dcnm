@@ -98,6 +98,7 @@ SVI = "int_vlan"
 PC_ACCESS = "int_port_channel_access_host"
 PC_TRUNK = "int_port_channel_trunk_host"
 PC_DOT1Q = "int_port_channel_dot1q_tunnel_host"
+ETH_DOT1Q = "int_dot1q_tunnel_host"
 PC_PARENTS = (PC_ACCESS, PC_TRUNK, PC_DOT1Q)
 # The routed port-channel (`type: pc`, `mode: l3`). Kept out of PC_PARENTS: the layer-2 port-channel cases iterate that
 # tuple with fields this parent does not declare.
@@ -929,6 +930,16 @@ PILOT = {
     (PC_L3, "DISABLE_IP_REDIRECTS"): ("disable_ip_redirects", True, "false", {}),
     (PC_L3, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", {}),
     (PC_L3, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", {}),
+    # Lot rp4: priority flow control, the Ethernet dot1q-tunnel QoS and queuing policies, and the routed port-channel
+    # policy statistics with the int_routed_host contexts. Read from the bodies, not measured live.
+    (ROUTED, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    (ETH_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    (ETH_DOT1Q, "ENABLE_QOS"): ("enable_qos", True, "false", {"qos_policy": "pilot_qos"}),
+    (ETH_DOT1Q, "QOS_POLICY"): ("qos_policy", "pilot_qos", "", {"enable_qos": True}),
+    (ETH_DOT1Q, "QUEUING_POLICY"): ("queuing_policy", "pilot_queue", "", {}),
+    (PC_L3, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    (PC_L3, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
+    (PC_L3, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became
@@ -1001,6 +1012,8 @@ PILOT_PC = {
     (PC_DOT1Q, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
     (PC_DOT1Q, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (PC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    # Lot rp4: priority flow control. Read from the body, not measured live.
+    (PC_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
 }
 PILOT_PC_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT_PC]
 PILOT_PC_ITEMS = [(p, n, k, applied, reset, extra)
@@ -1031,6 +1044,10 @@ PILOT_VPC = {
     (VPC_DOT1Q, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", {}),
     (VPC_DOT1Q, "queuingStats"): ("disable_queuing_stats", True, "false", {}),
     (VPC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", {}),
+    # Lot rp4: priority flow control on the three vPC parents. Read from the bodies, not measured live.
+    (VPC_ACCESS, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    (VPC_TRUNK, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    (VPC_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
 }
 
 # The combined matrix. Tests parametrized over this cover ethernet and port-channel in one
@@ -1107,6 +1124,8 @@ BASE_SVI = {"mode": "vlan", "int_vrf": "default", "mtu": 9216, "admin_state": Tr
             "description": "pilot", "route_tag": "",
             "disable_ip_redirects": False, "adv_subnet_in_underlay": False}
 
+BASE_ETH_DOT1Q = {"mode": "dot1q", "description": "pilot", "fec": "auto"}
+
 BASE_ROUTED = {"mode": "routed", "description": "pilot", "fec": "auto",
                "ipv4_addr": "192.0.2.1", "ipv4_mask_len": 30,
                "enable_ospf": True, "ospf_area_id": "0.0.0.0"}
@@ -1123,7 +1142,7 @@ def base_for(parent, **extra):
             PC_ACCESS: BASE_PC_ACCESS, PC_TRUNK: BASE_PC_TRUNK,
             PC_DOT1Q: BASE_PC_DOT1Q, PC_L3: BASE_PC_L3, VPC_ACCESS: BASE_VPC_ACCESS,
             VPC_TRUNK: BASE_VPC_TRUNK, VPC_DOT1Q: BASE_VPC_DOT1Q, LOOPBACK: BASE_LOOPBACK,
-            SVI: BASE_SVI}.get(parent, BASE_ACCESS)
+            SVI: BASE_SVI, ETH_DOT1Q: BASE_ETH_DOT1Q}.get(parent, BASE_ACCESS)
     prof = dict(base)
     prof.update(extra)
     return prof

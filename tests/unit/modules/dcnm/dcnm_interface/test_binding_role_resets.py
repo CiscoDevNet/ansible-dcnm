@@ -529,6 +529,9 @@ VPC_ROWS = [
     (VPC_TRUNK, "guard_mode", "GUARD_MODE", "enum", "no", "root"),
 ]
 
+# Public keys of later lots on the same two parents, pinned in their own suites: lot rp4 (test_binding_qos_pfc.py).
+LATER_LOT_KEYS = frozenset(("enable_pfc",))
+
 VPC_CASES = [pytest.param(*f, id="{0}-{1}".format(f[0].replace("int_vpc_", "").replace("_host", ""), f[1]))
              for f in VPC_ROWS]
 
@@ -543,7 +546,7 @@ def test_the_lot_is_thirteen_and_the_fixture_matches_the_table():
     fails instead of the count quietly changing underneath the documented claim.
     """
     in_table = {(r["parent_template"], r["profile_key"]) for r in BINDING_TABLE
-                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
+                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r["profile_key"] not in LATER_LOT_KEYS}
     in_fixture = {(f[0], f[1]) for f in VPC_ROWS}
     assert len(VPC_ROWS) == 13, "the fixture lists {0} rows, not 13".format(len(VPC_ROWS))
     assert in_table == in_fixture, (
@@ -659,7 +662,7 @@ def test_the_previous_lot_is_untouched():
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
-    assert len(BINDING_TABLE) == 322, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_42, rs1, pl1, ul1
+    assert len(BINDING_TABLE) == 334, "the table has {0} identities".format(len(BINDING_TABLE))   # + slices 0b_37 to 0b_42, rs1, pl1, ul1
     # 197 integrated + 3 int_vlan rows (test_binding_role_resets.py) = 200, + the six
     # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
@@ -670,10 +673,10 @@ def test_the_previous_lot_is_untouched():
     # + 1 trunk port-channel reset-skip reset (slice rs1) = 247, + 2 peer-link resets (slice pl1) = 249,
     # + 12 uplink resets (slice ul1) = 261, + 2 routed port-channel PIM resets (slice 0b_41) = 263,
     # + 10 routed port-channel EIGRP resets (slice 0b_42) = 273.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7, (
-        "the integrated table carries {0} resets, expected 287".format(len(with_reset)))
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7 + 12, (
+        "the integrated table carries {0} resets, expected 299".format(len(with_reset)))
     lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset
-                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
+                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r["profile_key"] not in LATER_LOT_KEYS}
     assert lot_rows == {(f[0], f[1]) for f in VPC_ROWS}
     for parent in (VPC_ACCESS, VPC_TRUNK):
         neighbour = resolve_binding(parent, "disable_lldp")
@@ -849,15 +852,15 @@ def test_the_arithmetic_is_197_plus_three():
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 228 + six dot1q rows + eleven PVLAN companion rows + one vPC PVLAN row, + slices 0b_37, 0b_38, 0b_39, 0b_40, rs1,
     # pl1, ul1, 0b_41 and 0b_42.
-    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3 + 4 + 7
+    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3 + 4 + 7 + 12
     # 200 + six dot1q resets + int_vlan::privateVlanMapping = 207, + 11 PVLAN companion resets (inferred) = 218, + 1 vPC PVLAN reset = 219.
     # + 5 SMU 017 resets read from the bodies (slice 0b_37) = 224, + 5 loopback EIGRP resets (slice 0b_38) = 229,
     # + 1 routed port-channel PIM BFD reset (slice 0b_39) = 230, + 16 routed port-channel OSPF resets (slice 0b_40) = 246,
     # + 1 trunk port-channel reset-skip reset (slice rs1) = 247, + 2 peer-link resets (slice pl1) = 249,
     # + 12 uplink resets (slice ul1) = 261, + 2 routed port-channel PIM resets (slice 0b_41) = 263,
     # + 10 routed port-channel EIGRP resets (slice 0b_42) = 273.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7, (
-        "the table carries %d resets, expected 287" % len(with_reset))
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7 + 12, (
+        "the table carries %d resets, expected 299" % len(with_reset))
     hsrp = {r["profile_key"] for r in with_reset
             if r["parent_template"] == SVI and r["profile_key"].startswith("hsrp")}
     assert hsrp == set(IDS), sorted(hsrp)
