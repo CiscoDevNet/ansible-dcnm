@@ -143,7 +143,8 @@ def test_r2_coverage_the_checker_invents_no_identity():
     # 78 = 77 + link_transmit_reset_skip (slice rs1). 80 = 78 + enable_qos and qos_policy (slice pl1).
     # 88 = 80 + enable_storm_control, storm_control_action and the six storm-control levels (slice ul1).
     # 91 = 88 + ipv6_addr, ipv6_mask_len and disable_ip_redirects (lot rp3). 93 = 91 + enable_pfc and queuing_policy (lot rp4).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 93
+    # 96 = 93 + enable_netflow, netflow_monitor and netflow_sampler (lot rp5).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 96
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():

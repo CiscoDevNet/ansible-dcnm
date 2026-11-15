@@ -956,6 +956,7 @@ def gie_nvpair_keymap():
 #   disable_ip_redirects: registered on int_l3_port_channel (lot rp3); native on the SVI profile, with its own default.
 #   enable_pfc: registered on seven parents (lot rp4); native on the Ethernet and port-channel trunk and access profiles.
 #   queuing_policy: registered on int_dot1q_tunnel_host (lot rp4); native on the Ethernet, port-channel and vPC profiles.
+#   enable_netflow, netflow_monitor: registered on twelve parents (lot rp5); native on the SVI and FEX profiles.
 GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "enable_cdp",
     "enable_qos",
@@ -973,6 +974,8 @@ GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "disable_ip_redirects",
     "enable_pfc",
     "queuing_policy",
+    "enable_netflow",
+    "netflow_monitor",
 })
 
 

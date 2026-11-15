@@ -234,6 +234,11 @@ MACSEC_FB_CTX = {"enable_macsec_interface_policy": True,
 
 # PIM stays enabled while its dependent rows are cleared.
 PIM_ON = {"enable_pim_sparse": True}
+
+# NetFlow contexts (lot rp5). The monitor is withdrawn without a NetFlow value in the request or HAVE, where an empty
+# monitor is valid (an explicit false would itself clear it under merged); the sampler with NetFlow on and its monitor kept.
+NETFLOW_MONITOR_ONLY = {"netflow_monitor": "PILOT-FM"}
+NETFLOW_ON = {"enable_netflow": True, "netflow_monitor": "PILOT-FM"}
 # HSRP on the SVI parent. The installed body rejects every advanced HSRP field unless HSRP is
 # enabled with a primary IPv4 VIP, and the preempt delay additionally needs `preempt: true`; the
 # native argspec requires `hsrp_vip` and `hsrp_group` whenever `enable_hsrp` is true. Priority 120
@@ -940,6 +945,27 @@ PILOT = {
     (PC_L3, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
     (PC_L3, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
     (PC_L3, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    # Lot rp5: NetFlow on the Ethernet, routed port-channel and subinterface parents, and the sampler on the SVI.
+    # Read from the bodies, not measured live.
+    (TRUNK, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (TRUNK, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (TRUNK, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (ACCESS, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (ACCESS, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (ACCESS, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (ROUTED, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (ROUTED, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (ROUTED, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (ETH_DOT1Q, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (ETH_DOT1Q, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (ETH_DOT1Q, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (PC_L3, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (PC_L3, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (PC_L3, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (SUBIF, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (SUBIF, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (SUBIF, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (SVI, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became
@@ -1014,6 +1040,16 @@ PILOT_PC = {
     (PC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
     # Lot rp4: priority flow control. Read from the body, not measured live.
     (PC_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    # Lot rp5: NetFlow. Read from the bodies, not measured live.
+    (PC_ACCESS, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (PC_ACCESS, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (PC_ACCESS, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (PC_TRUNK, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (PC_TRUNK, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (PC_TRUNK, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (PC_DOT1Q, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (PC_DOT1Q, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (PC_DOT1Q, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
 }
 PILOT_PC_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT_PC]
 PILOT_PC_ITEMS = [(p, n, k, applied, reset, extra)
@@ -1048,6 +1084,16 @@ PILOT_VPC = {
     (VPC_ACCESS, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
     (VPC_TRUNK, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
     (VPC_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    # Lot rp5: NetFlow on the three vPC parents. Read from the bodies, not measured live.
+    (VPC_ACCESS, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (VPC_ACCESS, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (VPC_ACCESS, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (VPC_TRUNK, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (VPC_TRUNK, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (VPC_TRUNK, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
+    (VPC_DOT1Q, "ENABLE_NETFLOW"): ("enable_netflow", True, "false", dict(NETFLOW_MONITOR_ONLY)),
+    (VPC_DOT1Q, "NETFLOW_MONITOR"): ("netflow_monitor", "PILOT-FM", "", {}),
+    (VPC_DOT1Q, "NETFLOW_SAMPLER"): ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON)),
 }
 
 # The combined matrix. Tests parametrized over this cover ethernet and port-channel in one

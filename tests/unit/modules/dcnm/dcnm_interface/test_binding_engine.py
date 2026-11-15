@@ -523,6 +523,16 @@ RP4_ROWS = {
     ("int_l3_port_channel", "queuingStats", "disable_queuing_stats"),
 }
 
+# NetFlow on twelve parents and the sampler on int_vlan, lot rp5.
+RP5_ROWS = {
+    (parent, nvpair, key) for parent in (
+        "int_trunk_host", "int_access_host", "int_routed_host", "int_dot1q_tunnel_host", "int_port_channel_trunk_host",
+        "int_port_channel_access_host", "int_l3_port_channel", "int_port_channel_dot1q_tunnel_host",
+        "int_vpc_trunk_host", "int_vpc_access_host", "int_vpc_dot1q_tunnel", "int_subif")
+    for nvpair, key in (("ENABLE_NETFLOW", "enable_netflow"), ("NETFLOW_MONITOR", "netflow_monitor"),
+                        ("NETFLOW_SAMPLER", "netflow_sampler"))
+} | {("int_vlan", "NETFLOW_SAMPLER", "netflow_sampler")}
+
 # The routed port-channel OSPF family, slice 0b_40.
 L3PO_OSPF_ROWS = {
     ("int_l3_port_channel", "ospf", "enable_ospf"),
@@ -615,7 +625,7 @@ def test_package_provenance_and_size():
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
-        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS | RP1_ROWS | RP2_ROWS | RP3_ROWS | RP4_ROWS
+        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS | RP1_ROWS | RP2_ROWS | RP3_ROWS | RP4_ROWS | RP5_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -629,7 +639,8 @@ def test_package_provenance_and_size():
     assert len(RP2_ROWS) == 4
     assert len(RP3_ROWS) == 7
     assert len(RP4_ROWS) == 12
-    assert len(BINDING_TABLE) == len(actual_keys) == 334
+    assert len(RP5_ROWS) == 37
+    assert len(BINDING_TABLE) == len(actual_keys) == 371
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -672,7 +683,7 @@ def test_package_provenance_and_size():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 334   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
+    assert len(rows) == 371   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -772,12 +783,14 @@ def test_registered_keys_per_parent():
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
         "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "logging_event_port_link_status",   # SMU 017, slice 0b_37
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     assert registered_profile_keys(PC_TRUNK) == {
         "guard_mode", "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -787,15 +800,18 @@ def test_registered_keys_per_parent():
         "enable_vpc_peer_link",
         # The member default of the trunk port-channel reset-skip, slice rs1.
         "link_transmit_reset_skip",
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     assert registered_profile_keys(PC_ACCESS) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
         "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     assert registered_profile_keys(PC_DOT1Q) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
         "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
         "enable_pfc",   # lot rp4; native on the trunk and access port-channels
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     # GUARD_MODE is NOT registered on access parents.
     assert "guard_mode" not in registered_profile_keys(ACCESS)
@@ -839,6 +855,10 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("aclFilter", "acl_filter"),
         ("qosStatsSuppressed", "disable_qos_stats"),
         ("queuingStats", "disable_queuing_stats"),
+        # Lot rp5: NetFlow, pinned in test_binding_netflow.py.
+        ("ENABLE_NETFLOW", "enable_netflow"),
+        ("NETFLOW_MONITOR", "netflow_monitor"),
+        ("NETFLOW_SAMPLER", "netflow_sampler"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -852,6 +872,10 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("qosStatsSuppressed", "disable_qos_stats"),
         ("queuingStats", "disable_queuing_stats"),
         ("loggingEventPortLinkStatus", "logging_event_port_link_status"),   # SMU 017, slice 0b_37
+        # Lot rp5: NetFlow, pinned in test_binding_netflow.py.
+        ("ENABLE_NETFLOW", "enable_netflow"),
+        ("NETFLOW_MONITOR", "netflow_monitor"),
+        ("NETFLOW_SAMPLER", "netflow_sampler"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -1144,6 +1168,8 @@ def test_all_registered_and_guarded_keys():
         "ipv6_addr", "ipv6_mask_len", "disable_ip_redirects",
         # Lot rp4: priority flow control and the queuing policy, native elsewhere.
         "enable_pfc", "queuing_policy",
+        # Lot rp5: NetFlow; enable_netflow and netflow_monitor are native elsewhere.
+        "enable_netflow", "netflow_monitor", "netflow_sampler",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -1236,6 +1262,8 @@ def test_all_registered_and_guarded_keys():
         # SMU 017 slice 0b_37. enable_cdp is registered but NOT guarded: the native spec serves it on other parents.
         # The same holds for enable_qos and qos_policy (slice pl1) and the storm-control keys (slice ul1).
         "enable_evpn_multisite_dci_tracking", "logging_event_port_link_status",
+        # Lot rp5: the NetFlow sampler, the only new public key of the lot.
+        "netflow_sampler",
     }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different

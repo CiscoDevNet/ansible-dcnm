@@ -31,7 +31,7 @@ on. Within a file, the rows keep the order of the original lots, and each lot's 
 |------|--------|-----:|
 | `registry_slice_eigrp.yaml` | EIGRP on the routed, subinterface, SVI, loopback and routed port-channel parents | 65 |
 | `registry_slice_hsrp_ipv6_nd.yaml` | HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay and routed port-channel parents | 24 |
-| `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback, SVI, port-channel and vPC parents: LLDP, QoS, PFC, ACL, flow control, dampening, ARP and related options | 54 |
+| `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback, SVI, port-channel and vPC parents: LLDP, QoS, PFC, ACL, flow control, dampening, ARP, NetFlow and related options | 91 |
 | `registry_slice_macsec.yaml` | MACsec on the routed Ethernet and routed port-channel parents | 8 |
 | `registry_slice_multicast_bfd.yaml` | PIM and BFD parents | 23 |
 | `registry_slice_ospf.yaml` | OSPF parents, including the routed port-channel | 96 |
@@ -91,6 +91,7 @@ rows belong to several families keeps its header in the family that holds most o
 | `rp2_l3po_macsec` | `registry_slice_macsec.yaml` (4) |
 | `rp3_l3po_ipv6_redirects` | `registry_slice_hsrp_ipv6_nd.yaml` (7) |
 | `rp4_qos_pfc_stats` | `registry_slice_interface_common.yaml` (12) |
+| `rp5_netflow` | `registry_slice_interface_common.yaml` (37) |
 | `rs1_po_link_transmit_reset_skip` | `registry_slice_port_channel_vpc.yaml` (1) |
 | `ul1_uplink_access` | `registry_slice_port_channel_vpc.yaml` (12) |
 

@@ -245,6 +245,51 @@ R2_REGISTERED_BINDINGS = {
         "int_vpc_trunk_host",
     )),
     "queuing_policy": ("QUEUING_POLICY", "str_fold", ("int_dot1q_tunnel_host",)),
+    # Lot rp5: NetFlow. enable_netflow and netflow_monitor are native and not checked on the SVI and FEX profiles
+    # (R2_NATIVE_UNCHECKED_KEYS).
+    "enable_netflow": ("ENABLE_NETFLOW", "bool", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_routed_host",
+        "int_subif",
+        "int_trunk_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "netflow_monitor": ("NETFLOW_MONITOR", "str_fold", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_routed_host",
+        "int_subif",
+        "int_trunk_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "netflow_sampler": ("NETFLOW_SAMPLER", "str_fold", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_routed_host",
+        "int_subif",
+        "int_trunk_host",
+        "int_vlan",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
     # The ToR-uplink storm-control keys (slice ul1), registered on int_vpc_uplink_access only and native on the access,
     # trunk and dot1q-tunnel profiles.
     "enable_storm_control": ("ENABLE_STORM_CONTROL", "bool", ("int_vpc_uplink_access",)),
@@ -411,7 +456,11 @@ R2_NATIVE_QOS_STORED_ENABLE_PARENTS = frozenset(("int_pvlan_host", "int_vpc_pvla
 #   disable_ip_redirects: native on the SVI profile (DISABLE_IP_REDIRECTS).
 #   enable_pfc: native on the Ethernet and port-channel trunk and access profiles (ENABLE_PFC).
 #   queuing_policy: native on the Ethernet, port-channel and vPC profiles (QUEUING_POLICY).
-R2_NATIVE_UNCHECKED_KEYS = frozenset(("disable_ip_redirects", "enable_pfc", "queuing_policy"))
+#   enable_netflow, netflow_monitor: native on the SVI and FEX profiles (ENABLE_NETFLOW, NETFLOW_MONITOR).
+# A parent this checker cannot resolve (the FEX profiles) is treated the same way for these keys.
+R2_NATIVE_UNCHECKED_KEYS = frozenset((
+    "disable_ip_redirects", "enable_pfc", "queuing_policy", "enable_netflow", "netflow_monitor",
+))
 
 # Parents whose module payload carries CDP_ENABLE natively (not a registry row): the eth trunk, access and dot1q
 # payloads, the pc trunk and access payloads, the vpc trunk, access and dot1q payload, and the PVLAN companions of
@@ -1209,7 +1258,7 @@ class DcnmInterfaceQuerySchema(BaseModel):
                     continue  # registered on the peer-link and uplink parents, native here (r2_native_qos above)
                 if parent in R2_NATIVE_CDP_PARENTS and key == "enable_cdp":
                     continue  # registered on the routed parent, native here (above)
-                if parent is not None and parent not in parents and key in R2_NATIVE_UNCHECKED_KEYS:
+                if (parent is None or parent not in parents) and key in R2_NATIVE_UNCHECKED_KEYS:
                     continue  # native on this parent and not checked here, as before it was registered elsewhere
                 if parent is None or parent not in parents:
                     reason = R2_EXCEPTIONS.get((parent, nvpair)) or (

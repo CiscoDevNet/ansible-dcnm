@@ -323,10 +323,10 @@ class TestPV09InventoryInvariants:
     def test_234_identities_and_207_reset_values_unchanged(self):
         # The eleven PVLAN companion rows, each with an inferred reset: 234 + 11, 207 + 11; plus one vPC PVLAN row.
         # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1, + 4: pl1, + 12: ul1, + 2: 0b_41, + 13: 0b_42
-        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3 + 4 + 7 + 12
+        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3 + 4 + 7 + 12 + 37
         # + 0b_37 to 0b_42, rs1, pl1, ul1
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
-            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7 + 12)
+            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4 + 7 + 12 + 37)
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -369,8 +369,9 @@ class TestPV09InventoryInvariants:
         # The routed port-channel MACsec rows of lot rp2 (was 3a50bba9...).
         # The routed port-channel IPv6 and redirect rows of lot rp3 (was e3c22b57...).
         # The priority flow control, Ethernet dot1q-tunnel QoS and routed port-channel statistics rows of lot rp4 (was d195d9ee...).
+        # The NetFlow rows of lot rp5 (was 5b3bfb79...).
         assert PROVENANCE_SHA256 == (
-            "5b3bfb79cfd7a7ffeec6e15c6400708bff8ee3718ffa3e19a106aa628a5da190"
+            "9eac40d22867cd49633299757e09ee3c2c477631d9f7887c2895f0fe57af529d"
         )
 
 

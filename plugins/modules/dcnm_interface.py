@@ -197,6 +197,14 @@ options:
       do; disabling QoS under C(merged) also clears the stored policy name. The routed port-channel also accepts
       C(disable_qos_stats) and C(disable_queuing_stats) with the routed Ethernet meaning. The module never creates the
       policies, and whether a platform accepts priority flow control is not checked. NOT LIVE TESTED.
+    - C(enable_netflow) (bool), C(netflow_monitor) and C(netflow_sampler) are also accepted on the Ethernet trunk,
+      access, routed and dot1q-tunnel profiles, the trunk, access, routed and dot1q-tunnel port-channel profiles, the
+      vPC trunk, access and dot1q-tunnel profiles and the subinterface; C(netflow_sampler) also on the SVI, beside its
+      native NetFlow keys. The monitor is required while NetFlow is enabled, and a request that enables NetFlow over an
+      empty stored monitor, or clears the monitor while NetFlow stays enabled, is refused. Under C(merged) disabling
+      NetFlow also clears the stored monitor and sampler; under C(replaced) and C(overridden) an omitted key is reset.
+      NetFlow must be enabled in the fabric and the monitor and sampler defined there; the module never creates them.
+      The templates describe the sampler as applicable to N7K only. NOT LIVE TESTED.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
       when it joins the port-channel. A member that already exists keeps its stored value when the option is raised or
