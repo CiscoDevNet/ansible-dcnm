@@ -12,8 +12,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import copy
-
 import pytest
 
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine

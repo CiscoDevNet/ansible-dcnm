@@ -624,7 +624,7 @@ A4_LINK_ROWS = (
     | {(p, "DEBOUNCE_TIMER", "debounce_timer") for p in A4_STP_HOSTS[:3]}
     | {(p, "DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer") for p in A4_STP_HOSTS[:3]}
     | {(p, "PORT_DUPLEX_MODE", "duplex") for p in ("int_port_channel_dot1q_tunnel_host", "int_vpc_trunk_host",
-                                                    "int_vpc_access_host", "int_vpc_dot1q_tunnel")}
+                                                   "int_vpc_access_host", "int_vpc_dot1q_tunnel")}
 )
 
 
