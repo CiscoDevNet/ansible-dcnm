@@ -386,8 +386,8 @@ def test_e13_registry_rows_and_resets_are_unchanged_except_the_c1_pvlan_companio
     # slice pl1 (no PVLAN parent); + 12 rows and 12 resets: the ToR-uplink parent, slice ul1 (no PVLAN parent); + 2 rows
     # and 2 resets: routed port-channel PIM sparse mode and DR priority, slice 0b_41 (no PVLAN parent); + 13 rows and
     # 10 resets: routed port-channel EIGRP, slice 0b_42 (no PVLAN parent).
-    assert (rows, resets, pvlan) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3,
-                                     207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3, 11 + 1)
+    assert (rows, resets, pvlan) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3 + 4,
+                                     207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4, 11 + 1)
 
 
 # ===================================================================================== E14

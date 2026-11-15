@@ -724,6 +724,12 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "bfdEcho"): "disable_bfd_echo",
     ("int_l3_port_channel", "arpTimeout"): "arp_timeout",
     ("int_l3_port_channel", "ipv4AclIn"): "ipv4_acl_in",
+    # MACsec on the routed port-channel (lot rp2), the int_routed_host contracts. The parent passes the values to its
+    # members, which render the lines. Read from the patched body; not measured live.
+    ("int_l3_port_channel", "macsecInterfacePolicy"): "enable_macsec_interface_policy",
+    ("int_l3_port_channel", "macsecKeyChainName"): "macsec_key_chain_name",
+    ("int_l3_port_channel", "macsecPolicyName"): "macsec_policy_name",
+    ("int_l3_port_channel", "macsecFallbackKeyChainName"): "macsec_fallback_key_chain_name",
     # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
     ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
     # Existing vPC peer-link parent (slice pl1). Read from the 017 body; not measured live.

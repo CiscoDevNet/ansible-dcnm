@@ -173,6 +173,13 @@ options:
       (60-28800 seconds) and C(ipv4_acl_in) (1-64 characters, compared with its case), with the routed Ethernet
       meaning. Under C(replaced) and C(overridden) an omitted key is reset to false or empty, which leaves its line out.
       The echo line needs C(feature bfd); the module never creates the access list. NOT LIVE TESTED.
+    - The routed port-channel also accepts the MACsec keys of the routed Ethernet profile -
+      C(enable_macsec_interface_policy), C(macsec_key_chain_name), C(macsec_policy_name) and
+      C(macsec_fallback_key_chain_name), with the same bounds and case-sensitive names. The template passes them to every
+      member port, where the MACsec line is rendered; the module writes the port-channel only. The template refuses the
+      policy without a key chain and a policy name; the module does not check it. Under C(replaced) and C(overridden) an
+      omitted key is reset to false or empty. Only the fallback key chain can be removed on its own. The module never
+      creates key chains or policies. NOT LIVE TESTED; MACsec sessions are not tested.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
       when it joins the port-channel. A member that already exists keeps its stored value when the option is raised or

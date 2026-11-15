@@ -916,6 +916,12 @@ PILOT = {
     (PC_L3, "bfdEcho"): ("disable_bfd_echo", True, "false", {}),
     (PC_L3, "arpTimeout"): ("arp_timeout", 900, "", {}),
     (PC_L3, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
+    # Lot rp2: MACsec with the contexts of int_routed_host. The enabler, key chain and policy can only be withdrawn together
+    # there; the fallback alone. Read from the body, not measured live.
+    (PC_L3, "macsecInterfacePolicy"): ("enable_macsec_interface_policy", True, "false", dict(MACSEC_NAMES)),
+    (PC_L3, "macsecKeyChainName"): ("macsec_key_chain_name", "PILOT-KC", "", dict(MACSEC_OFF)),
+    (PC_L3, "macsecPolicyName"): ("macsec_policy_name", "PILOT-POL", "", dict(MACSEC_OFF)),
+    (PC_L3, "macsecFallbackKeyChainName"): ("macsec_fallback_key_chain_name", "PILOT-FBKC", "", dict(MACSEC_FB_CTX)),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became

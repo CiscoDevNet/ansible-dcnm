@@ -323,10 +323,10 @@ class TestPV09InventoryInvariants:
     def test_234_identities_and_207_reset_values_unchanged(self):
         # The eleven PVLAN companion rows, each with an inferred reset: 234 + 11, 207 + 11; plus one vPC PVLAN row.
         # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1, + 4: pl1, + 12: ul1, + 2: 0b_41, + 13: 0b_42
-        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3
+        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 3 + 4
         # + 0b_37 to 0b_42, rs1, pl1, ul1
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
-            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3)
+            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 3 + 4)
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -366,8 +366,9 @@ class TestPV09InventoryInvariants:
         # 42 slices: those 41 and the routed port-channel PIM rows of slice 0b_41 (was f8b3ed32...).
         # The routed port-channel EIGRP rows of lot 0b_42, in the EIGRP family file (was e7174897...).
         # The routed port-channel BFD echo, ARP timeout and ACL rows of lot rp1 (was 38a2d043...).
+        # The routed port-channel MACsec rows of lot rp2 (was 3a50bba9...).
         assert PROVENANCE_SHA256 == (
-            "3a50bba94fd927a556622185391b43e8b0924c6a269bb5015a793b75679098a7"
+            "e3c22b570f0261b0076e6a9e15a1097018216db572fb64284d361e80fa014bdf"
         )
 
 

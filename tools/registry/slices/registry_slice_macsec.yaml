@@ -1,4 +1,4 @@
-# Registry source: MACsec on the routed parent.
+# Registry source: MACsec on the routed Ethernet and routed port-channel parents.
 #
 # Compiled by tools/gie_generate_binding_table.py with the other registry_slice_*.yaml files; see
 # tools/registry/README.md. Each section below is one original source lot. Its header is the original
@@ -180,3 +180,98 @@ bindings:
     parent_resolution: desired_parent
     removal_semantics: unresolved
     evidence_ref: "int_routed_host.template@65426107b3d1cdcf#L119"
+
+  # ==== Source lot rp2_l3po_macsec (4 of 4 rows) ====
+  # Registry lot rp2 -- MACsec on the routed port-channel (int_l3_port_channel, `type: pc`, `mode: l3`). Four bindings with
+  # the public keys and contracts of int_routed_host (lot 0b_33).
+  #
+  # Source: the int_l3_port_channel body of the supported patch release (template REST API, read only), sha256 of
+  # `content` 81c9392e92a488977d2a5c22fd2f79797fa826ff28b89d536d087fc8f9afe655:
+  #   * declarations L120-L141: macsecInterfacePolicy (boolean, defaultValue false), macsecKeyChainName and
+  #     macsecPolicyName (string 1..64, IsShow and IsMandatory when the policy is true), macsecFallbackKeyChainName
+  #     (string 1..64, IsShow only). Same types, bounds and gates as int_routed_host;
+  #   * reads L491-L494 and L613-L620;
+  #   * refusal L885-L890: "MACsec keychain and policy are required when MACsec interface policy is enabled.";
+  #   * rendering: the port-channel itself renders no MACsec line. The four values are passed to
+  #     int_l3_port_channel_member for every member (L1549-L1552), and the member body selects interface_macsec, or
+  #     interface_macsec_fallback when a fallback key chain is set. The CLI therefore lands on each member Ethernet port.
+  # The module writes only the port-channel nvPairs; it never writes a member. Nothing here is measured live:
+  # validated_on is absent and removal_semantics stays unresolved. The routed resets these rows copy were measured live on
+  # that parent, with the coordinated removal described in lot 0b_33.
+  #
+  # The key chains and the policy are names on the switch, not secrets (`no_log: false`). The module never creates them.
+  # Operation needs MACsec-capable member ports, a peer and key material; none of that is established by this registry.
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: macsecInterfacePolicy
+    profile_key: enable_macsec_interface_policy
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    reset_wire: "false"
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L121"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: macsecKeyChainName
+    profile_key: macsec_key_chain_name
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L126"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: macsecPolicyName
+    profile_key: macsec_policy_name
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L132"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: macsecFallbackKeyChainName
+    profile_key: macsec_fallback_key_chain_name
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L138"

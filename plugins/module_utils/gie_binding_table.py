@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 3a50bba94fd927a556622185391b43e8b0924c6a269bb5015a793b75679098a7
+# provenance_sha256 = e3c22b570f0261b0076e6a9e15a1097018216db572fb64284d361e80fa014bdf
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "3a50bba94fd927a556622185391b43e8b0924c6a269bb5015a793b75679098a7"
+PROVENANCE_SHA256 = "e3c22b570f0261b0076e6a9e15a1097018216db572fb64284d361e80fa014bdf"
 
 BINDING_TABLE = (
     {
@@ -414,6 +414,64 @@ BINDING_TABLE = (
         'parent_template': 'int_l3_port_channel',
         'parent_nvpair': 'ipv4AclIn',
         'profile_key': 'ipv4_acl_in',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
+        'no_log': False,
+        'string_compare': 'exact',
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'macsecFallbackKeyChainName',
+        'profile_key': 'macsec_fallback_key_chain_name',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
+        'no_log': False,
+        'string_compare': 'exact',
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'macsecInterfacePolicy',
+        'profile_key': 'enable_macsec_interface_policy',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'macsecKeyChainName',
+        'profile_key': 'macsec_key_chain_name',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
+        'no_log': False,
+        'string_compare': 'exact',
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'macsecPolicyName',
+        'profile_key': 'macsec_policy_name',
         'applicable_interface_type': 'pc',
         'applicable_mode': 'l3',
         'type': 'string',
