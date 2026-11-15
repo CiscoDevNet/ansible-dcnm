@@ -296,11 +296,13 @@ def test_the_option_on_with_no_entries_is_refused(parent, state):
     result, calls = run(base_for(parent, **{ENABLE: True, ENTRIES: []}), state, parent=parent)
     assert result.get("failed") and "vlan_mapping_entries" in result["msg"]
     assert split_calls(calls)["updates"] == []
-    # The controller returns "" for entries never set (measured on trunk and port-channel trunk interfaces).
-    have = _set_have_nv(_have_with(parent, **{ENABLE: False}), vlanMappingEntries="")
-    result, calls = run(base_for(parent, **{ENABLE: True}), state, have, parent=parent)
-    assert result.get("failed") and "vlan_mapping_entries" in result["msg"]
-    assert split_calls(calls)["updates"] == []
+    # The controller returns "" for entries never set (measured on trunk and port-channel trunk interfaces); an empty
+    # wrapper is the same empty list, and the template would render no mapping line for either.
+    for stored in ("", '{"vlanMappingEntries":[]}'):
+        have = _set_have_nv(_have_with(parent, **{ENABLE: False}), vlanMappingEntries=stored)
+        result, calls = run(base_for(parent, **{ENABLE: True}), state, have, parent=parent)
+        assert result.get("failed") and "vlan_mapping_entries" in result["msg"], stored
+        assert split_calls(calls)["updates"] == []
 
 
 @pytest.mark.parametrize("parent", PARENTS)

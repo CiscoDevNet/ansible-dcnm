@@ -894,8 +894,13 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
             # (a key cleared by an earlier disable). A field absent from both is not judged here: a new
             # interface without a tag is left to the controller, as before.
             explicit_empty = nvpair in explicit_nvpairs and want_nvpairs.get(nvpair) in ("", None)
+            stored = have_nvpairs.get(nvpair, _GIE_ABSENT)
             stored_empty = (gate["nvpair"] in explicit_nvpairs and nvpair not in explicit_nvpairs
-                            and nvpair not in want_nvpairs and have_nvpairs.get(nvpair, _GIE_ABSENT) in ("", None))
+                            and nvpair not in want_nvpairs
+                            and (stored in ("", None)
+                                 # A typed list stored as its empty wrapper is empty too.
+                                 or (b["type"] == STRUCT_LIST_TYPE and stored is not _GIE_ABSENT
+                                     and struct_is_empty(b["struct_contract"], stored))))
             if explicit_empty or stored_empty:
                 conflicts.append(dict(entry, reason="empty_while_on"))
     return writes, conflicts
