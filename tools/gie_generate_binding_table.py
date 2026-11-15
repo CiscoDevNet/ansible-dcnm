@@ -719,6 +719,11 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "eigrpIpv4DistributeListDirection"): "eigrp_ipv4_distribute_list_direction",
     ("int_l3_port_channel", "eigrpIpv6DistributeListPrefixList"): "eigrp_ipv6_distribute_list_prefix_list",
     ("int_l3_port_channel", "eigrpIpv6DistributeListDirection"): "eigrp_ipv6_distribute_list_direction",
+    # BFD echo, ARP timeout and inbound ACL on the routed port-channel (lot rp1), the int_routed_host contracts.
+    # Read from the patched body; not measured live.
+    ("int_l3_port_channel", "bfdEcho"): "disable_bfd_echo",
+    ("int_l3_port_channel", "arpTimeout"): "arp_timeout",
+    ("int_l3_port_channel", "ipv4AclIn"): "ipv4_acl_in",
     # Trunk port-channel reset-skip default (slice rs1): the value a member takes when it joins. Existing members keep theirs.
     ("int_port_channel_trunk_host", "linkTransmitResetSkip"): "link_transmit_reset_skip",
     # Existing vPC peer-link parent (slice pl1). Read from the 017 body; not measured live.

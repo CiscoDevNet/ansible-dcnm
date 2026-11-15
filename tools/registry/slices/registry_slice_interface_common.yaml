@@ -1474,3 +1474,64 @@ bindings:
     parent_resolution: desired_parent
     effect_rules: []
     evidence_ref: "int_trunk_host.template#L719"
+
+  # ==== Source lot rp1_l3po_l3_controls (2 of 3 rows) ====
+  # Registry lot rp1 -- BFD echo, ARP timeout and inbound IPv4 ACL on the routed port-channel (int_l3_port_channel,
+  # `type: pc`, `mode: l3`). Three bindings with the public keys and contracts that int_routed_host already serves
+  # (lots 0b_16 and 0b_3); the BFD echo row is in registry_slice_multicast_bfd.yaml.
+  #
+  # Source: the int_l3_port_channel body of the supported patch release (template REST API, read only), sha256 of
+  # `content` 81c9392e92a488977d2a5c22fd2f79797fa826ff28b89d536d087fc8f9afe655:
+  #   * declarations: bfdEcho L290-L293 (boolean, defaultValue false), arpTimeout L352-L356 (integer 60..28800, no
+  #     default), ipv4AclIn L358-L362 (string 1..64, no default). Same types, bounds and defaults as int_routed_host;
+  #   * reads L520, L531-L532, each through normalize() with the declared default or "";
+  #   * refusal L966-L975: "ARP timeout must be a positive integer." for a value that is not a positive integer;
+  #   * rendering: bfd_no_echo_interface when bfdEcho is "true" (L1194), interface_ip_arp_timeout_11_1 with ARP_TIMEOUT
+  #     when arpTimeout is not empty (L1430), interface_ip_access_group_in_11_1 with IPV4_ACL when ipv4AclIn is not
+  #     empty (L1437). Parent and child spellings differ for the ACL, as on int_routed_host: the rows use the parent
+  #     names.
+  # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42), so a
+  # reset to "false" or "" leaves the child out. Inferred from the body; nothing here is measured live, so
+  # validated_on is absent and removal_semantics stays unresolved. The int_routed_host resets these rows copy were
+  # measured live on that parent (lots 0b_16 and 0b_3).
+  #
+  # Prerequisites, not checked by the module: `feature bfd` for the echo line, and an existing IPv4 access list. On
+  # another parent NDFC was measured to store the ACL name lowercased; the case of a port-channel readback is not
+  # measured. The module never creates or deletes an access list.
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: arpTimeout
+    profile_key: arp_timeout
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    reset_wire: ""
+    min: 60
+    max: 28800
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L353"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ipv4AclIn
+    profile_key: ipv4_acl_in
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: exact
+    reset_wire: ''
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L359"

@@ -31,9 +31,9 @@ on. Within a file, the rows keep the order of the original lots, and each lot's 
 |------|--------|-----:|
 | `registry_slice_eigrp.yaml` | EIGRP on the routed, subinterface, SVI, loopback and routed port-channel parents | 65 |
 | `registry_slice_hsrp_ipv6_nd.yaml` | HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay parents | 17 |
-| `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options | 40 |
+| `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback, SVI and routed port-channel parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options | 42 |
 | `registry_slice_macsec.yaml` | MACsec on the routed parent | 4 |
-| `registry_slice_multicast_bfd.yaml` | PIM and BFD parents | 22 |
+| `registry_slice_multicast_bfd.yaml` | PIM and BFD parents | 23 |
 | `registry_slice_ospf.yaml` | OSPF parents, including the routed port-channel | 96 |
 | `registry_slice_port_channel_vpc.yaml` | Port-channel, vPC, peer-link and uplink parents | 61 |
 | `registry_slice_pvlan.yaml` | Private VLAN companion fields | 12 |
@@ -42,7 +42,7 @@ The registry used to be split into 42 files, one per development lot (`registry_
 the sources, in the generator and in the tests still cite those lot names, such as "slice 0b_22". Each lot is now a section of
 a family file, introduced by a `# ==== Source lot ... ====` comment, so a lot name can be found with a text search. A lot whose
 rows belong to several families keeps its header in the family that holds most of its rows. The other families point to it. Lot
-`0b_42_l3po_eigrp` came after the grouping and was added directly as a section of its family file.
+`0b_42_l3po_eigrp` and the `rp*` lots came after the grouping and were added directly as sections of their family files.
 
 | Original lot | Family files (rows) |
 |--------------|---------------------|
@@ -87,6 +87,7 @@ rows belong to several families keeps its header in the family that holds most o
 | `c1_pvlan_companions` | `registry_slice_pvlan.yaml` (11) |
 | `iq1_vpc_pvlan_qos_stats` | `registry_slice_pvlan.yaml` (1) |
 | `pl1_peer_link` | `registry_slice_port_channel_vpc.yaml` (4) |
+| `rp1_l3po_l3_controls` | `registry_slice_interface_common.yaml` (2), `registry_slice_multicast_bfd.yaml` (1) |
 | `rs1_po_link_transmit_reset_skip` | `registry_slice_port_channel_vpc.yaml` (1) |
 | `ul1_uplink_access` | `registry_slice_port_channel_vpc.yaml` (12) |
 

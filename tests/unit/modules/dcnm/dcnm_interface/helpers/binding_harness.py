@@ -911,6 +911,11 @@ PILOT = {
     (PC_L3, "eigrpBfd"): ("enable_eigrp_bfd", True, "false", dict(EIGRP_CTX)),
     (PC_L3, "eigrpBfdDisable"): ("disable_eigrp_bfd", True, "false", dict(EIGRP_CTX)),
     (PC_L3, "eigrpProcessTag"): ("eigrp_process_tag", "PILOT-EIGRP", "", dict(EIGRP_TAG_CTX)),
+    # Lot rp1: BFD echo, ARP timeout and inbound ACL with the applied values of int_routed_host. Read from the body,
+    # not measured live.
+    (PC_L3, "bfdEcho"): ("disable_bfd_echo", True, "false", {}),
+    (PC_L3, "arpTimeout"): ("arp_timeout", 900, "", {}),
+    (PC_L3, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became

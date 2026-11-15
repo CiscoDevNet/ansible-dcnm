@@ -481,6 +481,13 @@ L3PO_EIGRP_ROWS = {
     ("int_l3_port_channel", nv, key) for parent, nv, key in EIGRP_ROWS if parent == "int_routed_host"
 }
 
+# BFD echo, ARP timeout and inbound ACL on the routed port-channel, lot rp1: the int_routed_host keys.
+RP1_ROWS = {
+    ("int_l3_port_channel", "bfdEcho", "disable_bfd_echo"),
+    ("int_l3_port_channel", "arpTimeout", "arp_timeout"),
+    ("int_l3_port_channel", "ipv4AclIn", "ipv4_acl_in"),
+}
+
 # The routed port-channel OSPF family, slice 0b_40.
 L3PO_OSPF_ROWS = {
     ("int_l3_port_channel", "ospf", "enable_ospf"),
@@ -573,7 +580,7 @@ def test_package_provenance_and_size():
         | LOOPBACK_OSPF_ROWS | BFD_ROWS | LOOPBACK_EIGRP_ROWS | HSRP_ROWS
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
-        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS
+        | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS | RP1_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -581,9 +588,10 @@ def test_package_provenance_and_size():
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
     # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS + RS1_ROWS + PL1_ROWS + UL1_ROWS + L3PO_PIM_ROWS
-    # + L3PO_EIGRP_ROWS
+    # + L3PO_EIGRP_ROWS + RP1_ROWS
     assert len(L3PO_EIGRP_ROWS) == 13
-    assert len(BINDING_TABLE) == len(actual_keys) == 308
+    assert len(RP1_ROWS) == 3
+    assert len(BINDING_TABLE) == len(actual_keys) == 311
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -626,7 +634,7 @@ def test_package_provenance_and_size():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    assert len(rows) == 308   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
+    assert len(rows) == 311   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():

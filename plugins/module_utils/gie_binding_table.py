@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 38a2d043ab931a7d12adb3605bd0e08bf51c20167677a5e215d1c9a24499a509
+# provenance_sha256 = 3a50bba94fd927a556622185391b43e8b0924c6a269bb5015a793b75679098a7
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "38a2d043ab931a7d12adb3605bd0e08bf51c20167677a5e215d1c9a24499a509"
+PROVENANCE_SHA256 = "3a50bba94fd927a556622185391b43e8b0924c6a269bb5015a793b75679098a7"
 
 BINDING_TABLE = (
     {
@@ -214,6 +214,33 @@ BINDING_TABLE = (
     },
     {
         'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'arpTimeout',
+        'profile_key': 'arp_timeout',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'integer',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 60,
+        'max_value': 28800,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'bfdEcho',
+        'profile_key': 'disable_bfd_echo',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
         'parent_nvpair': 'eigrpBfd',
         'profile_key': 'enable_eigrp_bfd',
         'applicable_interface_type': 'pc',
@@ -382,6 +409,21 @@ BINDING_TABLE = (
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'ipv4AclIn',
+        'profile_key': 'ipv4_acl_in',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'string',
+        'reset_wire': '',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_length': 1,
+        'max_length': 64,
+        'no_log': False,
+        'string_compare': 'exact',
     },
     {
         'parent_template': 'int_l3_port_channel',

@@ -169,6 +169,10 @@ options:
       and C(overridden) an omitted key is reset to the template default (false, an empty tag or prefix list, C(out)).
       The three passive options have no reset; omitting one that is stored as true fails the task before any change is
       sent. The module never creates the EIGRP process or the referenced prefix lists. EIGRP adjacency is not tested.
+    - The routed port-channel also accepts C(disable_bfd_echo) (bool; renders C(no bfd echo)), C(arp_timeout)
+      (60-28800 seconds) and C(ipv4_acl_in) (1-64 characters, compared with its case), with the routed Ethernet
+      meaning. Under C(replaced) and C(overridden) an omitted key is reset to false or empty, which leaves its line out.
+      The echo line needs C(feature bfd); the module never creates the access list. NOT LIVE TESTED.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
       when it joins the port-channel. A member that already exists keeps its stored value when the option is raised or

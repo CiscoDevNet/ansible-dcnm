@@ -1683,7 +1683,9 @@ def test_the_parent_carries_exactly_the_ospf_family_the_pim_rows_and_eigrp():
     nvpairs = sorted(r["parent_nvpair"] for r in BINDING_TABLE if r["parent_template"] == L3PO)
     eigrp = [nv for nv in nvpairs if nv.startswith("eigrp")]
     assert len(eigrp) == 13
-    assert nvpairs == sorted(OSPF19 + ["pimBfdInstance", "ENABLE_PIM_SPARSE", "PIM_DR_PRIORITY"] + eigrp)
+    # The routing and policy lots, each pinned by name in its own suite: rp1 (test_binding_l3po_controls.py).
+    later = ["bfdEcho", "arpTimeout", "ipv4AclIn"]
+    assert nvpairs == sorted(OSPF19 + ["pimBfdInstance", "ENABLE_PIM_SPARSE", "PIM_DR_PRIORITY"] + eigrp + later)
 
 
 # ------------------------------------------------------------------ merged
