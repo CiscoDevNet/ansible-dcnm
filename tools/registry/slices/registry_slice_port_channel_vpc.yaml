@@ -1585,3 +1585,104 @@ bindings:
     parent_resolution: desired_parent
     removal_semantics: unresolved
     evidence_ref: "int_vpc_uplink_access.template@03e4fd18#L195,L245-249"
+
+  # ==== Source lot a4_1_discovery (4 of 6 rows) ====
+  # CDP and LLDP on parents whose native profile did not accept them:
+  #     int_l3_port_channel                 CDP_ENABLE    enable_cdp             member int_l3_port_channel_member
+  #     int_l3_port_channel                 lldpTransmit  disable_lldp_transmit  member int_l3_port_channel_member
+  #     int_l3_port_channel                 lldpReceive   disable_lldp_receive   member int_l3_port_channel_member
+  #     int_port_channel_dot1q_tunnel_host  CDP_ENABLE    enable_cdp             member int_port_channel_dot1q_tunnel_member_11_1
+  #     (the Ethernet dot1q-tunnel LLDP rows are in registry_slice_interface_common.yaml)
+  # The port-channel parents forward the value to each member policy; the CLI renders on the members, not on the
+  # port-channel. Public keys and polarity are those of the existing rows (enable_cdp: int_routed_host, slice 0b_37, and
+  # the native port-channel/vPC profiles; disable_lldp_*: slice 0b_17).
+  # Read from the captured SMU 4.3.1.0175006017 bodies; not measured live. No reset_wire: none is measured on these
+  # parents, so replaced/overridden refuse to withdraw a stored non-default value.
+
+  # int_l3_port_channel CDP_ENABLE -> enable_cdp. Declared at L95; member PTI int_l3_port_channel_member.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: CDP_ENABLE
+    profile_key: enable_cdp
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L95"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_l3_port_channel_member
+        phase: current
+        evidence_ref: "int_l3_port_channel@81c9392e#L1546"
+
+  # int_l3_port_channel lldpTransmit -> disable_lldp_transmit. Declared at L100; member PTI int_l3_port_channel_member.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: lldpTransmit
+    profile_key: disable_lldp_transmit
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L100"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_l3_port_channel_member
+        phase: current
+        evidence_ref: "int_l3_port_channel@81c9392e#L1547"
+
+  # int_l3_port_channel lldpReceive -> disable_lldp_receive. Declared at L105; member PTI int_l3_port_channel_member.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: lldpReceive
+    profile_key: disable_lldp_receive
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L105"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_l3_port_channel_member
+        phase: current
+        evidence_ref: "int_l3_port_channel@81c9392e#L1548"
+
+  # int_port_channel_dot1q_tunnel_host CDP_ENABLE -> enable_cdp. Declared at L99; member PTI _member_11_1.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: CDP_ENABLE
+    profile_key: enable_cdp
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L99"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_port_channel_dot1q_tunnel_member_11_1
+        phase: current
+        evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L677"

@@ -121,12 +121,12 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 308   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(BINDING_TABLE) == 314   # + 6: lot a4_1_discovery; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
     # + slice 0b_41 (2) + slice 0b_42 (13)
-    assert len(set(keys)) == 308, "duplicate (parent, nvpair) row"
+    assert len(set(keys)) == 314, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 308, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 314, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -184,7 +184,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 308   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
+    assert len(gen.compile_rows(rows)) == 314   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -216,7 +216,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 308   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
+    assert len(gen.compile_rows(rows)) == 314   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -312,7 +312,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 308   # 246 + slices 0b_37 to 0b_42, rs1, pl1 and ul1
+    assert len(gen.compile_rows(rows)) == 314   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
 
 # ------------------------------------------------------------------ positive transport
@@ -1093,7 +1093,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 131 = 128 + enable_qos, disable_qos_stats and enable_storm_control on int_vpc_uplink_access (slice ul1).
     # 132 = 131 + enable_pim_sparse on int_l3_port_channel (slice 0b_41).
     # 140 = 132 + the eight EIGRP booleans on int_l3_port_channel (slice 0b_42).
-    assert len(BOOL_PASSTHROUGH) == 140
+    # 146 = 140 + the six CDP/LLDP booleans of lot a4_1_discovery.
+    assert len(BOOL_PASSTHROUGH) == 146
 
 
 # ------------------------------------------------------- what the engine emits --

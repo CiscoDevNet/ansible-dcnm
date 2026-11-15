@@ -235,6 +235,26 @@ def test_r2_every_registered_key_correct_passes_wrong_and_missing_fail(tmp_path,
     assert res["failed"] is True and nv in res["msg"]
 
 
+# Every Alpha4 interface-completion route, not one parent per key: the checker must compare each new (parent, nvPair),
+# so a requested value read back wrong or not at all fails on every parent that gained it.
+A4_ROUTES = sorted([
+    # lot a4_1_discovery
+    ("int_dot1q_tunnel_host", "lldpTransmit"), ("int_dot1q_tunnel_host", "lldpReceive"),
+    ("int_l3_port_channel", "CDP_ENABLE"), ("int_l3_port_channel", "lldpTransmit"), ("int_l3_port_channel", "lldpReceive"),
+    ("int_port_channel_dot1q_tunnel_host", "CDP_ENABLE"),
+])
+
+
+@pytest.mark.parametrize("parent, nvpair", A4_ROUTES, ids=["%s::%s" % r for r in A4_ROUTES])
+def test_r2_alpha4_routes_correct_passes_wrong_and_missing_fail(tmp_path, parent, nvpair):
+    row = next(r for r in REG.BINDING_TABLE if (r["parent_template"], r["parent_nvpair"]) == (parent, nvpair))
+    requested, good, bad = r2_values(row)
+    cfg = [r2_cfg(parent, **{row["profile_key"]: requested})]
+    assert r2_run(tmp_path, cfg, r2_back(parent, {nvpair: good}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(parent, {nvpair: bad}))["failed"] is True
+    res = r2_run(tmp_path, cfg, r2_back(parent, {}))
+    assert res["failed"] is True and nvpair in res["msg"]
+
 ACL_PARENTS = r2_registry_parents("acl_filter")
 
 
@@ -472,8 +492,10 @@ NATIVE_CDP_PARENTS = sorted((
     "int_port_channel_trunk_host", "int_port_channel_access_host", "int_port_channel_pvlan_host",
     "int_vpc_trunk_host", "int_vpc_access_host", "int_vpc_dot1q_tunnel", "int_vpc_pvlan_host",
 ))
-NO_CDP_PARENTS = ["int_l3_port_channel", "int_port_channel_dot1q_tunnel_host", "int_vpc_peer_link_po", "int_vpc_uplink_access",
-                  "int_subif", "int_loopback", "int_vlan"]
+# The routed and dot1q-tunnel port-channels left this list with lot a4_1_discovery: CDP is registered on both, so a
+# requested value is compared (test_r2_every_registered_key_correct_passes_wrong_and_missing_fail and the cases below).
+NO_CDP_PARENTS = ["int_vpc_peer_link_po", "int_vpc_uplink_access", "int_subif", "int_loopback", "int_vlan"]
+REGISTERED_CDP_PO_PARENTS = ["int_l3_port_channel", "int_port_channel_dot1q_tunnel_host"]
 
 
 def test_r2_native_cdp_parents_are_the_module_payload_families():
@@ -502,6 +524,15 @@ def test_r2_cdp_on_a_parent_without_native_cdp_stays_diagnosed(tmp_path, parent)
     res = r2_run(tmp_path, [r2_cfg(parent, enable_cdp=False)], r2_back(parent, {"CDP_ENABLE": "false"}))
     assert res["failed"] is True, res["msg"]
     assert "'enable_cdp' (CDP_ENABLE) cannot be validated - not a registered field of the expected parent %s" % parent in res["msg"]
+
+
+@pytest.mark.parametrize("parent", REGISTERED_CDP_PO_PARENTS)
+def test_r2_registered_cdp_on_the_routed_and_dot1q_port_channels_is_compared(tmp_path, parent):
+    cfg = [r2_cfg(parent, enable_cdp=False)]
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"CDP_ENABLE": "false"}))["failed"] is False
+    assert r2_run(tmp_path, cfg, r2_back(parent, {"CDP_ENABLE": "true"}))["failed"] is True
+    res = r2_run(tmp_path, cfg, r2_back(parent, {}))
+    assert res["failed"] is True and "CDP_ENABLE" in res["msg"], res["msg"]
 
 
 # ---- the shared QoS and STP keys on the ToR-uplink parent; the one-parent-per-key test selects another parent for them

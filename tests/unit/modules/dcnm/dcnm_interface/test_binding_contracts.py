@@ -1179,6 +1179,8 @@ BUILDERS = {
         # int_routed_host rides the same builder: the eth payload path serves every eth mode,
         # and gie_contribute_nvpairs sits at method level there, not inside a mode branch.
         "int_routed_host",
+        # int_dot1q_tunnel_host too: the dot1q branch writes its base nvPairs after the method-level contribution.
+        "int_dot1q_tunnel_host",
         # The PVLAN branch builds its set in interface_pvlan (no hand-written nvPair here) and then calls the
         # engine. Its own omission contract (merged keeps HAVE, replaced follows the withdrawal classifier) is pinned
         # through the real main() in test_pvlan_companions.py.

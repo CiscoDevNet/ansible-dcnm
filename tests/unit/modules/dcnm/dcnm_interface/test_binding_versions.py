@@ -322,8 +322,9 @@ class TestPV09InventoryInvariants:
 
     def test_234_identities_and_207_reset_values_unchanged(self):
         # The eleven PVLAN companion rows, each with an inferred reset: 234 + 11, 207 + 11; plus one vPC PVLAN row.
-        # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1, + 4: pl1, + 12: ul1, + 2: 0b_41, + 13: 0b_42
-        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13
+        # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1, + 4: pl1, + 12: ul1, + 2: 0b_41, + 13: 0b_42,
+        # + 6: a4_1 (no reset)
+        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6
         # + 0b_37 to 0b_42, rs1, pl1, ul1
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
             207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10)
@@ -365,8 +366,9 @@ class TestPV09InventoryInvariants:
         # 41 slices: those 40 and the ToR-uplink rows of slice ul1 (was 1b7d7b01...).
         # 42 slices: those 41 and the routed port-channel PIM rows of slice 0b_41 (was f8b3ed32...).
         # The routed port-channel EIGRP rows of lot 0b_42, in the EIGRP family file (was e7174897...).
+        # The CDP/LLDP rows of lot a4_1_discovery (was 38a2d043...).
         assert PROVENANCE_SHA256 == (
-            "38a2d043ab931a7d12adb3605bd0e08bf51c20167677a5e215d1c9a24499a509"
+            "5a7a27243281b5319dcaa714a1f7dd02a82b5cc11f00d5403c91f0ea1582b75d"
         )
 
 

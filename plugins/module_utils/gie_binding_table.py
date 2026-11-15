@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 38a2d043ab931a7d12adb3605bd0e08bf51c20167677a5e215d1c9a24499a509
+# provenance_sha256 = 5a7a27243281b5319dcaa714a1f7dd02a82b5cc11f00d5403c91f0ea1582b75d
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "38a2d043ab931a7d12adb3605bd0e08bf51c20167677a5e215d1c9a24499a509"
+PROVENANCE_SHA256 = "5a7a27243281b5319dcaa714a1f7dd02a82b5cc11f00d5403c91f0ea1582b75d"
 
 BINDING_TABLE = (
     {
@@ -138,6 +138,42 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
         'cleared_on_change_to': ('int_routed_host',),
+    },
+    {
+        'parent_template': 'int_dot1q_tunnel_host',
+        'parent_nvpair': 'lldpReceive',
+        'profile_key': 'disable_lldp_receive',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'dot1q',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_dot1q_tunnel_host',
+        'parent_nvpair': 'lldpTransmit',
+        'profile_key': 'disable_lldp_transmit',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'dot1q',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'CDP_ENABLE',
+        'profile_key': 'enable_cdp',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': True,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
     },
     {
         'parent_template': 'int_l3_port_channel',
@@ -379,6 +415,30 @@ BINDING_TABLE = (
         'type': 'boolean',
         'default_template': False,
         'reset_wire': 'false',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'lldpReceive',
+        'profile_key': 'disable_lldp_receive',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'lldpTransmit',
+        'profile_key': 'disable_lldp_transmit',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1168,6 +1228,18 @@ BINDING_TABLE = (
         'valid_values': ('no', 'network', 'normal'),
         'default_template': 'no',
         'reset_wire': 'no',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_port_channel_dot1q_tunnel_host',
+        'parent_nvpair': 'CDP_ENABLE',
+        'profile_key': 'enable_cdp',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'dot1q',
+        'type': 'boolean',
+        'default_template': True,
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,

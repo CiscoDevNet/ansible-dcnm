@@ -121,6 +121,8 @@ R2_REGISTERED_BINDINGS = {
     "disable_ipv6_redirects": ("ipv6Redirects", "bool", ("int_routed_host", "int_subif", "int_vlan")),
     "disable_lldp_receive": ("lldpReceive", "bool", (
         "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
         "int_port_channel_access_host",
         "int_port_channel_dot1q_tunnel_host",
         "int_port_channel_pvlan_host",
@@ -135,6 +137,8 @@ R2_REGISTERED_BINDINGS = {
     )),
     "disable_lldp_transmit": ("lldpTransmit", "bool", (
         "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
         "int_port_channel_access_host",
         "int_port_channel_dot1q_tunnel_host",
         "int_port_channel_pvlan_host",
@@ -217,9 +221,9 @@ R2_REGISTERED_BINDINGS = {
     "enable_ospf_auth": ("ospfAuthentication", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_pim_bfd_instance": ("pimBfdInstance", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif")),
     "enable_pim_sparse": ("ENABLE_PIM_SPARSE", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
-    # SMU 017 first increment (registry slice 0b_37). enable_cdp is registered on the routed parent only; it is native
-    # on R2_NATIVE_CDP_PARENTS.
-    "enable_cdp": ("CDP_ENABLE", "bool", ("int_routed_host",)),
+    # SMU 017 first increment (registry slice 0b_37) and lot a4_1_discovery. enable_cdp is registered on the routed
+    # parent, the routed port-channel and the dot1q-tunnel port-channel; it is native on R2_NATIVE_CDP_PARENTS.
+    "enable_cdp": ("CDP_ENABLE", "bool", ("int_l3_port_channel", "int_port_channel_dot1q_tunnel_host", "int_routed_host")),
     "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "bool", ("int_routed_host",)),
     # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
     # (R2_NATIVE_QOS_PARENTS).

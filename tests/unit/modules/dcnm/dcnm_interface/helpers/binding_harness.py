@@ -80,6 +80,8 @@ IF_SVI = "Vlan931"
 
 ACCESS = "int_access_host"
 TRUNK = "int_trunk_host"
+# The Ethernet dot1q-tunnel parent (`type: eth`, `mode: dot1q`).
+ETH_DOT1Q = "int_dot1q_tunnel_host"
 ROUTED = "int_routed_host"
 SUBIF = "int_subif"
 # The USER loopback parent. The module keeps two loopback parents apart -- "lo_lo" ->
@@ -1023,6 +1025,7 @@ PILOT_ALL_ITEMS = [(p, n, k, applied, reset, extra)
 BASE_ACCESS = {"mode": "access", "description": "pilot", "fec": "auto",
                "enable_qos": True, "qos_policy": "pilot_qos"}
 BASE_TRUNK = {"mode": "trunk", "description": "pilot", "fec": "auto"}
+BASE_ETH_DOT1Q = {"mode": "dot1q", "description": "pilot", "fec": "auto"}
 
 # Port-channel bases. `fec` is NOT in the port-channel profile spec, so it is absent here
 # rather than copied from the ethernet bases. `members` stays a single explicit member for
@@ -1097,7 +1100,7 @@ def base_for(parent, **extra):
     pre-existing NDFC >= 12.4.1 requirement, and letting that legacy check fail a
     version case would attribute an old problem to this contract.
     """
-    base = {TRUNK: BASE_TRUNK, ROUTED: BASE_ROUTED, SUBIF: BASE_SUBIF,
+    base = {TRUNK: BASE_TRUNK, ETH_DOT1Q: BASE_ETH_DOT1Q, ROUTED: BASE_ROUTED, SUBIF: BASE_SUBIF,
             PC_ACCESS: BASE_PC_ACCESS, PC_TRUNK: BASE_PC_TRUNK,
             PC_DOT1Q: BASE_PC_DOT1Q, PC_L3: BASE_PC_L3, VPC_ACCESS: BASE_VPC_ACCESS,
             VPC_TRUNK: BASE_VPC_TRUNK, VPC_DOT1Q: BASE_VPC_DOT1Q, LOOPBACK: BASE_LOOPBACK,

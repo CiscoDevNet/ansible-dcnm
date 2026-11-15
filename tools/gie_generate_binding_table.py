@@ -739,6 +739,14 @@ COMMITTED_BINDINGS = {
     ("int_vpc_uplink_access", "STORM_CONTROL_BCAST_LEVEL_PPS"): "storm_control_broadcast_level_pps",
     ("int_vpc_uplink_access", "STORM_CONTROL_MCAST_LEVEL_PPS"): "storm_control_multicast_level_pps",
     ("int_vpc_uplink_access", "STORM_CONTROL_UCAST_LEVEL_PPS"): "storm_control_unicast_level_pps",
+    # CDP and LLDP on parents whose native profile did not accept them (lot a4_1_discovery). Read from the captured
+    # bodies; not measured live; no reset_wire.
+    ("int_dot1q_tunnel_host", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_dot1q_tunnel_host", "lldpReceive"): "disable_lldp_receive",
+    ("int_l3_port_channel", "CDP_ENABLE"): "enable_cdp",
+    ("int_l3_port_channel", "lldpTransmit"): "disable_lldp_transmit",
+    ("int_l3_port_channel", "lldpReceive"): "disable_lldp_receive",
+    ("int_port_channel_dot1q_tunnel_host", "CDP_ENABLE"): "enable_cdp",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the

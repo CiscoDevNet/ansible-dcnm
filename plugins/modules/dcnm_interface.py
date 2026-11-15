@@ -518,8 +518,25 @@ options:
           enable_cdp:
             description:
             - State of CDP protocol on the interface
+            - In modes 'l3' and 'dot1q' this is a registered field (NOT LIVE TESTED; read from the
+              installed template bodies). It needs an approved C(patch_version), has no default, and
+              the template sends it to each member policy, where 'false' renders C(no cdp enable).
+              'merged' keeps an omitted value. 'replaced' and 'overridden' refuse to withdraw a stored
+              'false', because no reset is verified on these policies; set 'true' explicitly instead.
             type: bool
             default: true
+          disable_lldp_transmit:
+            description:
+            - Disable LLDP transmit on the members of a routed port-channel (mode 'l3') or of the
+              port-channel modes that already registered it. Registered field (NOT LIVE TESTED in mode
+              'l3'); needs an approved C(patch_version); explicit-only, no default. The template sends
+              the value to each member policy. In mode 'l3', 'replaced' and 'overridden' refuse to
+              withdraw a stored 'true'; set 'false' explicitly instead.
+            type: bool
+          disable_lldp_receive:
+            description:
+            - Disable LLDP receive on the members. Same contract as disable_lldp_transmit.
+            type: bool
           enable_monitor:
             description:
             - State of Switchport Monitor for SPAN/ERSPAN
@@ -1305,6 +1322,9 @@ options:
               disable_lldp, which acted on both directions at once; the two
               directions are now independent. Explicit-only, no default; when
               omitted the current controller value is left untouched.
+            - Also accepted in mode 'dot1q' (NOT LIVE TESTED there). On that policy no reset is
+              verified, so 'replaced' and 'overridden' refuse to withdraw a stored 'true'; set
+              'false' explicitly instead. The same applies to disable_lldp_receive.
             type: bool
           disable_lldp_receive:
             description:
@@ -6140,6 +6160,9 @@ class DcnmIntf:
         gie_extend_prof_spec(eth_prof_spec_access, "int_access_host", cfg[0]["profile"])
         gie_extend_prof_spec(
             eth_prof_spec_routed_host, "int_routed_host", cfg[0]["profile"]
+        )
+        gie_extend_prof_spec(
+            eth_prof_spec_dot1q_tunnel_host, "int_dot1q_tunnel_host", cfg[0]["profile"]
         )
 
         if "trunk" == cfg[0]["profile"]["mode"]:
