@@ -907,6 +907,8 @@ def gie_nvpair_keymap():
 #               (slice ul1); native on the Ethernet, port-channel and vPC profiles.
 #   enable_storm_control, storm_control_action, storm_control_*_level_percent/_pps: registered on
 #               int_vpc_uplink_access (slice ul1); native on the access, trunk and dot1q-tunnel profiles.
+#   disable_lacp_suspend_individual, lacp_port_priority, lacp_rate: registered on int_port_channel_dot1q_tunnel_host
+#               (lot a4_3_lacp); native on the trunk and access port-channel and the vPC profiles.
 GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "enable_cdp",
     "enable_qos",
@@ -919,6 +921,9 @@ GIE_NATIVE_ELSEWHERE_KEYS = frozenset({
     "storm_control_multicast_level_pps",
     "storm_control_unicast_level_percent",
     "storm_control_unicast_level_pps",
+    "disable_lacp_suspend_individual",
+    "lacp_port_priority",
+    "lacp_rate",
 })
 
 

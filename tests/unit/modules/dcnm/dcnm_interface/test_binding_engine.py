@@ -587,6 +587,13 @@ A4_DAMPENING_ROWS = {
     )
 }
 
+# LACP on the dot1q-tunnel port-channel (lot a4_3_lacp), the native keys of the other port-channel profiles.
+A4_LACP_ROWS = {
+    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LACP_SUSPEND", "disable_lacp_suspend_individual"),
+    ("int_port_channel_dot1q_tunnel_host", "LACP_PORT_PRIO", "lacp_port_priority"),
+    ("int_port_channel_dot1q_tunnel_host", "LACP_RATE", "lacp_rate"),
+}
+
 
 # ---- binding package runtime contract ----
 def test_package_provenance_and_size():
@@ -598,7 +605,7 @@ def test_package_provenance_and_size():
         | REDIRECTS_ROWS | DAMPENING_ROWS | ARP_ROWS | PIM_ROWS | LINK_LOCAL_ROWS
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
         | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS
-        | A4_DISCOVERY_ROWS | A4_DAMPENING_ROWS
+        | A4_DISCOVERY_ROWS | A4_DAMPENING_ROWS | A4_LACP_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -610,7 +617,8 @@ def test_package_provenance_and_size():
     assert len(L3PO_EIGRP_ROWS) == 13
     assert len(A4_DISCOVERY_ROWS) == 6
     assert len(A4_DAMPENING_ROWS) == 7
-    assert len(BINDING_TABLE) == len(actual_keys) == 321   # + 6: lot a4_1_discovery
+    assert len(A4_LACP_ROWS) == 3
+    assert len(BINDING_TABLE) == len(actual_keys) == 324   # + 6: lot a4_1_discovery
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -654,7 +662,7 @@ def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
     # + 6: lot a4_1_discovery
-    assert len(rows) == 321   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
+    assert len(rows) == 324   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -779,6 +787,8 @@ def test_registered_keys_per_parent():
         "spanning_tree_port_type", "disable_qos_stats", "disable_queuing_stats",
         # CDP on the members of the dot1q-tunnel port-channel, lot a4_1_discovery.
         "enable_cdp",
+        # LACP, lot a4_3_lacp.
+        "disable_lacp_suspend_individual", "lacp_port_priority", "lacp_rate",
     }
     # GUARD_MODE is NOT registered on access parents.
     assert "guard_mode" not in registered_profile_keys(ACCESS)
@@ -1032,6 +1042,8 @@ def test_all_registered_and_guarded_keys():
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "link_transmit_reset_skip",
+        # LACP on the dot1q-tunnel port-channel, lot a4_3_lacp (native on the other port-channel and vPC profiles).
+        "disable_lacp_suspend_individual", "lacp_port_priority", "lacp_rate",
         "disable_bfd_echo", "ipv4_acl_in",
         # OSPF, slices 0b_18/0b_19/0b_20. SIXTEEN distinct names across the three overlay
         # parents plus int_loopback. Written as one list on purpose: the earlier version listed
@@ -1220,6 +1232,8 @@ def test_all_registered_and_guarded_keys():
     # the module rejects it by name instead, which is a different mechanism with a different
     # message.
     assert "enable_ospf_auth_message_digest" not in gie_guarded_keys()
+    # Lot a4_3_lacp: registered on the dot1q-tunnel port-channel, native elsewhere, so not guarded.
+    assert not {"disable_lacp_suspend_individual", "lacp_port_priority", "lacp_rate"} & gie_guarded_keys()
 
     # INVERTED. These two used to assert the opposite, and the reason they did is gone.
     #

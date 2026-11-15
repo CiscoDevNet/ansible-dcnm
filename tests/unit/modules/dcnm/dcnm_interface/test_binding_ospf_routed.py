@@ -301,6 +301,9 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_l3_port_channel", "dampeningRestartPenalty"),
         ("int_l3_port_channel", "dampeningReuse"),
         ("int_l3_port_channel", "dampeningSuppress"),
+        # Lot a4_3_lacp: LACP_PORT_PRIO on the dot1q-tunnel port-channel, the native integer of the other port-channel
+        # profiles; same string representation from the endpoint that feeds HAVE.
+        ("int_port_channel_dot1q_tunnel_host", "LACP_PORT_PRIO"),
         # The six BFD intervals, committed. Reviewed individually, not generated
         # into this list: each was read off the installed template (tx and min_rx 50-999,
         # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC

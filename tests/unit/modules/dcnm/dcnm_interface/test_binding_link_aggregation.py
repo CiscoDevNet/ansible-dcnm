@@ -68,6 +68,10 @@ ROUTES = {
                                       {k: v for k, v in DAMP_FULL_GROUP.items() if k != "dampening_max_suppress"}),
     (PC_L3, "dampeningRestart"): ("dampening_restart", True, False, dict(DAMP_FULL_GROUP)),
     (PC_L3, "dampeningRestartPenalty"): ("dampening_restart_penalty", 100, None, dict(DAMP_WITH_RESTART)),
+    # Lot a4_3_lacp (registry rows; the vPC access LACP inputs are native and tested below).
+    (PC_DOT1Q, "DISABLE_LACP_SUSPEND"): ("disable_lacp_suspend_individual", True, False, {}),
+    (PC_DOT1Q, "LACP_PORT_PRIO"): ("lacp_port_priority", 100, 32768, {}),
+    (PC_DOT1Q, "LACP_RATE"): ("lacp_rate", "fast", "normal", {}),
 }
 
 ITEMS = [(p, n, k, a, d, e) for (p, n), (k, a, d, e) in sorted(ROUTES.items())]
@@ -244,3 +248,64 @@ def test_a_key_of_this_family_on_a_parent_that_does_not_declare_it_is_refused():
     result, calls = run(base_for("int_vlan", disable_lldp_transmit=True), "merged", parent="int_vlan")
     assert result.get("failed") is True and "disable_lldp_transmit" in result["msg"], result.get("msg")
     assert _no_writes(calls)
+
+
+# ------------------------------------------------------------------ vPC access LACP (native, lot a4_3_lacp)
+VPC_LACP = [
+    ("disable_lacp_suspend_individual", "DISABLE_LACP_SUSPEND", True, False),
+    ("enable_lacp_vpc_convergence", "ENABLE_LACP_VPC_CONV", True, False),
+    ("lacp_port_priority", "LACP_PORT_PRIO", 100, 32768),
+    ("lacp_rate", "LACP_RATE", "fast", "normal"),
+]
+VPC_LACP_IDS = [k for k, _n, _a, _d in VPC_LACP]
+
+
+def _vpc_have(**values):
+    have = build_have(VPC_ACCESS)
+    have[0]["interfaces"][0]["nvPairs"].update(values)
+    return have
+
+
+@pytest.mark.parametrize("key,nvpair,applied,default", VPC_LACP, ids=VPC_LACP_IDS)
+def test_vpc_access_lacp_explicit_value_reaches_the_request(key, nvpair, applied, default):
+    """Before lot a4_3_lacp the access spec dropped these keys and the builder sent the default."""
+    result, calls = run(base_for(VPC_ACCESS, **{key: applied}), "merged", parent=VPC_ACCESS)
+    assert not result.get("failed"), result.get("msg")
+    assert wire(request_nvpairs(calls)[0][nvpair]) == wire(applied)
+
+
+@pytest.mark.parametrize("key,nvpair,applied,default", VPC_LACP, ids=VPC_LACP_IDS)
+def test_vpc_access_lacp_omission_under_merged_keeps_a_stored_non_default(key, nvpair, applied, default):
+    """The spec default must not make an omitted key look authored: merged keeps what the controller holds."""
+    have = _vpc_have(**{nvpair: wire(applied)})
+    result, calls = run(base_for(VPC_ACCESS, peer1_description="changed"), "merged", have, parent=VPC_ACCESS)
+    assert not result.get("failed"), result.get("msg")
+    nv = request_nvpairs(calls)
+    assert nv, "positive control: the description changed"
+    assert wire(nv[0][nvpair]) == wire(applied), nv[0][nvpair]
+
+
+@pytest.mark.parametrize("key,nvpair,applied,default", VPC_LACP, ids=VPC_LACP_IDS)
+def test_vpc_access_lacp_omission_under_replaced_sends_the_native_default(key, nvpair, applied, default):
+    """Unchanged native contract: replaced writes the builder default for an omitted key, as it did before."""
+    have = _vpc_have(**{nvpair: wire(applied)})
+    result, calls = run(base_for(VPC_ACCESS), "replaced", have, parent=VPC_ACCESS)
+    assert not result.get("failed"), result.get("msg")
+    assert wire(request_nvpairs(calls)[0][nvpair]) == wire(default)
+
+
+def test_vpc_access_lacp_port_priority_is_bounded_before_any_write():
+    for bad in (0, 65536):
+        result, calls = run(base_for(VPC_ACCESS, lacp_port_priority=bad), "merged", parent=VPC_ACCESS)
+        assert result.get("failed") is True and "lacp_port_priority" in result["msg"], result.get("msg")
+        assert _no_writes(calls)
+
+
+@pytest.mark.parametrize("parent", [PC_TRUNK, "int_port_channel_access_host", "int_vpc_trunk_host", "int_vpc_dot1q_tunnel"])
+def test_the_native_lacp_profiles_are_unchanged(parent):
+    """GIE_NATIVE_ELSEWHERE_KEYS keeps the generic guard off these native parents."""
+    result, calls = run(base_for(parent, lacp_rate="fast", lacp_port_priority=100, disable_lacp_suspend_individual=True),
+                        "merged", parent=parent)
+    assert not result.get("failed"), result.get("msg")
+    nv = request_nvpairs(calls)[0]
+    assert (nv["LACP_RATE"], wire(nv["LACP_PORT_PRIO"]), wire(nv["DISABLE_LACP_SUSPEND"])) == ("fast", "100", "true")

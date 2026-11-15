@@ -121,12 +121,12 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     """
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
-    assert len(BINDING_TABLE) == 321   # + 6: lot a4_1_discovery; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
+    assert len(BINDING_TABLE) == 324   # + 6: lot a4_1_discovery; 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
     # + slice 0b_41 (2) + slice 0b_42 (13)
-    assert len(set(keys)) == 321, "duplicate (parent, nvpair) row"
+    assert len(set(keys)) == 324, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 321, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 324, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -184,7 +184,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 321   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 324   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -216,7 +216,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 321   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 324   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -312,7 +312,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 321   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
+    assert len(gen.compile_rows(rows)) == 324   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1 and lot a4_1
 
 
 # ------------------------------------------------------------------ positive transport
@@ -727,7 +727,11 @@ def test_keymap_carries_every_new_nvpair():
     # int_vpc_uplink_access); its four QoS and STP nvPairs were mapped.
     assert km["ENABLE_STORM_CONTROL"] == "enable_storm_control"
     assert km["STORM_CONTROL_BCAST_LEVEL_PPS"] == "storm_control_broadcast_level_pps"
-    assert len(km) == 88
+    # Lot a4_3_lacp: three nvPairs, with the names the native keymap already gives them.
+    assert km["DISABLE_LACP_SUSPEND"] == "disable_lacp_suspend_individual"
+    assert km["LACP_PORT_PRIO"] == "lacp_port_priority"
+    assert km["LACP_RATE"] == "lacp_rate"
+    assert len(km) == 91
 
 
 def test_all_registered_keys():
@@ -736,6 +740,8 @@ def test_all_registered_keys():
         "guard_mode", "disable_lldp_transmit", "disable_lldp_receive", "acl_filter",
         "disable_qos_stats", "disable_queuing_stats",
         "link_transmit_reset_skip",
+        # LACP on the dot1q-tunnel port-channel, lot a4_3_lacp (native on the other port-channel and vPC profiles).
+        "disable_lacp_suspend_individual", "lacp_port_priority", "lacp_rate",
         # The peer-link QoS keys, slice pl1 (native on the other Ethernet, port-channel and vPC profiles).
         "enable_qos", "qos_policy",
         # The ToR-uplink storm-control keys, slice ul1 (native on the access, trunk and dot1q-tunnel profiles).
@@ -1019,6 +1025,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         "enable_vpc_peer_link",
         # Trunk port-channel reset-skip default, slice rs1 (int_port_channel_trunk_host).
         "link_transmit_reset_skip",
+        # Lot a4_3_lacp: the boolean LACP key on the dot1q-tunnel port-channel.
+        "disable_lacp_suspend_individual",
         # Peer-link QoS enable, slice pl1 (int_vpc_peer_link_po); disable_qos_stats is already listed.
         "enable_qos",
         # ToR-uplink storm-control enable, slice ul1 (int_vpc_uplink_access); its QoS booleans are already listed.
@@ -1095,7 +1103,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 140 = 132 + the eight EIGRP booleans on int_l3_port_channel (slice 0b_42).
     # 146 = 140 + the six CDP/LLDP booleans of lot a4_1_discovery.
     # 148 = 146 + the 2 boolean rows of lot a4_2_l3po_dampening.
-    assert len(BOOL_PASSTHROUGH) == 148
+    # 149 = 148 + the 1 boolean rows of lot a4_3_lacp.
+    assert len(BOOL_PASSTHROUGH) == 149
 
 
 # ------------------------------------------------------- what the engine emits --

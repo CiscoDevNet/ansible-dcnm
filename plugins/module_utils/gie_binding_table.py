@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = a4ed9b94711cac27b744e5202d059c4d4807c5be9796351b4d5ada32f015abf4
+# provenance_sha256 = 9b0edb24ec881cec2eb296b2ef06b7d920ed83e2a172522c3f32c0507fca2715
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "a4ed9b94711cac27b744e5202d059c4d4807c5be9796351b4d5ada32f015abf4"
+PROVENANCE_SHA256 = "9b0edb24ec881cec2eb296b2ef06b7d920ed83e2a172522c3f32c0507fca2715"
 
 BINDING_TABLE = (
     {
@@ -1329,6 +1329,45 @@ BINDING_TABLE = (
         'applicable_mode': 'dot1q',
         'type': 'boolean',
         'default_template': True,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_port_channel_dot1q_tunnel_host',
+        'parent_nvpair': 'DISABLE_LACP_SUSPEND',
+        'profile_key': 'disable_lacp_suspend_individual',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'dot1q',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_port_channel_dot1q_tunnel_host',
+        'parent_nvpair': 'LACP_PORT_PRIO',
+        'profile_key': 'lacp_port_priority',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'dot1q',
+        'type': 'integer',
+        'default_template': 32768,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 65535,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_port_channel_dot1q_tunnel_host',
+        'parent_nvpair': 'LACP_RATE',
+        'profile_key': 'lacp_rate',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'dot1q',
+        'type': 'enum',
+        'valid_values': ('normal', 'fast'),
+        'default_template': 'normal',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,

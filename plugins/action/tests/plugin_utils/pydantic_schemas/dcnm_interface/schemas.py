@@ -225,6 +225,11 @@ R2_REGISTERED_BINDINGS = {
     # parent, the routed port-channel and the dot1q-tunnel port-channel; it is native on R2_NATIVE_CDP_PARENTS.
     "enable_cdp": ("CDP_ENABLE", "bool", ("int_l3_port_channel", "int_port_channel_dot1q_tunnel_host", "int_routed_host")),
     "enable_evpn_multisite_dci_tracking": ("evpnMultisiteDciTracking", "bool", ("int_routed_host",)),
+    # LACP on the dot1q-tunnel port-channel (lot a4_3_lacp); native on the other port-channel and vPC profiles, where the
+    # checker keeps its earlier behaviour (R2_NATIVE_ELSEWHERE_KEYS).
+    "disable_lacp_suspend_individual": ("DISABLE_LACP_SUSPEND", "bool", ("int_port_channel_dot1q_tunnel_host",)),
+    "lacp_port_priority": ("LACP_PORT_PRIO", "int", ("int_port_channel_dot1q_tunnel_host",)),
+    "lacp_rate": ("LACP_RATE", "enum", ("int_port_channel_dot1q_tunnel_host",)),
     # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
     # (R2_NATIVE_QOS_PARENTS).
     "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
@@ -405,6 +410,15 @@ R2_NATIVE_CDP_PARENTS = frozenset((
     "int_vpc_dot1q_tunnel",
     "int_vpc_pvlan_host",
     "int_vpc_trunk_host",
+))
+
+# Registered keys that the module also accepts natively on other profiles (the LACP keys of lot a4_3_lacp). Before
+# they were registered the checker did not compare them on any parent; on a parent that does not register them it
+# still does not, so a native playbook is neither newly diagnosed nor newly compared.
+R2_NATIVE_ELSEWHERE_KEYS = frozenset((
+    "disable_lacp_suspend_individual",
+    "lacp_port_priority",
+    "lacp_rate",
 ))
 
 R2_NVPAIR_KIND = dict((nv, kind) for nv, kind, _parents in R2_REGISTERED_BINDINGS.values())
@@ -1186,6 +1200,8 @@ class DcnmInterfaceQuerySchema(BaseModel):
                     continue  # registered on the peer-link and uplink parents, native here (r2_native_qos above)
                 if parent in R2_NATIVE_CDP_PARENTS and key == "enable_cdp":
                     continue  # registered on the routed parent, native here (above)
+                if key in R2_NATIVE_ELSEWHERE_KEYS and parent is not None and parent not in parents:
+                    continue  # native on this profile; not compared here, as before it was registered elsewhere
                 if parent is None or parent not in parents:
                     reason = R2_EXCEPTIONS.get((parent, nvpair)) or (
                         "not a registered field of the expected parent %s" % parent if parent

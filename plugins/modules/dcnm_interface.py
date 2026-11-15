@@ -573,6 +573,12 @@ options:
             - Set the rate at which LACP control packets are sent to an LACP-supported
               interface. Normal rate (30 seconds), fast rate (1 second), rate is set on member
               interfaces, default is normal
+            - In mode 'dot1q', disable_lacp_suspend_individual, lacp_port_priority and lacp_rate are
+              registered fields (NOT LIVE TESTED; read from the installed template body). They need an
+              approved C(patch_version) and have no default there. Under 'merged' an omitted value is kept;
+              no reset is verified on that policy, so 'replaced' and 'overridden' refuse to withdraw a stored
+              value that differs from the template default; false, 32768 and normal are the explicit
+              neutral values.
             type: str
             choices: ['normal', 'fast']
             default: normal
@@ -962,6 +968,9 @@ options:
           enable_lacp_vpc_convergence:
             description:
             - Enable lacp convergence for vPC port-channels
+            - The four LACP options are accepted in modes 'trunk', 'access' and 'dot1q'. They are native, with
+              the defaults shown, on all three; mode 'access' accepts them since this release (the module already
+              sent the defaults for it). Under 'merged' an omitted option keeps the stored value.
             type: bool
             default: false
           lacp_port_priority:
@@ -5393,20 +5402,21 @@ class DcnmIntf:
             queuing_policy=dict(type="str", default=""),
             copy_description=dict(type="bool", default=False),
             enable_cdp=dict(type="bool", default=True),
-        )
-        vpc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
-
-        # dot1q-tunnel (int_vpc_dot1q_tunnel). The installed parent declares the access-port
-        # set -- per-peer access VLAN, which is the dot1q-tunnel (outer) VLAN on each peer --
-        # plus the four LACP options that the trunk spec already exposes. Same public names and
-        # defaults as the sibling specs; nothing here is new public vocabulary.
-        vpc_prof_spec_dot1q = dict(vpc_prof_spec_access)
-        vpc_prof_spec_dot1q.update(
+            # The four LACP options of the trunk and dot1q-tunnel vPC specs. The vPC builder already writes
+            # these nvPairs for every mode, with these defaults, so only the input is new; an omitted key still
+            # sends the default, and under merged the comparator still keeps the stored value.
             disable_lacp_suspend_individual=dict(type="bool", default=False),
             enable_lacp_vpc_convergence=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
         )
+        vpc_prof_spec_access.update(self.dcnm_intf_storm_control_spec())
+
+        # dot1q-tunnel (int_vpc_dot1q_tunnel). The installed parent declares the access-port
+        # set -- per-peer access VLAN, which is the dot1q-tunnel (outer) VLAN on each peer --
+        # plus the four LACP options of the trunk spec, which the access spec now carries too. Same
+        # public names and defaults as the sibling specs; nothing here is new public vocabulary.
+        vpc_prof_spec_dot1q = dict(vpc_prof_spec_access)
 
         # Registered keys must reach the vPC spec exactly as they reach the ethernet and
         # port-channel ones. Without this the keys are not in the spec, so

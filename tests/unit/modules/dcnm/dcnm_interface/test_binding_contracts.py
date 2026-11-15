@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import ast
 import inspect
 import pytest
 import re
@@ -1233,80 +1234,148 @@ BUILDERS = {
     ),
 }
 
-# A parent whose builder branch returns before the hand-written block, keyed to the line that opens the branch. The
-# collision check runs on that branch alone, and the test requires the branch to end in a return placed before the
-# first hand-written assignment of the builder.
-EARLY_RETURN_BRANCHES = {
-    # The uplink branch sends INTF_NAME and the engine's contribution, then returns; the vPC builder's hand-written
-    # ENABLE_QOS and QOS_POLICY below it belong to the ordinary vPC modes.
-    "int_vpc_uplink_access": 'if delem[profile]["mode"] == "uplink_access":',
-}
-
-ASSIGN = re.compile(r'nvPairs"\]\["([A-Z0-9_]+)"\]\s*=')
-UPDATE_LITERAL = re.compile(r'nvPairs"\]\.update\(\{"([A-Z0-9_]+)"')
-
-
+# The check reads the builder's syntax tree, mode by mode. A builder writes some nvPairs at method level, for every mode,
+# and others only inside an `if delem[profile]["mode"] ...` branch; a parent's own mode reaches the method-level
+# statements and the branches whose test includes it, in order, up to a branch of its mode that returns. Reading the
+# text instead missed an assignment split over two lines (`nvPairs"][` / `"CDP_ENABLE"] =`) and charged every mode with
+# the writes of any one of them.
 @pytest.fixture(scope="module")
 def source():
     return MODULE.read_text()
 
 
-def _builder_body(source, name):
-    start = source.index("def {0}".format(name))
-    nxt = source.find("\n    def ", start + 1)
-    return source[start:nxt if nxt != -1 else len(source)]
+@pytest.fixture(scope="module")
+def tree(source):
+    return ast.parse(source)
 
 
-def _early_return_branch(body, opener):
-    """The text of one `if` branch of a builder, which must end in a bare return before any hand-written nvPair."""
-    start = body.index(opener)
-    indent = len(body[:start]) - len(body[:start].rstrip(" "))
-    end = body.index("\n" + " " * (indent + 4) + "return\n", start)
-    first_hand = min(m.start() for m in ASSIGN.finditer(body))
-    assert end < first_hand, "the branch at {0!r} does not return before the hand-written block".format(opener)
-    return body[start:end]
+def _builder_function(tree, name):
+    found = [n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == name]
+    assert len(found) == 1, (name, len(found))
+    return found[0]
 
 
-def _legacy_nvpairs(body):
-    """nvPair names the builder writes by hand, excluding the engine's own update()."""
-    return set(ASSIGN.findall(body)) | set(UPDATE_LITERAL.findall(body))
+def _is_mode_expr(node):
+    """delem[profile]["mode"]"""
+    return (isinstance(node, ast.Subscript) and isinstance(node.slice, ast.Constant) and node.slice.value == "mode"
+            and isinstance(node.value, ast.Subscript) and isinstance(node.value.value, ast.Name)
+            and node.value.value.id == "delem")
+
+
+def _mode_set(test, all_modes):
+    """The modes an `if` test admits, or None when the test is not about the mode."""
+    if not (isinstance(test, ast.Compare) and len(test.ops) == 1 and _is_mode_expr(test.left)):
+        return None
+    op, right = test.ops[0], test.comparators[0]
+    if isinstance(op, ast.Eq) and isinstance(right, ast.Constant):
+        return {right.value}
+    if isinstance(op, ast.NotEq) and isinstance(right, ast.Constant):
+        return set(all_modes) - {right.value}
+    if isinstance(op, ast.In) and isinstance(right, (ast.Tuple, ast.List, ast.Set)):
+        return {e.value for e in right.elts}
+    raise AssertionError("unrecognized mode test at line {0}".format(test.lineno))
+
+
+def _assigned_nvpairs(statements):
+    """nvPair names written by hand: x["nvPairs"]["KEY"] = ... and x["nvPairs"].update({"KEY": ...})."""
+    out = set()
+    for stmt in statements:
+        for node in ast.walk(stmt):
+            targets = node.targets if isinstance(node, ast.Assign) else []
+            for tgt in targets:
+                if (isinstance(tgt, ast.Subscript) and isinstance(tgt.slice, ast.Constant)
+                        and isinstance(tgt.value, ast.Subscript) and isinstance(tgt.value.slice, ast.Constant)
+                        and tgt.value.slice.value == "nvPairs"):
+                    out.add(tgt.slice.value)
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "update"
+                    and isinstance(node.func.value, ast.Subscript) and isinstance(node.func.value.slice, ast.Constant)
+                    and node.func.value.slice.value == "nvPairs" and node.args and isinstance(node.args[0], ast.Dict)):
+                out.update(k.value for k in node.args[0].keys if isinstance(k, ast.Constant))
+    return out
+
+
+def _builder_modes(fn):
+    modes = set()
+    for stmt in fn.body:
+        if isinstance(stmt, ast.If) and isinstance(stmt.test, ast.Compare) and _is_mode_expr(stmt.test.left):
+            for c in stmt.test.comparators:
+                modes |= {c.value} if isinstance(c, ast.Constant) else {e.value for e in getattr(c, "elts", [])}
+    return modes
+
+
+def _hand_written_for_mode(fn, mode, all_modes):
+    """Every nvPair the builder writes by hand when it builds an item of `mode`."""
+    out = set()
+    for stmt in fn.body:
+        if isinstance(stmt, ast.If):
+            admitted = _mode_set(stmt.test, all_modes)
+            if admitted is not None:
+                branch = stmt.body if mode in admitted else stmt.orelse
+                out |= _assigned_nvpairs(branch)
+                if mode in admitted and any(isinstance(s, ast.Return) for s in stmt.body):
+                    return out
+                continue
+        out |= _assigned_nvpairs([stmt])
+        if isinstance(stmt, ast.Return):
+            return out
+    return out
+
+
+def _parent_mode(parent):
+    modes = {b["applicable_mode"] for b in BINDING_TABLE if b["parent_template"] == parent}
+    assert len(modes) <= 1, (parent, modes)
+    return modes.pop() if modes else None
 
 
 @pytest.mark.parametrize("builder,parents", sorted(BUILDERS.items()))
-def test_no_registered_nvpair_is_also_written_by_hand(builder, parents, source):
-    body = _builder_body(source, builder)
-    for parent in [p for p in parents if p in EARLY_RETURN_BRANCHES]:
-        branch = _early_return_branch(body, EARLY_RETURN_BRANCHES[parent])
-        own = {b["parent_nvpair"] for b in BINDING_TABLE if b["parent_template"] == parent}
-        assert not _legacy_nvpairs(branch) & own, (builder, parent, sorted(_legacy_nvpairs(branch) & own))
-    parents = tuple(p for p in parents if p not in EARLY_RETURN_BRANCHES)
-    legacy = _legacy_nvpairs(body)
-    engine = {b["parent_nvpair"] for b in BINDING_TABLE if b["parent_template"] in parents}
-
-    collision = legacy & engine
-    assert not collision, (
-        "{0} assigns {1} by hand and the engine also contributes it for {2}. The hand-written "
-        "assignment runs first and always writes, so omitting the key in a playbook would set "
-        "the legacy default instead of preserving the controller's value -- explicit_only would "
-        "no longer hold. Either drop the registry row or remove the hand-written "
-        "assignment.".format(builder, sorted(collision), ", ".join(parents))
-    )
+def test_no_registered_nvpair_is_also_written_by_hand(builder, parents, tree):
+    fn = _builder_function(tree, builder)
+    all_modes = _builder_modes(fn) | {m for m in map(_parent_mode, parents) if m}
+    for parent in parents:
+        mode = _parent_mode(parent)
+        if mode is None:
+            continue
+        legacy = _hand_written_for_mode(fn, mode, all_modes)
+        engine = {b["parent_nvpair"] for b in BINDING_TABLE if b["parent_template"] == parent}
+        collision = legacy & engine
+        assert not collision, (
+            "{0} assigns {1} by hand in mode {2!r} and the engine also contributes it for {3}. The hand-written "
+            "assignment always writes, so omitting the key in a playbook would set the legacy default instead of "
+            "preserving the controller's value -- explicit_only would no longer hold. Either drop the registry row "
+            "or remove the hand-written assignment.".format(builder, sorted(collision), mode, parent)
+        )
 
 
-def test_every_builder_actually_writes_something_by_hand(source):
+def test_every_builder_actually_writes_something_by_hand(tree):
     """Guard the guard.
 
-    If the extraction regexes ever stop matching -- a refactor to a helper, a renamed local --
-    every test above would pass on an empty set and prove nothing. A builder that assigns no
-    nvPair at all is far more likely to mean the extraction broke than that the builder changed.
+    If the extraction ever stops matching -- a refactor to a helper, a renamed local -- every test above would pass on
+    an empty set and prove nothing. A builder that assigns no nvPair at all is far more likely to mean the extraction
+    broke than that the builder changed.
     """
     for builder in BUILDERS:
-        legacy = _legacy_nvpairs(_builder_body(source, builder))
+        legacy = _assigned_nvpairs([_builder_function(tree, builder)])
         assert len(legacy) >= 5, (
             "{0}: found only {1} hand-written nvPairs. The collision test above is only "
-            "meaningful while this extraction works; this count dropping means the regexes no "
-            "longer match how the builder writes.".format(builder, len(legacy))
+            "meaningful while this extraction works; this count dropping means it no "
+            "longer matches how the builder writes.".format(builder, len(legacy))
         )
+
+
+def test_the_mode_reading_sees_split_assignments_and_keeps_branches_apart(tree):
+    """The port-channel trunk branch writes CDP_ENABLE and LACP_RATE over two lines, the dot1q branch does not; the
+    Ethernet dot1q branch writes CDP_ENABLE and PORT_DUPLEX_MODE; the vPC builder writes the LACP pair for every mode;
+    the uplink branch returns before the ordinary vPC writes."""
+    pc = _builder_function(tree, "dcnm_intf_get_pc_payload")
+    modes = _builder_modes(pc)
+    assert {"CDP_ENABLE", "LACP_RATE", "ENABLE_ORPHAN_PORT"} <= _hand_written_for_mode(pc, "trunk", modes)
+    assert not {"CDP_ENABLE", "LACP_RATE", "ENABLE_ORPHAN_PORT"} & _hand_written_for_mode(pc, "dot1q", modes)
+    eth = _builder_function(tree, "dcnm_intf_get_eth_payload")
+    assert {"CDP_ENABLE", "PORT_DUPLEX_MODE"} <= _hand_written_for_mode(eth, "dot1q", _builder_modes(eth))
+    vpc = _builder_function(tree, "dcnm_intf_get_vpc_payload")
+    vmodes = _builder_modes(vpc)
+    assert {"LACP_RATE", "ENABLE_LACP_VPC_CONV"} <= _hand_written_for_mode(vpc, "access", vmodes)
+    assert not {"ENABLE_QOS", "QOS_POLICY"} & _hand_written_for_mode(vpc, "uplink_access", vmodes)
 
 
 def test_every_registered_parent_belongs_to_exactly_one_builder():

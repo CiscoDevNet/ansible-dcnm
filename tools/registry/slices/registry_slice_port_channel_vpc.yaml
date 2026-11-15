@@ -1686,3 +1686,75 @@ bindings:
         child_template: int_port_channel_dot1q_tunnel_member_11_1
         phase: current
         evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L677"
+
+  # ==== Source lot a4_3_lacp (3 of 3 registry rows; the vPC access LACP inputs are native) ====
+  # LACP on the dot1q-tunnel port-channel, with the native public keys and bounds of the trunk and access port-channel
+  # profiles: disable_lacp_suspend_individual renders `no lacp suspend-individual` on the port-channel; LACP_PORT_PRIO
+  # and LACP_RATE go to each member policy. The three keys are native on other profiles, so they are listed in
+  # GIE_NATIVE_ELSEWHERE_KEYS. LACP_RATE is a string with Enum "normal,fast" in the body; it is registered as that enum.
+  # The vPC access parent takes the same four LACP keys natively (its builder already writes them); no registry row.
+  # Read from the captured SMU 4.3.1.0175006017 body; not measured live; no reset_wire.
+
+  # int_port_channel_dot1q_tunnel_host DISABLE_LACP_SUSPEND -> disable_lacp_suspend_individual. Declared at L136; Po stanza.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: DISABLE_LACP_SUSPEND
+    profile_key: disable_lacp_suspend_individual
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L136"
+
+  # int_port_channel_dot1q_tunnel_host LACP_PORT_PRIO -> lacp_port_priority. Declared at L141; member PTI _member_11_1.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: LACP_PORT_PRIO
+    profile_key: lacp_port_priority
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: integer
+    min: 1
+    max: 65535
+    default_template: 32768
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L141"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_port_channel_dot1q_tunnel_member_11_1
+        phase: current
+        evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L680"
+
+  # int_port_channel_dot1q_tunnel_host LACP_RATE -> lacp_rate. Declared at L148; member PTI _member_11_1.
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: LACP_RATE
+    profile_key: lacp_rate
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: enum
+    valid_values: ['normal', 'fast']
+    default_template: 'normal'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L148"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: int_port_channel_dot1q_tunnel_member_11_1
+        phase: current
+        evidence_ref: "int_port_channel_dot1q_tunnel_host@b17631cd#L681"

@@ -142,7 +142,8 @@ def test_r2_coverage_the_checker_invents_no_identity():
     # 77 = 74 + enable_cdp, enable_evpn_multisite_dci_tracking and logging_event_port_link_status (SMU 017, slice 0b_37).
     # 78 = 77 + link_transmit_reset_skip (slice rs1). 80 = 78 + enable_qos and qos_policy (slice pl1).
     # 88 = 80 + enable_storm_control, storm_control_action and the six storm-control levels (slice ul1).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 88
+    # 91 = 88 + disable_lacp_suspend_individual, lacp_port_priority and lacp_rate (lot a4_3_lacp).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 91
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():
@@ -246,7 +247,20 @@ A4_ROUTES = sorted([
     ("int_l3_port_channel", "dampening"), ("int_l3_port_channel", "dampeningHalfLife"), ("int_l3_port_channel", "dampeningReuse"),
     ("int_l3_port_channel", "dampeningSuppress"), ("int_l3_port_channel", "dampeningMaxSuppress"),
     ("int_l3_port_channel", "dampeningRestart"), ("int_l3_port_channel", "dampeningRestartPenalty"),
+    # lot a4_3_lacp
+    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LACP_SUSPEND"), ("int_port_channel_dot1q_tunnel_host", "LACP_PORT_PRIO"),
+    ("int_port_channel_dot1q_tunnel_host", "LACP_RATE"),
 ])
+
+
+@pytest.mark.parametrize("parent", ["int_port_channel_trunk_host", "int_vpc_access_host", "int_vpc_trunk_host"])
+def test_r2_lacp_on_a_native_profile_is_neither_diagnosed_nor_compared(tmp_path, parent):
+    """The LACP keys stay native on these profiles: a wrong readback does not fail and nothing is diagnosed, as before
+    lot a4_3_lacp registered them on the dot1q-tunnel port-channel."""
+    cfg = [r2_cfg(parent, lacp_rate="fast", lacp_port_priority=100, disable_lacp_suspend_individual=True)]
+    back = {"LACP_RATE": "normal", "LACP_PORT_PRIO": "32768", "DISABLE_LACP_SUSPEND": "false"}
+    res = r2_run(tmp_path, cfg, r2_back(parent, back))
+    assert res["failed"] is False, res["msg"]
 
 
 @pytest.mark.parametrize("parent, nvpair", A4_ROUTES, ids=["%s::%s" % r for r in A4_ROUTES])

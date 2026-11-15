@@ -756,6 +756,11 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "dampeningMaxSuppress"): "dampening_max_suppress",
     ("int_l3_port_channel", "dampeningRestart"): "dampening_restart",
     ("int_l3_port_channel", "dampeningRestartPenalty"): "dampening_restart_penalty",
+    # LACP on the dot1q-tunnel port-channel (lot a4_3_lacp), the native keys of the trunk and access port-channel profiles
+    # (listed in GIE_NATIVE_ELSEWHERE_KEYS). Read from the 017 body; not measured live; no reset_wire.
+    ("int_port_channel_dot1q_tunnel_host", "DISABLE_LACP_SUSPEND"): "disable_lacp_suspend_individual",
+    ("int_port_channel_dot1q_tunnel_host", "LACP_PORT_PRIO"): "lacp_port_priority",
+    ("int_port_channel_dot1q_tunnel_host", "LACP_RATE"): "lacp_rate",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the
