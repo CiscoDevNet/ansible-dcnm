@@ -1680,12 +1680,14 @@ def test_the_slice_cites_the_l3_port_channel_body_for_every_row():
 
 def test_the_parent_carries_exactly_the_ospf_family_the_pim_rows_and_eigrp():
     """PIM sparse mode and DR priority are slice 0b_41 and EIGRP is slice 0b_42, both in this file. CDP and LLDP are
-    lot a4_1_discovery, in the port-channel family file."""
+    lot a4_1_discovery, in the port-channel family file; dampening is lot a4_2_l3po_dampening."""
     nvpairs = sorted(r["parent_nvpair"] for r in BINDING_TABLE if r["parent_template"] == L3PO)
     eigrp = [nv for nv in nvpairs if nv.startswith("eigrp")]
     assert len(eigrp) == 13
     assert nvpairs == sorted(OSPF19 + ["pimBfdInstance", "ENABLE_PIM_SPARSE", "PIM_DR_PRIORITY"] + eigrp
-                             + ["CDP_ENABLE", "lldpTransmit", "lldpReceive"])
+                             + ["CDP_ENABLE", "lldpTransmit", "lldpReceive"]
+                             + ["dampening", "dampeningHalfLife", "dampeningReuse", "dampeningSuppress",
+                                "dampeningMaxSuppress", "dampeningRestart", "dampeningRestartPenalty"])
 
 
 # ------------------------------------------------------------------ merged

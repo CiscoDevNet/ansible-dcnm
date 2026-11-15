@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 5a7a27243281b5319dcaa714a1f7dd02a82b5cc11f00d5403c91f0ea1582b75d
+# provenance_sha256 = a4ed9b94711cac27b744e5202d059c4d4807c5be9796351b4d5ada32f015abf4
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "5a7a27243281b5319dcaa714a1f7dd02a82b5cc11f00d5403c91f0ea1582b75d"
+PROVENANCE_SHA256 = "a4ed9b94711cac27b744e5202d059c4d4807c5be9796351b4d5ada32f015abf4"
 
 BINDING_TABLE = (
     {
@@ -246,6 +246,95 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
         'max_value': 4294967295,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dampening',
+        'profile_key': 'enable_dampening',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dampeningHalfLife',
+        'profile_key': 'dampening_half_life',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 30,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dampeningMaxSuppress',
+        'profile_key': 'dampening_max_suppress',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 255,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dampeningRestart',
+        'profile_key': 'dampening_restart',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dampeningRestartPenalty',
+        'profile_key': 'dampening_restart_penalty',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 20000,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dampeningReuse',
+        'profile_key': 'dampening_reuse',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 20000,
+        'no_log': False,
+    },
+    {
+        'parent_template': 'int_l3_port_channel',
+        'parent_nvpair': 'dampeningSuppress',
+        'profile_key': 'dampening_suppress',
+        'applicable_interface_type': 'pc',
+        'applicable_mode': 'l3',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 20000,
         'no_log': False,
     },
     {

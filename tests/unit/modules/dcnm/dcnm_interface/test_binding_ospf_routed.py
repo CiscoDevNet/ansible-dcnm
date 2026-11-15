@@ -294,6 +294,13 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         ("int_l3_port_channel", "ospfPriority"),
         ("int_l3_port_channel", "ospfRetransmitInterval"),
         ("int_l3_port_channel", "ospfTransmitDelay"),
+        # Lot a4_2_l3po_dampening: the five int_routed_host dampening integers on identical 017 declarations. The
+        # endpoint that feeds HAVE returns every nvPair as a string, so the same exemption applies.
+        ("int_l3_port_channel", "dampeningHalfLife"),
+        ("int_l3_port_channel", "dampeningMaxSuppress"),
+        ("int_l3_port_channel", "dampeningRestartPenalty"),
+        ("int_l3_port_channel", "dampeningReuse"),
+        ("int_l3_port_channel", "dampeningSuppress"),
         # The six BFD intervals, committed. Reviewed individually, not generated
         # into this list: each was read off the installed template (tx and min_rx 50-999,
         # multiplier 1-50) and takes the same exemption for the same measured reason -- NDFC

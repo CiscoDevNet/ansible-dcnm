@@ -19,6 +19,9 @@ import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils import gie_engine as engine
 
 from .helpers.binding_harness import (
+    DAMP_FULL_GROUP,
+    DAMP_GATE,
+    DAMP_WITH_RESTART,
     ETH_DOT1Q,
     NON_ETH_PARENTS,
     PC_DOT1Q,
@@ -54,6 +57,17 @@ ROUTES = {
     (PC_L3, "lldpTransmit"): ("disable_lldp_transmit", True, False, {}),
     (PC_L3, "lldpReceive"): ("disable_lldp_receive", True, False, {}),
     (PC_DOT1Q, "CDP_ENABLE"): ("enable_cdp", False, True, {}),
+    # Lot a4_2_l3po_dampening. Context keeps each value inside the template rules (the gate, half-life before the
+    # thresholds, the full group before restart, restart before the penalty), so the HAVE is a state the controller can hold.
+    (PC_L3, "dampening"): ("enable_dampening", True, False, {}),
+    (PC_L3, "dampeningHalfLife"): ("dampening_half_life", 5, None, dict(DAMP_GATE)),
+    (PC_L3, "dampeningReuse"): ("dampening_reuse", 750, None, {k: v for k, v in DAMP_FULL_GROUP.items() if k != "dampening_reuse"}),
+    (PC_L3, "dampeningSuppress"): ("dampening_suppress", 2000, None,
+                                   {k: v for k, v in DAMP_FULL_GROUP.items() if k != "dampening_suppress"}),
+    (PC_L3, "dampeningMaxSuppress"): ("dampening_max_suppress", 60, None,
+                                      {k: v for k, v in DAMP_FULL_GROUP.items() if k != "dampening_max_suppress"}),
+    (PC_L3, "dampeningRestart"): ("dampening_restart", True, False, dict(DAMP_FULL_GROUP)),
+    (PC_L3, "dampeningRestartPenalty"): ("dampening_restart_penalty", 100, None, dict(DAMP_WITH_RESTART)),
 }
 
 ITEMS = [(p, n, k, a, d, e) for (p, n), (k, a, d, e) in sorted(ROUTES.items())]
@@ -167,7 +181,9 @@ def test_query_only_reads(parent, nvpair, key, applied, default, extra):
 @pytest.mark.parametrize("parent,nvpair,key,applied,default,extra", ITEMS, ids=IDS)
 def test_without_an_approved_patch_version_an_explicit_value_is_refused(parent, nvpair, key, applied, default, extra):
     result, calls = run(base_for(parent, **dict(extra, **{key: applied})), "merged", patch_version=None, **_pkw(parent))
-    assert result.get("failed") is True and key in result["msg"], result.get("msg")
+    # The refusal names the first registered key of the profile, which may be one of the context keys.
+    assert result.get("failed") is True and "requires caller-supplied patch_version" in result["msg"], result.get("msg")
+    assert any("'%s'" % k in result["msg"] for k in [key] + list(extra)), result["msg"]
     assert _no_writes(calls)
 
 

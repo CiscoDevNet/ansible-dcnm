@@ -747,6 +747,15 @@ COMMITTED_BINDINGS = {
     ("int_l3_port_channel", "lldpTransmit"): "disable_lldp_transmit",
     ("int_l3_port_channel", "lldpReceive"): "disable_lldp_receive",
     ("int_port_channel_dot1q_tunnel_host", "CDP_ENABLE"): "enable_cdp",
+    # Dampening on the routed port-channel (lot a4_2_l3po_dampening), the int_routed_host contracts of slice 0b_6 without
+    # their resets. Read from the 017 body; not measured live; not validatable on NX-OSv.
+    ("int_l3_port_channel", "dampening"): "enable_dampening",
+    ("int_l3_port_channel", "dampeningHalfLife"): "dampening_half_life",
+    ("int_l3_port_channel", "dampeningReuse"): "dampening_reuse",
+    ("int_l3_port_channel", "dampeningSuppress"): "dampening_suppress",
+    ("int_l3_port_channel", "dampeningMaxSuppress"): "dampening_max_suppress",
+    ("int_l3_port_channel", "dampeningRestart"): "dampening_restart",
+    ("int_l3_port_channel", "dampeningRestartPenalty"): "dampening_restart_penalty",
 }
 
 # Runtime helpers emitted verbatim after the table. Kept as one literal block so the

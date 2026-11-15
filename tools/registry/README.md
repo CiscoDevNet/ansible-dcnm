@@ -31,7 +31,7 @@ on. Within a file, the rows keep the order of the original lots, and each lot's 
 |------|--------|-----:|
 | `registry_slice_eigrp.yaml` | EIGRP on the routed, subinterface, SVI, loopback and routed port-channel parents | 65 |
 | `registry_slice_hsrp_ipv6_nd.yaml` | HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay parents | 17 |
-| `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options | 42 |
+| `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options | 49 |
 | `registry_slice_macsec.yaml` | MACsec on the routed parent | 4 |
 | `registry_slice_multicast_bfd.yaml` | PIM and BFD parents | 22 |
 | `registry_slice_ospf.yaml` | OSPF parents, including the routed port-channel | 96 |
@@ -86,6 +86,7 @@ lots that follow it.
 | `0b_8` | `registry_slice_interface_common.yaml` (2) |
 | `0b_9` | `registry_slice_interface_common.yaml` (2), `registry_slice_port_channel_vpc.yaml` (3) |
 | `a4_1_discovery` | `registry_slice_port_channel_vpc.yaml` (4), `registry_slice_interface_common.yaml` (2) |
+| `a4_2_l3po_dampening` | `registry_slice_interface_common.yaml` (7) |
 | `c1_pvlan_companions` | `registry_slice_pvlan.yaml` (11) |
 | `iq1_vpc_pvlan_qos_stats` | `registry_slice_pvlan.yaml` (1) |
 | `pl1_peer_link` | `registry_slice_port_channel_vpc.yaml` (4) |

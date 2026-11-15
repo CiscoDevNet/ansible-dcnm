@@ -1521,3 +1521,160 @@ bindings:
       - ndfc_effect: inline_config
         phase: current
         evidence_ref: "int_dot1q_tunnel_host@33684a76#L484"
+
+  # ==== Source lot a4_2_l3po_dampening (7 of 7 rows) ====
+  # Interface dampening on the routed port-channel, with the public keys, types and bounds of the int_routed_host rows
+  # of slice 0b_6. The int_l3_port_channel body (SMU 4.3.1.0175006017) declares the same seven fields and the same four
+  # template rules (reuse/suppress/max-suppress together; that group needs half-life; restart needs the group; the
+  # penalty needs restart), and creates one interface_dampening* child on the port-channel. The rules stay the
+  # template's; they are not duplicated here.
+  # The int_routed_host rows carry resets validated against the controller; none is measured on this parent, so these
+  # rows carry no reset_wire and replaced/overridden refuse to withdraw a stored value. NX-OSv rejects `dampening`, so
+  # this family cannot be validated on the device in this lab (platform limit, not an omitted run).
+
+  # int_l3_port_channel dampening -> enable_dampening. Declared at L365; Po child policies interface_dampening*.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: dampening
+    profile_key: enable_dampening
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L365"
+
+  # int_l3_port_channel dampeningHalfLife -> dampening_half_life. Declared at L370; Po child policies interface_dampening*.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: dampeningHalfLife
+    profile_key: dampening_half_life
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    min: 1
+    max: 30
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L370"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: interface_dampening_restart_penalty
+        phase: current
+        evidence_ref: "int_l3_port_channel@81c9392e#L1143"
+
+  # int_l3_port_channel dampeningReuse -> dampening_reuse. Declared at L376; Po child policies interface_dampening*.
+  # Controller-side rule: template: reuse/suppress/max-suppress together, need half-life.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: dampeningReuse
+    profile_key: dampening_reuse
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    min: 1
+    max: 20000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L376"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: interface_dampening_restart_penalty
+        phase: current
+        evidence_ref: "int_l3_port_channel@81c9392e#L1144"
+
+  # int_l3_port_channel dampeningSuppress -> dampening_suppress. Declared at L382; Po child policies interface_dampening*.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: dampeningSuppress
+    profile_key: dampening_suppress
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    min: 1
+    max: 20000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L382"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: interface_dampening_restart_penalty
+        phase: current
+        evidence_ref: "int_l3_port_channel@81c9392e#L1145"
+
+  # int_l3_port_channel dampeningMaxSuppress -> dampening_max_suppress. Declared at L388; Po child policies interface_dampening*.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: dampeningMaxSuppress
+    profile_key: dampening_max_suppress
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    min: 1
+    max: 255
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L388"
+    effect_rules:
+      - ndfc_effect: child_policy
+        child_template: interface_dampening_restart_penalty
+        phase: current
+        evidence_ref: "int_l3_port_channel@81c9392e#L1146"
+
+  # int_l3_port_channel dampeningRestart -> dampening_restart. Declared at L394; Po child policies interface_dampening*.
+  # Controller-side rule: template: restart needs the full tuple.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: dampeningRestart
+    profile_key: dampening_restart
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L394"
+
+  # int_l3_port_channel dampeningRestartPenalty -> dampening_restart_penalty. Declared at L399; Po child policies interface_dampening*.
+  # Controller-side rule: template: penalty needs restart true.
+  - parent_template: int_l3_port_channel
+    parent_nvpair: dampeningRestartPenalty
+    profile_key: dampening_restart_penalty
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    min: 1
+    max: 20000
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel@81c9392e#L399"

@@ -242,6 +242,10 @@ A4_ROUTES = sorted([
     ("int_dot1q_tunnel_host", "lldpTransmit"), ("int_dot1q_tunnel_host", "lldpReceive"),
     ("int_l3_port_channel", "CDP_ENABLE"), ("int_l3_port_channel", "lldpTransmit"), ("int_l3_port_channel", "lldpReceive"),
     ("int_port_channel_dot1q_tunnel_host", "CDP_ENABLE"),
+    # lot a4_2_l3po_dampening
+    ("int_l3_port_channel", "dampening"), ("int_l3_port_channel", "dampeningHalfLife"), ("int_l3_port_channel", "dampeningReuse"),
+    ("int_l3_port_channel", "dampeningSuppress"), ("int_l3_port_channel", "dampeningMaxSuppress"),
+    ("int_l3_port_channel", "dampeningRestart"), ("int_l3_port_channel", "dampeningRestartPenalty"),
 ])
 
 

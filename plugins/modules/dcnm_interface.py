@@ -537,6 +537,21 @@ options:
             description:
             - Disable LLDP receive on the members. Same contract as disable_lldp_transmit.
             type: bool
+          enable_dampening:
+            description:
+            - Interface dampening on a routed port-channel (mode 'l3'). Registered field with the
+              int_routed_host contract (NOT LIVE TESTED; NX-OSv rejects C(dampening), so it cannot be
+              validated on that platform). Needs an approved C(patch_version); explicit-only, no
+              default. The template creates one interface_dampening child on the port-channel.
+            - The companions are dampening_half_life (1-30), dampening_reuse, dampening_suppress
+              (1-20000), dampening_max_suppress (1-255), dampening_restart (bool) and
+              dampening_restart_penalty (1-20000). The template requires the gate for any value,
+              reuse, suppress and max suppress together and after half-life, the full group for
+              restart and restart for the penalty; the controller refuses a request that breaks a rule.
+            - Under 'merged' an omitted value is kept. No reset is verified on this policy, so
+              'replaced' and 'overridden' refuse to withdraw a stored value; set the gate to false
+              explicitly to remove dampening.
+            type: bool
           enable_monitor:
             description:
             - State of Switchport Monitor for SPAN/ERSPAN
