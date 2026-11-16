@@ -1,9 +1,9 @@
 """DHCP relay servers on the routed Ethernet, routed port-channel and subinterface parents (registry slice dr1).
 
 dhcp_servers is a typed list (struct_list). The parents parse it with ast.literal_eval, create the child policy
-interface_dhcp_relay_internal only from a non-empty list and never delete it, so an empty list over stored servers is
-refused. Expected wire strings are written by hand from the template bodies, not produced by the contract. Module cases
-run the real main() through helpers/binding_harness on all three parents.
+interface_dhcp_relay_internal only from a non-empty list; removal by an empty list is not verified, so an empty list
+over stored servers is refused. Expected wire strings are written by hand from the template bodies, not produced by the
+contract. Module cases run the real main() through helpers/binding_harness on all three parents.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -236,7 +236,7 @@ def test_an_empty_list_over_stored_servers_is_refused(parent, state, check_mode)
     have = _have(parent, TWO)
     result, calls = run(base_for(parent, **{KEY: []}), state, have, parent=parent, check_mode=check_mode)
     assert result.get("failed")
-    assert "dhcp_servers on" in result["msg"] and "does not remove the configuration" in result["msg"]
+    assert "dhcp_servers on" in result["msg"] and "the module does not support removing every entry" in result["msg"]
     assert _no_writes(calls)
 
 
@@ -303,7 +303,7 @@ def test_a_leaf_reset_of_a_routed_port_drops_the_relay_with_the_policy(state):
 
 @pytest.mark.parametrize("state", role_reset.STATES)
 def test_a_border_reset_of_a_routed_port_with_servers_is_refused(state):
-    # Same parent: the default payload cannot remove the relay child, and no reset exists.
+    # Same parent: removal of the relay child by the default payload is not verified, and no reset exists.
     have = _have(ROUTED, TWO)
     result, calls = role_reset.run(state, have, "border")
     assert result.get("failed") and "dhcp_servers" in result["msg"]

@@ -159,9 +159,11 @@ def _vlan_mapping_read(raw):
 # The parents parse the value with ast.literal_eval (parseDhcpServers), refuse more than 16 items or an empty
 # address, and hand the value unchanged to the child policy interface_dhcp_relay_internal, which renders one
 # `ip dhcp relay address` (or `ipv6 dhcp relay address`) line per item, with `use-vrf` when srvrVrf is set and
-# differs, ignoring case, from the interface VRF. The parents create that child only while the list is not empty
-# and never delete it, so an empty list leaves the relay lines of the previous list in place: an explicit empty
-# list over a stored one is refused (clear_allowed False).
+# differs, ignoring case, from the interface VRF. The parents create that child only while the list is not empty.
+# Each body deletes the interface's child policies before it recreates them on a modify (int_l3_port_channel unless
+# the hidden SKIP_DEL_ON_ADD is true; int_subif marks them deleted), so an empty list may remove the child and its
+# lines, but no full clear has been measured. An explicit empty list over a stored one is refused
+# (clear_allowed False).
 _DHCP_SERVER_KEYS = ("srvr_ip", "srvr_vrf")
 _DHCP_SERVERS_MAX = 16
 _VRF_TEXT = re.compile(r"^[a-zA-Z0-9:_-]*$")
@@ -279,5 +281,5 @@ def struct_is_empty(contract, raw):
 
 
 def struct_clear_allowed(contract):
-    """False when an empty list cannot remove what a stored list configured (see the contract's comment)."""
+    """False when an explicit empty list may not replace a stored one (see the contract's comment)."""
     return _contract(contract)["clear_allowed"]

@@ -25,11 +25,13 @@ bindings:
   # child renders, per item, `ip dhcp relay address <srvrAddr>` (`ipv6 ...` when the address contains ":"), with
   # `use-vrf <srvrVrf>` when srvrVrf is set and differs, ignoring case, from the interface VRF.
   #
-  # The parents never delete that child: there is no deleteChildTemplate call for it, unlike the CDP, redirect, PIM
-  # BFD and multisite children. An empty list therefore leaves the relay lines of the previous list in place, so the
-  # list contract refuses an explicit empty list over a stored one, and no reset exists (removal_semantics
+  # No deleteChildTemplate call names that child, unlike the CDP, redirect, PIM BFD and multisite children. A modify
+  # first deletes the interface's child policies (int_l3_port_channel unless the hidden SKIP_DEL_ON_ADD is true;
+  # int_subif marks them deleted), so an empty list may remove the relay child, but no full clear has been measured.
+  # The list contract therefore refuses an explicit empty list over a stored one, and no reset exists (removal_semantics
   # unresolved): an omitted stored list under replaced or overridden is refused. A shorter non-empty list updates the
-  # child; whether the switch then removes the dropped lines is not measured. int_routed_host deletes every
+  # child. On int_l3_port_channel the switch then removes the dropped lines (measured); on int_routed_host and
+  # int_subif this is not measured. int_routed_host deletes every
   # interface-scoped child when its policy is replaced (POLICY_CHANGE_DROPS_CHILDREN in the generator).
   #
   # The meaning of IsFabricInstance=true for an interface field was not established. This list does not replace the

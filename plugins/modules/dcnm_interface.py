@@ -243,13 +243,14 @@ options:
     - On a routed Ethernet port (C(mode=routed)), a routed port-channel (C(mode=l3)) and a subinterface the
       C(4.3.1.0175006017) templates declare C(dhcp_servers), a list of up to 16 DHCP relay servers with C(srvr_ip) (an
       IPv4 or IPv6 address in canonical form) and C(srvr_vrf) (optional; blank means the interface VRF), the same item
-      shape as C(dhcp_servers) of M(cisco.dcnm.dcnm_network). NOT LIVE TESTED, read from the installed template
-      bodies. An explicit list is the whole value of the field in every state; item order is not significant, and a
-      repeated server and VRF pair is refused. The templates create the relay configuration only from a non-empty list
-      and never remove it, so the module refuses an empty list while the controller holds servers, and an omitted
-      stored list under C(replaced) or C(overridden) also fails the task before any change is sent. A shorter list is
-      sent; whether the switch removes the dropped relay lines is not measured. This list does not replace the
-      numbered DHCP server options of the SVI profile.
+      shape as C(dhcp_servers) of M(cisco.dcnm.dcnm_network). LIVE TESTED only on a routed port-channel; on the other
+      two parents the behavior is read from the installed template bodies. An explicit list is the whole value of the
+      field in every state; item order is not significant, and a repeated server and VRF pair is refused. The module
+      does not support removing every server, so it refuses an empty list while the controller holds servers, and an
+      omitted stored list under C(replaced) or C(overridden) also fails the task before any change is sent. Whether
+      the controller removes the relay configuration for an empty list is not verified. A shorter list is sent. On a
+      routed port-channel the switch removes the dropped relay lines; on a routed Ethernet port or a subinterface this
+      is not measured. This list does not replace the numbered DHCP server options of the SVI profile.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -4547,7 +4548,7 @@ class DcnmIntf:
         # Bindings whose required withdrawal cannot be completed. Collected during the
         # comparison pass and raised ONCE by main(), before anything is sent.
         self.withdrawal_blocked = []
-        # Typed lists whose explicit empty value cannot remove the stored entries (gie_struct_clear_refused); raised by
+        # Typed lists whose explicit empty value is refused over stored entries (gie_struct_clear_refused); raised by
         # main() before any request.
         self.struct_clear_blocked = []
         # Dependent fields (inert_when) set against their gate, collected and raised before any request.
@@ -17143,9 +17144,9 @@ def main():
             {(b["interface"], b["parent"], b["field"]) for b in dcnm_intf.struct_clear_blocked}
         )
         module.fail_json(
-            msg="These lists are requested empty while the controller holds entries, and on this parent an "
-            "empty list does not remove the configuration the entries created: {0}. No configuration or "
-            "deployment request was sent. Keep at least one entry.".format(
+            msg="These lists are requested empty while the controller holds entries, and the module does not "
+            "support removing every entry of these lists: {0}. No configuration or deployment request was sent. "
+            "Keep at least one entry.".format(
                 ", ".join("{2} on {0}, parent {1}".format(*b) for b in cleared)
             ),
             **dcnm_intf.result
