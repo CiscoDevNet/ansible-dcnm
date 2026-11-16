@@ -1685,11 +1685,18 @@ def test_the_parent_carries_exactly_the_ospf_family_the_pim_rows_and_eigrp():
     eigrp = [nv for nv in nvpairs if nv.startswith("eigrp")]
     assert len(eigrp) == 13
     # + dhcpServers, the DHCP relay list of slice dr1 (test_binding_dhcp_servers.py).
+    # The routing and policy lots, each pinned by name in its own suite: rp1 (test_binding_l3po_controls.py), rp2
+    # (test_binding_l3po_macsec.py), rp3 (test_binding_l3po_ipv6_redirects.py), rp4 (test_binding_qos_pfc.py)
+    # and rp5 (test_binding_netflow.py).
+    later = ["bfdEcho", "arpTimeout", "ipv4AclIn", "macsecInterfacePolicy", "macsecKeyChainName", "macsecPolicyName",
+             "macsecFallbackKeyChainName", "IPv6", "IPv6_PREFIX", "ipv6LinkLocal", "ipv6NdSuppressRa",
+             "DISABLE_IP_REDIRECTS", "ipv4Redirects", "ipv6Redirects", "ENABLE_PFC", "qosStatsSuppressed", "queuingStats",
+             "ENABLE_NETFLOW", "NETFLOW_MONITOR", "NETFLOW_SAMPLER"]
     assert nvpairs == sorted(OSPF19 + ["pimBfdInstance", "ENABLE_PIM_SPARSE", "PIM_DR_PRIORITY"] + eigrp
                              + ["CDP_ENABLE", "lldpTransmit", "lldpReceive"]
                              + ["dampening", "dampeningHalfLife", "dampeningReuse", "dampeningSuppress",
                                 "dampeningMaxSuppress", "dampeningRestart", "dampeningRestartPenalty"]
-                             + ["dhcpServers"])
+                             + ["dhcpServers"] + later)
 
 
 # ------------------------------------------------------------------ merged

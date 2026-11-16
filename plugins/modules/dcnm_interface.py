@@ -169,6 +169,53 @@ options:
       and C(overridden) an omitted key is reset to the template default (false, an empty tag or prefix list, C(out)).
       The three passive options have no reset; omitting one that is stored as true fails the task before any change is
       sent. The module never creates the EIGRP process or the referenced prefix lists. EIGRP adjacency is not tested.
+    - The routed port-channel also accepts C(disable_bfd_echo) (bool; renders C(no bfd echo)), C(arp_timeout)
+      (60-28800 seconds) and C(ipv4_acl_in) (1-64 characters, compared with its case), with the routed Ethernet
+      meaning. No reset is established for them on this profile, so under C(replaced) and C(overridden) omitting a key
+      stored with a non-default value fails the task before any change is sent. C(disable_bfd_echo=false) and an empty
+      C(ipv4_acl_in) are sent when given; C(arp_timeout) has no clear and is removed only with the port-channel. The
+      echo line needs C(feature bfd); the module never creates the access list. NOT LIVE TESTED.
+    - The routed port-channel also accepts the MACsec keys of the routed Ethernet profile -
+      C(enable_macsec_interface_policy), C(macsec_key_chain_name), C(macsec_policy_name) and
+      C(macsec_fallback_key_chain_name), with the same bounds and case-sensitive names. The template passes them to every
+      member port, where the MACsec line is rendered; the module writes the port-channel only. The template refuses the
+      policy without a key chain and a policy name; the module does not check it. No reset is established for them on
+      this profile, so under C(replaced) and C(overridden) omitting a stored MACsec key fails the task before any change
+      is sent; give C(enable_macsec_interface_policy=false) and empty names to disable MACsec. Only the fallback key
+      chain can be cleared on its own. The module never creates key chains or policies. NOT LIVE TESTED; MACsec
+      sessions are not tested.
+    - The routed port-channel also accepts C(ipv6_addr) and C(ipv6_mask_len) (1-127), the IPv6 address keys of the
+      routed Ethernet profile. The template renders the address only with both set and requires the prefix with the
+      address, so the module refuses a request that would leave one of them set and the other empty. The prefix has
+      no clear, so clearing C(ipv6_addr) while a prefix is stored is refused too; the address is removed only with the
+      port-channel. C(ipv6_link_local) and C(ipv6_nd_suppress_ra) have the routed Ethernet meaning. Redirects are
+      C(disable_ipv4_redirects), C(disable_ipv6_redirects) and the combined C(disable_ip_redirects) (default false
+      here). While the combined option is true the template ignores the other two, so an explicit false for either one
+      is refused unless the same task sets the combined option to false, and a stored value for either one is kept. No
+      reset is established for these keys on this profile, so under C(replaced) and C(overridden) omitting a key
+      stored with a non-default value fails the task before any change is sent. The two split options declare no
+      default, so omitting one stored as false fails too. NOT LIVE TESTED.
+    - C(enable_pfc) (bool) is also accepted on the routed Ethernet, Ethernet dot1q-tunnel, routed port-channel,
+      dot1q-tunnel port-channel and vPC trunk, access and dot1q-tunnel profiles, with the meaning it has on the trunk
+      and access profiles, which keep their native default. The Ethernet dot1q-tunnel profile also accepts
+      C(enable_qos), C(qos_policy) and C(queuing_policy) as the other Ethernet modes do; disabling QoS under C(merged)
+      keeps the stored policy name, which the template ignores while QoS is off. The routed port-channel also accepts
+      C(disable_qos_stats) and C(disable_queuing_stats) with the routed Ethernet meaning. No reset is established for
+      these keys on these profiles. An omitted value is kept under C(merged); under C(replaced) and C(overridden)
+      omitting a key stored with a non-default value fails the task before any change is sent, and the explicit
+      default (false, or an empty name) is sent when given. The module never creates the policies, and whether a
+      platform accepts priority flow control is not checked. NOT LIVE TESTED.
+    - C(enable_netflow) (bool), C(netflow_monitor) and C(netflow_sampler) are also accepted on the Ethernet trunk,
+      access, routed and dot1q-tunnel profiles, the trunk, access, routed and dot1q-tunnel port-channel profiles, the
+      vPC trunk, access and dot1q-tunnel profiles and the subinterface; C(netflow_sampler) also on the SVI, beside its
+      native NetFlow keys. The monitor is required while NetFlow is enabled, and a request that enables NetFlow over an
+      empty stored monitor, or clears the monitor while NetFlow stays enabled, is refused. Under C(merged) disabling
+      NetFlow keeps the stored monitor and sampler, which the template ignores while NetFlow is off, and a later enable
+      without a monitor uses the stored one. No reset is established for these keys, so under C(replaced) and
+      C(overridden) omitting a key stored with a non-default value fails the task before any change is sent, unless it
+      is a monitor or sampler stored while NetFlow is off; the explicit false and empty names are sent when given.
+      NetFlow must be enabled in the fabric and the monitor and sampler defined there; the module never creates them.
+      The templates describe the sampler as applicable to N7K only. NOT LIVE TESTED.
     - On a trunk port-channel (C(mode=trunk)) the C(4.3.1.0175006017) templates declare C(link_transmit_reset_skip)
       (bool; the nvPair C(linkTransmitResetSkip) of C(int_port_channel_trunk_host)). It is the default a member takes
       when it joins the port-channel. A member that already exists keeps its stored value when the option is raised or
@@ -3538,6 +3585,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_withdrawal_action,
     gie_binding_inert,
     gie_inert_gate_nvpairs,
+    gie_superseded,
+    gie_superseding_alias,
     gie_dependency_plan,
     gie_binding_is_owned_elsewhere,
     gie_patch_supported,
@@ -13448,7 +13497,10 @@ class DcnmIntf:
                                                     "reason": _w_action,
                                                 }
                                                 _w_row = gie_resolve_by_nvpair(want.get("policy"), _w_nvp)
-                                                if _w_row is not None and _w_row.get("inert_when"):
+                                                if _w_row is not None and (
+                                                    _w_row.get("inert_when")
+                                                    or gie_superseding_alias(want.get("policy"), _w_nvp)
+                                                ):
                                                     # Judged after this loop, against the gate's
                                                     # final value (explicit, or reset above).
                                                     _w_gated.append((_w_row, _w_entry))
@@ -13460,10 +13512,13 @@ class DcnmIntf:
                                         # the carry-forward below and nothing new is transported. The
                                         # gate is taken from WANT when this pass sets it, else from
                                         # the authoritative HAVE the carry-forward will preserve.
+                                        # A split redirect option superseded by its alias (GIE_SUPERSEDING_ALIASES) is judged
+                                        # the same way: the template blanks it while the alias ends true.
                                         for _w_b, _w_entry in _w_gated:
                                             _w_gate_nv = {}
+                                            _w_alias = gie_superseding_alias(want.get("policy"), _w_b["parent_nvpair"])
                                             # The gate, and its `unless` nvPair when declared (int_loopback: INTF_VRF).
-                                            for _w_gate in gie_inert_gate_nvpairs(_w_b):
+                                            for _w_gate in gie_inert_gate_nvpairs(_w_b) + ((_w_alias[0],) if _w_alias else ()):
                                                 if _w_gate in want[k][0][ik]:
                                                     _w_gate_nv[_w_gate] = want[k][0][ik][_w_gate]
                                                 else:
@@ -13471,6 +13526,8 @@ class DcnmIntf:
                                                         if isinstance(intf.get(ik), dict) and _w_gate in intf[ik]:
                                                             _w_gate_nv[_w_gate] = intf[ik][_w_gate]
                                                             break
+                                            if gie_superseded(want.get("policy"), _w_b["parent_nvpair"], _w_gate_nv):
+                                                continue
                                             if not gie_binding_inert(_w_b, _w_gate_nv):
                                                 self.withdrawal_blocked.append(_w_entry)
                                             elif "clear" in _w_b["inert_when"]:
@@ -16991,6 +17048,20 @@ def main():
                 if b["reason"] == "empty_while_on"
             }
         )
+        superseded = sorted(
+            {
+                (b["interface"], b["parent"], b["field"], b["gate"])
+                for b in dcnm_intf.dependency_blocked
+                if b["reason"] == "superseded"
+            }
+        )
+        no_paired_clear = sorted(
+            {
+                (b["interface"], b["parent"], b["field"], b["gate"])
+                for b in dcnm_intf.dependency_blocked
+                if b["reason"] == "no_paired_clear"
+            }
+        )
         parts = []
         if set_off:
             parts.append(
@@ -17005,6 +17076,21 @@ def main():
                 "These fields are required while the option they depend on is enabled, and this request "
                 "leaves them empty: {0}. Set the field, or disable the option.".format(
                     ", ".join("{2} (with {3} enabled) on {0}, parent {1}".format(*b) for b in empty_on)
+                )
+            )
+        if superseded:
+            parts.append(
+                "These fields are false while an option that overrides them is true, and the template ignores "
+                "them then: {0}. Set the overriding option to false in the same task, or omit the field.".format(
+                    ", ".join("{2} (overridden by {3}) on {0}, parent {1}".format(*b) for b in superseded)
+                )
+            )
+        if no_paired_clear:
+            parts.append(
+                "These fields are cleared while the value they are paired with stays stored, and this parent has "
+                "no supported clear for that value: {0}. The module does not send a clear of only one of the two. "
+                "Keep the field, or remove the interface.".format(
+                    ", ".join("{2} (paired with {3}) on {0}, parent {1}".format(*b) for b in no_paired_clear)
                 )
             )
         parts.append("No configuration or deployment request was sent.")

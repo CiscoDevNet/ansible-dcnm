@@ -304,8 +304,8 @@ def test_only_the_declared_parents_carry_the_inline_marker():
     # + access loggingEventPortLinkStatus (0b_37); + 6: BPDUFILTER_ENABLED, LINK_TYPE and ENABLE_ERRDISABLE_ACL on the
     # trunk and access parents (lot a4_4_stp_protection), which inherit their parent's declaration; + 10: the five
     # link-setting rows of lot a4_5_link_settings on each of the two parents; + the two int_trunk_host VLAN mapping rows
-    # (vm1), computed from the parent.
-    assert sum(1 for r in table.BINDING_TABLE if r.get("cleared_on_change_to")) == 36
+    # (vm1), computed from the parent; + the three NetFlow rows of each Ethernet host parent (lot rp5).
+    assert sum(1 for r in table.BINDING_TABLE if r.get("cleared_on_change_to")) == 42
     assert not any(r.get("cleared_on_change_to") and r.get("dropped_on_policy_change") for r in table.BINDING_TABLE)
 
 
@@ -666,8 +666,8 @@ def test_the_previous_lot_is_untouched():
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
-    # + slices 0b_37 to 0b_42, rs1, pl1, ul1, a4_1 to a4_5, vm1, dr1
-    assert len(BINDING_TABLE) == 393, "the table has {0} identities".format(len(BINDING_TABLE))
+    # + slices 0b_37 to 0b_42, rs1, pl1, ul1, a4_1 to a4_5, vm1, dr1, rp1 to rp5
+    assert len(BINDING_TABLE) == 456, "the table has {0} identities".format(len(BINDING_TABLE))
     # 197 integrated + 3 int_vlan rows (test_binding_role_resets.py) = 200, + the six
     # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
@@ -681,7 +681,7 @@ def test_the_previous_lot_is_untouched():
     assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10, (
         "the integrated table carries {0} resets, expected 273".format(len(with_reset)))
     lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset
-                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK)}
+                if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r.get("reset_wire") is not None}
     assert lot_rows == {(f[0], f[1]) for f in VPC_ROWS}
     for parent in (VPC_ACCESS, VPC_TRUNK):
         neighbour = resolve_binding(parent, "disable_lldp")
@@ -856,8 +856,9 @@ def test_the_arithmetic_is_197_plus_three():
     """246 identities, 219 resets, and these three are the only int_vlan HSRP rows with one."""
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 228 + six dot1q rows + eleven PVLAN companion rows + one vPC PVLAN row, + slices 0b_37, 0b_38, 0b_39, 0b_40, rs1,
-    # pl1, ul1, 0b_41, 0b_42, a4_1 to a4_5, vm1 and dr1 (a4_*, vm1 and dr1 declare no reset).
-    assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
+    # pl1, ul1, 0b_41, 0b_42, a4_1 to a4_5, vm1, dr1 and rp1 to rp5 (a4_*, vm1, dr1 and rp* declare no reset).
+    assert len(BINDING_TABLE) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
+                                  + 3 + 4 + 7 + 12 + 37)
     # 200 + six dot1q resets + int_vlan::privateVlanMapping = 207, + 11 PVLAN companion resets (inferred) = 218, + 1 vPC PVLAN reset = 219.
     # + 5 SMU 017 resets read from the bodies (slice 0b_37) = 224, + 5 loopback EIGRP resets (slice 0b_38) = 229,
     # + 1 routed port-channel PIM BFD reset (slice 0b_39) = 230, + 16 routed port-channel OSPF resets (slice 0b_40) = 246,

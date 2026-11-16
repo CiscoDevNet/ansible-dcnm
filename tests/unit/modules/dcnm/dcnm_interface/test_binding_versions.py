@@ -323,8 +323,9 @@ class TestPV09InventoryInvariants:
     def test_234_identities_and_207_reset_values_unchanged(self):
         # The eleven PVLAN companion rows, each with an inferred reset: 234 + 11, 207 + 11; plus one vPC PVLAN row.
         # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1, + 4: pl1, + 12: ul1, + 2: 0b_41, + 13: 0b_42,
-        # + 76: a4_1 to a4_5, + 6: vm1, + 3: dr1 (no reset_wire: removal not measured)
-        assert len(BINDING_TABLE) == 234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
+        # + 76: a4_1 to a4_5, + 6: vm1, + 3: dr1, + 63: rp1 to rp5 (no reset_wire: removal not measured)
+        assert len(BINDING_TABLE) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
+                                      + 3 + 4 + 7 + 12 + 37)
         # + 0b_37 to 0b_42, rs1, pl1, ul1
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
             207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10)
@@ -374,8 +375,18 @@ class TestPV09InventoryInvariants:
         # The VLAN mapping rows of lot vm1, in their own family file, with the struct_contract field, and the DHCP relay
         # server rows of lot dr1, in their own family file, merged after the a4_* lots (was 9dcaf4c5...; without the a4_*
         # lots, c7cda915...).
+        # On the branch that added lots rp1 to rp5, from the base:
+        # The routed port-channel BFD echo, ARP timeout and ACL rows of lot rp1 (was 38a2d043...).
+        # The routed port-channel MACsec rows of lot rp2 (was 3a50bba9...).
+        # The routed port-channel IPv6 and redirect rows of lot rp3 (was e3c22b57...).
+        # The priority flow control, Ethernet dot1q-tunnel QoS and routed port-channel statistics rows of lot rp4
+        # (was d195d9ee...).
+        # The NetFlow rows of lot rp5 (was 5b3bfb79...).
+        # The rows of lots rp1 to rp5 without a reset_wire (was 9eac40d2...).
+        # The rows of lots rp1 to rp5 merged after the a4_*, vm1 and dr1 lots (was aa5ae723...; without those lots,
+        # 34e33e5b...).
         assert PROVENANCE_SHA256 == (
-            "aa5ae723e7a3576d1a4bb358a5311c127807b88d00641340ffcd71674a91aeb8"
+            "e5e8f03d95068a734b20f9ade66cb2fb612a8dc92106c3c08046d28cf291cf2e"
         )
 
 

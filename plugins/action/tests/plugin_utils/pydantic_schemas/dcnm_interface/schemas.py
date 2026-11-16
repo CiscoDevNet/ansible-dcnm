@@ -106,7 +106,7 @@ R2_REGISTERED_BINDINGS = {
         "int_vpc_pvlan_host",
         "int_vpc_trunk_host",
     )),
-    "arp_timeout": ("arpTimeout", "int", ("int_routed_host", "int_subif", "int_vlan")),
+    "arp_timeout": ("arpTimeout", "int", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
     "bfd_min_rx_interval": ("bfdMinRxInterval", "int", ("int_subif", "int_vlan")),
     "bfd_multiplier": ("bfdMultiplier", "int", ("int_subif", "int_vlan")),
     "bfd_tx_interval": ("bfdTxInterval", "int", ("int_subif", "int_vlan")),
@@ -118,10 +118,10 @@ R2_REGISTERED_BINDINGS = {
     "dampening_restart_penalty": ("dampeningRestartPenalty", "int", ("int_l3_port_channel", "int_routed_host")),
     "dampening_reuse": ("dampeningReuse", "int", ("int_l3_port_channel", "int_routed_host")),
     "dampening_suppress": ("dampeningSuppress", "int", ("int_l3_port_channel", "int_routed_host")),
-    "disable_bfd_echo": ("bfdEcho", "bool", ("int_routed_host", "int_vlan")),
+    "disable_bfd_echo": ("bfdEcho", "bool", ("int_l3_port_channel", "int_routed_host", "int_vlan")),
     "disable_eigrp_bfd": ("eigrpBfdDisable", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
-    "disable_ipv4_redirects": ("ipv4Redirects", "bool", ("int_routed_host", "int_subif", "int_vlan")),
-    "disable_ipv6_redirects": ("ipv6Redirects", "bool", ("int_routed_host", "int_subif", "int_vlan")),
+    "disable_ipv4_redirects": ("ipv4Redirects", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
+    "disable_ipv6_redirects": ("ipv6Redirects", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
     "disable_lldp_receive": ("lldpReceive", "bool", (
         "int_access_host",
         "int_dot1q_tunnel_host",
@@ -156,6 +156,7 @@ R2_REGISTERED_BINDINGS = {
     )),
     "disable_qos_stats": ("qosStatsSuppressed", "bool", (
         "int_access_host",
+        "int_l3_port_channel",
         "int_port_channel_access_host",
         "int_port_channel_dot1q_tunnel_host",
         "int_port_channel_trunk_host",
@@ -170,6 +171,7 @@ R2_REGISTERED_BINDINGS = {
     )),
     "disable_queuing_stats": ("queuingStats", "bool", (
         "int_access_host",
+        "int_l3_port_channel",
         "int_port_channel_access_host",
         "int_port_channel_dot1q_tunnel_host",
         "int_port_channel_pvlan_host",
@@ -219,7 +221,7 @@ R2_REGISTERED_BINDINGS = {
     "enable_eigrp_ipv6_routing": ("eigrpIpv6Routing", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_eigrp_routing": ("eigrpRouting", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_eigrp_shutdown": ("eigrpShutdown", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
-    "enable_macsec_interface_policy": ("macsecInterfacePolicy", "bool", ("int_routed_host",)),
+    "enable_macsec_interface_policy": ("macsecInterfacePolicy", "bool", ("int_l3_port_channel", "int_routed_host")),
     "enable_ospf": ("ospf", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_ospf_auth": ("ospfAuthentication", "bool", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "enable_pim_bfd_instance": ("pimBfdInstance", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif")),
@@ -308,10 +310,73 @@ R2_REGISTERED_BINDINGS = {
         "int_trunk_host",
         "int_vpc_trunk_host",
     )),
+    # The routed port-channel IPv6 pair and combined redirect option (lot rp3). ipv6_addr and ipv6_mask_len are also
+    # mapped natively for every parent (interface_nvpairs_fields); disable_ip_redirects is native on the SVI profile and
+    # not checked there (R2_NATIVE_ELSEWHERE_KEYS).
+    "ipv6_addr": ("IPv6", "str_fold", ("int_l3_port_channel",)),
+    "ipv6_mask_len": ("IPv6_PREFIX", "int", ("int_l3_port_channel",)),
+    "disable_ip_redirects": ("DISABLE_IP_REDIRECTS", "bool", ("int_l3_port_channel",)),
     # The QoS keys of the peer-link (slice pl1) and ToR-uplink (slice ul1) parents; native on the other profiles
     # (R2_NATIVE_QOS_PARENTS).
-    "enable_qos": ("ENABLE_QOS", "bool", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
-    "qos_policy": ("QOS_POLICY", "str_fold", ("int_vpc_peer_link_po", "int_vpc_uplink_access")),
+    "enable_qos": ("ENABLE_QOS", "bool", ("int_dot1q_tunnel_host", "int_vpc_peer_link_po", "int_vpc_uplink_access")),
+    "qos_policy": ("QOS_POLICY", "str_fold", ("int_dot1q_tunnel_host", "int_vpc_peer_link_po", "int_vpc_uplink_access")),
+    # Lot rp4: priority flow control and the Ethernet dot1q-tunnel queuing policy; native and not checked on the
+    # Ethernet, port-channel and vPC profiles that already carry them (R2_NATIVE_ELSEWHERE_KEYS).
+    "enable_pfc": ("ENABLE_PFC", "bool", (
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_routed_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "queuing_policy": ("QUEUING_POLICY", "str_fold", ("int_dot1q_tunnel_host",)),
+    # Lot rp5: NetFlow. enable_netflow and netflow_monitor are native and not checked on the SVI and FEX profiles
+    # (R2_NATIVE_ELSEWHERE_KEYS).
+    "enable_netflow": ("ENABLE_NETFLOW", "bool", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_routed_host",
+        "int_subif",
+        "int_trunk_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "netflow_monitor": ("NETFLOW_MONITOR", "str_fold", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_routed_host",
+        "int_subif",
+        "int_trunk_host",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
+    "netflow_sampler": ("NETFLOW_SAMPLER", "str_fold", (
+        "int_access_host",
+        "int_dot1q_tunnel_host",
+        "int_l3_port_channel",
+        "int_port_channel_access_host",
+        "int_port_channel_dot1q_tunnel_host",
+        "int_port_channel_trunk_host",
+        "int_routed_host",
+        "int_subif",
+        "int_trunk_host",
+        "int_vlan",
+        "int_vpc_access_host",
+        "int_vpc_dot1q_tunnel",
+        "int_vpc_trunk_host",
+    )),
     # The ToR-uplink storm-control keys (slice ul1), registered on int_vpc_uplink_access only and native on the access,
     # trunk and dot1q-tunnel profiles.
     "enable_storm_control": ("ENABLE_STORM_CONTROL", "bool", ("int_vpc_uplink_access",)),
@@ -332,13 +397,13 @@ R2_REGISTERED_BINDINGS = {
     "hsrp_priority_forwarding_threshold_lower": ("hsrpPriorityForwardingThresholdLower", "int", ("int_vlan",)),
     "hsrp_priority_forwarding_threshold_upper": ("hsrpPriorityForwardingThresholdUpper", "int", ("int_vlan",)),
     "hsrp_vipv6": ("HSRP_VIPv6", "str_fold", ("int_vlan",)),
-    "ipv4_acl_in": ("ipv4AclIn", "str_exact", ("int_routed_host", "int_vlan")),
-    "ipv6_link_local": ("ipv6LinkLocal", "str_fold", ("int_routed_host", "int_subif", "int_vlan")),
-    "ipv6_nd_suppress_ra": ("ipv6NdSuppressRa", "bool", ("int_routed_host", "int_subif", "int_vlan")),
+    "ipv4_acl_in": ("ipv4AclIn", "str_exact", ("int_l3_port_channel", "int_routed_host", "int_vlan")),
+    "ipv6_link_local": ("ipv6LinkLocal", "str_fold", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
+    "ipv6_nd_suppress_ra": ("ipv6NdSuppressRa", "bool", ("int_l3_port_channel", "int_routed_host", "int_subif", "int_vlan")),
     "link_transmit_reset_skip": ("linkTransmitResetSkip", "bool", ("int_port_channel_trunk_host",)),
-    "macsec_fallback_key_chain_name": ("macsecFallbackKeyChainName", "str_exact", ("int_routed_host",)),
-    "macsec_key_chain_name": ("macsecKeyChainName", "str_exact", ("int_routed_host",)),
-    "macsec_policy_name": ("macsecPolicyName", "str_exact", ("int_routed_host",)),
+    "macsec_fallback_key_chain_name": ("macsecFallbackKeyChainName", "str_exact", ("int_l3_port_channel", "int_routed_host")),
+    "macsec_key_chain_name": ("macsecKeyChainName", "str_exact", ("int_l3_port_channel", "int_routed_host")),
+    "macsec_policy_name": ("macsecPolicyName", "str_exact", ("int_l3_port_channel", "int_routed_host")),
     "ospf_advertise_subnet": ("ospfAdvertiseSubnet", "bool", ("int_loopback",)),
     "ospf_area_id": ("OSPF_AREA_ID", "str_fold", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
     "ospf_auth_key": ("OSPF_AUTH_KEY", "str_exact", ("int_l3_port_channel", "int_loopback", "int_routed_host", "int_subif", "int_vlan")),
@@ -473,6 +538,30 @@ R2_NATIVE_QOS_KEYS = ("enable_qos", "qos_policy")
 # merged and send the policy name; they refuse a name with an explicit enable_qos false.
 R2_NATIVE_QOS_STORED_ENABLE_PARENTS = frozenset(("int_pvlan_host", "int_vpc_pvlan_host"))
 
+# Registered keys that the module also serves natively on parents outside their registry rows, where this checker has no
+# mapping for them. Before they were registered the checker did not compare them there; on a parent that does not
+# register them it still does not, so a native playbook is neither newly diagnosed nor newly compared:
+#   disable_lacp_suspend_individual, lacp_port_priority, lacp_rate (lot a4_3_lacp): native on the other port-channel and
+#               vPC profiles.
+#   orphan_port (lot a4_4_stp_protection), duplex (lot a4_5_link_settings): native on the other profiles.
+#   disable_ip_redirects: native on the SVI profile (DISABLE_IP_REDIRECTS).
+#   enable_pfc: native on the Ethernet and port-channel trunk and access profiles (ENABLE_PFC).
+#   queuing_policy: native on the Ethernet, port-channel and vPC profiles (QUEUING_POLICY).
+#   enable_netflow, netflow_monitor: native on the SVI and FEX profiles (ENABLE_NETFLOW, NETFLOW_MONITOR).
+# A parent this checker cannot resolve (the FEX profiles) is treated the same way for these keys.
+R2_NATIVE_ELSEWHERE_KEYS = frozenset((
+    "disable_lacp_suspend_individual",
+    "lacp_port_priority",
+    "lacp_rate",
+    "orphan_port",
+    "duplex",
+    "disable_ip_redirects",
+    "enable_pfc",
+    "queuing_policy",
+    "enable_netflow",
+    "netflow_monitor",
+))
+
 # Parents whose module payload carries CDP_ENABLE natively (not a registry row): the eth trunk, access and dot1q
 # payloads, the pc trunk and access payloads, the vpc trunk, access and dot1q payload, and the PVLAN companions of
 # int_pvlan_host, int_port_channel_pvlan_host and int_vpc_pvlan_host. The module sends the boolean as given.
@@ -488,18 +577,6 @@ R2_NATIVE_CDP_PARENTS = frozenset((
     "int_vpc_dot1q_tunnel",
     "int_vpc_pvlan_host",
     "int_vpc_trunk_host",
-))
-
-# Registered keys that the module also accepts natively on other profiles (the LACP keys of lot a4_3_lacp and
-# orphan_port of lot a4_4_stp_protection, duplex of lot a4_5_link_settings). Before
-# they were registered the checker did not compare them on any parent; on a parent that does not register them it
-# still does not, so a native playbook is neither newly diagnosed nor newly compared.
-R2_NATIVE_ELSEWHERE_KEYS = frozenset((
-    "disable_lacp_suspend_individual",
-    "lacp_port_priority",
-    "lacp_rate",
-    "orphan_port",
-    "duplex",
 ))
 
 R2_NVPAIR_KIND = dict((nv, kind) for nv, kind, _parents in R2_REGISTERED_BINDINGS.values())
@@ -1375,8 +1452,8 @@ class DcnmInterfaceQuerySchema(BaseModel):
                     continue  # registered on the peer-link and uplink parents, native here (r2_native_qos above)
                 if parent in R2_NATIVE_CDP_PARENTS and key == "enable_cdp":
                     continue  # registered on the routed parent, native here (above)
-                if key in R2_NATIVE_ELSEWHERE_KEYS and parent is not None and parent not in parents:
-                    continue  # native on this profile; not compared here, as before it was registered elsewhere
+                if (parent is None or parent not in parents) and key in R2_NATIVE_ELSEWHERE_KEYS:
+                    continue  # native on this parent and not checked here, as before it was registered elsewhere
                 if parent is None or parent not in parents:
                     reason = R2_EXCEPTIONS.get((parent, nvpair)) or (
                         "not a registered field of the expected parent %s" % parent if parent

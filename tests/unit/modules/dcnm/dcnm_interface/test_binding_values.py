@@ -122,13 +122,13 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
     # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row; + 76: lots a4_1 to a4_5;
-    # + 9: slices vm1, dr1
-    assert len(BINDING_TABLE) == 393
+    # + 9: slices vm1, dr1; + 63: lots rp1 to rp5
+    assert len(BINDING_TABLE) == 456
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
-    # + slice 0b_41 (2) + slice 0b_42 (13) + lots a4_1 to a4_5 (76) + slice vm1 (6) + slice dr1 (3)
-    assert len(set(keys)) == 393, "duplicate (parent, nvpair) row"
+    # + slice 0b_41 (2) + slice 0b_42 (13) + lots a4_1 to a4_5 (76) + slice vm1 (6) + slice dr1 (3) + lots rp1 to rp5 (63)
+    assert len(set(keys)) == 456, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 393, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 456, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -186,7 +186,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 393   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1 and dr1
+    assert len(gen.compile_rows(rows)) == 456   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -218,7 +218,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 393   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1 and dr1
+    assert len(gen.compile_rows(rows)) == 456   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -314,7 +314,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 393   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1 and dr1
+    assert len(gen.compile_rows(rows)) == 456   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5
 
 
 # ------------------------------------------------------------------ positive transport
@@ -568,6 +568,10 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
         ("enableVlanMapping", "enable_vlan_mapping"),     # slice vm1
         ("vlanMappingEntries", "vlan_mapping_entries"),
+        # Lot rp5: NetFlow, pinned in test_binding_netflow.py.
+        ("ENABLE_NETFLOW", "enable_netflow"),
+        ("NETFLOW_MONITOR", "netflow_monitor"),
+        ("NETFLOW_SAMPLER", "netflow_sampler"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -591,6 +595,10 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("INHERIT_BW", "inherit_bandwidth"),
         ("DEBOUNCE_TIMER", "debounce_timer"),
         ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
+        # Lot rp5: NetFlow, pinned in test_binding_netflow.py.
+        ("ENABLE_NETFLOW", "enable_netflow"),
+        ("NETFLOW_MONITOR", "netflow_monitor"),
+        ("NETFLOW_SAMPLER", "netflow_sampler"),
     }
     # The port-channel parents carry every field registered for them.
     assert {
@@ -617,6 +625,10 @@ def test_carry_forward_covers_every_new_passthrough_binding():
         ("INHERIT_BW", "inherit_bandwidth"),
         ("enableVlanMapping", "enable_vlan_mapping"),     # slice vm1
         ("vlanMappingEntries", "vlan_mapping_entries"),
+        # Lot rp5: NetFlow, pinned in test_binding_netflow.py.
+        ("ENABLE_NETFLOW", "enable_netflow"),
+        ("NETFLOW_MONITOR", "netflow_monitor"),
+        ("NETFLOW_SAMPLER", "netflow_sampler"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -780,7 +792,14 @@ def test_keymap_carries_every_new_nvpair():
     assert km["enableVlanMapping"] == "enable_vlan_mapping" and km["vlanMappingEntries"] == "vlan_mapping_entries"
     # 104 = 103 + dhcpServers (slice dr1, three parents).
     assert km["dhcpServers"] == "dhcp_servers"
-    assert len(km) == 104
+    # 107 = 104 + IPv6, IPv6_PREFIX and DISABLE_IP_REDIRECTS (lot rp3, int_l3_port_channel), with their native names.
+    assert (km["IPv6"], km["IPv6_PREFIX"], km["DISABLE_IP_REDIRECTS"]) == ("ipv6_addr", "ipv6_mask_len", "disable_ip_redirects")
+    # 109 = 107 + ENABLE_PFC and QUEUING_POLICY (lot rp4), with their native names; ENABLE_QOS was mapped.
+    assert (km["ENABLE_PFC"], km["QUEUING_POLICY"]) == ("enable_pfc", "queuing_policy")
+    # 112 = 109 + ENABLE_NETFLOW, NETFLOW_MONITOR and NETFLOW_SAMPLER (lot rp5).
+    assert (km["ENABLE_NETFLOW"], km["NETFLOW_MONITOR"], km["NETFLOW_SAMPLER"]) == (
+        "enable_netflow", "netflow_monitor", "netflow_sampler")
+    assert len(km) == 112
 
 
 def test_all_registered_keys():
@@ -886,6 +905,13 @@ def test_all_registered_keys():
         "enable_vlan_mapping", "vlan_mapping_entries",
         # DHCP relay servers, slice dr1, a typed list.
         "dhcp_servers",
+        # Lot rp3: the routed port-channel IPv6 pair and combined redirect option, native elsewhere
+        # (GIE_NATIVE_ELSEWHERE_KEYS).
+        "ipv6_addr", "ipv6_mask_len", "disable_ip_redirects",
+        # Lot rp4: priority flow control and the queuing policy, native elsewhere (GIE_NATIVE_ELSEWHERE_KEYS).
+        "enable_pfc", "queuing_policy",
+        # Lot rp5: NetFlow; enable_netflow and netflow_monitor are native elsewhere (GIE_NATIVE_ELSEWHERE_KEYS).
+        "enable_netflow", "netflow_monitor", "netflow_sampler",
     }
 
 
@@ -1108,6 +1134,12 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
         # does not exist either. The asymmetry is the template's.
         # VLAN mapping enable flag, slice vm1, on the three trunk parents.
         "enable_vlan_mapping",
+        # Lot rp3: the combined redirect option of the routed port-channel.
+        "disable_ip_redirects",
+        # Lot rp4: priority flow control on seven parents (enable_qos is already listed).
+        "enable_pfc",
+        # Lot rp5: NetFlow on twelve parents.
+        "enable_netflow",
     }
     # 80 = the per-parent counts below, which are what the table actually holds. Measured
     # against BINDING_TABLE when slice 0b_22 landed, not carried forward by arithmetic:
@@ -1170,7 +1202,8 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 154 = 149 + the 5 boolean rows of lot a4_4_stp_protection.
     # 163 = 154 + the 9 boolean rows of lot a4_5_link_settings.
     # 166 = 163 + enable_vlan_mapping on the three trunk parents (slice vm1).
-    assert len(BOOL_PASSTHROUGH) == 166
+    # 194 = 166 + the 28 boolean rows of lots rp1 to rp5.
+    assert len(BOOL_PASSTHROUGH) == 194
 
 
 # ------------------------------------------------------- what the engine emits --
@@ -1618,7 +1651,7 @@ def test_every_registered_string_binding_declares_a_comparison_category():
     # ospfAuthenticationKey on int_l3_port_channel (slice 0b_40). 52 = 51 + QOS_POLICY on int_vpc_peer_link_po (slice pl1).
     # 56 = 52 + QOS_POLICY and the three storm-control percent levels on int_vpc_uplink_access (slice ul1).
     # 59 = 56 + the EIGRP process tag and the two prefix lists on int_l3_port_channel (slice 0b_42).
-    assert len(strings) == 59
+    assert len(strings) == 92
     assert {b["string_compare"] for b in strings} == {"exact", "casefold", "case_irrelevant", "unverified"}
     assert not [b for b in table.BINDING_TABLE if b["type"] != "string" and "string_compare" in b]
 

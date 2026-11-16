@@ -148,7 +148,9 @@ def test_r2_coverage_the_checker_invents_no_identity():
     # 95 = 91 + bpdu_filter, spanning_tree_link_type, enable_errdisable_acl and orphan_port (lot a4_4_stp_protection).
     # 101 = 95 + negotiate_auto, duplex, bandwidth, inherit_bandwidth, debounce_timer and debounce_linkup_timer (lot a4_5).
     # 104 = 101 + enable_vlan_mapping and vlan_mapping_entries (slice vm1) + dhcp_servers (slice dr1).
-    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 104
+    # 107 = 104 + ipv6_addr, ipv6_mask_len and disable_ip_redirects (lot rp3). 109 = 107 + enable_pfc and queuing_policy
+    # (lot rp4). 112 = 109 + enable_netflow, netflow_monitor and netflow_sampler (lot rp5).
+    assert len(S.R2_REGISTERED_BINDINGS) == len(set(r["profile_key"] for r in REG.BINDING_TABLE)) == 112
 
 
 def test_r2_coverage_wire_values_sensitive_names_and_parents_match_the_registry():
@@ -486,7 +488,8 @@ NATIVE_QOS_PARENTS = sorted((
     "int_port_channel_trunk_host", "int_port_channel_access_host", "int_l3_port_channel", "int_port_channel_dot1q_tunnel_host",
     "int_vpc_trunk_host", "int_vpc_access_host", "int_vpc_dot1q_tunnel", "int_vpc_pvlan_host",
 ))
-NO_QOS_PARENTS = ["int_dot1q_tunnel_host", "int_port_channel_pvlan_host", "int_subif", "int_loopback", "int_vlan"]
+# int_dot1q_tunnel_host left this list when lot rp4 registered its QoS keys (test_r2_registered_qos_parents_keep_the_passthrough).
+NO_QOS_PARENTS = ["int_port_channel_pvlan_host", "int_subif", "int_loopback", "int_vlan"]
 
 
 def test_r2_native_qos_parents_are_the_module_payload_families():
@@ -548,7 +551,7 @@ def test_r2_qos_on_a_parent_without_native_qos_stays_diagnosed(tmp_path, parent)
     assert res["failed"] is True and "not a registered field of the expected parent %s" % parent in res["msg"], res["msg"]
 
 
-@pytest.mark.parametrize("parent", ["int_vpc_peer_link_po", "int_vpc_uplink_access"])
+@pytest.mark.parametrize("parent", ["int_dot1q_tunnel_host", "int_vpc_peer_link_po", "int_vpc_uplink_access"])
 def test_r2_registered_qos_parents_keep_the_passthrough(tmp_path, parent):
     cfg = [r2_cfg(parent, enable_qos=False, qos_policy="R2-QOS-A")]
     assert r2_run(tmp_path, cfg, r2_back(parent, {"ENABLE_QOS": "false", "QOS_POLICY": "R2-QOS-A"}))["failed"] is False

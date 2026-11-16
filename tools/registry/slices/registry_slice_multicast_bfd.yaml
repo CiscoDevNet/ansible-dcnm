@@ -680,3 +680,22 @@ bindings:
     effect_role: value_source
     required_when_gate: true
     evidence_ref: "int_vlan.template#L1054"
+
+  # ==== Source lot rp1_l3po_l3_controls (1 of 3 rows) ====
+  # The header of this lot is in registry_slice_interface_common.yaml.
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: bfdEcho
+    profile_key: disable_bfd_echo
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L291"

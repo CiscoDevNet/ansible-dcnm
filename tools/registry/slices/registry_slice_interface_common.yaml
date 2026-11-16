@@ -1,4 +1,4 @@
-# Registry source: Fields shared by Ethernet, routed, loopback and SVI parents: LLDP, QoS, ACL, flow control, dampening, ARP and related options.
+# Registry source: Fields shared by Ethernet, routed, loopback, SVI, port-channel and vPC parents: LLDP, QoS, PFC, ACL, flow control, dampening, ARP, NetFlow and related options.
 #
 # Compiled by tools/gie_generate_binding_table.py with the other registry_slice_*.yaml files; see
 # tools/registry/README.md. Each section below is one original source lot. Its header is the original
@@ -2251,3 +2251,1009 @@ bindings:
       - ndfc_effect: inline_config
         phase: current
         evidence_ref: "int_dot1q_tunnel_host@33684a76#L503"
+
+  # ==== Source lot rp1_l3po_l3_controls (2 of 3 rows) ====
+  # Registry lot rp1 -- BFD echo, ARP timeout and inbound IPv4 ACL on the routed port-channel (int_l3_port_channel,
+  # `type: pc`, `mode: l3`). Three bindings with the public keys and contracts that int_routed_host already serves
+  # (lots 0b_16 and 0b_3); the BFD echo row is in registry_slice_multicast_bfd.yaml.
+  #
+  # Source: the int_l3_port_channel body of the supported patch release (template REST API, read only), sha256 of
+  # `content` 81c9392e92a488977d2a5c22fd2f79797fa826ff28b89d536d087fc8f9afe655:
+  #   * declarations: bfdEcho L290-L293 (boolean, defaultValue false), arpTimeout L352-L356 (integer 60..28800, no
+  #     default), ipv4AclIn L358-L362 (string 1..64, no default). Same types, bounds and defaults as int_routed_host;
+  #   * reads L520, L531-L532, each through normalize() with the declared default or "";
+  #   * refusal L966-L975: "ARP timeout must be a positive integer." for a value that is not a positive integer;
+  #   * rendering: bfd_no_echo_interface when bfdEcho is "true" (L1194), interface_ip_arp_timeout_11_1 with ARP_TIMEOUT
+  #     when arpTimeout is not empty (L1430), interface_ip_access_group_in_11_1 with IPV4_ACL when ipv4AclIn is not
+  #     empty (L1437). Parent and child spellings differ for the ACL, as on int_routed_host: the rows use the parent
+  #     names.
+  # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42), so an
+  # explicit "false" or "" would leave the child out. Inferred from the body; nothing here is measured live, so
+  # validated_on is absent, removal_semantics stays unresolved and no row declares a reset_wire: an omitted non-default
+  # value is refused under replaced and overridden. arp_timeout has no public clear. Evidence for a later measurement on
+  # this parent: class X for arpTimeout (its int_routed_host reset was measured live), class P for bfdEcho and ipv4AclIn
+  # (int_routed_host rows whose reset is not annotated as measured).
+  #
+  # Prerequisites, not checked by the module: `feature bfd` for the echo line, and an existing IPv4 access list. On
+  # another parent NDFC was measured to store the ACL name lowercased; the case of a port-channel readback is not
+  # measured. The module never creates or deletes an access list.
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: arpTimeout
+    profile_key: arp_timeout
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: integer
+    min: 60
+    max: 28800
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L353"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ipv4AclIn
+    profile_key: ipv4_acl_in
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: exact
+    min_length: 1
+    max_length: 64
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L359"
+
+  # ==== Source lot rp4_qos_pfc_stats (12 of 12 rows) ====
+  # Registry lot rp4 -- priority flow control on seven parents, the QoS and queuing policies on the Ethernet dot1q-tunnel
+  # parent, and the two policy-statistics options on the routed port-channel.
+  #
+  # Sources, each the body the supported patch release serves (template REST API, read only), sha256 of `content`:
+  # int_routed_host b5345584..., int_l3_port_channel 81c9392e..., int_port_channel_dot1q_tunnel_host b17631cd...,
+  # int_vpc_trunk_host 1e346263...; and int_dot1q_tunnel_host 33684a76..., int_vpc_access_host 23ba8135...,
+  # int_vpc_dot1q_tunnel 1eb7a8b6..., which the patch left byte-identical to the earlier release.
+  #
+  # ENABLE_PFC (boolean, defaultValue false, no gate) on every listed parent. The public key is the native one of the
+  # Ethernet and port-channel trunk and access profiles, listed in GIE_NATIVE_ELSEWHERE_KEYS; those profiles keep their
+  # native field. Rendering, when "true": int_routed_host and int_l3_port_channel create interface_pfc, or
+  # interface_pfc_mode on an N9K-C98 model; int_dot1q_tunnel_host renders `priority-flow-control mode on` inline and,
+  # except on N9K-C98, `priority-flow-control watch-dog-interval on`; the vPC parents forward ENABLE_PFC to each peer's
+  # port-channel; the dot1q port-channel forwards it to its members. Each body wraps this in a try block whose exception
+  # is ignored, so an unexpected model read renders nothing without an error. Whether a platform accepts PFC on the
+  # interface is a device question.
+  #
+  # ENABLE_QOS (boolean, defaultValue false), QOS_POLICY (string, IsShow "ENABLE_QOS==true", no bounds) and
+  # QUEUING_POLICY (string, no gate, no bounds) on int_dot1q_tunnel_host (L169-L177). The body renders
+  # `service-policy type qos input <QOS_POLICY>` when ENABLE_QOS is "true", falling back to QOS_CLASSIFICATION when the
+  # policy is empty and the fabric enables AI/ML QoS, and `service-policy type queuing output <QUEUING_POLICY>` when it is
+  # set (L550-L563). Public keys and meaning as on the native Ethernet trunk and access profiles; queuing_policy joins
+  # GIE_NATIVE_ELSEWHERE_KEYS. qos_policy is inert while ENABLE_QOS is false, so a merged disable keeps the stored name
+  # (it has no reset) and replaced keeps it while QoS ends disabled. Policy names keep the legacy comparison
+  # (`unverified`), as on the peer-link and uplink rows. The policies must already exist; the module never creates them.
+  #
+  # qosStatsSuppressed and queuingStats on int_l3_port_channel (L441-L452), the int_routed_host contracts: each appends
+  # `no-stats` to the service-policy line of its own policy (L1485, L1500).
+  #
+  # int_dot1q_tunnel_host renders inline (setGeneratedConfig), so an explicit disable relies on NDFC negating a line that
+  # is no longer expected. Nothing here is measured live: validated_on is absent, removal_semantics stays unresolved and
+  # no row declares a reset_wire: an omitted non-default value is refused under replaced and overridden. Evidence for a
+  # later measurement on these parents: class D for ENABLE_PFC (7 rows) and QUEUING_POLICY; class P for ENABLE_QOS and
+  # QOS_POLICY (lot ul1 rows whose reset is not annotated as measured); class X for qosStatsSuppressed and queuingStats
+  # (their int_routed_host resets were measured live).
+
+
+  - parent_template: int_routed_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L426"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L164"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L429"
+
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host.template@b17631cd#L177"
+
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host.template@1e346263#L228"
+
+  - parent_template: int_vpc_access_host
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host.template@23ba8135#L212"
+
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: ENABLE_PFC
+    profile_key: enable_pfc
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel.template@1eb7a8b6#L212"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: ENABLE_QOS
+    profile_key: enable_qos
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L169"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: QOS_POLICY
+    profile_key: qos_policy
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_QOS
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L174"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: QUEUING_POLICY
+    profile_key: queuing_policy
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L177"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: qosStatsSuppressed
+    profile_key: disable_qos_stats
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L442"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: queuingStats
+    profile_key: disable_queuing_stats
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L450"
+
+  # ==== Source lot rp5_netflow (37 of 37 rows) ====
+  # Registry lot rp5 -- NetFlow on twelve parents (ENABLE_NETFLOW, NETFLOW_MONITOR, NETFLOW_SAMPLER) and the sampler on the
+  # SVI parent, whose two other NetFlow fields are native.
+  #
+  # Sources, each the body the supported patch release serves (template REST API, read only), by sha256 of `content`:
+  # int_trunk_host 99dc8f0a..., int_access_host 103fc249..., int_routed_host b5345584..., int_dot1q_tunnel_host
+  # 33684a76..., int_port_channel_trunk_host 25f2582d..., int_port_channel_access_host 544f7a8c..., int_l3_port_channel
+  # 81c9392e..., int_port_channel_dot1q_tunnel_host b17631cd..., int_vpc_trunk_host 1e346263..., int_vpc_access_host
+  # 23ba8135..., int_vpc_dot1q_tunnel 1eb7a8b6..., int_subif 1937c6a5..., int_vlan 877d3fe8....
+  #
+  # Declarations, the same on every parent: ENABLE_NETFLOW (boolean, defaultValue false, "NetFlow is supported only if it
+  # is enabled on fabric"), NETFLOW_MONITOR (string, no bounds, IsMandatory and IsShow "ENABLE_NETFLOW==true") and
+  # NETFLOW_SAMPLER (string, no bounds, IsShow "ENABLE_NETFLOW==true", described "applicable to N7K only").
+  #
+  # Effect: with ENABLE_NETFLOW "true" each body calls fabric_utility_11_1.allowNetflowConfig with the device, the fabric,
+  # IS_LAYER2 ("true" on the switchport parents, "false" on the routed ones) and the sampler when it is set; a failure
+  # response is returned to the caller. It then renders the monitor on the interface, with `sampler <name>` appended when
+  # the sampler is set (`layer2-switched flow monitor ... input` inline on the Layer 2 parents; children
+  # interface_ipv4_netflow / interface_ipv4_netflow_sampler on the routed ones). The vPC parents run the check on both
+  # peers and forward the three values to each peer's port-channel. Every body wraps the check in a try block whose
+  # exception is ignored, which leaves NetFlow unrendered without an error.
+  #
+  # Contracts: enable_netflow and netflow_monitor reuse the native SVI and FEX keys (GIE_NATIVE_ELSEWHERE_KEYS);
+  # netflow_sampler is new. The monitor is required while NetFlow is enabled; monitor and sampler are inert while it is
+  # disabled, so a merged disable keeps them (they have no reset) and replaced keeps them while NetFlow ends disabled; a
+  # later enable without a monitor uses the stored one. On int_vlan the
+  # sampler has no inert_when: its gate is a native field, not a registry row. Names keep the legacy comparison
+  # (`unverified`); their case handling by NDFC is not measured.
+  #
+  # Prerequisites, not checked by the module: NetFlow enabled in the fabric settings and the referenced monitor (and
+  # sampler) defined there. The module never creates them. The sampler is described for N7K only; no N9K or virtual
+  # platform behavior is claimed. Nothing here is measured live: validated_on is absent, removal_semantics stays
+  # unresolved and no row declares a reset_wire: an omitted non-default value is refused under replaced and overridden.
+  # Evidence class D for all 37 rows: no measured NetFlow withdrawal on any parent.
+
+
+  - parent_template: int_trunk_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host.template@99dc8f0a#L182"
+
+  - parent_template: int_trunk_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host.template@99dc8f0a#L187"
+
+  - parent_template: int_trunk_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: eth
+    applicable_mode: trunk
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_trunk_host.template@99dc8f0a#L190"
+
+  - parent_template: int_access_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host.template@103fc249#L171"
+
+  - parent_template: int_access_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host.template@103fc249#L176"
+
+  - parent_template: int_access_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: eth
+    applicable_mode: access
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_access_host.template@103fc249#L179"
+
+  - parent_template: int_routed_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L415"
+
+  - parent_template: int_routed_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L420"
+
+  - parent_template: int_routed_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template@b5345584#L423"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L153"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L158"
+
+  - parent_template: int_dot1q_tunnel_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: eth
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_dot1q_tunnel_host.template@33684a76#L161"
+
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host.template@25f2582d#L182"
+
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host.template@25f2582d#L187"
+
+  - parent_template: int_port_channel_trunk_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: pc
+    applicable_mode: trunk
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_trunk_host.template@25f2582d#L190"
+
+  - parent_template: int_port_channel_access_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: pc
+    applicable_mode: access
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_access_host.template@544f7a8c#L166"
+
+  - parent_template: int_port_channel_access_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: pc
+    applicable_mode: access
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_access_host.template@544f7a8c#L171"
+
+  - parent_template: int_port_channel_access_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: pc
+    applicable_mode: access
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_access_host.template@544f7a8c#L174"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L418"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L423"
+
+  - parent_template: int_l3_port_channel
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: pc
+    applicable_mode: l3
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_l3_port_channel.template@81c9392e#L426"
+
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host.template@b17631cd#L166"
+
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host.template@b17631cd#L171"
+
+  - parent_template: int_port_channel_dot1q_tunnel_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: pc
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_port_channel_dot1q_tunnel_host.template@b17631cd#L174"
+
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host.template@1e346263#L217"
+
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host.template@1e346263#L222"
+
+  - parent_template: int_vpc_trunk_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: vpc
+    applicable_mode: trunk
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_trunk_host.template@1e346263#L225"
+
+  - parent_template: int_vpc_access_host
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host.template@23ba8135#L201"
+
+  - parent_template: int_vpc_access_host
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host.template@23ba8135#L206"
+
+  - parent_template: int_vpc_access_host
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: vpc
+    applicable_mode: access
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_access_host.template@23ba8135#L209"
+
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel.template@1eb7a8b6#L201"
+
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel.template@1eb7a8b6#L206"
+
+  - parent_template: int_vpc_dot1q_tunnel
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: vpc
+    applicable_mode: dot1q
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vpc_dot1q_tunnel.template@1eb7a8b6#L209"
+
+  - parent_template: int_subif
+    parent_nvpair: ENABLE_NETFLOW
+    profile_key: enable_netflow
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: boolean
+    default_template: false
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@1937c6a5#L334"
+
+  - parent_template: int_subif
+    parent_nvpair: NETFLOW_MONITOR
+    profile_key: netflow_monitor
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+      required: true
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@1937c6a5#L339"
+
+  - parent_template: int_subif
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: sub_int
+    applicable_mode: subint
+    type: string
+    string_compare: unverified
+    inert_when:
+      nvpair: ENABLE_NETFLOW
+      value: 'false'
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_subif.template@1937c6a5#L342"
+
+  - parent_template: int_vlan
+    parent_nvpair: NETFLOW_SAMPLER
+    profile_key: netflow_sampler
+    applicable_interface_type: svi
+    applicable_mode: vlan
+    type: string
+    string_compare: unverified
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    removal_semantics: unresolved
+    evidence_ref: "int_vlan.template@877d3fe8#L442"

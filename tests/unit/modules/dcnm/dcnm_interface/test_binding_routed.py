@@ -281,9 +281,12 @@ def test_the_parent_is_registered_exactly_once_per_nvpair():
     # owns them. Widening it to a subset check would have retired the guard instead of scoping it.
     eigrp = {b["parent_nvpair"] for b in BINDING_TABLE
              if "eigrp" in b["parent_nvpair"].lower()}
-    # dhcpServers is the DHCP relay list of slice dr1, owned by test_binding_dhcp_servers.py.
-    assert set(names) - eigrp - {"dhcpServers"} == {nvpair for nvpair, _native in EXPECTED.values()}
+    # dhcpServers is the DHCP relay list of slice dr1, owned by test_binding_dhcp_servers.py. Later lots on this parent,
+    # pinned in their own suites: lot rp4 (test_binding_qos_pfc.py) and lot rp5 (test_binding_netflow.py).
+    later = {"ENABLE_PFC", "ENABLE_NETFLOW", "NETFLOW_MONITOR", "NETFLOW_SAMPLER"}
+    assert set(names) - eigrp - {"dhcpServers"} - later == {nvpair for nvpair, _native in EXPECTED.values()}
     assert "dhcpServers" in names
+    assert later <= set(names)
     assert len(eigrp & set(names)) == 13, "int_routed_host should carry 13 EIGRP rows"
 
 
@@ -995,7 +998,7 @@ def test_combined_case_fails_when_one_source_family_is_removed_in_memory(monkeyp
         # int_vpc_trunk_host carry no reset and are not part of this case.
         rows = [row for row in BINDING_TABLE
                 if row["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and "reset_wire" in row]
-        assert len(rows) == 13
+        assert len(rows) == 13   # rows without a reset (lots a4_*, rp4 and rp5) are not part of this combined case
     with monkeypatch.context() as patcher:
         for row in rows:
             patcher.delitem(row, "reset_wire")

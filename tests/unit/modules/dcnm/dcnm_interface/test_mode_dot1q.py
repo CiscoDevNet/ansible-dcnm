@@ -237,7 +237,8 @@ def test_check_mode_plans_a_native_change_and_sends_nothing():
 
 
 def test_the_six_resets_are_this_parents_own_rows():
-    # Lot a4_4_stp_protection added bpdu_filter and spanning_tree_link_type here without a reset; this case is about the six.
+    # Lots a4_4_stp_protection (bpdu_filter, spanning_tree_link_type), rp4 and rp5 (PFC, NetFlow) added rows here without
+    # a reset; this case is about the six.
     rows = {r["profile_key"]: r for r in BINDING_TABLE if r["parent_template"] == VPC_DOT1Q and "reset_wire" in r}
     assert {k: r.get("reset_wire") for k, r in rows.items()} == RESETS
     assert all(isinstance(r["reset_wire"], str) for r in rows.values())

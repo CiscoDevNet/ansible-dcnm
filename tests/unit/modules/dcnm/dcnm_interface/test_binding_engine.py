@@ -481,6 +481,58 @@ L3PO_EIGRP_ROWS = {
     ("int_l3_port_channel", nv, key) for parent, nv, key in EIGRP_ROWS if parent == "int_routed_host"
 }
 
+# BFD echo, ARP timeout and inbound ACL on the routed port-channel, lot rp1: the int_routed_host keys.
+RP1_ROWS = {
+    ("int_l3_port_channel", "bfdEcho", "disable_bfd_echo"),
+    ("int_l3_port_channel", "arpTimeout", "arp_timeout"),
+    ("int_l3_port_channel", "ipv4AclIn", "ipv4_acl_in"),
+}
+
+# MACsec on the routed port-channel, lot rp2: the int_routed_host keys.
+RP2_ROWS = {
+    ("int_l3_port_channel", "macsecInterfacePolicy", "enable_macsec_interface_policy"),
+    ("int_l3_port_channel", "macsecKeyChainName", "macsec_key_chain_name"),
+    ("int_l3_port_channel", "macsecPolicyName", "macsec_policy_name"),
+    ("int_l3_port_channel", "macsecFallbackKeyChainName", "macsec_fallback_key_chain_name"),
+}
+
+# IPv6 addressing, link-local, ND suppress-RA and redirects on the routed port-channel, lot rp3.
+RP3_ROWS = {
+    ("int_l3_port_channel", "IPv6", "ipv6_addr"),
+    ("int_l3_port_channel", "IPv6_PREFIX", "ipv6_mask_len"),
+    ("int_l3_port_channel", "ipv6LinkLocal", "ipv6_link_local"),
+    ("int_l3_port_channel", "ipv6NdSuppressRa", "ipv6_nd_suppress_ra"),
+    ("int_l3_port_channel", "DISABLE_IP_REDIRECTS", "disable_ip_redirects"),
+    ("int_l3_port_channel", "ipv4Redirects", "disable_ipv4_redirects"),
+    ("int_l3_port_channel", "ipv6Redirects", "disable_ipv6_redirects"),
+}
+
+# Priority flow control, the Ethernet dot1q-tunnel QoS and queuing policies and the routed port-channel statistics, lot rp4.
+RP4_ROWS = {
+    ("int_routed_host", "ENABLE_PFC", "enable_pfc"),
+    ("int_dot1q_tunnel_host", "ENABLE_PFC", "enable_pfc"),
+    ("int_l3_port_channel", "ENABLE_PFC", "enable_pfc"),
+    ("int_port_channel_dot1q_tunnel_host", "ENABLE_PFC", "enable_pfc"),
+    ("int_vpc_trunk_host", "ENABLE_PFC", "enable_pfc"),
+    ("int_vpc_access_host", "ENABLE_PFC", "enable_pfc"),
+    ("int_vpc_dot1q_tunnel", "ENABLE_PFC", "enable_pfc"),
+    ("int_dot1q_tunnel_host", "ENABLE_QOS", "enable_qos"),
+    ("int_dot1q_tunnel_host", "QOS_POLICY", "qos_policy"),
+    ("int_dot1q_tunnel_host", "QUEUING_POLICY", "queuing_policy"),
+    ("int_l3_port_channel", "qosStatsSuppressed", "disable_qos_stats"),
+    ("int_l3_port_channel", "queuingStats", "disable_queuing_stats"),
+}
+
+# NetFlow on twelve parents and the sampler on int_vlan, lot rp5.
+RP5_ROWS = {
+    (parent, nvpair, key) for parent in (
+        "int_trunk_host", "int_access_host", "int_routed_host", "int_dot1q_tunnel_host", "int_port_channel_trunk_host",
+        "int_port_channel_access_host", "int_l3_port_channel", "int_port_channel_dot1q_tunnel_host",
+        "int_vpc_trunk_host", "int_vpc_access_host", "int_vpc_dot1q_tunnel", "int_subif")
+    for nvpair, key in (("ENABLE_NETFLOW", "enable_netflow"), ("NETFLOW_MONITOR", "netflow_monitor"),
+                        ("NETFLOW_SAMPLER", "netflow_sampler"))
+} | {("int_vlan", "NETFLOW_SAMPLER", "netflow_sampler")}
+
 # The routed port-channel OSPF family, slice 0b_40.
 L3PO_OSPF_ROWS = {
     ("int_l3_port_channel", "ospf", "enable_ospf"),
@@ -639,7 +691,7 @@ def test_package_provenance_and_size():
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
         | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS
         | A4_DISCOVERY_ROWS | A4_DAMPENING_ROWS | A4_LACP_ROWS | A4_STP_ROWS | A4_LINK_ROWS | VM1_ROWS
-        | DR1_ROWS
+        | DR1_ROWS | RP1_ROWS | RP2_ROWS | RP3_ROWS | RP4_ROWS | RP5_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -647,7 +699,7 @@ def test_package_provenance_and_size():
     }
     # 234 = 228 + the six int_vpc_dot1q_tunnel rows (VPC_DOT1Q_ROWS); 245 = 234 + the eleven PVLAN_C1_ROWS; 246 = 245 + IQ1_ROWS.
     # 251 + LOEIGRP017_ROWS + L3PO017_ROWS + L3PO_OSPF_ROWS + RS1_ROWS + PL1_ROWS + UL1_ROWS + L3PO_PIM_ROWS
-    # + L3PO_EIGRP_ROWS + VM1_ROWS + DR1_ROWS
+    # + L3PO_EIGRP_ROWS + VM1_ROWS + DR1_ROWS + RP1_ROWS
     assert len(L3PO_EIGRP_ROWS) == 13
     assert len(A4_DISCOVERY_ROWS) == 6
     assert len(A4_DAMPENING_ROWS) == 7
@@ -656,7 +708,12 @@ def test_package_provenance_and_size():
     assert len(A4_LINK_ROWS) == 37
     assert len(VM1_ROWS) == 6
     assert len(DR1_ROWS) == 3
-    assert len(BINDING_TABLE) == len(actual_keys) == 393   # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1
+    assert len(RP1_ROWS) == 3
+    assert len(RP2_ROWS) == 4
+    assert len(RP3_ROWS) == 7
+    assert len(RP4_ROWS) == 12
+    assert len(RP5_ROWS) == 37
+    assert len(BINDING_TABLE) == len(actual_keys) == 456   # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1; + 63: lots rp1 to rp5
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -699,8 +756,8 @@ def test_package_provenance_and_size():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1
-    assert len(rows) == 393   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1, vm1, dr1
+    # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1; + 63: lots rp1 to rp5
+    assert len(rows) == 456   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1, vm1, dr1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():
@@ -803,6 +860,7 @@ def test_registered_keys_per_parent():
         "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl",   # lot a4_4_stp_protection
         "negotiate_auto", "bandwidth", "inherit_bandwidth", "debounce_timer", "debounce_linkup_timer",   # lot a4_5_link_settings
         "enable_vlan_mapping", "vlan_mapping_entries",   # slice vm1
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     assert registered_profile_keys(ACCESS) == {
         "flowcontrol_receive", "flowcontrol_send", "spanning_tree_port_type",
@@ -811,6 +869,7 @@ def test_registered_keys_per_parent():
         "logging_event_port_link_status",   # SMU 017, slice 0b_37
         "bpdu_filter", "spanning_tree_link_type", "enable_errdisable_acl",   # lot a4_4_stp_protection
         "negotiate_auto", "bandwidth", "inherit_bandwidth", "debounce_timer", "debounce_linkup_timer",   # lot a4_5_link_settings
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     assert registered_profile_keys(PC_TRUNK) == {
         "guard_mode", "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -824,6 +883,7 @@ def test_registered_keys_per_parent():
         "bpdu_filter", "spanning_tree_link_type",
         "negotiate_auto", "bandwidth", "inherit_bandwidth",   # lot a4_5_link_settings
         "enable_vlan_mapping", "vlan_mapping_entries",   # slice vm1
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     assert registered_profile_keys(PC_ACCESS) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -831,6 +891,7 @@ def test_registered_keys_per_parent():
         # Lot a4_4_stp_protection.
         "bpdu_filter", "spanning_tree_link_type",
         "negotiate_auto", "bandwidth", "inherit_bandwidth",   # lot a4_5_link_settings
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     assert registered_profile_keys(PC_DOT1Q) == {
         "acl_filter", "disable_lldp_transmit", "disable_lldp_receive",
@@ -843,6 +904,8 @@ def test_registered_keys_per_parent():
         "bpdu_filter", "spanning_tree_link_type", "orphan_port",
         "negotiate_auto", "bandwidth", "inherit_bandwidth",   # lot a4_5_link_settings
         "duplex",
+        "enable_pfc",   # lot rp4; native on the trunk and access port-channels
+        "enable_netflow", "netflow_monitor", "netflow_sampler",   # lot rp5
     }
     # GUARD_MODE is NOT registered on access parents.
     assert "guard_mode" not in registered_profile_keys(ACCESS)
@@ -898,6 +961,10 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
         ("enableVlanMapping", "enable_vlan_mapping"),     # slice vm1
         ("vlanMappingEntries", "vlan_mapping_entries"),
+        # Lot rp5: NetFlow, pinned in test_binding_netflow.py.
+        ("ENABLE_NETFLOW", "enable_netflow"),
+        ("NETFLOW_MONITOR", "netflow_monitor"),
+        ("NETFLOW_SAMPLER", "netflow_sampler"),
     }
     assert {
         (r["parent_nvpair"], r["profile_key"]) for r in gie_carry_forward_bindings(ACCESS)
@@ -921,6 +988,10 @@ def test_registry_drives_comparator_keymap_and_carry_forward():
         ("INHERIT_BW", "inherit_bandwidth"),
         ("DEBOUNCE_TIMER", "debounce_timer"),
         ("DEBOUNCE_LINKUP_TIMER", "debounce_linkup_timer"),
+        # Lot rp5: NetFlow, pinned in test_binding_netflow.py.
+        ("ENABLE_NETFLOW", "enable_netflow"),
+        ("NETFLOW_MONITOR", "netflow_monitor"),
+        ("NETFLOW_SAMPLER", "netflow_sampler"),
     }
     assert gie_carry_forward_bindings(LOOPBACK) == []
 
@@ -1219,6 +1290,12 @@ def test_all_registered_and_guarded_keys():
         "enable_vlan_mapping", "vlan_mapping_entries",
         # Slice dr1: the DHCP relay server list on the routed, routed port-channel and subinterface parents.
         "dhcp_servers",
+        # Lot rp3: the routed port-channel IPv6 pair and combined redirect option, native elsewhere.
+        "ipv6_addr", "ipv6_mask_len", "disable_ip_redirects",
+        # Lot rp4: priority flow control and the queuing policy, native elsewhere.
+        "enable_pfc", "queuing_policy",
+        # Lot rp5: NetFlow; enable_netflow and netflow_monitor are native elsewhere.
+        "enable_netflow", "netflow_monitor", "netflow_sampler",
     }
     # only passthrough keys are generically guarded; child_pti (OSPF-MD) keeps its own validate.
     # flowcontrol_send joins this set precisely BECAUSE it is passthrough -- the engine owns
@@ -1319,6 +1396,8 @@ def test_all_registered_and_guarded_keys():
         "enable_vlan_mapping", "vlan_mapping_entries",
         # Slice dr1. Not native on any interface profile (the SVI uses the numbered dhcp_server_addr fields).
         "dhcp_servers",
+        # Lot rp5: the NetFlow sampler, the only new public key of the lot.
+        "netflow_sampler",
     }
     # The withdrawn fabric-loopback key. It is registered nowhere, so it is guarded nowhere --
     # the module rejects it by name instead, which is a different mechanism with a different
