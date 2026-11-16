@@ -595,8 +595,9 @@ options:
           enable_cdp:
             description:
             - State of CDP protocol on the interface
-            - In modes 'l3' and 'dot1q' this is a registered field (NOT LIVE TESTED; read from the
-              installed template bodies). It needs an approved C(patch_version), has no default, and
+            - In modes 'l3' and 'dot1q' this is a registered field (live tested in mode 'l3' on NDFC
+              12.6.0.267; NOT LIVE TESTED in mode 'dot1q', read from the installed template body).
+              It needs an approved C(patch_version), has no default, and
               the template sends it to each member policy, where 'false' renders C(no cdp enable).
               'merged' keeps an omitted value. 'replaced' and 'overridden' refuse to withdraw a stored
               'false', because no reset is verified on these policies; set 'true' explicitly instead.
@@ -605,8 +606,8 @@ options:
           disable_lldp_transmit:
             description:
             - Disable LLDP transmit on the members of a routed port-channel (mode 'l3') or of the
-              port-channel modes that already registered it. Registered field (NOT LIVE TESTED in mode
-              'l3'); needs an approved C(patch_version); explicit-only, no default. The template sends
+              port-channel modes that already registered it. Registered field (live tested in mode 'l3'
+              on NDFC 12.6.0.267); needs an approved C(patch_version); explicit-only, no default. The template sends
               the value to each member policy. In mode 'l3', 'replaced' and 'overridden' refuse to
               withdraw a stored 'true'; set 'false' explicitly instead.
             type: bool

@@ -1851,7 +1851,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Disable LLDP transmit on the members of a routed port-channel (mode &#x27;l3&#x27;) or of the port-channel modes that already registered it. Registered field (NOT LIVE TESTED in mode &#x27;l3&#x27;); needs an approved <code>patch_version</code>; explicit-only, no default. The template sends the value to each member policy. In mode &#x27;l3&#x27;, &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored &#x27;true&#x27;; set &#x27;false&#x27; explicitly instead.</div>
+                        <div>Disable LLDP transmit on the members of a routed port-channel (mode &#x27;l3&#x27;) or of the port-channel modes that already registered it. Registered field (live tested in mode &#x27;l3&#x27; on NDFC 12.6.0.267); needs an approved <code>patch_version</code>; explicit-only, no default. The template sends the value to each member policy. In mode &#x27;l3&#x27;, &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored &#x27;true&#x27;; set &#x27;false&#x27; explicitly instead.</div>
                 </td>
             </tr>
             <tr>
@@ -1942,7 +1942,7 @@ Parameters
                 </td>
                 <td>
                         <div>State of CDP protocol on the interface</div>
-                        <div>In modes &#x27;l3&#x27; and &#x27;dot1q&#x27; this is a registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>, has no default, and the template sends it to each member policy, where &#x27;false&#x27; renders <code>no cdp enable</code>. &#x27;merged&#x27; keeps an omitted value. &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored &#x27;false&#x27;, because no reset is verified on these policies; set &#x27;true&#x27; explicitly instead.</div>
+                        <div>In modes &#x27;l3&#x27; and &#x27;dot1q&#x27; this is a registered field (live tested in mode &#x27;l3&#x27; on NDFC 12.6.0.267; NOT LIVE TESTED in mode &#x27;dot1q&#x27;, read from the installed template body). It needs an approved <code>patch_version</code>, has no default, and the template sends it to each member policy, where &#x27;false&#x27; renders <code>no cdp enable</code>. &#x27;merged&#x27; keeps an omitted value. &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored &#x27;false&#x27;, because no reset is verified on these policies; set &#x27;true&#x27; explicitly instead.</div>
                 </td>
             </tr>
             <tr>
