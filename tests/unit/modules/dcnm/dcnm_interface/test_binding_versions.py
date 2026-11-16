@@ -19,6 +19,7 @@ from ansible_collections.cisco.dcnm.plugins.modules import dcnm_interface
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_interface import DcnmIntf
 
 from .helpers.binding_harness import ACCESS
+from .helpers.binding_harness import BASE_PC_L3
 from .helpers.binding_harness import IF_A
 from .helpers.binding_harness import IF_B
 from .helpers.binding_harness import PATCH_KEY_OMITTED
@@ -33,6 +34,7 @@ from .helpers.binding_harness import request_nvpairs
 from .helpers.binding_harness import run
 from .helpers.binding_harness import run_configs
 from .helpers.binding_harness import writes
+from .helpers.binding_harness import PC_L3
 from .helpers.binding_harness import PC_TRUNK
 from .helpers.binding_harness import SVI
 from .helpers.binding_harness import VPC_DOT1Q
@@ -80,7 +82,7 @@ UNAPPROVED_EXPLICIT = [
     pytest.param("4.3.1.0175006012", id="unapproved_6012_one_above"),
     pytest.param("4.3.1.0175006011", id="retired_smu_6011"),
     pytest.param("4.3.1.0175006016", id="unapproved_6016_one_below_017"),
-    pytest.param("4.3.1.0175006018", id="unapproved_6018_one_above_017"),
+    pytest.param("4.3.1.0175006019", id="unapproved_6019_one_above_018"),
     pytest.param("4.3.1", id="truncated_4.3.1"),
     pytest.param("4.4.0.9999999999", id="below_nd_release_floor"),
     pytest.param("4.4.1-rc1", id="non_numeric_suffix"),
@@ -439,28 +441,89 @@ class TestNdReleaseCapability:
 class TestPatchPolicyApprovedSmuOrNdRelease:
     """Keep the exact SMU exception and compare numeric ND releases as PR730 does."""
 
-    def test_only_the_one_smu_is_allowlisted(self):
-        assert GIE_ENABLED_PATCH_VERSIONS == frozenset({"4.3.1.0175006017"})
+    def test_only_the_two_smus_are_allowlisted(self):
+        assert GIE_ENABLED_PATCH_VERSIONS == frozenset({"4.3.1.0175006017", "4.3.1.0175006018"})
 
     @pytest.mark.parametrize("value", [
-        None, "", "4.3.1", "4.3.1.0175006010", "4.3.1.0175006011", "4.3.1.0175006012", "4.3.1.0175006016", "4.3.1.0175006018", "4.3.99",
+        None, "", "4.3.1", "4.3.1.0175006010", "4.3.1.0175006011", "4.3.1.0175006012", "4.3.1.0175006016", "4.3.1.0175006019",
+        "4.3.1.0175006020", "4.3.99",
         "4.4", "4.4.0", "4.4.0.9999999999", "4.4.1-rc1", "4.4.1.", "4.4.1.bad",
         "4.4.1.2.bad", "5.-1.0", " 4.4.1", "4.4.1 ", "not-a-version", "4.4.\u00b2",
-        " 4.3.1.0175006017", "4.3.1.0175006017 ", 4, True, [], {},
+        " 4.3.1.0175006017", "4.3.1.0175006017 ", " 4.3.1.0175006018", "4.3.1.0175006018 ", 4, True, [], {},
     ])
     def test_missing_malformed_and_below_floor_are_unsupported(self, value):
         assert gie_patch_supported(value) is False
 
-    def test_the_exact_approved_string_is_supported(self):
-        assert gie_patch_supported("4.3.1.0175006017") is True
+    @pytest.mark.parametrize("value", ["4.3.1.0175006017", "4.3.1.0175006018"])
+    def test_the_exact_approved_strings_are_supported(self, value):
+        assert gie_patch_supported(value) is True
 
     def test_the_retired_smu_is_no_longer_supported(self):
-        # 4.3.1.0175006011 declares the boolean OSPF nvPairs; this candidate supports only 017.
+        # 4.3.1.0175006011 declares the boolean OSPF nvPairs; this candidate supports only 017 and 018.
         assert gie_patch_supported("4.3.1.0175006011") is False
 
     @pytest.mark.parametrize("value", ["4.4.1", "4.4.1.0", "4.4.2", "4.10.0", "5.0.0.0"])
     def test_numeric_nd_release_is_supported(self, value):
         assert gie_patch_supported(value) is True
+
+
+# ============================================================================= installed SMU 018
+SMU_017 = "4.3.1.0175006017"
+SMU_018 = "4.3.1.0175006018"
+L3PO_EIGRP = dict(BASE_PC_L3, eigrp_process_tag="PILOT-EIGRP", enable_eigrp_routing=True,
+                  eigrp_ipv4_distribute_list_prefix_list="PILOT-PL4", eigrp_ipv4_distribute_list_direction="in")
+
+
+class TestInstalledSmu018:
+    """SMU 018 is accepted as interface-compatible with 017: through main() it produces the 017 requests."""
+
+    @pytest.mark.parametrize("parent, profile", [
+        (TRUNK, dict(base_for(TRUNK), guard_mode="root")),
+        (PC_L3, L3PO_EIGRP),
+    ], ids=["trunk_guard_mode", "l3_port_channel_eigrp"])
+    def test_explicit_fields_send_the_017_requests(self, parent, profile):
+        conf = [cfg_for(parent, profile)]
+        control, control_calls = run_configs(conf, "merged", patch_version=SMU_017)
+        result, calls = run_configs(conf, "merged", patch_version=SMU_018)
+        assert not control.get("failed"), control.get("msg")
+        assert not result.get("failed"), result.get("msg")
+        assert writes(calls) == writes(control_calls)
+        assert diff_nvpairs(result) == diff_nvpairs(control)
+
+    def test_l3_port_channel_eigrp_nvpairs_are_sent(self):
+        result, calls = run_configs([cfg_for(PC_L3, L3PO_EIGRP)], "merged", patch_version=SMU_018)
+        assert not result.get("failed"), result.get("msg")
+        nv = request_nvpairs(calls)[0]
+        assert (nv["eigrpProcessTag"], nv["eigrpRouting"]) == ("PILOT-EIGRP", "true")
+        assert (nv["eigrpIpv4DistributeListPrefixList"], nv["eigrpIpv4DistributeListDirection"]) == ("PILOT-PL4", "in")
+
+    @pytest.mark.parametrize("state", ["merged", "replaced", "overridden"])
+    def test_omitted_eigrp_fields_follow_the_017_state_semantics(self, state):
+        have = build_have(PC_L3, None, None, eigrp_process_tag="PILOT-EIGRP", enable_eigrp_routing=True)
+        want = dict(BASE_PC_L3, description="smu018-unrelated-change")
+        control, control_calls = run_configs([cfg_for(PC_L3, want)], state, have=have, patch_version=SMU_017)
+        result, calls = run_configs([cfg_for(PC_L3, want)], state, have=have, patch_version=SMU_018)
+        assert not control.get("failed"), control.get("msg")
+        assert not result.get("failed"), result.get("msg")
+        assert writes(calls) == writes(control_calls)
+
+    def test_an_already_applied_value_writes_nothing(self):
+        have = build_have(PC_L3, None, None, **{k: v for k, v in L3PO_EIGRP.items() if k not in BASE_PC_L3})
+        result, calls = run_configs([cfg_for(PC_L3, L3PO_EIGRP)], "merged", have=have, patch_version=SMU_018)
+        assert not result.get("failed"), result.get("msg")
+        assert not result["changed"]
+        assert writes(calls) == []
+
+    def test_svi_dhcp_names_follow_the_017_body(self):
+        assert dcnm_interface.svi_dhcp4_fields(SMU_018) == dcnm_interface.svi_dhcp4_fields(SMU_017)
+        assert dcnm_interface.svi_dhcp4_fields(SMU_018) == dcnm_interface.SVI_DHCP4_FIELDS_SMU
+
+    @pytest.mark.parametrize("patch_version", ["4.3.1.0175006016", "4.3.1.0175006019", "4.4.0.9999999999"])
+    def test_neighbouring_unapproved_builds_still_refuse_the_eigrp_fields(self, patch_version):
+        result, calls = run_configs([cfg_for(PC_L3, L3PO_EIGRP)], "merged", patch_version=patch_version)
+        assert result.get("failed")
+        assert "requires caller-supplied patch_version" in result["msg"]
+        assert writes(calls) == []
 
 
 # ====================================================================================================
