@@ -1,9 +1,10 @@
 """Link, discovery, STP/protection, LACP and dampening bindings added on parents that lacked them.
 
 Every route is driven through the real ``main()`` with the controller doubled at ``dcnm_send``
-(``helpers/binding_harness.py``). Only the routed port-channel discovery rows in ``MEASURED`` carry a
-``reset_wire``: their explicit withdrawal was measured live on that parent, and their omission cases are in
-``test_binding_l3po_measured_resets.py``. No reset is measured for the other routes, so an authoritative
+(``helpers/binding_harness.py``). Only the routes in ``MEASURED`` carry a ``reset_wire``: their explicit withdrawal
+was measured live on that parent. The omission cases of the routed port-channel discovery rows are in
+``test_binding_l3po_measured_resets.py``, those of the trunk BPDU filter and link type rows in
+``test_binding_trunk_stp_resets.py``. No reset is measured for the other routes, so an authoritative
 withdrawal of a stored value that differs from the template default must be refused before any write, and the
 explicit template default stays the only clear.
 The CLI these values produce (inline, on a member, or on a vPC peer's port-channel) is the
@@ -144,7 +145,9 @@ ROUTES = {
 }
 
 # Routes with a reset_wire, measured live on this parent, and that wire value.
-MEASURED = {(PC_L3, "CDP_ENABLE"): "true", (PC_L3, "lldpTransmit"): "false", (PC_L3, "lldpReceive"): "false"}
+MEASURED = {(PC_L3, "CDP_ENABLE"): "true", (PC_L3, "lldpTransmit"): "false", (PC_L3, "lldpReceive"): "false",
+            (TRUNK, "BPDUFILTER_ENABLED"): "no", (TRUNK, "LINK_TYPE"): "auto",
+            (PC_TRUNK, "BPDUFILTER_ENABLED"): "no", (PC_TRUNK, "LINK_TYPE"): "auto"}
 
 ITEMS = [(p, n, k, a, d, e) for (p, n), (k, a, d, e) in sorted(ROUTES.items())]
 IDS = ["%s::%s" % (p, n) for p, n, _k, _a, _d, _e in ITEMS]
@@ -300,12 +303,13 @@ def test_deleting_the_physical_interface_resets_it_or_names_the_field(parent, nv
     policies = role_reset.reset_policies(calls)
     assert len(policies) == 1, "neither a refusal nor exactly one reset request: %r" % (policies,)
     dst = policies[0]["policy"]
-    assert dst != parent
     sent = policies[0]["interfaces"][0]["nvPairs"]
     b = resolve_binding(dst, key)
     if b is not None and b.get("reset_wire") is not None:
+        # Also when the role default is the same parent (a trunk port on a leaf): the measured reset is sent.
         assert sent.get(nvpair) == b["reset_wire"], (dst, sent.get(nvpair))
     else:
+        assert dst != parent
         # The source parent renders the field inline and declares that the controller negates its lines for this
         # destination (cleared_on_change_to, a parent-level declaration); nothing is written into the destination.
         src = resolve_binding(parent, key)

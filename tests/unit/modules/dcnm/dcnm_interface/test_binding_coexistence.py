@@ -88,8 +88,9 @@ UNION_RESET_TOTAL = 74
 # identical declarations, not measured on this parent: 261 + 2 = 263. Routed port-channel EIGRP (L3PO_EIGRP_ADDITIONS,
 # slice 0b_42), the ten resets of the other EIGRP parents on identical declarations, not measured: 263 + 10 = 273.
 # Routed port-channel rows whose explicit withdrawal was measured live on that parent (L3PO_MEASURED_ADDITIONS): 273 + 9
-# = 282.
-CANDIDATE_RESET_TOTAL = 282
+# = 282. Trunk Ethernet and trunk port-channel spanning-tree rows measured the same way (TRUNK_STP_MEASURED_ADDITIONS):
+# 282 + 4 = 286.
+CANDIDATE_RESET_TOTAL = 286
 
 # The additions this candidate is allowed to carry, and nothing else: four
 # `int_routed_host` and four `int_subif` rows, plus two `int_loopback` and four
@@ -604,6 +605,16 @@ L3PO_MEASURED_ADDITIONS = (
 )
 L3PO_MEASURED_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in L3PO_MEASURED_ADDITIONS)
 
+# BPDU filter and link type on the trunk Ethernet and trunk port-channel parents, whose explicit withdrawal was measured
+# live on those parents. The automatic reset on omission is not tested live.
+TRUNK_STP_MEASURED_ADDITIONS = (
+    ("int_trunk_host", "BPDUFILTER_ENABLED", "bpdu_filter", "no"),
+    ("int_trunk_host", "LINK_TYPE", "spanning_tree_link_type", "auto"),
+    ("int_port_channel_trunk_host", "BPDUFILTER_ENABLED", "bpdu_filter", "no"),
+    ("int_port_channel_trunk_host", "LINK_TYPE", "spanning_tree_link_type", "auto"),
+)
+TRUNK_STP_MEASURED_IDENTITIES = frozenset((p, nv) for p, nv, _k, _r in TRUNK_STP_MEASURED_ADDITIONS)
+
 # Every addition this checkout carries over the published 74, by lot. The dampening lot is
 # included in the SET arithmetic -- it is registered, so it must be accounted for -- while its
 # controller-only evidence status is recorded above and asserted in its own grouped test.
@@ -612,14 +623,15 @@ ALL_ADDITIONS = (CANDIDATE_ADDITIONS + EIGRP_ADDITIONS + MACSEC_ADDITIONS
                  + VPC13_ADDITIONS + HSRP3_ADDITIONS + VPC_DOT1Q6_ADDITIONS
                  + PVLAN1_ADDITIONS + PVLANC1_ADDITIONS + IQ1_ADDITIONS + BATCH017_ADDITIONS
                  + LOEIGRP017_ADDITIONS + L3PO017_ADDITIONS + L3PO_OSPF_ADDITIONS + RS1_ADDITIONS + PL1_ADDITIONS
-                 + UL1_ADDITIONS + L3PO_PIM_ADDITIONS + L3PO_EIGRP_ADDITIONS + L3PO_MEASURED_ADDITIONS)
+                 + UL1_ADDITIONS + L3PO_PIM_ADDITIONS + L3PO_EIGRP_ADDITIONS + L3PO_MEASURED_ADDITIONS
+                 + TRUNK_STP_MEASURED_ADDITIONS)
 ALL_ADDED_IDENTITIES = (CANDIDATE_IDENTITIES | EIGRP_IDENTITIES | MACSEC_IDENTITIES
                         | DAMPENING_EXPERIMENTAL_IDENTITIES | PIMACL_IDENTITIES
                         | VPC13_IDENTITIES | HSRP3_IDENTITIES | VPC_DOT1Q6_IDENTITIES
                         | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES | BATCH017_IDENTITIES
                         | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES
                         | PL1_IDENTITIES | UL1_IDENTITIES | L3PO_PIM_IDENTITIES | L3PO_EIGRP_IDENTITIES
-                        | L3PO_MEASURED_IDENTITIES)
+                        | L3PO_MEASURED_IDENTITIES | TRUNK_STP_MEASURED_IDENTITIES)
 
 
 def _rows():
@@ -785,9 +797,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
     # from the bodies) = 187, and 74 + 187 = 261. + 2 routed port-channel PIM rows (L3PO_PIM_ADDITIONS, slice 0b_41)
     # = 189, and 74 + 189 = 263. + 10 routed port-channel EIGRP rows (L3PO_EIGRP_ADDITIONS, slice 0b_42) = 199, and
     # 74 + 199 = 273. + 9 measured routed port-channel rows (L3PO_MEASURED_ADDITIONS) = 208, and 74 + 208 = 282.
+    # + 4 measured trunk spanning-tree rows (TRUNK_STP_MEASURED_ADDITIONS) = 212, and 74 + 212 = 286.
     assert len(ALL_ADDED_IDENTITIES) == (54 + 35 + 4 + 7 + 10 + 13 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2
-                                         + 10 + 9) == len(ALL_ADDITIONS), (
-        "the lots together declare %d additions over %d distinct identities; expected 208"
+                                         + 10 + 9 + 4) == len(ALL_ADDITIONS), (
+        "the lots together declare %d additions over %d distinct identities; expected 212"
         % (len(ALL_ADDITIONS), len(ALL_ADDED_IDENTITIES)))
 
     # NEGATIVE CONTROL: the withheld EIGRP identities must still carry NO reset. Without
@@ -909,7 +922,10 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
               ("routed port-channel EIGRP/from template", set(L3PO_EIGRP_IDENTITIES), 10),
               # routed port-channel rows whose explicit withdrawal was measured live on that parent; the automatic
               # reset on omission is NOT tested live
-              ("routed port-channel measured withdrawal", set(L3PO_MEASURED_IDENTITIES), 9))
+              ("routed port-channel measured withdrawal", set(L3PO_MEASURED_IDENTITIES), 9),
+              # trunk Ethernet and trunk port-channel BPDU filter and link type, explicit withdrawal measured live on
+              # those parents; the automatic reset on omission is NOT tested live
+              ("trunk spanning-tree measured withdrawal", set(TRUNK_STP_MEASURED_IDENTITIES), 4))
     for name, group, expected in groups:
         assert len(group) == expected, (
             "%s declares %d identities, expected %d" % (name, len(group), expected))
@@ -923,20 +939,20 @@ def test_the_registered_reset_total_is_the_previous_seventy_plus_these_four():
              | VPC_DOT1Q6_IDENTITIES | PVLAN1_IDENTITIES | PVLANC1_IDENTITIES | IQ1_IDENTITIES
              | BATCH017_IDENTITIES | LOEIGRP017_IDENTITIES | L3PO017_IDENTITIES | L3PO_OSPF_IDENTITIES | RS1_IDENTITIES
              | PL1_IDENTITIES | UL1_IDENTITIES | L3PO_PIM_IDENTITIES | L3PO_EIGRP_IDENTITIES
-             | L3PO_MEASURED_IDENTITIES)
+             | L3PO_MEASURED_IDENTITIES | TRUNK_STP_MEASURED_IDENTITIES)
     assert union == set(ALL_ADDED_IDENTITIES), (
         "the named campaign groups are not exactly the declared additions.\n"
         "  in a group but not declared: %s\n  declared but in no group: %s"
         % (sorted(union - set(ALL_ADDED_IDENTITIES)),
            sorted(set(ALL_ADDED_IDENTITIES) - union)))
-    assert len(union) == 208, (
+    assert len(union) == 212, (
         "the named groups cover %d identities; the delta over the published 74 is "
         "14 base88 + 30 OSPF-ALL + 10 BFD-ALL + 35 EIGRP + 4 MACsec + 7 dampening "
         "+ 10 PIM/ACL + 13 vPC + 3 HSRP/IPv4 + 6 vPC dot1q-tunnel + 1 PVLAN + 11 PVLAN companions + 1 IQ1 "
         "+ 5 SMU017 batch 1 + 5 SMU017 loopback EIGRP + 1 SMU017 routed port-channel PIM BFD "
         "+ 16 routed port-channel OSPF + 1 trunk port-channel reset-skip + 2 peer-link + 12 uplink "
-        "+ 2 routed port-channel PIM + 10 routed port-channel EIGRP + 9 routed port-channel measured = 208, "
-        "and 74 + 208 = 282"
+        "+ 2 routed port-channel PIM + 10 routed port-channel EIGRP + 9 routed port-channel measured "
+        "+ 4 trunk spanning-tree measured = 212, and 74 + 212 = 286"
         % len(union))
 
 

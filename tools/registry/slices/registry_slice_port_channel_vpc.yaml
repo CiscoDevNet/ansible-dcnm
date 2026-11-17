@@ -1782,6 +1782,11 @@ bindings:
   # The port-channel parents render the value on the port-channel (the dot1q-tunnel one also passes `bpdufilter enable`
   # to its members); the vPC parents hand it to each peer's _po_11_1 child.
   # Read from the captured bodies; not measured live; no reset_wire.
+  # Since then, on int_trunk_host and int_port_channel_trunk_host only, configuration and explicit withdrawal were
+  # measured live (NDFC 12.6.0.267, bodies 99dc8f0a and 25f2582d): explicit BPDUFILTER_ENABLED "no" and LINK_TYPE
+  # "auto" removed `spanning-tree bpdufilter <value>` and `spanning-tree link-type <value>`, and the repeat sent
+  # nothing. Those four rows declare that value as their reset_wire. The automatic reset on omission under
+  # replaced/overridden is not tested live. The access, dot1q-tunnel and vPC rows keep no reset_wire.
 
   # int_port_channel_trunk_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L42; Po stanza.
   # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
@@ -1793,6 +1798,7 @@ bindings:
     type: enum
     valid_values: ['enable', 'disable', 'no']
     default_template: 'no'
+    reset_wire: 'no'
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1815,6 +1821,7 @@ bindings:
     type: enum
     valid_values: ['auto', 'point-to-point', 'shared']
     default_template: 'auto'
+    reset_wire: 'auto'
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

@@ -155,8 +155,9 @@ def test_only_the_measured_routes_carry_a_reset():
         assert b["profile_key"] == key and b["mechanism"] == "passthrough"
         assert engine.gie_declared_default_wire(b) == (neutral or None), (parent, nvpair)
         assert wire(applied) != neutral, (parent, nvpair)
-    # 273 resets on the parent commit, plus the nine measured on the routed port-channel (six here, three discovery rows).
-    assert sum(1 for b in BINDING_TABLE if "reset_wire" in b) == 273 + 9
+    # 273 resets on the parent commit, plus the nine measured on the routed port-channel (six here, three discovery rows)
+    # and the four trunk spanning-tree resets (test_binding_trunk_stp_resets.py).
+    assert sum(1 for b in BINDING_TABLE if "reset_wire" in b) == 273 + 9 + 4
 
 
 @pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", ITEMS, ids=IDS)

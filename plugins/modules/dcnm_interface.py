@@ -736,18 +736,27 @@ options:
           bpdu_filter:
             description:
             - Spanning-tree BPDU filter - C(enable), C(disable), or C(no) for the switch default (the template
-              default is C(enable) in mode C(dot1q) and C(no) in the other modes). Registered field (NOT LIVE
-              TESTED; read from the installed template bodies). It needs an approved C(patch_version); explicit-only,
-              no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but
-              C(enable); that refusal comes from the controller. Under 'merged' an omitted value is kept. No reset
-              is verified, so 'replaced' and 'overridden' refuse to withdraw a stored value that differs from the
-              template default; set the default explicitly instead.
+              default is C(enable) in mode C(dot1q) and C(no) in the other modes). Registered field. It needs an
+              approved C(patch_version); explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the
+              dot1q-tunnel templates refuse anything but C(enable); that refusal comes from the controller. Under
+              'merged' an omitted value is kept.
+            - In mode C(trunk) the three values were live tested on NDFC 12.6.0.267, and an explicit C(no) removed
+              the C(spanning-tree bpdufilter) line. 'replaced' and 'overridden' send C(no) for an omitted stored
+              value (NOT LIVE TESTED).
+            - In modes C(access) and C(dot1q) the field is NOT LIVE TESTED (read from the installed template bodies)
+              and no reset is verified, so 'replaced' and 'overridden' refuse to withdraw a stored value that differs
+              from the template default; set the default explicitly instead.
             type: str
             choices: ['enable', 'disable', 'no']
           spanning_tree_link_type:
             description:
             - Spanning-tree link type - C(auto) (the template default, which renders nothing), C(point-to-point) or
-              C(shared). Same registration and withdrawal contract as bpdu_filter.
+              C(shared). Same registration contract as bpdu_filter.
+            - In mode C(trunk) the three values were live tested on NDFC 12.6.0.267, and an explicit C(auto) removed
+              the C(spanning-tree link-type) line. 'replaced' and 'overridden' send C(auto) for an omitted stored
+              value (NOT LIVE TESTED).
+            - In modes C(access) and C(dot1q) (NOT LIVE TESTED) no reset is verified, so 'replaced' and 'overridden'
+              refuse to withdraw a stored value other than C(auto); set C(auto) explicitly instead.
             type: str
             choices: ['auto', 'point-to-point', 'shared']
           spanning_tree_port_type:
@@ -1408,26 +1417,37 @@ options:
           bpdu_filter:
             description:
             - Spanning-tree BPDU filter - C(enable), C(disable), or C(no) for the switch default (the template
-              default is C(enable) in mode C(dot1q) and C(no) in the other modes). Registered field (NOT LIVE
-              TESTED; read from the installed template bodies). It needs an approved C(patch_version); explicit-only,
-              no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but
-              C(enable); that refusal comes from the controller. Under 'merged' an omitted value is kept. No reset
-              is verified, so 'replaced' and 'overridden' refuse to withdraw a stored value that differs from the
-              template default; set the default explicitly instead.
+              default is C(enable) in mode C(dot1q) and C(no) in the other modes). Registered field. It needs an
+              approved C(patch_version); explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the
+              dot1q-tunnel templates refuse anything but C(enable); that refusal comes from the controller. Under
+              'merged' an omitted value is kept.
+            - In mode C(trunk) the three values were live tested on NDFC 12.6.0.267, and an explicit C(no) removed
+              the C(spanning-tree bpdufilter) line. 'replaced' and 'overridden' send C(no) for an omitted stored
+              value (NOT LIVE TESTED).
+            - In modes C(access) and C(dot1q) the field is NOT LIVE TESTED (read from the installed template bodies)
+              and no reset is verified, so 'replaced' and 'overridden' refuse to withdraw a stored value that differs
+              from the template default; set the default explicitly instead.
             type: str
             choices: ['enable', 'disable', 'no']
           spanning_tree_link_type:
             description:
             - Spanning-tree link type - C(auto) (the template default, which renders nothing), C(point-to-point) or
-              C(shared). Same registration and withdrawal contract as bpdu_filter.
+              C(shared). Same registration contract as bpdu_filter.
+            - In mode C(trunk) the three values were live tested on NDFC 12.6.0.267, and an explicit C(auto) removed
+              the C(spanning-tree link-type) line. 'replaced' and 'overridden' send C(auto) for an omitted stored
+              value (NOT LIVE TESTED).
+            - In modes C(access) and C(dot1q) (NOT LIVE TESTED) no reset is verified, so 'replaced' and 'overridden'
+              refuse to withdraw a stored value other than C(auto); set C(auto) explicitly instead.
             type: str
             choices: ['auto', 'point-to-point', 'shared']
           enable_errdisable_acl:
             description:
             - Error detection for access-list installation failures. C(false) renders
               C(no errdisable port detect cause acl-exception); the template default is true. Modes C(trunk),
-              C(access) and C(dot1q); the template refuses false on a FEX host interface. Same registration and
-              withdrawal contract as bpdu_filter.
+              C(access) and C(dot1q); the template refuses false on a FEX host interface. Registered field (NOT LIVE
+              TESTED; read from the installed template bodies). It needs an approved C(patch_version); explicit-only,
+              no default. No reset is verified, so 'replaced' and 'overridden' refuse to withdraw a stored false; set
+              true explicitly instead.
             type: bool
           spanning_tree_port_type:
             description:

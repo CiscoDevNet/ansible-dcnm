@@ -420,6 +420,9 @@ PILOT = {
     (TRUNK, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (TRUNK, "GUARD_MODE"): ("guard_mode", "root", "no", {}),
     (TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    # BPDU filter and link type: explicit withdrawal measured live on the trunk Ethernet parent.
+    (TRUNK, "BPDUFILTER_ENABLED"): ("bpdu_filter", "enable", "no", {}),
+    (TRUNK, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
     (ROUTED, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", dict(IPV6_ON)),
     (ROUTED, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", dict(IPV4_ON)),
     # The routed stats pair. Same prerequisites as on access/trunk -- the fields are
@@ -986,6 +989,9 @@ PILOT_PC = {
     # Trunk port-channel reset-skip default (slice rs1): the PARENT value only. Existing members keep their stored values.
     (PC_TRUNK, "linkTransmitResetSkip"): ("link_transmit_reset_skip", True, "false", {}),
     (PC_TRUNK, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    # BPDU filter and link type: explicit withdrawal measured live on the trunk port-channel parent.
+    (PC_TRUNK, "BPDUFILTER_ENABLED"): ("bpdu_filter", "enable", "no", {}),
+    (PC_TRUNK, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
     (PC_DOT1Q, "aclFilter"): ("acl_filter", "ACL-PILOT", "", {}),
     (PC_DOT1Q, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
     (PC_DOT1Q, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),

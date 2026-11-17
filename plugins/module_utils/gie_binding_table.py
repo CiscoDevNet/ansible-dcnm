@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = bc2937d4fa516c4166c8617d301539982f6be318ffb2b00a54df656d5d308cab
+# provenance_sha256 = 259ac54c2233e0c3e1de93926b79a19a114e2640a9ae2ae8086c38fae2e75df1
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "bc2937d4fa516c4166c8617d301539982f6be318ffb2b00a54df656d5d308cab"
+PROVENANCE_SHA256 = "259ac54c2233e0c3e1de93926b79a19a114e2640a9ae2ae8086c38fae2e75df1"
 
 BINDING_TABLE = (
     {
@@ -2395,6 +2395,7 @@ BINDING_TABLE = (
         'type': 'enum',
         'valid_values': ('enable', 'disable', 'no'),
         'default_template': 'no',
+        'reset_wire': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -2460,6 +2461,7 @@ BINDING_TABLE = (
         'type': 'enum',
         'valid_values': ('auto', 'point-to-point', 'shared'),
         'default_template': 'auto',
+        'reset_wire': 'auto',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -4275,6 +4277,7 @@ BINDING_TABLE = (
         'type': 'enum',
         'valid_values': ('enable', 'disable', 'no'),
         'default_template': 'no',
+        'reset_wire': 'no',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -4373,6 +4376,7 @@ BINDING_TABLE = (
         'type': 'enum',
         'valid_values': ('auto', 'point-to-point', 'shared'),
         'default_template': 'auto',
+        'reset_wire': 'auto',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,

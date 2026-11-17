@@ -1681,7 +1681,8 @@ bindings:
 
   # ==== Source lot a4_4_stp_protection (10 of 23 rows; header in registry_slice_port_channel_vpc.yaml) ====
   # BPDU filter, spanning-tree link type, ACL-exception error detection and the vPC orphan port on the Ethernet parents.
-  # Inline on the Ethernet stanza. Read from the captured bodies; not measured live; no reset_wire.
+  # Inline on the Ethernet stanza. Read from the captured bodies; not measured live; no reset_wire, except the two
+  # int_trunk_host spanning-tree rows below, whose explicit withdrawal was measured live (see the header).
 
   # int_trunk_host ENABLE_ERRDISABLE_ACL -> enable_errdisable_acl. Declared at L111; inline on the Ethernet stanza.
   # Controller-side rule: Ethernet: false refused on FEX HIF ports.
@@ -1715,6 +1716,7 @@ bindings:
     type: enum
     valid_values: ['enable', 'disable', 'no']
     default_template: 'no'
+    reset_wire: 'no'
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1737,6 +1739,7 @@ bindings:
     type: enum
     valid_values: ['auto', 'point-to-point', 'shared']
     default_template: 'auto'
+    reset_wire: 'auto'
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

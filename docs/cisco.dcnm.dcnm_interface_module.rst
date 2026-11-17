@@ -534,7 +534,9 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Spanning-tree BPDU filter - <code>enable</code>, <code>disable</code>, or <code>no</code> for the switch default (the template default is <code>enable</code> in mode <code>dot1q</code> and <code>no</code> in the other modes). Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but <code>enable</code>; that refusal comes from the controller. Under &#x27;merged&#x27; an omitted value is kept. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; set the default explicitly instead.</div>
+                        <div>Spanning-tree BPDU filter - <code>enable</code>, <code>disable</code>, or <code>no</code> for the switch default (the template default is <code>enable</code> in mode <code>dot1q</code> and <code>no</code> in the other modes). Registered field. It needs an approved <code>patch_version</code>; explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but <code>enable</code>; that refusal comes from the controller. Under &#x27;merged&#x27; an omitted value is kept.</div>
+                        <div>In mode <code>trunk</code> the three values were live tested on NDFC 12.6.0.267, and an explicit <code>no</code> removed the <code>spanning-tree bpdufilter</code> line. &#x27;replaced&#x27; and &#x27;overridden&#x27; send <code>no</code> for an omitted stored value (NOT LIVE TESTED).</div>
+                        <div>In modes <code>access</code> and <code>dot1q</code> the field is NOT LIVE TESTED (read from the installed template bodies) and no reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; set the default explicitly instead.</div>
                 </td>
             </tr>
             <tr>
@@ -783,7 +785,7 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Error detection for access-list installation failures. <code>false</code> renders <code>no errdisable port detect cause acl-exception</code>; the template default is true. Modes <code>trunk</code>, <code>access</code> and <code>dot1q</code>; the template refuses false on a FEX host interface. Same registration and withdrawal contract as bpdu_filter.</div>
+                        <div>Error detection for access-list installation failures. <code>false</code> renders <code>no errdisable port detect cause acl-exception</code>; the template default is true. Modes <code>trunk</code>, <code>access</code> and <code>dot1q</code>; the template refuses false on a FEX host interface. Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored false; set true explicitly instead.</div>
                 </td>
             </tr>
             <tr>
@@ -1380,7 +1382,9 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Spanning-tree link type - <code>auto</code> (the template default, which renders nothing), <code>point-to-point</code> or <code>shared</code>. Same registration and withdrawal contract as bpdu_filter.</div>
+                        <div>Spanning-tree link type - <code>auto</code> (the template default, which renders nothing), <code>point-to-point</code> or <code>shared</code>. Same registration contract as bpdu_filter.</div>
+                        <div>In mode <code>trunk</code> the three values were live tested on NDFC 12.6.0.267, and an explicit <code>auto</code> removed the <code>spanning-tree link-type</code> line. &#x27;replaced&#x27; and &#x27;overridden&#x27; send <code>auto</code> for an omitted stored value (NOT LIVE TESTED).</div>
+                        <div>In modes <code>access</code> and <code>dot1q</code> (NOT LIVE TESTED) no reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value other than <code>auto</code>; set <code>auto</code> explicitly instead.</div>
                 </td>
             </tr>
             <tr>
@@ -1730,7 +1734,9 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Spanning-tree BPDU filter - <code>enable</code>, <code>disable</code>, or <code>no</code> for the switch default (the template default is <code>enable</code> in mode <code>dot1q</code> and <code>no</code> in the other modes). Registered field (NOT LIVE TESTED; read from the installed template bodies). It needs an approved <code>patch_version</code>; explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but <code>enable</code>; that refusal comes from the controller. Under &#x27;merged&#x27; an omitted value is kept. No reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; set the default explicitly instead.</div>
+                        <div>Spanning-tree BPDU filter - <code>enable</code>, <code>disable</code>, or <code>no</code> for the switch default (the template default is <code>enable</code> in mode <code>dot1q</code> and <code>no</code> in the other modes). Registered field. It needs an approved <code>patch_version</code>; explicit-only, no default. On an N9K running NX-OS 9.3(5) or later the dot1q-tunnel templates refuse anything but <code>enable</code>; that refusal comes from the controller. Under &#x27;merged&#x27; an omitted value is kept.</div>
+                        <div>In mode <code>trunk</code> the three values were live tested on NDFC 12.6.0.267, and an explicit <code>no</code> removed the <code>spanning-tree bpdufilter</code> line. &#x27;replaced&#x27; and &#x27;overridden&#x27; send <code>no</code> for an omitted stored value (NOT LIVE TESTED).</div>
+                        <div>In modes <code>access</code> and <code>dot1q</code> the field is NOT LIVE TESTED (read from the installed template bodies) and no reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; set the default explicitly instead.</div>
                 </td>
             </tr>
             <tr>
@@ -2417,7 +2423,9 @@ Parameters
                         </ul>
                 </td>
                 <td>
-                        <div>Spanning-tree link type - <code>auto</code> (the template default, which renders nothing), <code>point-to-point</code> or <code>shared</code>. Same registration and withdrawal contract as bpdu_filter.</div>
+                        <div>Spanning-tree link type - <code>auto</code> (the template default, which renders nothing), <code>point-to-point</code> or <code>shared</code>. Same registration contract as bpdu_filter.</div>
+                        <div>In mode <code>trunk</code> the three values were live tested on NDFC 12.6.0.267, and an explicit <code>auto</code> removed the <code>spanning-tree link-type</code> line. &#x27;replaced&#x27; and &#x27;overridden&#x27; send <code>auto</code> for an omitted stored value (NOT LIVE TESTED).</div>
+                        <div>In modes <code>access</code> and <code>dot1q</code> (NOT LIVE TESTED) no reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value other than <code>auto</code>; set <code>auto</code> explicitly instead.</div>
                 </td>
             </tr>
             <tr>
