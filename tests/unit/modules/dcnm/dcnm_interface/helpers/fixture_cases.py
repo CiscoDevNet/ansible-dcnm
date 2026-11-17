@@ -65,6 +65,7 @@ SOURCES = {
     "pvlan_vpc_duplex_measured": ("pvlan_vpc_link_settings.json", "pvlan_vpc_duplex_measured"),
     "pvlan_vpc_speed_diag_measured": ("pvlan_vpc_link_settings.json", "pvlan_vpc_speed_diag_measured"),
     "pvlan_vpc_l1e4_measured": ("pvlan_vpc_lifecycle.json", None),
+    "l3po_stored_nvpairs": ("l3po_stored_nvpairs.json", None),
 }
 
 _FILES = {}

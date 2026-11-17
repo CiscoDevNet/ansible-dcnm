@@ -1322,18 +1322,37 @@ def gie_struct_compare_form(binding, value):
     return struct_compare_form(binding["struct_contract"], value)
 
 
-def gie_struct_clear_refused(binding, want_value, have_value):
-    """True when WANT empties a list that HAVE holds and the contract cannot remove it that way.
+def gie_struct_clear_refused(binding, want_value, have_value, have_nvpairs=()):
+    """True when WANT empties a list that HAVE holds and the module cannot remove it that way.
 
     An absent HAVE value holds nothing. An unreadable one is treated as holding entries: an empty list
-    is never sent over a value nobody can show to be empty.
+    is never sent over a value nobody can show to be empty. `have_nvpairs` are the stored nvPair objects of
+    the interface's records; a row with `struct_clear_when` allows the clear only over a list the contract
+    reads and only while those records all hold its gate value (gie_struct_clear_gate_open).
     """
     contract = binding["struct_contract"]
-    return (
-        not struct_clear_allowed(contract)
-        and struct_is_empty(contract, want_value)
-        and have_value is not None
-        and not struct_is_empty(contract, have_value)
+    if (
+        struct_clear_allowed(contract)
+        or not struct_is_empty(contract, want_value)
+        or have_value is None
+        or struct_is_empty(contract, have_value)
+    ):
+        return False
+    return struct_read(contract, have_value) is None or not gie_struct_clear_gate_open(binding, have_nvpairs)
+
+
+def gie_struct_clear_gate_open(binding, have_nvpairs):
+    """True when the row declares `struct_clear_when` and every stored record holds exactly its value.
+
+    No record, a record without the nvPair, or any other value (another string, a native bool, null) keeps the
+    gate closed. The value is read from what the controller stored; the module never sends that nvPair.
+    """
+    gate = binding.get("struct_clear_when")
+    if gate is None:
+        return False
+    records = list(have_nvpairs)
+    return bool(records) and all(
+        isinstance(nv, dict) and nv.get(gate["nvpair"]) == gate["value"] for nv in records
     )
 
 

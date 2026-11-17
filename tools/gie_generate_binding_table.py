@@ -1067,11 +1067,18 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
           "applicable_mode", "type", "valid_values", "default_template", "reset_wire",
           "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
           "max_value", "no_log", "wire_values", "smu_unsupported", "string_compare",
-          "inert_when", "dropped_on_policy_change", "cleared_on_change_to", "struct_contract"]
+          "inert_when", "dropped_on_policy_change", "cleared_on_change_to", "struct_contract",
+          "struct_clear_when"]
 
 # `struct_contract` -- required on a `type: struct_list` row and forbidden on any other: the name of the
 # list contract in plugins/module_utils/interface_struct_lists.py that validates, serializes and compares
 # the value. STRUCT_CONTRACTS is this generator's own copy of those names; a unit test compares the two.
+
+# `struct_clear_when` -- {nvpair, value}, on a struct_list row only: on this parent an explicit empty list may
+# replace a stored non-empty one although the row's contract refuses that, provided every stored record of the
+# interface holds `value` in the parent nvPair `nvpair`. The module reads that nvPair from the interface it has
+# already fetched and never sends it; an absent or different value keeps the refusal. Declare it only where a full
+# clear of the field was measured on the parent with the gate at that value.
 
 # `smu_unsupported` -- this identity has NO counterpart in the installed SMU build. The
 # row is KEPT so its history and provenance survive; the engine refuses explicit input for
@@ -1364,9 +1371,23 @@ def _check_registry_schema(r, key):
                 "binding {0!r} declares {1} on a struct_list binding; its contract owns the value "
                 "rules".format(key, scalar)
             )
+        if "struct_clear_when" in r:
+            sc = r["struct_clear_when"]
+            if (not isinstance(sc, dict) or set(sc) != {"nvpair", "value"}
+                    or not all(isinstance(sc[k], str) for k in ("nvpair", "value"))
+                    or sc["nvpair"] in ("", r["parent_nvpair"])):
+                raise ValueError(
+                    "binding {0!r} declares struct_clear_when {1!r}; it must be a mapping with string keys "
+                    "'nvpair' (another nvPair of the parent) and 'value' (its stored wire value)".format(key, sc)
+                )
     elif "struct_contract" in r:
         raise ValueError(
             "binding {0!r} declares struct_contract on type {1!r}; it applies to struct_list "
+            "bindings only".format(key, r["type"])
+        )
+    elif "struct_clear_when" in r:
+        raise ValueError(
+            "binding {0!r} declares struct_clear_when on type {1!r}; it applies to struct_list "
             "bindings only".format(key, r["type"])
         )
     if "smu_unsupported" in r and r["smu_unsupported"] is not True:
@@ -1489,6 +1510,8 @@ def compile_rows(slice_rows):
                     v = dict((k, v[k]) for k in ("nvpair", "value", "required", "strict", "clear", "unless") if k in v)
                     if "unless" in v:
                         v["unless"] = {"nvpair": v["unless"]["nvpair"], "values": tuple(v["unless"]["values"])}
+                if f == "struct_clear_when":
+                    v = {"nvpair": v["nvpair"], "value": v["value"]}
                 row[f] = v
         if r["parent_template"] in POLICY_CHANGE_DROPS_CHILDREN:
             row["dropped_on_policy_change"] = True

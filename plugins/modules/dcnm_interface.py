@@ -251,12 +251,17 @@ options:
       IPv4 or IPv6 address in canonical form) and C(srvr_vrf) (optional; blank means the interface VRF), the same item
       shape as C(dhcp_servers) of M(cisco.dcnm.dcnm_network). LIVE TESTED only on a routed port-channel; on the other
       two parents the behavior is read from the installed template bodies. An explicit list is the whole value of the
-      field in every state; item order is not significant, and a repeated server and VRF pair is refused. The module
-      does not support removing every server, so it refuses an empty list while the controller holds servers, and an
-      omitted stored list under C(replaced) or C(overridden) also fails the task before any change is sent. Whether
-      the controller removes the relay configuration for an empty list is not verified. A shorter list is sent. On a
-      routed port-channel the switch removes the dropped relay lines; on a routed Ethernet port or a subinterface this
-      is not measured. This list does not replace the numbered DHCP server options of the SVI profile.
+      field in every state; item order is not significant, and a repeated server and VRF pair is refused. On a routed
+      port-channel, under C(merged), C(replaced) and C(overridden), the module sends an explicit empty list as an
+      empty C(dhcpServers) while the controller stores the hidden template field C(SKIP_DEL_ON_ADD) as C(false). It
+      never sends C(SKIP_DEL_ON_ADD). With that stored value, an empty C(dhcpServers) sent directly to the controller
+      removed the relay configuration from the switch; the module request is NOT LIVE TESTED. The module refuses an
+      empty list while the controller holds servers in every other case, including any other stored
+      C(SKIP_DEL_ON_ADD), a stored list the template does not read, a routed Ethernet port and a subinterface. An
+      omitted stored list under C(replaced) or C(overridden) fails the task on every parent before any change is
+      sent. A shorter list is sent. On a routed port-channel the switch removes the dropped relay lines; on a routed
+      Ethernet port or a subinterface this is not measured. This list does not replace the numbered DHCP server
+      options of the SVI profile.
     - This is a SECOND, independent requirement on top of each registered field's existing
       minimum NDFC version. Meeting the per-field NDFC floor does not substitute for a
       supported patch/ND release, and that release does not bypass a field's NDFC floor or its
@@ -3614,6 +3619,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_have_carry_forward_nvpairs,
     gie_no_log_profile_keys,
     gie_struct_binding,
+    gie_struct_clear_gate_open,
     gie_struct_clear_refused,
     gie_struct_compare_form,
     gie_validate_binding_value,
@@ -4050,6 +4056,22 @@ def routed_ipv6_reset(payload, have_payload):
         return
     payload["interfaces"][0]["nvPairs"]["IPv6"] = ""
     payload["interfaces"][0]["nvPairs"]["IPv6_PREFIX"] = ""
+
+
+# A stored record without the gate nvPair of a struct_clear_when row.
+_SC_ABSENT = object()
+
+
+def _struct_clear_gate_note(gate, stored):
+    """The refusal note for a list whose parent allows a full clear only while a stored nvPair holds a value."""
+    seen = []
+    for value in stored:
+        text = "absent" if value is _SC_ABSENT else json.dumps(value, default=repr)
+        if text not in seen:
+            seen.append(text)
+    return " (supported on this parent only while the stored {0} is {1}; it is {2})".format(
+        gate["nvpair"], json.dumps(gate["value"]), " and ".join(seen) or "absent"
+    )
 
 
 def _read_reason_key(stage, serial):
@@ -13805,13 +13827,34 @@ class DcnmIntf:
                                         # the comparison; every other key keeps the legacy one.
                                         exact_nv = gie_string_compare(want.get("policy"), nk) == "exact"
                                         struct_nv = gie_struct_binding(want.get("policy"), nk)
+                                        # The stored records of this interface, as already fetched. A per-parent clear
+                                        # gate (struct_clear_when) is read from them; nothing else is requested.
+                                        _sc_records = (
+                                            [intf[ik] for intf in d[k] if isinstance(intf.get(ik), dict)]
+                                            if struct_nv is not None else []
+                                        )
                                         if struct_nv is not None and gie_struct_clear_refused(
                                             struct_nv,
                                             want[k][0][ik][nk],
-                                            next((intf[ik].get(nk) for intf in d[k] if isinstance(intf.get(ik), dict)), None),
+                                            next((nv.get(nk) for nv in _sc_records), None),
+                                            _sc_records,
                                         ):
+                                            _sc_gate = struct_nv.get("struct_clear_when")
+                                            if not _sc_gate:
+                                                _sc_note = ""
+                                            elif gie_struct_clear_gate_open(struct_nv, _sc_records):
+                                                _sc_note = " (the stored value is not a list the template reads)"
+                                            else:
+                                                _sc_note = _struct_clear_gate_note(
+                                                    _sc_gate, [nv.get(_sc_gate["nvpair"], _SC_ABSENT) for nv in _sc_records]
+                                                )
                                             self.struct_clear_blocked.append(
-                                                {"interface": name, "parent": want.get("policy"), "field": struct_nv["profile_key"]}
+                                                {
+                                                    "interface": name,
+                                                    "parent": want.get("policy"),
+                                                    "field": struct_nv["profile_key"],
+                                                    "note": _sc_note,
+                                                }
                                             )
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
@@ -17198,13 +17241,16 @@ def main():
 
     if dcnm_intf.struct_clear_blocked:
         cleared = sorted(
-            {(b["interface"], b["parent"], b["field"]) for b in dcnm_intf.struct_clear_blocked}
+            {
+                (b["interface"], b["parent"], b["field"], b["note"])
+                for b in dcnm_intf.struct_clear_blocked
+            }
         )
         module.fail_json(
             msg="These lists are requested empty while the controller holds entries, and the module does not "
             "support removing every entry of these lists: {0}. No configuration or deployment request was sent. "
             "Keep at least one entry.".format(
-                ", ".join("{2} on {0}, parent {1}".format(*b) for b in cleared)
+                ", ".join("{2} on {0}, parent {1}{3}".format(*b) for b in cleared)
             ),
             **dcnm_intf.result
         )
