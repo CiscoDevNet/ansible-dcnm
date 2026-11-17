@@ -328,9 +328,9 @@ class TestPV09InventoryInvariants:
         # + 76: a4_1 to a4_5, + 6: vm1, + 3: dr1, + 63: rp1 to rp5 (no reset_wire: removal not measured)
         assert len(BINDING_TABLE) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
                                       + 3 + 4 + 7 + 12 + 37)
-        # + 0b_37 to 0b_42, rs1, pl1, ul1
+        # + 0b_37 to 0b_42, rs1, pl1, ul1, + 9: the routed port-channel resets measured live on that parent
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
-            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10)
+            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9)
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -387,8 +387,9 @@ class TestPV09InventoryInvariants:
         # The rows of lots rp1 to rp5 without a reset_wire (was 9eac40d2...).
         # The rows of lots rp1 to rp5 merged after the a4_*, vm1 and dr1 lots (was aa5ae723...; without those lots,
         # 34e33e5b...).
+        # The reset_wire of nine routed port-channel rows, measured live on that parent (was e5e8f03d...).
         assert PROVENANCE_SHA256 == (
-            "e5e8f03d95068a734b20f9ade66cb2fb612a8dc92106c3c08046d28cf291cf2e"
+            "32ffcc16c7fc34ae3bff69ac5ff98f73946dee9a4dfaa956c496b59a0008b372"
         )
 
 

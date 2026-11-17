@@ -5,12 +5,13 @@ the address is set and renders the address only when both are set. It blanks the
 DISABLE_IP_REDIRECTS is true. The address pair reuses the native public keys of the other routed profiles, and so does
 the combined redirect option (the SVI key), with this parent's default. The engine refuses a request that ends with one
 half of the address pair, and an explicit split redirect false while the combined option ends true. Link-local, ND and
-the split redirects reuse the int_routed_host contracts except the reset. None of the seven rows declares a reset, so
-under replaced and overridden an omitted value that differs from the default is refused before any write (per route in
+the split redirects reuse the int_routed_host contracts, with the resets measured live on this parent ("" and "false");
+their omission cases are in test_binding_l3po_measured_resets.py. A split reset is sent only while the combined option
+is stored "false" and ends "false". The address pair and the combined option have no reset, so under replaced and
+overridden an omitted value that differs from the default is refused before any write (per route in
 test_binding_rp_omission.py). The integer prefix has no public clear, so clearing the address while a prefix is stored
 is refused too: the address is removed only with the port-channel. A split option stored while the combined option
-ends true configures nothing and is kept. The split options declare no default, so a stored "false" is not neutral
-either and an omission over it is refused.
+ends true configures nothing and is kept.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -47,10 +48,9 @@ SET = {**BASE, **ADDR, "ipv6_link_local": "fe80::31", "ipv6_nd_suppress_ra": Tru
        "disable_ipv6_redirects": False}
 SET_WIRE = {**ADDR_WIRE, "ipv6LinkLocal": "fe80::31", "ipv6NdSuppressRa": "true", "ipv4Redirects": "true",
             "ipv6Redirects": "false"}
-# The keys of SET that replaced and overridden cannot withdraw. disable_ipv6_redirects is stored "false", which is not
-# a declared default.
-REFUSED_KEYS = ("ipv6_addr", "ipv6_mask_len", "ipv6_link_local", "ipv6_nd_suppress_ra", "disable_ipv4_redirects",
-                "disable_ipv6_redirects")
+# The keys of SET that replaced and overridden cannot withdraw, and the ones they reset (combined option stored false).
+REFUSED_KEYS = ("ipv6_addr", "ipv6_mask_len")
+RESET_KEYS = ("ipv6_link_local", "ipv6_nd_suppress_ra", "disable_ipv4_redirects", "disable_ipv6_redirects")
 KEPT_NV = ("MEMBER_INTERFACES", "IP", "PREFIX", "INTF_VRF", "MTU", "DESC")
 
 
@@ -83,13 +83,17 @@ def test_link_local_nd_and_split_redirects_reuse_the_routed_ethernet_contract(ke
     assert b is not None and (b["parent_nvpair"], b["mechanism"]) == (nvpair, "passthrough")
     assert (b["applicable_interface_type"], b["applicable_mode"]) == ("pc", "l3")
     assert resolve_by_nvpair(L3PO, nvpair) is b
-    assert "reset_wire" not in b
     routed = resolve_binding(h.ROUTED, key)
     for field in ("parent_nvpair", "type", "default_template", "max_length", "string_compare",
                   "min_ndfc_version", "no_log", "inert_when"):
         assert b.get(field) == routed.get(field), (key, field)
-    # The routed reset stays the evidence for a later measurement on this parent; it is not used here.
-    assert routed.get("reset_wire") is not None
+    # The wire measured on this parent is the routed one.
+    assert b["reset_wire"] == routed["reset_wire"]
+
+
+def test_the_address_pair_and_the_combined_option_have_no_reset():
+    for nvpair in ("IPv6", "IPv6_PREFIX", "DISABLE_IP_REDIRECTS"):
+        assert "reset_wire" not in resolve_by_nvpair(L3PO, nvpair), nvpair
 
 
 def test_the_address_pair_uses_the_native_public_keys_and_the_template_bounds():
@@ -303,26 +307,36 @@ def test_replaced_with_a_stored_combined_true_kept_and_a_stored_split_false_writ
     assert h.writes(calls) == []
 
 
-def test_replaced_omitting_a_live_split_option_is_refused():
-    """With the combined option at its default the split option is live, and it has no reset."""
+def test_replaced_omitting_a_live_split_option_resets_it():
+    """With the combined option stored and kept at its default the split option is live and is reset to "false"."""
     have = _l3po_pim_bfd_have({**BASE, "disable_ip_redirects": False, "disable_ipv4_redirects": True})
     result, calls = h.run_configs([_po({**BASE, "disable_ip_redirects": False})], "replaced", have)
-    _refused(result, calls, "disable_ipv4_redirects on %s" % L3PO)
+    assert not result.get("failed"), result.get("msg")
+    assert _sel(_only(calls)) == {"DISABLE_IP_REDIRECTS": "false", "ipv4Redirects": "false"}
+
+
+def test_replaced_omitting_a_split_option_without_a_stored_combined_option_is_refused():
+    have = _l3po_pim_bfd_have({**BASE, "disable_ipv4_redirects": True})
+    assert "DISABLE_IP_REDIRECTS" not in have[0]["interfaces"][0]["nvPairs"]
+    result, calls = h.run_configs([_po(BASE)], "replaced", have)
+    _refused(result, calls, "disable_ipv4_redirects (combined option disable_ip_redirects) on %s" % L3PO)
 
 
 # ------------------------------------------------------------------ replaced, overridden, deleted, query, check mode
-def test_replaced_omission_is_refused_for_every_stored_value_and_names_no_value():
+def test_replaced_omission_is_refused_for_the_address_pair_only_and_names_no_value():
     have = _l3po_pim_bfd_have({**SET, "disable_ip_redirects": False})
     result, calls = h.run_configs([_po(BASE)], "replaced", have)
     msg = _refused(result, calls, *("%s on %s" % (k, L3PO) for k in REFUSED_KEYS))
     assert "disable_ip_redirects on" not in msg, "the combined option is stored at its default"
+    assert not any(k in msg for k in RESET_KEYS), msg
     assert "2001:db8::31" not in msg and "fe80::31" not in msg
 
 
-def test_overridden_retained_port_channel_refuses_the_same_withdrawal():
+def test_overridden_retained_port_channel_refuses_the_address_pair_withdrawal():
     have = _l3po_pim_bfd_have({**SET, "disable_ip_redirects": False, "members": [MEM_A]}) + _member_have(MEM_A, PO_A)
     result, calls = _l3po_pim_bfd_run([_po({**BASE, "members": [MEM_A]})], "overridden", have)
-    _refused(result, calls, *("%s on %s" % (k, L3PO) for k in REFUSED_KEYS))
+    msg = _refused(result, calls, *("%s on %s" % (k, L3PO) for k in REFUSED_KEYS))
+    assert not any(k in msg for k in RESET_KEYS), msg
     assert _identities(calls) == []
 
 
@@ -481,3 +495,20 @@ def test_helper_superseded_reads_the_alias_value(nvpairs, superseded):
         assert gie_engine.gie_superseded(L3PO, nvpair, nvpairs) is superseded
     assert gie_engine.gie_superseded(h.ROUTED, "ipv4Redirects", {"DISABLE_IP_REDIRECTS": "true"}) is False
     assert gie_engine.gie_superseded(L3PO, "DISABLE_IP_REDIRECTS", {"DISABLE_IP_REDIRECTS": "true"}) is False
+
+
+@pytest.mark.parametrize("have,final,measured", [
+    ({"DISABLE_IP_REDIRECTS": "false"}, {"DISABLE_IP_REDIRECTS": "false"}, True),
+    ({"DISABLE_IP_REDIRECTS": False}, {"DISABLE_IP_REDIRECTS": "false"}, True),
+    ({"DISABLE_IP_REDIRECTS": "true"}, {"DISABLE_IP_REDIRECTS": "false"}, False),
+    ({"DISABLE_IP_REDIRECTS": "false"}, {"DISABLE_IP_REDIRECTS": "true"}, False),
+    ({}, {"DISABLE_IP_REDIRECTS": "false"}, False),
+    ({"DISABLE_IP_REDIRECTS": ""}, {"DISABLE_IP_REDIRECTS": ""}, False),
+    ({"DISABLE_IP_REDIRECTS": None}, {"DISABLE_IP_REDIRECTS": "false"}, False),
+], ids=["stored_false_kept", "native_false", "stored_true_turned_off", "turned_on", "absent", "empty", "null"])
+def test_helper_alias_reset_measured_only_with_the_alias_stored_and_kept_false(have, final, measured):
+    for nvpair in ("ipv4Redirects", "ipv6Redirects"):
+        assert gie_engine.gie_alias_reset_measured(L3PO, nvpair, have, final) is measured
+    # Not a dependent: no alias condition.
+    assert gie_engine.gie_alias_reset_measured(L3PO, "bfdEcho", {}, {}) is True
+    assert gie_engine.gie_alias_reset_measured(h.ROUTED, "ipv4Redirects", {}, {}) is True

@@ -691,6 +691,7 @@ bindings:
     applicable_mode: l3
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

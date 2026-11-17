@@ -677,9 +677,10 @@ def test_the_previous_lot_is_untouched():
     # + 1 routed port-channel PIM BFD reset (slice 0b_39) = 230, + 16 routed port-channel OSPF resets (slice 0b_40) = 246,
     # + 1 trunk port-channel reset-skip reset (slice rs1) = 247, + 2 peer-link resets (slice pl1) = 249,
     # + 12 uplink resets (slice ul1) = 261, + 2 routed port-channel PIM resets (slice 0b_41) = 263,
-    # + 10 routed port-channel EIGRP resets (slice 0b_42) = 273.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10, (
-        "the integrated table carries {0} resets, expected 273".format(len(with_reset)))
+    # + 10 routed port-channel EIGRP resets (slice 0b_42) = 273, + 9 routed port-channel resets measured live on that
+    # parent = 282.
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9, (
+        "the integrated table carries {0} resets, expected 282".format(len(with_reset)))
     lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset
                 if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r.get("reset_wire") is not None}
     assert lot_rows == {(f[0], f[1]) for f in VPC_ROWS}
@@ -864,9 +865,10 @@ def test_the_arithmetic_is_197_plus_three():
     # + 1 routed port-channel PIM BFD reset (slice 0b_39) = 230, + 16 routed port-channel OSPF resets (slice 0b_40) = 246,
     # + 1 trunk port-channel reset-skip reset (slice rs1) = 247, + 2 peer-link resets (slice pl1) = 249,
     # + 12 uplink resets (slice ul1) = 261, + 2 routed port-channel PIM resets (slice 0b_41) = 263,
-    # + 10 routed port-channel EIGRP resets (slice 0b_42) = 273.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10, (
-        "the table carries %d resets, expected 273" % len(with_reset))
+    # + 10 routed port-channel EIGRP resets (slice 0b_42) = 273, + 9 routed port-channel resets measured live on that
+    # parent = 282.
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9, (
+        "the table carries %d resets, expected 282" % len(with_reset))
     hsrp = {r["profile_key"] for r in with_reset
             if r["parent_template"] == SVI and r["profile_key"].startswith("hsrp")}
     assert hsrp == set(IDS), sorted(hsrp)

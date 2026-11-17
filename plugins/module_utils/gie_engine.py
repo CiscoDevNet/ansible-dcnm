@@ -800,6 +800,8 @@ _GIE_ABSENT = object()
 #   GIE_SUPERSEDING_ALIASES: (parent, alias, wire, dependents). While `alias` holds `wire` the template blanks the
 #       dependents (int_l3_port_channel DISABLE_IP_REDIRECTS over the split redirect options), so an explicit
 #       dependent "false" asks for a line the template does not render, and a stored dependent configures nothing.
+#       A dependent's own reset is sent only while the alias is stored and ends at its default
+#       (gie_alias_reset_measured).
 GIE_PAIRED_NVPAIRS = (("int_l3_port_channel", "IPv6", "IPv6_PREFIX"),)
 GIE_SUPERSEDING_ALIASES = (("int_l3_port_channel", "DISABLE_IP_REDIRECTS", "true", ("ipv4Redirects", "ipv6Redirects")),)
 
@@ -821,6 +823,26 @@ def gie_superseded(parent_template, nvpair, nvpairs):
     if found is None or not isinstance(nvpairs, dict) or nvpairs.get(found[0]) is None:
         return False
     return _have_comparison_wire(nvpairs[found[0]]) == found[1]
+
+
+def gie_alias_reset_measured(parent_template, nvpair, have_nvpairs, final_nvpairs):
+    """True when the reset of a GIE_SUPERSEDING_ALIASES dependent may be sent: its alias is stored at the alias's declared
+    default and ends there.
+
+    The split redirect resets of int_l3_port_channel were measured only in that state (DISABLE_IP_REDIRECTS "false"
+    before and after). A stored alias that this request changes, or one that is absent or empty on either side, is not
+    that state. True for an nvPair that is not a dependent."""
+    found = gie_superseding_alias(parent_template, nvpair)
+    if found is None:
+        return True
+    off = gie_declared_default_wire(resolve_by_nvpair(parent_template, found[0]))
+    if off is None:
+        return False
+    for nvpairs in (have_nvpairs, final_nvpairs):
+        value = nvpairs.get(found[0]) if isinstance(nvpairs, dict) else None
+        if value is None or _have_comparison_wire(value) != off:
+            return False
+    return True
 
 
 def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nvpairs, neutralize,

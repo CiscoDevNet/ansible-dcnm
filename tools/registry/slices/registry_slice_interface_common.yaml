@@ -2268,11 +2268,12 @@ bindings:
   #     empty (L1437). Parent and child spellings differ for the ACL, as on int_routed_host: the rows use the parent
   #     names.
   # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42), so an
-  # explicit "false" or "" would leave the child out. Inferred from the body; nothing here is measured live, so
-  # validated_on is absent, removal_semantics stays unresolved and no row declares a reset_wire: an omitted non-default
-  # value is refused under replaced and overridden. arp_timeout has no public clear. Evidence for a later measurement on
-  # this parent: class X for arpTimeout (its int_routed_host reset was measured live), class P for bfdEcho and ipv4AclIn
-  # (int_routed_host rows whose reset is not annotated as measured).
+  # explicit "false" or "" leaves the child out. Explicit withdrawal was measured live on this parent (NDFC 12.6.0.267,
+  # body 81c9392e): merged disable_bfd_echo false (bfdEcho "false") removed `no bfd echo`, and merged
+  # ipv4_acl_in "" removed `ip access-group <name> in`. bfdEcho and ipv4AclIn therefore declare those values as their
+  # reset_wire. The automatic reset on omission under replaced/overridden is new in this registry and not tested live.
+  # arpTimeout has no reset_wire and no public clear: only a change within 60..28800 was measured, so an omitted value
+  # is still refused under replaced and overridden, and the port-channel delete is the only removal.
   #
   # Prerequisites, not checked by the module: `feature bfd` for the echo line, and an existing IPv4 access list. On
   # another parent NDFC was measured to store the ACL name lowercased; the case of a port-channel readback is not
@@ -2302,6 +2303,7 @@ bindings:
     applicable_mode: l3
     type: string
     string_compare: exact
+    reset_wire: ''
     min_length: 1
     max_length: 64
     presence_model: two_axis

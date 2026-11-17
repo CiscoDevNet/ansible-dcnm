@@ -913,6 +913,17 @@ PILOT = {
     (PC_L3, "eigrpBfd"): ("enable_eigrp_bfd", True, "false", dict(EIGRP_CTX)),
     (PC_L3, "eigrpBfdDisable"): ("disable_eigrp_bfd", True, "false", dict(EIGRP_CTX)),
     (PC_L3, "eigrpProcessTag"): ("eigrp_process_tag", "PILOT-EIGRP", "", dict(EIGRP_TAG_CTX)),
+    # Routed port-channel rows whose explicit withdrawal was measured live on this parent. The split redirect resets
+    # hold only while the combined option is stored false and stays false, so their context sets it false.
+    (PC_L3, "CDP_ENABLE"): ("enable_cdp", False, "true", {}),
+    (PC_L3, "lldpTransmit"): ("disable_lldp_transmit", True, "false", {}),
+    (PC_L3, "lldpReceive"): ("disable_lldp_receive", True, "false", {}),
+    (PC_L3, "bfdEcho"): ("disable_bfd_echo", True, "false", {}),
+    (PC_L3, "ipv4AclIn"): ("ipv4_acl_in", "PILOT-ACL", "", {}),
+    (PC_L3, "ipv6LinkLocal"): ("ipv6_link_local", "fe80::33:1", "", {}),
+    (PC_L3, "ipv6NdSuppressRa"): ("ipv6_nd_suppress_ra", True, "false", {}),
+    (PC_L3, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", dict(disable_ip_redirects=False)),
+    (PC_L3, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", dict(disable_ip_redirects=False)),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became

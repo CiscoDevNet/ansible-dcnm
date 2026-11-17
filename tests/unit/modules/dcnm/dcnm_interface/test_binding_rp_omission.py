@@ -1,11 +1,13 @@
 """Omission contract of the routed port-channel controls, MACsec, IPv6, redirects, PFC, QoS and NetFlow routes.
 
 Every route is driven through the real ``main()`` with the controller doubled at ``dcnm_send``
-(``helpers/binding_harness.py``). None of these rows carries a ``reset_wire``: a reset measured on another parent does
-not establish this route. Under ``replaced``, a retained interface of ``overridden`` and the role-default reset of a
-physical port, an omitted value that differs from the template default is refused before any write. An explicit value,
-including the template default, is sent as requested; sending a default does not prove that the device line is removed.
-The IPv6 address and prefix are a pair and are covered in ``test_binding_l3po_ipv6_redirects.py``.
+(``helpers/binding_harness.py``). A reset measured on another parent does not establish a route. The routes in
+``MEASURED`` carry a ``reset_wire`` because their explicit withdrawal was measured live on the routed port-channel
+itself; their omission contract is in ``test_binding_l3po_measured_resets.py``. For every other route, under
+``replaced``, a retained interface of ``overridden`` and the role-default reset of a physical port, an omitted value
+that differs from the template default is refused before any write. An explicit value, including the template default,
+is sent as requested; sending a default does not prove that the device line is removed. The IPv6 address and prefix
+are a pair and are covered in ``test_binding_l3po_ipv6_redirects.py``.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -97,8 +99,21 @@ for _p in NETFLOW_PARENTS:
 ROUTES[(SVI, "NETFLOW_SAMPLER")] = ("netflow_sampler", "PILOT-FS", "", dict(NETFLOW_ON))
 PAIR = ((PC_L3, "IPv6"), (PC_L3, "IPv6_PREFIX"))
 
+# Routes with a reset_wire, measured live on this parent, and that wire value.
+MEASURED = {
+    (PC_L3, "bfdEcho"): "false",
+    (PC_L3, "ipv4AclIn"): "",
+    (PC_L3, "ipv6LinkLocal"): "",
+    (PC_L3, "ipv6NdSuppressRa"): "false",
+    (PC_L3, "ipv4Redirects"): "false",
+    (PC_L3, "ipv6Redirects"): "false",
+}
+
 ITEMS = [(p, n, k, a, z, e) for (p, n), (k, a, z, e) in sorted(ROUTES.items())]
 IDS = ["%s::%s" % (p, n) for p, n, _k, _a, _z, _e in ITEMS]
+# The routes whose omission of a stored non-default value is refused.
+REFUSED = [i for i in ITEMS if (i[0], i[1]) not in MEASURED]
+REFUSED_IDS = ["%s::%s" % (p, n) for p, n, _k, _a, _z, _e in REFUSED]
 # Rows whose neutral value is the declared template default; the others are cleared with "" where the type allows it.
 WITH_DEFAULT = [i for i in ITEMS if i[4] != ""]
 WITH_DEFAULT_IDS = ["%s::%s" % (p, n) for p, n, _k, _a, _z, _e in WITH_DEFAULT]
@@ -125,19 +140,23 @@ def _changed(parent):
     return {"peer1_description": "changed"} if parent in VPC_PARENTS else {"description": "changed"}
 
 
-def test_every_route_is_a_registered_row_without_a_reset():
+def test_only_the_measured_routes_carry_a_reset():
     from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import BINDING_TABLE
     rows = {(b["parent_template"], b["parent_nvpair"]): b for b in BINDING_TABLE}
     assert len(ROUTES) + len(PAIR) == 63
+    assert set(MEASURED) <= set(ROUTES)
     for identity in list(ROUTES) + list(PAIR):
-        assert "reset_wire" not in rows[identity], identity
+        if identity in MEASURED:
+            assert rows[identity]["reset_wire"] == MEASURED[identity], identity
+        else:
+            assert "reset_wire" not in rows[identity], identity
     for (parent, nvpair), (key, applied, neutral, _extra) in ROUTES.items():
         b = rows[(parent, nvpair)]
         assert b["profile_key"] == key and b["mechanism"] == "passthrough"
         assert engine.gie_declared_default_wire(b) == (neutral or None), (parent, nvpair)
         assert wire(applied) != neutral, (parent, nvpair)
-    # The base rows keep their resets: 273 of them, as on the base commit.
-    assert sum(1 for b in BINDING_TABLE if "reset_wire" in b) == 273
+    # 273 resets on the parent commit, plus the nine measured on the routed port-channel (six here, three discovery rows).
+    assert sum(1 for b in BINDING_TABLE if "reset_wire" in b) == 273 + 9
 
 
 @pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", ITEMS, ids=IDS)
@@ -181,7 +200,7 @@ def test_replaced_omission_without_the_nvpair_in_have_writes_nothing(parent, nvp
     assert not any(nvpair in nv for nv in request_nvpairs(calls))
 
 
-@pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", ITEMS, ids=IDS)
+@pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", REFUSED, ids=REFUSED_IDS)
 def test_replaced_omission_of_a_stored_value_is_refused_before_any_write(parent, nvpair, key, applied, neutral, extra):
     have = build_have(parent, key, applied, **extra)
     result, calls = run(want_omitting(parent, key, **extra), "replaced", have, **_pkw(parent))
@@ -193,7 +212,7 @@ def test_replaced_omission_of_a_stored_value_is_refused_before_any_write(parent,
     assert _no_writes(calls)
 
 
-@pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", ITEMS, ids=IDS)
+@pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", REFUSED, ids=REFUSED_IDS)
 def test_overridden_retained_interface_refuses_the_same_withdrawal(parent, nvpair, key, applied, neutral, extra):
     have = build_have(parent, key, applied, **extra)
     result, calls = run_configs([cfg_for(parent, want_omitting(parent, key, **extra), deploy=False)], "overridden", have)
@@ -202,7 +221,7 @@ def test_overridden_retained_interface_refuses_the_same_withdrawal(parent, nvpai
     assert _no_writes(calls)
 
 
-@pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", ITEMS, ids=IDS)
+@pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", REFUSED, ids=REFUSED_IDS)
 def test_check_mode_refuses_the_same_withdrawal(parent, nvpair, key, applied, neutral, extra):
     have = build_have(parent, key, applied, **extra)
     result, calls = run(want_omitting(parent, key, **extra), "replaced", have, check_mode=True, **_pkw(parent))

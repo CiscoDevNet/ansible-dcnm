@@ -2,10 +2,10 @@
 
 The int_l3_port_channel body of the supported patch release declares bfdEcho, arpTimeout and ipv4AclIn with the types, bounds and
 defaults of int_routed_host and renders the same three children. The rows reuse the int_routed_host public keys and
-contracts except the reset: the int_routed_host resets are not measured on this parent, so these rows declare none.
-Under replaced and overridden an omitted value that differs from the default is refused before any write; the
-per-route cases are in test_binding_rp_omission.py. ARP timeout has no public clear (an empty value is refused): once
-set it can be changed within 60..28800 or removed with the port-channel.
+contracts. bfdEcho and ipv4AclIn reset to "false" and "", the explicit withdrawals measured live on this parent; the
+omission cases are in test_binding_l3po_measured_resets.py. arpTimeout has no reset: under replaced and overridden an
+omitted stored value is refused before any write, and it has no public clear (an empty value is refused), so once set
+it can be changed within 60..28800 or removed with the port-channel.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -33,6 +33,8 @@ ROWS = [
     ("ipv4_acl_in", "ipv4AclIn", "PILOT-ACL", "PILOT-ACL", ""),
 ]
 IDS = [r[0] for r in ROWS]
+# The rows with a reset_wire on this parent.
+MEASURED = ("bfdEcho", "ipv4AclIn")
 NVPAIRS = [r[1] for r in ROWS]
 BASE = dict(h.BASE_PC_L3)
 SET = {**BASE, **{r[0]: r[2] for r in ROWS}}
@@ -60,18 +62,22 @@ def _routed_nv(profile):
 
 # ------------------------------------------------------------------ the rows are the routed Ethernet contracts
 @pytest.mark.parametrize("key,nvpair,applied,wire,neutral", ROWS, ids=IDS)
-def test_the_row_reuses_the_routed_ethernet_contract_without_its_reset(key, nvpair, applied, wire, neutral):
+def test_the_row_reuses_the_routed_ethernet_contract(key, nvpair, applied, wire, neutral):
     b = resolve_binding(L3PO, key)
     assert b is not None, "%s is not registered on int_l3_port_channel" % key
     assert (b["parent_nvpair"], b["mechanism"]) == (nvpair, "passthrough")
     assert (b["applicable_interface_type"], b["applicable_mode"]) == ("pc", "l3")
     assert resolve_by_nvpair(L3PO, nvpair) is b
-    assert "reset_wire" not in b and "inert_when" not in b
+    assert "inert_when" not in b
+    if nvpair in MEASURED:
+        assert b["reset_wire"] == neutral
+    else:
+        assert "reset_wire" not in b
     routed = resolve_binding(h.ROUTED, key)
     for field in ("parent_nvpair", "type", "default_template", "min_value", "max_value", "min_length",
                   "max_length", "valid_values", "string_compare", "min_ndfc_version", "no_log"):
         assert b.get(field) == routed.get(field), (key, field)
-    # The routed reset stays the evidence for a later measurement on this parent; it is not used here.
+    # Same wire as the routed reset; on this parent only the measured rows declare it.
     assert routed.get("reset_wire") == neutral
 
 
@@ -153,12 +159,13 @@ def test_the_bounds_are_accepted():
 
 
 # ------------------------------------------------------------------ replaced, overridden, deleted, query, check mode
-def test_replaced_omission_of_the_three_is_refused_before_any_write():
+def test_replaced_omission_of_the_three_is_refused_for_the_arp_timeout_only():
+    """The omitted ARP timeout stops the whole request; BFD echo and the ACL have a reset and are not named."""
     have = _l3po_pim_bfd_have({**SET, **OTHERS})
     result, calls = h.run_configs([_po({**BASE, **OTHERS})], "replaced", have)
     assert result.get("failed") is True
-    for key in IDS:
-        assert "%s on %s" % (key, L3PO) in result["msg"], result["msg"]
+    assert "arp_timeout on %s" % L3PO in result["msg"], result["msg"]
+    assert "disable_bfd_echo" not in result["msg"] and "ipv4_acl_in" not in result["msg"], result["msg"]
     assert "PILOT-ACL" not in result["msg"] and "900" not in result["msg"], "the refusal named a value"
     assert h.writes(calls) == []
 
@@ -199,11 +206,12 @@ def test_deleted_removes_the_port_channel_and_a_repeat_writes_nothing():
     assert _identities(calls) == []
 
 
-def test_overridden_retained_port_channel_refuses_the_same_withdrawal():
+def test_overridden_retained_port_channel_refuses_the_arp_timeout_withdrawal():
     have = _l3po_pim_bfd_have({**SET, "members": [MEM_A]}) + _member_have(MEM_A, PO_A)
     result, calls = _l3po_pim_bfd_run([_po({**BASE, "members": [MEM_A]})], "overridden", have)
     assert result.get("failed") is True
-    assert all("%s on %s" % (key, L3PO) in result["msg"] for key in IDS), result["msg"]
+    assert "arp_timeout on %s" % L3PO in result["msg"], result["msg"]
+    assert "disable_bfd_echo" not in result["msg"] and "ipv4_acl_in" not in result["msg"], result["msg"]
     assert _identities(calls) == [] and h.writes(calls) == []
 
 

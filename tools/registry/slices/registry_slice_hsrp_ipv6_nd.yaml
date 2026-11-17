@@ -560,12 +560,18 @@ bindings:
   #
   # While the combined option ends "true" a stored split value configures nothing, so replaced and overridden keep it.
   #
-  # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42). Nothing
-  # here is measured live: validated_on is absent and removal_semantics stays unresolved. No row declares a reset_wire: an
-  # omitted non-default value is refused under replaced and overridden. Evidence for a later measurement on this parent:
-  # class X for link-local, ND and the split redirects (their int_routed_host resets were measured live on that parent);
-  # class D for DISABLE_IP_REDIRECTS (template default only). The split options declare no default, so a stored "false"
-  # is refused as well.
+  # Removal: add() deletes every child of the port-channel before it recreates the selected ones (see lot 0b_42).
+  # Explicit withdrawal was measured live on this parent (NDFC 12.6.0.267, body 81c9392e), each with the combined option
+  # stored and sent "false": ipv6_link_local "" with ipv6_nd_suppress_ra false removed `ipv6 link-local` and
+  # `ipv6 nd suppress-ra`; disable_ipv4_redirects false removed `no ip redirects`; disable_ipv6_redirects false removed
+  # `no ipv6 redirects`. Those four rows declare that value as their reset_wire. The automatic reset on omission under
+  # replaced/overridden is new in this registry and not tested live.
+  # The split resets hold only in the measured state: the module sends one only while DISABLE_IP_REDIRECTS is stored
+  # "false" and ends "false". While it ends "true" the stored split value is kept (above). A stored "true" that this
+  # request turns off, or an absent or empty one, is refused: the change of the combined option was measured only with
+  # the split values given explicitly, which does not cover every combination.
+  # DISABLE_IP_REDIRECTS, IPv6 and IPv6_PREFIX have no reset_wire: an omitted non-default value is refused under replaced
+  # and overridden.
 
 
   - parent_template: int_l3_port_channel
@@ -610,6 +616,7 @@ bindings:
     type: string
     string_compare: casefold
     max_length: 45
+    reset_wire: ''
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -626,6 +633,7 @@ bindings:
     applicable_mode: l3
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -657,6 +665,7 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -672,6 +681,7 @@ bindings:
     applicable_interface_type: pc
     applicable_mode: l3
     type: boolean
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

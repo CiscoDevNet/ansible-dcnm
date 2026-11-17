@@ -22,6 +22,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import gie_e
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import gie_guarded_keys
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import gie_invalid_parent_key
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import gie_nvpair_keymap
+from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import gie_superseding_alias
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import gie_validate_binding_value
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import gie_version_supported
 from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import GIE_ENABLED_PATCH_VERSIONS
@@ -1418,6 +1419,13 @@ def test_omitted_boolean_under_replaced_follows_the_withdrawal_contract(
         # covered by the W2 acceptance suite, not here.
         assert sent[nvpair] == held
         assert reported == {"DESC": "new"}
+    elif gie_superseding_alias(parent, nvpair):
+        # A split redirect reset holds only while its combined option is stored false and stays false. This HAVE
+        # has no combined option, so the reset is not sent and the field is named for refusal; the measured state
+        # is covered in test_binding_l3po_ipv6_redirects.py.
+        assert sent[nvpair] == held
+        assert reported == {"DESC": "new"}
+        assert [(b["field"], b["reason"]) for b in obj.withdrawal_blocked] == [(profile_key, "alias_not_measured")]
     else:
         assert sent[nvpair] == reset, (
             "the withdrawal did not reach the request; omission must transmit the "

@@ -1598,6 +1598,10 @@ bindings:
   # the native port-channel/vPC profiles; disable_lldp_*: slice 0b_17).
   # Read from the captured SMU 4.3.1.0175006017 bodies; not measured live. No reset_wire: none is measured on these
   # parents, so replaced/overridden refuse to withdraw a stored non-default value.
+  # Since then, on int_l3_port_channel only, configuration and explicit withdrawal were measured live (NDFC 12.6.0.267,
+  # body 81c9392e): explicit CDP_ENABLE "true" and lldpTransmit "false" removed `no cdp enable` and `no lldp transmit`
+  # from the member, and an explicit lldpReceive "false" under replaced removed `no lldp receive`. Those three rows
+  # declare that value as their reset_wire. The automatic reset on omission under replaced/overridden is not tested live.
 
   # int_l3_port_channel CDP_ENABLE -> enable_cdp. Declared at L95; member PTI int_l3_port_channel_member.
   - parent_template: int_l3_port_channel
@@ -1607,6 +1611,7 @@ bindings:
     applicable_mode: l3
     type: boolean
     default_template: true
+    reset_wire: "true"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1629,6 +1634,7 @@ bindings:
     applicable_mode: l3
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1651,6 +1657,7 @@ bindings:
     applicable_mode: l3
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

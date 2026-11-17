@@ -387,10 +387,11 @@ def test_e13_registry_rows_and_resets_are_unchanged_except_the_c1_pvlan_companio
     # and 2 resets: routed port-channel PIM sparse mode and DR priority, slice 0b_41 (no PVLAN parent); + 13 rows and
     # 10 resets: routed port-channel EIGRP, slice 0b_42 (no PVLAN parent); + 76 rows and no reset: lots a4_1 to a4_5;
     # + 6 rows and no reset: VLAN mapping on the trunk parents, slice vm1 (no PVLAN parent); + 3 rows and no reset: DHCP
-    # relay servers, slice dr1 (no PVLAN parent); + 63 rows and no reset: lots rp1 to rp5 (no PVLAN parent).
+    # relay servers, slice dr1 (no PVLAN parent); + 63 rows and no reset: lots rp1 to rp5 (no PVLAN parent); + 9 resets
+    # on existing routed port-channel rows, measured live on that parent (no PVLAN parent).
     assert (rows, resets, pvlan) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
                                      + 3 + 4 + 7 + 12 + 37,
-                                     207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10, 11 + 1)
+                                     207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9, 11 + 1)
 
 
 # ===================================================================================== E14

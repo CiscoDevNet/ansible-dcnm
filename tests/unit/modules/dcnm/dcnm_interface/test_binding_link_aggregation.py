@@ -1,9 +1,11 @@
 """Link, discovery, STP/protection, LACP and dampening bindings added on parents that lacked them.
 
 Every route is driven through the real ``main()`` with the controller doubled at ``dcnm_send``
-(``helpers/binding_harness.py``). None of these rows carries a ``reset_wire``: no reset is measured
-on these parents, so an authoritative withdrawal of a stored value that differs from the template
-default must be refused before any write, and the explicit template default stays the only clear.
+(``helpers/binding_harness.py``). Only the routed port-channel discovery rows in ``MEASURED`` carry a
+``reset_wire``: their explicit withdrawal was measured live on that parent, and their omission cases are in
+``test_binding_l3po_measured_resets.py``. No reset is measured for the other routes, so an authoritative
+withdrawal of a stored value that differs from the template default must be refused before any write, and the
+explicit template default stays the only clear.
 The CLI these values produce (inline, on a member, or on a vPC peer's port-channel) is the
 controller's and the device's; it is not observable here and is a live-test question.
 """
@@ -141,8 +143,14 @@ ROUTES = {
     (VPC_DOT1Q, "PORT_DUPLEX_MODE"): ("duplex", "full", "auto", {}),
 }
 
+# Routes with a reset_wire, measured live on this parent, and that wire value.
+MEASURED = {(PC_L3, "CDP_ENABLE"): "true", (PC_L3, "lldpTransmit"): "false", (PC_L3, "lldpReceive"): "false"}
+
 ITEMS = [(p, n, k, a, d, e) for (p, n), (k, a, d, e) in sorted(ROUTES.items())]
 IDS = ["%s::%s" % (p, n) for p, n, _k, _a, _d, _e in ITEMS]
+# The routes whose omission of a stored non-default value is refused.
+REFUSED = [i for i in ITEMS if (i[0], i[1]) not in MEASURED]
+REFUSED_IDS = ["%s::%s" % (p, n) for p, n, _k, _a, _d, _e in REFUSED]
 WITH_DEFAULT = [i for i in ITEMS if i[4] is not None]
 WITH_DEFAULT_IDS = ["%s::%s" % (p, n) for p, n, _k, _a, _d, _e in WITH_DEFAULT]
 AGGREGATES = NON_ETH_PARENTS
@@ -153,13 +161,17 @@ def _no_writes(calls):
     return s["updates"] == [] and s["deploys"] == [] and s["other"] == []
 
 
-def test_every_route_is_a_registered_row_without_a_reset():
+def test_only_the_measured_routes_carry_a_reset():
     from ansible_collections.cisco.dcnm.plugins.module_utils.gie_binding_table import BINDING_TABLE
     rows = {(b["parent_template"], b["parent_nvpair"]): b for b in BINDING_TABLE}
+    assert set(MEASURED) <= set(ROUTES)
     for (parent, nvpair), (key, applied, default, _extra) in ROUTES.items():
         b = rows[(parent, nvpair)]
         assert b["profile_key"] == key and b["mechanism"] == "passthrough"
-        assert "reset_wire" not in b, (parent, nvpair)
+        if (parent, nvpair) in MEASURED:
+            assert b["reset_wire"] == MEASURED[(parent, nvpair)] == wire(default), (parent, nvpair)
+        else:
+            assert "reset_wire" not in b, (parent, nvpair)
         if default is None:
             assert "default_template" not in b, (parent, nvpair)
         else:
@@ -198,7 +210,7 @@ def test_replaced_omission_at_the_template_default_writes_nothing(parent, nvpair
     assert _no_writes(calls) and result.get("changed") is False
 
 
-@pytest.mark.parametrize("parent,nvpair,key,applied,default,extra", ITEMS, ids=IDS)
+@pytest.mark.parametrize("parent,nvpair,key,applied,default,extra", REFUSED, ids=REFUSED_IDS)
 def test_replaced_omission_of_a_stored_value_is_refused_before_any_write(parent, nvpair, key, applied, default, extra):
     have = build_have(parent, key, applied, **extra)
     result, calls = run(want_omitting(parent, key, **extra), "replaced", have, **_pkw(parent))
@@ -208,7 +220,7 @@ def test_replaced_omission_of_a_stored_value_is_refused_before_any_write(parent,
     assert _no_writes(calls)
 
 
-@pytest.mark.parametrize("parent,nvpair,key,applied,default,extra", ITEMS, ids=IDS)
+@pytest.mark.parametrize("parent,nvpair,key,applied,default,extra", REFUSED, ids=REFUSED_IDS)
 def test_overridden_retained_interface_refuses_the_same_withdrawal(parent, nvpair, key, applied, default, extra):
     have = build_have(parent, key, applied, **extra)
     result, calls = run_configs([cfg_for(parent, want_omitting(parent, key, **extra), deploy=False)], "overridden", have)

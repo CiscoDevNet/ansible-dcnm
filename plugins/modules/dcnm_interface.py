@@ -173,10 +173,12 @@ options:
       sent. The module never creates the EIGRP process or the referenced prefix lists. EIGRP adjacency is not tested.
     - The routed port-channel also accepts C(disable_bfd_echo) (bool; renders C(no bfd echo)), C(arp_timeout)
       (60-28800 seconds) and C(ipv4_acl_in) (1-64 characters, compared with its case), with the routed Ethernet
-      meaning. No reset is established for them on this profile, so under C(replaced) and C(overridden) omitting a key
-      stored with a non-default value fails the task before any change is sent. C(disable_bfd_echo=false) and an empty
-      C(ipv4_acl_in) are sent when given; C(arp_timeout) has no clear and is removed only with the port-channel. The
-      echo line needs C(feature bfd); the module never creates the access list. NOT LIVE TESTED.
+      meaning. Their configuration was live tested on NDFC 12.6.0.267, and so were C(disable_bfd_echo=false) and an
+      empty C(ipv4_acl_in), which remove their lines. Under C(replaced) and C(overridden) an omitted stored value of
+      these two keys is reset the same way; that reset on omission is NOT LIVE TESTED. C(arp_timeout) has no reset and
+      no clear. Omitting a stored value under C(replaced) or C(overridden) fails the task before any change is sent,
+      and the value is removed only with the port-channel. The echo line needs C(feature bfd); the module never
+      creates the access list.
     - The routed port-channel also accepts the MACsec keys of the routed Ethernet profile -
       C(enable_macsec_interface_policy), C(macsec_key_chain_name), C(macsec_policy_name) and
       C(macsec_fallback_key_chain_name), with the same bounds and case-sensitive names. The template passes them to every
@@ -193,10 +195,14 @@ options:
       port-channel. C(ipv6_link_local) and C(ipv6_nd_suppress_ra) have the routed Ethernet meaning. Redirects are
       C(disable_ipv4_redirects), C(disable_ipv6_redirects) and the combined C(disable_ip_redirects) (default false
       here). While the combined option is true the template ignores the other two, so an explicit false for either one
-      is refused unless the same task sets the combined option to false, and a stored value for either one is kept. No
-      reset is established for these keys on this profile, so under C(replaced) and C(overridden) omitting a key
-      stored with a non-default value fails the task before any change is sent. The two split options declare no
-      default, so omitting one stored as false fails too. NOT LIVE TESTED.
+      is refused unless the same task sets the combined option to false, and a stored value for either one is kept.
+      Configuration of these keys was live tested on NDFC 12.6.0.267, and so were an empty C(ipv6_link_local),
+      C(ipv6_nd_suppress_ra=false) and a split option set to false with the combined option false, which remove
+      their lines. Under C(replaced) and C(overridden) an omitted stored value of these four keys is reset the same
+      way (NOT LIVE TESTED). A split option is reset only while C(disable_ip_redirects) is stored false and stays
+      false; when the task turns a stored true combined option off, or the combined option is not stored, omitting a
+      stored split option fails the task before any change is sent. C(ipv6_addr), C(ipv6_mask_len) and
+      C(disable_ip_redirects) have no reset, so omitting one stored with a non-default value fails the task too.
     - C(enable_pfc) (bool) is also accepted on the routed Ethernet, Ethernet dot1q-tunnel, routed port-channel,
       dot1q-tunnel port-channel and vPC trunk, access and dot1q-tunnel profiles, with the meaning it has on the trunk
       and access profiles, which keep their native default. The Ethernet dot1q-tunnel profile also accepts
@@ -599,8 +605,10 @@ options:
               12.6.0.267; NOT LIVE TESTED in mode 'dot1q', read from the installed template body).
               It needs an approved C(patch_version), has no default, and
               the template sends it to each member policy, where 'false' renders C(no cdp enable).
-              'merged' keeps an omitted value. 'replaced' and 'overridden' refuse to withdraw a stored
-              'false', because no reset is verified on these policies; set 'true' explicitly instead.
+              'merged' keeps an omitted value. In mode 'l3' an explicit 'true' was live tested to remove
+              that line, and 'replaced' and 'overridden' send 'true' for an omitted stored 'false' (NOT LIVE
+              TESTED). In mode 'dot1q' they refuse to withdraw a stored 'false', because no reset is verified
+              there; set 'true' explicitly instead.
             type: bool
             default: true
           disable_lldp_transmit:
@@ -608,8 +616,8 @@ options:
             - Disable LLDP transmit on the members of a routed port-channel (mode 'l3') or of the
               port-channel modes that already registered it. Registered field (live tested in mode 'l3'
               on NDFC 12.6.0.267); needs an approved C(patch_version); explicit-only, no default. The template sends
-              the value to each member policy. In mode 'l3', 'replaced' and 'overridden' refuse to
-              withdraw a stored 'true'; set 'false' explicitly instead.
+              the value to each member policy. In mode 'l3' an explicit 'false' was live tested to remove the
+              line, and 'replaced' and 'overridden' send 'false' for an omitted stored 'true' (NOT LIVE TESTED).
             type: bool
           disable_lldp_receive:
             description:
@@ -3591,6 +3599,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import (
     gie_inert_gate_nvpairs,
     gie_superseded,
     gie_superseding_alias,
+    gie_alias_reset_measured,
     gie_dependency_plan,
     gie_binding_is_owned_elsewhere,
     gie_patch_supported,
@@ -13478,7 +13487,22 @@ class DcnmIntf:
                                             # each copy individually unkillable by mutation
                                             # while protecting nothing the generic
                                             # carry-forward below does not already do.
-                                            if _w_action == GIE_WITHDRAW_RESET:
+                                            if _w_action == GIE_WITHDRAW_RESET and gie_superseding_alias(
+                                                want.get("policy"), _w_nvp
+                                            ):
+                                                # A split redirect reset waits for its alias: judged below.
+                                                _w_gated.append((
+                                                    gie_resolve_by_nvpair(want.get("policy"), _w_nvp),
+                                                    {
+                                                        "parent": want.get("policy"),
+                                                        "field": _w_key,
+                                                        "nvpair": _w_nvp,
+                                                        "interface": name,
+                                                        "reason": "alias_not_measured",
+                                                    },
+                                                    _w_wire,
+                                                ))
+                                            elif _w_action == GIE_WITHDRAW_RESET:
                                                 want[k][0][ik][_w_nvp] = _w_wire
                                                 if _w_nvp not in nv_keys:
                                                     nv_keys.append(_w_nvp)
@@ -13507,7 +13531,7 @@ class DcnmIntf:
                                                 ):
                                                     # Judged after this loop, against the gate's
                                                     # final value (explicit, or reset above).
-                                                    _w_gated.append((_w_row, _w_entry))
+                                                    _w_gated.append((_w_row, _w_entry, None))
                                                 else:
                                                     self.withdrawal_blocked.append(_w_entry)
                                         # A field inert under its gate (inert_when) is not withdrawn
@@ -13517,8 +13541,9 @@ class DcnmIntf:
                                         # gate is taken from WANT when this pass sets it, else from
                                         # the authoritative HAVE the carry-forward will preserve.
                                         # A split redirect option superseded by its alias (GIE_SUPERSEDING_ALIASES) is judged
-                                        # the same way: the template blanks it while the alias ends true.
-                                        for _w_b, _w_entry in _w_gated:
+                                        # the same way: the template blanks it while the alias ends true. Otherwise its
+                                        # reset is sent only in the measured state, the alias stored and ending false.
+                                        for _w_b, _w_entry, _w_reset in _w_gated:
                                             _w_gate_nv = {}
                                             _w_alias = gie_superseding_alias(want.get("policy"), _w_b["parent_nvpair"])
                                             # The gate, and its `unless` nvPair when declared (int_loopback: INTF_VRF).
@@ -13532,7 +13557,23 @@ class DcnmIntf:
                                                             break
                                             if gie_superseded(want.get("policy"), _w_b["parent_nvpair"], _w_gate_nv):
                                                 continue
-                                            if not gie_binding_inert(_w_b, _w_gate_nv):
+                                            if _w_reset is not None:
+                                                _w_have_nv = next(
+                                                    (intf[ik] for intf in d[k] if isinstance(intf.get(ik), dict)), {}
+                                                )
+                                                if not gie_alias_reset_measured(
+                                                    want.get("policy"), _w_b["parent_nvpair"], _w_have_nv, _w_gate_nv
+                                                ):
+                                                    _w_entry["gate"] = gie_resolve_by_nvpair(
+                                                        want.get("policy"), _w_alias[0]
+                                                    )["profile_key"]
+                                                    self.withdrawal_blocked.append(_w_entry)
+                                                    continue
+                                                want[k][0][ik][_w_b["parent_nvpair"]] = _w_reset
+                                                if _w_b["parent_nvpair"] not in nv_keys:
+                                                    nv_keys.append(_w_b["parent_nvpair"])
+                                                changed_dict[k][0][ik][_w_b["parent_nvpair"]] = _w_reset
+                                            elif not gie_binding_inert(_w_b, _w_gate_nv):
                                                 self.withdrawal_blocked.append(_w_entry)
                                             elif "clear" in _w_b["inert_when"]:
                                                 # Key material is cleared, not kept, once its gate ends off.
@@ -17115,6 +17156,13 @@ def main():
                 if b["reason"] == GIE_WITHDRAW_UNCLASSIFIED
             }
         )
+        alias_state = sorted(
+            {
+                (b["parent"], b["field"], b["gate"])
+                for b in dcnm_intf.withdrawal_blocked
+                if b["reason"] == "alias_not_measured"
+            }
+        )
         parts = []
         if unsupported:
             parts.append(
@@ -17132,6 +17180,14 @@ def main():
                 "confirm the replacement is complete: {1}.".format(
                     module.params["state"],
                     ", ".join("{0} on {1}".format(f, p) for p, f in unclassified),
+                )
+            )
+        if alias_state:
+            parts.append(
+                "These fields were omitted while the controller holds a different configured "
+                "value, and their reset is verified only while the combined option is stored "
+                "false and stays false, which this request does not keep: {0}.".format(
+                    ", ".join("{0} (combined option {2}) on {1}".format(f, p, g) for p, f, g in alias_state)
                 )
             )
         parts.append(

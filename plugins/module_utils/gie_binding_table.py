@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = e5e8f03d95068a734b20f9ade66cb2fb612a8dc92106c3c08046d28cf291cf2e
+# provenance_sha256 = 32ffcc16c7fc34ae3bff69ac5ff98f73946dee9a4dfaa956c496b59a0008b372
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "e5e8f03d95068a734b20f9ade66cb2fb612a8dc92106c3c08046d28cf291cf2e"
+PROVENANCE_SHA256 = "32ffcc16c7fc34ae3bff69ac5ff98f73946dee9a4dfaa956c496b59a0008b372"
 
 BINDING_TABLE = (
     {
@@ -525,6 +525,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': True,
+        'reset_wire': 'true',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -711,6 +712,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -994,6 +996,7 @@ BINDING_TABLE = (
         'applicable_interface_type': 'pc',
         'applicable_mode': 'l3',
         'type': 'string',
+        'reset_wire': '',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'min_length': 1,
@@ -1008,6 +1011,7 @@ BINDING_TABLE = (
         'applicable_interface_type': 'pc',
         'applicable_mode': 'l3',
         'type': 'boolean',
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1019,6 +1023,7 @@ BINDING_TABLE = (
         'applicable_interface_type': 'pc',
         'applicable_mode': 'l3',
         'type': 'string',
+        'reset_wire': '',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'max_length': 45,
@@ -1033,6 +1038,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1044,6 +1050,7 @@ BINDING_TABLE = (
         'applicable_interface_type': 'pc',
         'applicable_mode': 'l3',
         'type': 'boolean',
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1056,6 +1063,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1068,6 +1076,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
