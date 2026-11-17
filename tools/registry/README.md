@@ -153,6 +153,11 @@ form the parent template reads, and compares two values by their rows in any ord
 `valid_values`, `wire_values`, lengths or numeric bounds: the contract owns the value rules. The generator keeps its own copy
 of the contract names (`STRUCT_CONTRACTS`), and a unit test compares the two.
 
+A contract may refuse an explicit empty list over a stored one (`clear_allowed` False). A row of such a contract may declare
+`struct_clear_when: {nvpair, value}` to allow that clear on its parent only, while every stored record of the interface holds
+`value` in the parent nvPair `nvpair`. The module reads that nvPair from the interface it has already fetched and never sends
+it. Declare it only where a full clear was measured on that parent with the nvPair at that value.
+
 ## Sanitization policy for the sources
 
 Slices are published. They must not contain absolute or personal paths, references to private evidence files, lab serial numbers,

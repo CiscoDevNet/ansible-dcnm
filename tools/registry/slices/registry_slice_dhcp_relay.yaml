@@ -8,7 +8,7 @@ shared_effects: []
 bindings:
 
   # ==== Source lot dr1_dhcp_relay (3 rows) ====
-  # Read from the SMU 4.3.1.0175006017 bodies; not measured live.
+  # Read from the SMU 4.3.1.0175006017 bodies. Measured live only on int_l3_port_channel, as stated below.
   #
   #     int_routed_host      body b5345584...  dhcpServers L151-161, parser L470-484, checks L635-660, child L1278-1285
   #     int_l3_port_channel  body 81c9392e...  dhcpServers L160-170, parser L467-483, checks L636-661, child L1222-1229
@@ -26,12 +26,20 @@ bindings:
   # `use-vrf <srvrVrf>` when srvrVrf is set and differs, ignoring case, from the interface VRF.
   #
   # No deleteChildTemplate call names that child, unlike the CDP, redirect, PIM BFD and multisite children. A modify
-  # first deletes the interface's child policies (int_l3_port_channel unless the hidden SKIP_DEL_ON_ADD is true;
-  # int_subif marks them deleted), so an empty list may remove the relay child, but no full clear has been measured.
-  # The list contract therefore refuses an explicit empty list over a stored one, and no reset exists (removal_semantics
-  # unresolved): an omitted stored list under replaced or overridden is refused. A shorter non-empty list updates the
-  # child. On int_l3_port_channel the switch then removes the dropped lines (measured); on int_routed_host and
-  # int_subif this is not measured. int_routed_host deletes every
+  # first deletes the interface's child policies (int_l3_port_channel unless the hidden SKIP_DEL_ON_ADD is "true";
+  # int_subif marks them deleted), so an empty list may remove the relay child.
+  #
+  # Measured on int_l3_port_channel (body 81c9392e, SMU 4.3.1.0175006017), twice, with SKIP_DEL_ON_ADD stored as
+  # "false": an interface/modify that changed only dhcpServers from one server to "" returned SUCCESS, the pending
+  # configuration was `no ip dhcp relay address ...` on the port-channel, and after the deploy the relay child and the
+  # switch line were gone while the other values of the interface were kept. That request was sent directly to the
+  # controller, not by this module. The row therefore allows an explicit empty list on this parent while the stored
+  # SKIP_DEL_ON_ADD is "false" (struct_clear_when). The contract refuses it on int_routed_host and int_subif, where no
+  # full clear has been measured.
+  #
+  # No reset exists on any parent (removal_semantics unresolved): an omitted stored list under replaced or overridden
+  # is refused. A shorter non-empty list updates the child. On int_l3_port_channel the switch then removes the dropped
+  # lines (measured); on int_routed_host and int_subif this is not measured. int_routed_host deletes every
   # interface-scoped child when its policy is replaced (POLICY_CHANGE_DROPS_CHILDREN in the generator).
   #
   # The meaning of IsFabricInstance=true for an interface field was not established. This list does not replace the
@@ -60,6 +68,7 @@ bindings:
     applicable_mode: l3
     type: struct_list
     struct_contract: dhcp_servers
+    struct_clear_when: {nvpair: SKIP_DEL_ON_ADD, value: "false"}
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

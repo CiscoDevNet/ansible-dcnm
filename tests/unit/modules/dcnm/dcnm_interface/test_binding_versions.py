@@ -387,8 +387,9 @@ class TestPV09InventoryInvariants:
         # The rows of lots rp1 to rp5 without a reset_wire (was 9eac40d2...).
         # The rows of lots rp1 to rp5 merged after the a4_*, vm1 and dr1 lots (was aa5ae723...; without those lots,
         # 34e33e5b...).
+        # `struct_clear_when` on the int_l3_port_channel DHCP relay row of lot dr1 (was e5e8f03d...).
         assert PROVENANCE_SHA256 == (
-            "e5e8f03d95068a734b20f9ade66cb2fb612a8dc92106c3c08046d28cf291cf2e"
+            "02da88b6e9926d78d467ba5df03b3b2caddc3a3709c52726db7c114fd94500c5"
         )
 
 
