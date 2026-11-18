@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 3221a6f9d5c7d9d5c3154f728348aed0d19079fa219e57aa01f81260055b6c70
+# provenance_sha256 = cae749350fbc270abe1737752e0ccb7ae8bda28fec0b4e377aade092492182e9
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "3221a6f9d5c7d9d5c3154f728348aed0d19079fa219e57aa01f81260055b6c70"
+PROVENANCE_SHA256 = "cae749350fbc270abe1737752e0ccb7ae8bda28fec0b4e377aade092492182e9"
 
 BINDING_TABLE = (
     {
@@ -388,6 +388,7 @@ BINDING_TABLE = (
         'applicable_mode': 'dot1q',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -400,6 +401,7 @@ BINDING_TABLE = (
         'applicable_mode': 'dot1q',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -562,6 +564,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1393,6 +1396,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1405,6 +1409,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,

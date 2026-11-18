@@ -2,12 +2,13 @@
 
 Every route is driven through the real ``main()`` with the controller doubled at ``dcnm_send``
 (``helpers/binding_harness.py``). A reset measured on another parent does not establish a route. The routes in
-``MEASURED`` carry a ``reset_wire`` because their explicit withdrawal was measured live on the routed port-channel
-itself; their omission contract is in ``test_binding_l3po_measured_resets.py``. For every other route, under
-``replaced``, a retained interface of ``overridden`` and the role-default reset of a physical port, an omitted value
-that differs from the template default is refused before any write. An explicit value, including the template default,
-is sent as requested; sending a default does not prove that the device line is removed. The IPv6 address and prefix
-are a pair and are covered in ``test_binding_l3po_ipv6_redirects.py``.
+``MEASURED`` carry a ``reset_wire`` because their explicit withdrawal was measured live on their own parent; their
+omission contract is in ``test_binding_l3po_measured_resets.py`` (routed port-channel controls and redirects) and
+``test_binding_qos_pfc_resets.py`` (policy statistics, routed port-channel PFC, Ethernet dot1q-tunnel QoS and PFC).
+For every other route, under ``replaced``, a retained interface of ``overridden`` and the role-default reset of a
+physical port, an omitted value that differs from the template default is refused before any write. An explicit value,
+including the template default, is sent as requested; sending a default does not prove that the device line is
+removed. The IPv6 address and prefix are a pair and are covered in ``test_binding_l3po_ipv6_redirects.py``.
 """
 
 from __future__ import absolute_import, division, print_function
@@ -107,6 +108,11 @@ MEASURED = {
     (PC_L3, "ipv6NdSuppressRa"): "false",
     (PC_L3, "ipv4Redirects"): "false",
     (PC_L3, "ipv6Redirects"): "false",
+    (PC_L3, "qosStatsSuppressed"): "false",
+    (PC_L3, "queuingStats"): "false",
+    (PC_L3, "ENABLE_PFC"): "false",
+    (ETH_DOT1Q, "ENABLE_QOS"): "false",
+    (ETH_DOT1Q, "ENABLE_PFC"): "false",
 }
 
 ITEMS = [(p, n, k, a, z, e) for (p, n), (k, a, z, e) in sorted(ROUTES.items())]
@@ -156,9 +162,9 @@ def test_only_the_measured_routes_carry_a_reset():
         assert engine.gie_declared_default_wire(b) == (neutral or None), (parent, nvpair)
         assert wire(applied) != neutral, (parent, nvpair)
     # 273 resets on the parent commit, plus the nine measured on the routed port-channel (six here, three discovery rows),
-    # the four trunk spanning-tree resets (test_binding_trunk_stp_resets.py) and the five dot1q-tunnel port-channel
-    # resets (test_binding_dot1q_po_resets.py).
-    assert sum(1 for b in BINDING_TABLE if "reset_wire" in b) == 273 + 9 + 4 + 5
+    # the four trunk spanning-tree resets (test_binding_trunk_stp_resets.py), the five dot1q-tunnel port-channel
+    # resets (test_binding_dot1q_po_resets.py), the four QoS and PFC resets here and the routed port-channel PFC reset.
+    assert sum(1 for b in BINDING_TABLE if "reset_wire" in b) == 273 + 9 + 4 + 5 + 4 + 1
 
 
 @pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", ITEMS, ids=IDS)

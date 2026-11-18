@@ -927,6 +927,14 @@ PILOT = {
     (PC_L3, "ipv6NdSuppressRa"): ("ipv6_nd_suppress_ra", True, "false", {}),
     (PC_L3, "ipv4Redirects"): ("disable_ipv4_redirects", True, "false", dict(disable_ip_redirects=False)),
     (PC_L3, "ipv6Redirects"): ("disable_ipv6_redirects", True, "false", dict(disable_ip_redirects=False)),
+    # Routed port-channel policy statistics and Ethernet dot1q-tunnel QoS and PFC: explicit "false" measured live on
+    # these parents. The context gives the policy names explicitly; omitting a stored name has no reset.
+    (PC_L3, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
+    (PC_L3, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
+    (ETH_DOT1Q, "ENABLE_QOS"): ("enable_qos", True, "false", {"qos_policy": "pilot_qos"}),
+    (ETH_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    # Routed port-channel PFC: explicit "false" measured live on this parent.
+    (PC_L3, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became

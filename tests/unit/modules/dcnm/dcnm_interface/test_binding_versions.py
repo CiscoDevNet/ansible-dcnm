@@ -330,9 +330,11 @@ class TestPV09InventoryInvariants:
                                       + 3 + 4 + 7 + 12 + 37)
         # + 0b_37 to 0b_42, rs1, pl1, ul1, + 9: the routed port-channel resets measured live on that parent,
         # + 4: the trunk Ethernet and trunk port-channel spanning-tree resets measured live on those parents,
-        # + 5: the dot1q-tunnel port-channel LACP, CDP and link-type resets measured live on that parent
+        # + 5: the dot1q-tunnel port-channel LACP, CDP and link-type resets measured live on that parent,
+        # + 4: the routed port-channel statistics and Ethernet dot1q-tunnel QoS and PFC resets measured live on those
+        # parents, + 1: the routed port-channel PFC reset measured live on that parent
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
-            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 5)
+            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 5 + 4 + 1)
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -395,8 +397,13 @@ class TestPV09InventoryInvariants:
         # measured live on those parents (was bc2937d4...).
         # The reset_wire of the LACP, CDP and link type rows on int_port_channel_dot1q_tunnel_host, measured live on
         # that parent (was 259ac54c...).
+        # The reset_wire of the int_l3_port_channel qosStatsSuppressed and queuingStats rows and the
+        # int_dot1q_tunnel_host ENABLE_QOS and ENABLE_PFC rows, measured live on those parents (was 259ac54c...).
+        # The reset_wire of the int_l3_port_channel ENABLE_PFC row, measured live on that parent (was 50993415...).
+        # Both reset lots merged (was 3221a6f9... with the dot1q-tunnel port-channel resets only, 2a381f86... with
+        # the QoS and PFC resets only).
         assert PROVENANCE_SHA256 == (
-            "3221a6f9d5c7d9d5c3154f728348aed0d19079fa219e57aa01f81260055b6c70"
+            "cae749350fbc270abe1737752e0ccb7ae8bda28fec0b4e377aade092492182e9"
         )
 
 
