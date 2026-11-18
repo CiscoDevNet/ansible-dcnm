@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 259ac54c2233e0c3e1de93926b79a19a114e2640a9ae2ae8086c38fae2e75df1
+# provenance_sha256 = 50993415d67fb0bb1392bd968fbbd3f1d1f6d6953a31b94f9aee8e0f6b0d2b93
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "259ac54c2233e0c3e1de93926b79a19a114e2640a9ae2ae8086c38fae2e75df1"
+PROVENANCE_SHA256 = "50993415d67fb0bb1392bd968fbbd3f1d1f6d6953a31b94f9aee8e0f6b0d2b93"
 
 BINDING_TABLE = (
     {
@@ -388,6 +388,7 @@ BINDING_TABLE = (
         'applicable_mode': 'dot1q',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -400,6 +401,7 @@ BINDING_TABLE = (
         'applicable_mode': 'dot1q',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1393,6 +1395,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -1405,6 +1408,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,

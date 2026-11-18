@@ -2349,11 +2349,19 @@ bindings:
   # `no-stats` to the service-policy line of its own policy (L1485, L1500).
   #
   # int_dot1q_tunnel_host renders inline (setGeneratedConfig), so an explicit disable relies on NDFC negating a line that
-  # is no longer expected. Nothing here is measured live: validated_on is absent, removal_semantics stays unresolved and
-  # no row declares a reset_wire: an omitted non-default value is refused under replaced and overridden. Evidence for a
-  # later measurement on these parents: class D for ENABLE_PFC (7 rows) and QUEUING_POLICY; class P for ENABLE_QOS and
-  # QOS_POLICY (lot ul1 rows whose reset is not annotated as measured); class X for qosStatsSuppressed and queuingStats
-  # (their int_routed_host resets were measured live).
+  # is no longer expected. validated_on is absent and removal_semantics stays unresolved on every row of this lot.
+  # Since then, configuration and explicit withdrawal were measured live on two parents (NDFC 12.6.0.267):
+  #   int_l3_port_channel (body 81c9392e): explicit qosStatsSuppressed "false" and queuingStats "false" made NDFC negate
+  #     both `service-policy ... no-stats` lines and push the plain lines again.
+  #   int_dot1q_tunnel_host (body 33684a76): explicit ENABLE_QOS "false" made NDFC deploy
+  #     `no service-policy type qos input <name>` and keep the queuing line; explicit ENABLE_PFC "false" made it deploy
+  #     `no priority-flow-control watch-dog-interval on` and `no priority-flow-control mode on`, leaving no PFC line.
+  # Later requests at these values sent nothing. The four rows declare "false" as their reset_wire; the reset on omission
+  # under replaced/overridden is not tested live. The other rows keep no reset_wire, so an omitted non-default value is
+  # still refused: ENABLE_PFC on the other six parents (the routed port-channel disable is not measured), QUEUING_POLICY,
+  # and QOS_POLICY unless ENABLE_QOS ends false (its inert_when gate then keeps the stored name). Evidence for a later
+  # measurement: class D for those six ENABLE_PFC rows and QUEUING_POLICY; class P for QOS_POLICY (lot ul1 rows whose
+  # reset is not annotated as measured).
 
 
   - parent_template: int_routed_host
@@ -2379,6 +2387,7 @@ bindings:
     applicable_mode: dot1q
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -2475,6 +2484,7 @@ bindings:
     applicable_mode: dot1q
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -2526,6 +2536,7 @@ bindings:
     applicable_mode: l3
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -2542,6 +2553,7 @@ bindings:
     applicable_mode: l3
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough

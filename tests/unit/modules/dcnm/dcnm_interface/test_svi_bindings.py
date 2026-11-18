@@ -756,8 +756,10 @@ def test_registering_this_reset_left_the_sibling_svi_bindings_alone():
     assert len(BINDING_TABLE) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
                                   + 3 + 4 + 7 + 12 + 37)
     # + 0b_37 to 0b_42, rs1, pl1, ul1, + 9 routed port-channel resets measured live on that parent, + 4 trunk
-    # spanning-tree resets measured live on the trunk Ethernet and trunk port-channel parents
-    assert sum("reset_wire" in r for r in BINDING_TABLE) == 207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4
+    # spanning-tree resets measured live on the trunk Ethernet and trunk port-channel parents, + 4 routed port-channel
+    # statistics and Ethernet dot1q-tunnel QoS and PFC resets measured live on those parents
+    assert sum("reset_wire" in r for r in BINDING_TABLE) == (
+        207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 4)
     # The four int_vlan identities that remain deliberately unregistered.
     for nv in ("HSRP_GROUPv6", "HSRP_VIPv6", "OSPF_AUTH_KEY", "ospfTag"):
         assert "reset_wire" not in rows[("int_vlan", nv)], nv

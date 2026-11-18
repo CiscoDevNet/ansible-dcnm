@@ -4,9 +4,11 @@ ENABLE_PFC is registered on the seven parents that declare it without a native f
 dot1q-tunnel, routed port-channel, dot1q-tunnel port-channel and the three vPC host parents. The Ethernet and
 port-channel trunk and access profiles keep their native enable_pfc. The Ethernet dot1q-tunnel parent also takes the
 native QoS keys of the other Ethernet modes, and the routed port-channel the routed Ethernet statistics options.
-None of the twelve rows declares a reset, so under replaced and overridden an omitted value that differs from the
-default is refused before any write (per route in test_binding_rp_omission.py). A merged QoS disable sends
-ENABLE_QOS false and keeps the stored policy name, which the template ignores while QoS is off.
+Four rows declare the "false" measured live on their parent as reset_wire: the two routed port-channel statistics
+options, and ENABLE_QOS and ENABLE_PFC on the Ethernet dot1q-tunnel parent (test_binding_qos_pfc_resets.py). For the
+other eight, under replaced and overridden an omitted value that differs from the default is refused before any write
+(per route in test_binding_rp_omission.py). A merged QoS disable sends ENABLE_QOS false and keeps the stored policy
+name, which the template ignores while QoS is off.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -75,7 +77,9 @@ def test_enable_pfc_is_one_contract_on_every_registered_parent(parent):
     assert b is not None, parent
     assert (b["parent_nvpair"], b["type"], b["default_template"], b["mechanism"]) == (
         "ENABLE_PFC", "boolean", False, "passthrough")
-    assert "inert_when" not in b and "reset_wire" not in b
+    assert "inert_when" not in b
+    # Only the Ethernet dot1q-tunnel disable was measured live.
+    assert b.get("reset_wire") == ("false" if parent == h.ETH_DOT1Q else None), parent
 
 
 @pytest.mark.parametrize("parent", NATIVE_PFC_PARENTS)
@@ -92,7 +96,8 @@ def test_the_dot1q_tunnel_qos_rows_use_the_native_keys():
     assert qp["inert_when"] == {"nvpair": "ENABLE_QOS", "value": "false"} and "max_length" not in qp
     assert (qu["parent_nvpair"], qu["string_compare"]) == ("QUEUING_POLICY", "unverified")
     assert "inert_when" not in qu
-    assert not any("reset_wire" in b for b in (eq, qp, qu))
+    assert eq["reset_wire"] == "false", "the explicit disable was measured live on this parent"
+    assert not any("reset_wire" in b for b in (qp, qu)), "the policy names keep no reset"
 
 
 @pytest.mark.parametrize("key", ["disable_qos_stats", "disable_queuing_stats"])
@@ -100,8 +105,8 @@ def test_the_routed_port_channel_statistics_reuse_the_routed_ethernet_contract(k
     b, routed = resolve_binding(h.PC_L3, key), resolve_binding(h.ROUTED, key)
     for field in ("parent_nvpair", "type", "default_template", "min_ndfc_version", "no_log", "inert_when"):
         assert b.get(field) == routed.get(field), field
-    # The routed reset stays the evidence for a later measurement on this parent; it is not used here.
-    assert "reset_wire" not in b and routed.get("reset_wire") == "false"
+    # Measured on this parent as well, with the same wire as on the routed Ethernet.
+    assert b.get("reset_wire") == routed.get("reset_wire") == "false"
 
 
 # ------------------------------------------------------------------ priority flow control
@@ -180,8 +185,8 @@ def test_dot1q_tunnel_qos_without_a_policy_is_transported():
 
 def test_dot1q_tunnel_merged_qos_disable_keeps_the_inert_policy():
     """No reset is established for QOS_POLICY on this parent, so the disable sends ENABLE_QOS false and the stored name
-    stays: the template neither validates nor renders it while QoS is off. Whether the controller removes the
-    service-policy line on deploy is not measured."""
+    stays: the template neither validates nor renders it while QoS is off. On deploy the controller removed the qos
+    service-policy line and kept the queuing line (measured live)."""
     have = _have(h.ETH_DOT1Q, **DOT1Q_QOS)
     result, calls = _run(h.ETH_DOT1Q, h.base_for(h.ETH_DOT1Q, enable_qos=False), "merged", have)
     assert not result.get("failed"), result.get("msg")
@@ -228,11 +233,14 @@ def test_dot1q_tunnel_policy_change_is_sent_and_a_repeat_writes_nothing(state):
 
 
 def test_dot1q_tunnel_replaced_without_qos_is_refused_before_any_write():
+    """ENABLE_QOS now has a reset, and QOS_POLICY is inert once it ends false, but QUEUING_POLICY has no reset, so
+    the whole request is refused."""
     have = _have(h.ETH_DOT1Q, **DOT1Q_QOS)
     result, calls = _run(h.ETH_DOT1Q, h.base_for(h.ETH_DOT1Q), "replaced", have)
     assert result.get("failed") is True
-    for key in ("enable_qos", "qos_policy", "queuing_policy"):
-        assert "%s on %s" % (key, h.ETH_DOT1Q) in result["msg"], result["msg"]
+    assert "queuing_policy on %s" % h.ETH_DOT1Q in result["msg"], result["msg"]
+    for key in ("enable_qos", "qos_policy"):
+        assert "%s on %s" % (key, h.ETH_DOT1Q) not in result["msg"], result["msg"]
     assert "pilot_q" not in result["msg"]
     assert h.writes(calls) == []
 
@@ -271,18 +279,18 @@ def test_routed_port_channel_statistics_append_to_their_own_policies():
         "queuingStats": "true"}
 
 
-def test_routed_port_channel_statistics_replaced_omission_is_refused_and_the_explicit_default_is_sent():
+def test_routed_port_channel_statistics_replaced_omission_sends_the_explicit_default():
     have = _have(h.PC_L3, **h.QOS, **h.QUEUE, disable_qos_stats=True, disable_queuing_stats=True)
     result, calls = _run(h.PC_L3, h.base_for(h.PC_L3, **h.QOS, **h.QUEUE), "replaced", have)
-    assert result.get("failed") is True
-    assert all("%s on %s" % (k, h.PC_L3) in result["msg"] for k in ("disable_qos_stats", "disable_queuing_stats"))
-    assert h.writes(calls) == []
+    assert not result.get("failed"), result.get("msg")
+    omitted = _nv(calls, h.PC_L3)
     profile = h.base_for(h.PC_L3, **h.QOS, **h.QUEUE, disable_qos_stats=False, disable_queuing_stats=False)
     result, calls = _run(h.PC_L3, profile, "replaced", have)
     assert not result.get("failed"), result.get("msg")
     nv = _nv(calls, h.PC_L3)
     assert (nv["qosStatsSuppressed"], nv["queuingStats"], nv["QOS_POLICY"], nv["QUEUING_POLICY"]) == (
         "false", "false", "pilot_qos", "pilot_queue")
+    assert omitted == nv
 
 
 @pytest.mark.parametrize("key", ["disable_qos_stats", "disable_queuing_stats"])

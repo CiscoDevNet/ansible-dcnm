@@ -329,9 +329,11 @@ class TestPV09InventoryInvariants:
         assert len(BINDING_TABLE) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
                                       + 3 + 4 + 7 + 12 + 37)
         # + 0b_37 to 0b_42, rs1, pl1, ul1, + 9: the routed port-channel resets measured live on that parent,
-        # + 4: the trunk Ethernet and trunk port-channel spanning-tree resets measured live on those parents
+        # + 4: the trunk Ethernet and trunk port-channel spanning-tree resets measured live on those parents,
+        # + 4: the routed port-channel statistics and Ethernet dot1q-tunnel QoS and PFC resets measured live on those
+        # parents
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
-            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4)
+            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 4)
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -392,8 +394,10 @@ class TestPV09InventoryInvariants:
         # on the int_l3_port_channel DHCP relay row of lot dr1 (was e5e8f03d...).
         # The reset_wire of the BPDU filter and link type rows on int_trunk_host and int_port_channel_trunk_host,
         # measured live on those parents (was bc2937d4...).
+        # The reset_wire of the int_l3_port_channel qosStatsSuppressed and queuingStats rows and the
+        # int_dot1q_tunnel_host ENABLE_QOS and ENABLE_PFC rows, measured live on those parents (was 259ac54c...).
         assert PROVENANCE_SHA256 == (
-            "259ac54c2233e0c3e1de93926b79a19a114e2640a9ae2ae8086c38fae2e75df1"
+            "50993415d67fb0bb1392bd968fbbd3f1d1f6d6953a31b94f9aee8e0f6b0d2b93"
         )
 
 
