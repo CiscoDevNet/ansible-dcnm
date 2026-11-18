@@ -136,5 +136,151 @@
             "peerSerialNumber": null,
             "fabricName": "test_network"
         }
-    }
+    },
+    "port_attach_items": {
+        "_comment": "Port fields of attachment items NDFC 12.6 accepted through the legacy API (sanitized captures): an isolated network on an Ethernet host port, on a vPC with a different port-channel per peer, a port attach without a prior switch-only attach, and a port detach.",
+        "ethernet_host": {
+            "switchPorts": "Ethernet1/41",
+            "detachSwitchPorts": "",
+            "vlan": 0,
+            "dot1QVlan": 0,
+            "untagged": false,
+            "deployment": true,
+            "isAttached": true,
+            "extensionValues": "",
+            "instanceValues": "{\"sviEnabled\": \"true\"}",
+            "freeformConfig": "",
+            "torports": []
+        },
+        "vpc_peer1": {
+            "switchPorts": "Port-channel543",
+            "detachSwitchPorts": "",
+            "vlan": 0,
+            "dot1QVlan": 0,
+            "untagged": false,
+            "deployment": true,
+            "isAttached": true,
+            "extensionValues": "",
+            "instanceValues": "{\"sviEnabled\": \"true\"}",
+            "freeformConfig": "",
+            "torports": []
+        },
+        "vpc_peer2": {
+            "switchPorts": "Port-channel544",
+            "detachSwitchPorts": "",
+            "vlan": 0,
+            "dot1QVlan": 0,
+            "untagged": false,
+            "deployment": true,
+            "isAttached": true,
+            "extensionValues": "",
+            "instanceValues": "{\"sviEnabled\": \"true\"}",
+            "freeformConfig": "",
+            "torports": []
+        },
+        "without_switch_attach": {
+            "switchPorts": "Ethernet1/41",
+            "detachSwitchPorts": "",
+            "vlan": 0,
+            "dot1QVlan": 0,
+            "untagged": false,
+            "deployment": true,
+            "isAttached": true,
+            "extensionValues": "",
+            "instanceValues": "{\"sviEnabled\": \"true\"}",
+            "freeformConfig": "",
+            "torports": []
+        },
+        "port_detach": {
+            "switchPorts": "",
+            "detachSwitchPorts": "Ethernet1/41",
+            "vlan": 0,
+            "dot1QVlan": 0,
+            "untagged": false,
+            "deployment": true,
+            "isAttached": true,
+            "extensionValues": "",
+            "instanceValues": "{\"sviEnabled\": \"true\"}",
+            "freeformConfig": "",
+            "torports": []
+        }
+    },
+    "port_policies": {
+        "_comment": "Policies of one switch after port attachments, NDFC 12.6 (sanitized captures): the direct PVLAN port policies and the OVERLAY policy each attachment creates on its port. Network names renamed; the VLANs are the family VLANs of the tests.",
+        "policies": [
+            {
+                "policyId": "POLICY-57280",
+                "entityType": "INTERFACE",
+                "entityName": "Ethernet1/44",
+                "templateName": "int_pvlan_host",
+                "priority": 500,
+                "source": "",
+                "deleted": false,
+                "secondaryEntityName": null,
+                "secondaryEntityType": null,
+                "generatedConfig": "interface Ethernet1/44\n  switchport\n  switchport mode private-vlan promiscuous\n  mtu 9216\n  spanning-tree port type edge trunk\n  no shutdown\n"
+            },
+            {
+                "policyId": "POLICY-57290",
+                "entityType": "INTERFACE",
+                "entityName": "Ethernet1/41",
+                "templateName": "int_pvlan_host",
+                "priority": 500,
+                "source": "",
+                "deleted": false,
+                "secondaryEntityName": null,
+                "secondaryEntityType": null,
+                "generatedConfig": "interface Ethernet1/41\n  switchport\n  switchport mode private-vlan host\n  mtu 9216\n  spanning-tree port type edge trunk\n  no shutdown\n"
+            },
+            {
+                "policyId": "POLICY-147450",
+                "entityType": "INTERFACE",
+                "entityName": "port-channel541",
+                "templateName": "int_port_channel_pvlan_host",
+                "priority": 500,
+                "source": "",
+                "deleted": false,
+                "secondaryEntityName": null,
+                "secondaryEntityType": null,
+                "generatedConfig": "interface port-channel541\n  switchport\n  switchport mode private-vlan host\n  mtu 9216\n  spanning-tree bpduguard enable\n  spanning-tree port type edge trunk\n  no shutdown\n"
+            },
+            {
+                "policyId": "PROFILE-NETWORK-26",
+                "entityType": "Interface",
+                "entityName": "Ethernet1/41",
+                "templateName": "NA",
+                "priority": 1525,
+                "source": "OVERLAY",
+                "deleted": false,
+                "secondaryEntityName": "pv-isolated",
+                "secondaryEntityType": "Config_Profile",
+                "generatedConfig": "interface Ethernet1/41\n  switchport private-vlan host-association 2431 2432\n"
+            },
+            {
+                "policyId": "PROFILE-NETWORK-30",
+                "entityType": "Interface",
+                "entityName": "Ethernet1/44",
+                "templateName": "NA",
+                "priority": 1525,
+                "source": "OVERLAY",
+                "deleted": false,
+                "secondaryEntityName": "pv-primary",
+                "secondaryEntityType": "Config_Profile",
+                "generatedConfig": "interface Ethernet1/44\n  switchport private-vlan mapping 2431 2433\n  switchport private-vlan mapping 2431 2432\n"
+            },
+            {
+                "policyId": "PROFILE-NETWORK-27",
+                "entityType": "Interface",
+                "entityName": "Port-channel541",
+                "templateName": "NA",
+                "priority": 1525,
+                "source": "OVERLAY",
+                "deleted": false,
+                "secondaryEntityName": "pv-community",
+                "secondaryEntityType": "Config_Profile",
+                "generatedConfig": "interface Port-channel541\n  switchport private-vlan host-association 2431 2433\n"
+            }
+        ]
+    },
+    "port_refusal_text": "Invalid Interfaces in leaf-11. Invalid interfaces are Ethernet1/44.  The following interfaces are not in a valid host or secondary trunk mode: Ethernet1/44"
 }

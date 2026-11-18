@@ -368,10 +368,15 @@ options:
         - The type of an existing network cannot be changed. When this option
           is omitted, the type returned by the controller is kept in every
           state.
-        - Private VLAN networks support switch attachments only;
-          O(config[].attach[].ports) and O(config[].attach[].tor_ports) are
-          rejected, and so is a request that would remove existing port
-          attachments of a private VLAN network.
+        - O(config[].attach[].ports) of a private VLAN network name Ethernet
+          interfaces or port-channels. A vPC is attached by naming the
+          port-channel of each peer; the peers may use different port-channel
+          numbers. The interface must already be in the private VLAN mode the
+          network type needs (host or trunk secondary for an isolated network,
+          host for a community network, promiscuous or trunk promiscuous for a
+          primary network). The module does not change interface modes.
+        - O(config[].attach[].tor_ports) is not supported for private VLAN
+          networks.
         - The controller attaches a primary network to every switch where one
           of its secondary networks is attached, and an attached secondary
           network to every switch where its primary is attached later.
@@ -1156,6 +1161,9 @@ class DcnmNetwork:
     # PVLAN network types as NDFC returns them in the top-level "type" field.
     PVLAN_TYPES = {"primary": "Primary", "isolated": "Isolated", "community": "Community"}
     PVLAN_SECONDARY_TEMPLATE = "Pvlan_Secondary_Network"
+    # Port names measured on PVLAN attachments: Ethernet ports and port-channels, including the per-peer
+    # port-channel of a vPC. A vPC is attached by naming each peer's port-channel.
+    PVLAN_PORT_NAME = re.compile(r"^(Ethernet\d+(/\d+){1,2}|Port-channel\d+)$")
     PVLAN_INPUT_KEYS = ("pvlan_type", "pvlan_primary")
     # States of a row with isLanAttached false whose removal is saved but not
     # deployed. Such a row keeps its configuration on the switch, also after a
@@ -6917,11 +6925,14 @@ class DcnmNetwork:
             serials = set()
             for item in (want_attach_by_name.get(name) or {}).get("lanAttachList", []):
                 serials.add(item["serialNumber"])
-                if item.get("switchPorts") or item.get("torports"):
-                    errors.append(
-                        f"Network '{name}': attachment ports and tor_ports are not supported for PVLAN networks; "
-                        "attach switches only"
-                    )
+                if item.get("torports"):
+                    errors.append(f"Network '{name}': tor_ports are not supported for PVLAN networks")
+                for port in (item.get("switchPorts") or "").split(","):
+                    if port and not self.PVLAN_PORT_NAME.match(port):
+                        errors.append(
+                            f"Network '{name}': port {port} on switch {self.pvlan_switch_label(item['serialNumber'])} is not an "
+                            "Ethernet or Port-channel interface; attach a vPC by naming the port-channel of each peer"
+                        )
             self.pvlan_want_serials[name] = serials
 
         have_attach_by_name = {}
@@ -6975,30 +6986,6 @@ class DcnmNetwork:
                 staying = desired(primary) | keep.get(primary, set())
                 keep[name] = current.get(name, set()) & staying
         self.pvlan_keep = keep
-
-        # Port attachments of PVLAN networks are not managed: never remove or change them.
-        ordered = list(config_by_name) + sorted(name for name in delete_names if name not in config_by_name)
-        for name in ordered:
-            kind = (eff.get(name) or index.get(name) or {}).get("type")
-            if not kind:
-                continue
-            rows = [
-                row for row in (have_attach_by_name.get(name) or {}).get("lanAttachList", [])
-                if row.get("isAttached") and row.get("switchPorts")
-            ]
-            if name in delete_names:
-                removing = rows
-            elif state in ("replaced", "overridden"):
-                wanted = self.pvlan_want_serials.get(name, set())
-                removing = [row for row in rows if row["serialNumber"] in wanted or row["serialNumber"] not in keep.get(name, set())]
-            else:
-                removing = []
-            for row in removing:
-                errors.append(
-                    f"Network '{name}': switch {self.pvlan_switch_label(row['serialNumber'])} has named-port attachments "
-                    f"({row['switchPorts']}); the module manages PVLAN network attachments per switch and does not "
-                    "remove or change ports"
-                )
 
         # NDFC refuses to delete a primary that a secondary still references.
         for name in sorted(delete_names):
@@ -7166,10 +7153,15 @@ class DcnmNetwork:
         Send attachment changes in PVLAN dependency order.
 
         1. pinned primary attaches
-        2. regular items and secondary detaches
-        3. primary detaches still needed after a fresh read
-        4. primary attaches
-        5. secondary attaches
+        2. port detaches of PVLAN switch detaches
+        3. regular items and secondary detaches
+        4. primary detaches still needed after a fresh read
+        5. primary attaches
+        6. secondary attaches
+
+        A PVLAN switch detach of a row that still holds ports is sent as a
+        port detach first and then a switch detach without ports, the order
+        measured on the controller.
 
         A primary row that NDFC added with a secondary reads isLanAttached
         false right after that secondary detach; its detach is not sent.
@@ -7186,22 +7178,28 @@ class DcnmNetwork:
         for entry in payload:
             kind = self.pvlan_kind(entry["networkName"])
             for item in entry["lanAttachList"]:
+                if kind is not None and not item.get("deployment") and item.get("switchPorts"):
+                    # Copies: the planned diff keeps the row as it was read.
+                    port_detach = copy.deepcopy(item)
+                    port_detach.update({"switchPorts": "", "detachSwitchPorts": item["switchPorts"], "deployment": True})
+                    items.append((entry, port_detach, 1))
+                    item = dict(copy.deepcopy(item), switchPorts="")
                 if item.get("_pvlan_pin"):
                     phase = 0
                 elif kind is None:
-                    phase = 1
+                    phase = 2
                 elif kind == "Primary":
-                    phase = 3 if item.get("deployment") else 2
+                    phase = 4 if item.get("deployment") else 3
                 else:
-                    phase = 4 if item.get("deployment") else 1
+                    phase = 5 if item.get("deployment") else 2
                     if not item.get("deployment"):
                         primary = self.pvlan_primary_name(entry["networkName"])
                         self.pvlan_detached.setdefault(primary, set()).add(item.get("serialNumber"))
                 items.append((entry, item, phase))
 
-        for phase in range(5):
+        for phase in range(6):
             selected = [(entry, item) for entry, item, item_phase in items if item_phase == phase]
-            if phase == 2 and selected:
+            if phase == 3 and selected:
                 selected = self.pvlan_filter_primary_detaches(selected)
             if not selected:
                 continue

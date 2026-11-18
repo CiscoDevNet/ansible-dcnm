@@ -662,12 +662,25 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
                 self.assert_no_writes()
                 self.assertNotIn("reg-auto", self.ndfc.networks)
 
-    def test_named_ports_rejected(self):
-        """Port attachments on a PVLAN network are rejected."""
+    def test_named_ports_input(self):
+        """PVLAN ports are Ethernet interfaces or port-channels; tor_ports and other names are refused before any write."""
         config = self.family()
         config[0]["attach"] = [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/41"]}]
+        self.assertTrue(self.run_module("merged", config)["changed"])
+        self.assertIn(("pv-isolated", SN["leaf11"], "Ethernet1/41", "", True), self.port_items())
+
+        self.ndfc.networks, self.ndfc.rows = {}, {}
+        for ports in (["vPC543"], ["loopback0"], ["Vlan2431"]):
+            with self.subTest(ports=ports):
+                config = self.family()
+                config[0]["attach"] = [{"ip_address": IP["leaf13"], "ports": ports}, {"ip_address": IP["leaf14"], "ports": ports}]
+                result = self.run_module("merged", config, failed=True)
+                self.assertIn("is not an Ethernet or Port-channel interface", result["msg"])
+                self.assert_no_writes()
+        config = self.family()
+        config[0]["attach"] = [{"ip_address": IP["leaf11"], "tor_ports": [{"ip_address": IP["leaf12"], "ports": ["Ethernet1/1"]}]}]
         result = self.run_module("merged", config, failed=True)
-        self.assertIn("attach switches only", result["msg"])
+        self.assertIn("tor_ports are not supported for PVLAN networks", result["msg"])
         self.assert_no_writes()
 
     # ----- identity ----------------------------------------------------------
@@ -931,22 +944,26 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         self.assertEqual(len(self.ndfc.networks), before)
         self.assertEqual([request for request in self.ndfc.writes() if request[0] == "DELETE"], [])
 
-    def test_existing_named_ports_boundary(self):
-        """Existing named ports on a PVLAN network block replaced/overridden/deleted; merged and query pass."""
+    def test_existing_named_ports_follow_the_state(self):
+        """Existing named ports of a PVLAN network: merged keeps them, replaced without them detaches them and keeps the
+        switch, deleted detaches the ports before the switch; query reports them."""
         self.seed_family()
         self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41")
-        mcast = json.loads(self.ndfc.networks["pv-primary"]["networkTemplateConfig"])["mcastGroup"]
-        isolated = {"net_name": "pv-isolated", "vlan_id": 2432, "is_l2only": True, "multicast_group_address": mcast, "attach": [{"ip_address": IP["leaf11"]}]}
-        for state, config in (("replaced", [isolated]), ("overridden", [{"net_name": "reg-z", "net_id": 30199, "vlan_id": 2199, "is_l2only": True}]),
-                              ("deleted", [{"net_name": "pv-isolated"}])):
-            with self.subTest(state=state):
-                result = self.run_module(state, config, failed=True)
-                self.assertIn("Ethernet1/41", result["msg"])
-                self.assert_no_writes()
+        isolated = self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"]}])
         self.assertFalse(self.run_module("merged", [isolated])["changed"])
         self.ndfc.seed("regular", "reg-routed", 30100, 2100, vrf="VRF_A", isLayer2Only="false")
         query = self.run_module("query", [{"net_name": "pv-isolated"}])
         self.assertIn("Ethernet1/41", json.dumps(query["response"]))
+
+        self.run_module("replaced", [isolated])
+        self.assertEqual(self.port_items(), [("pv-isolated", SN["leaf11"], "", "Ethernet1/41", True)])
+        self.assertEqual(self.ndfc.attached("pv-isolated"), [SN["leaf11"]])
+
+        self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41")
+        self.run_module("deleted", [{"net_name": "pv-isolated"}])
+        self.assertEqual(self.port_posts()[:2], [[("pv-isolated", SN["leaf11"], "", "Ethernet1/41", True)],
+                                                 [("pv-isolated", SN["leaf11"], "", "", False)]])
+        self.assertNotIn("pv-isolated", self.ndfc.networks)
 
     def test_pvlan_config_policy_not_attachment_freeform(self):
         """The generated PVLAN_CONFIG policies are not read as attachment freeform."""
@@ -1723,6 +1740,325 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
         self.assertTrue(result["changed"], result)
         self.assertEqual(sorted(self.ndfc.networks), ["pv-community", "pv-isolated", "pv-primary"])
         self.assertTrue([path for method, path, body in self.ndfc.writes() if "config-deploy" in path])
+
+    # ----- named ports -------------------------------------------------------
+    #
+    # Port fields of the sent items are compared with port_attach_items (accepted by NDFC 12.6 through the legacy
+    # API). The item envelope differs from those hand-built bodies: no isAttached or torports, freeformConfig null
+    # on a new attachment, instanceValues merged from the readback and vlan from the network.
+
+    PORT_FIELDS = ("switchPorts", "detachSwitchPorts", "dot1QVlan", "untagged", "deployment", "extensionValues")
+
+    def port_items(self, deployment=None):
+        """(network, serial, switchPorts, detachSwitchPorts, deployment) of every attachment item sent, in order."""
+        out = []
+        for method, path, body in self.ndfc.requests:
+            if method == "POST" and path == ATTACH:
+                for entry in body:
+                    for item in entry["lanAttachList"]:
+                        if deployment is None or item["deployment"] is deployment:
+                            out.append((entry["networkName"], item["serialNumber"], item.get("switchPorts"), item.get("detachSwitchPorts"), item["deployment"]))
+        return out
+
+    def port_posts(self):
+        """Attachment POSTs as lists of (network, serial, switchPorts, detachSwitchPorts, deployment)."""
+        posts = []
+        for method, path, body in self.ndfc.requests:
+            if method == "POST" and path == ATTACH:
+                posts.append([(e["networkName"], i["serialNumber"], i.get("switchPorts"), i.get("detachSwitchPorts"), i["deployment"])
+                              for e in body for i in e["lanAttachList"]])
+        return posts
+
+    def ports_on(self, name, switch):
+        row = self.ndfc.rows.get((name, SN[switch]))
+        return row["ports"] if row and row["attached"] else None
+
+    def assert_port_fields(self, item, measured):
+        expected = self.fixtures["port_attach_items"][measured]
+        self.assertEqual({k: item.get(k) for k in self.PORT_FIELDS}, {k: expected.get(k) for k in self.PORT_FIELDS})
+
+    def existing_net(self, name, vlan, attach=None):
+        mcast = json.loads(self.ndfc.networks["pv-primary"]["networkTemplateConfig"])["mcastGroup"]
+        entry = {"net_name": name, "vlan_id": vlan, "is_l2only": True, "multicast_group_address": mcast}
+        if attach is not None:
+            entry["attach"] = attach
+        return entry
+
+    @staticmethod
+    def regular_l2(attach=None, **extra):
+        entry = dict({"net_name": "reg-l2", "net_id": 30101, "vlan_id": 2101, "is_l2only": True}, **extra)
+        if attach is not None:
+            entry["attach"] = attach
+        return entry
+
+    def seed_regular_l2(self, on=None):
+        self.ndfc.seed("regular", "reg-l2", 30101, 2101, isLayer2Only="true")["vrf"] = "NA"
+        for switch, ports in (on or {}).items():
+            self.ndfc.attach("reg-l2", switch, ports=ports)
+
+    # regular networks: unchanged behavior
+
+    def test_regular_ports_attach_and_repeat(self):
+        """Ethernet, Po and a vPC with a different port-channel per peer; the repeat writes nothing."""
+        config = [self.regular_l2([{"ip_address": IP["leaf11"], "ports": ["ethernet1/41", "port-channel541"]},
+                                   {"ip_address": IP["leaf13"], "ports": ["Port-channel543"]},
+                                   {"ip_address": IP["leaf14"], "ports": ["Port-channel544"]}])]
+        self.assertTrue(self.run_module("merged", config)["changed"])
+        self.assertEqual(sorted(item[1:3] for item in self.port_items()),
+                         sorted([(SN["leaf11"], "Ethernet1/41,Port-channel541"), (SN["leaf13"], "Port-channel543"), (SN["leaf14"], "Port-channel544")]))
+        self.assertFalse(self.run_module("merged", config)["changed"])
+        self.assert_no_writes()
+
+    def test_regular_port_changes(self):
+        """merged adds only new ports; replaced sends the exact set; ports [] keeps the switch; an omitted switch is one
+        detach item that still holds its ports; deleted detaches with the ports."""
+        cases = (
+            ("merged", {"leaf11": "Ethernet1/41"}, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/42"]}], [(SN["leaf11"], "Ethernet1/42", "", True)]),
+            ("replaced", {"leaf11": "Ethernet1/41,Ethernet1/42"}, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/42"]}],
+             [(SN["leaf11"], "", "Ethernet1/41", True)]),
+            ("replaced", {"leaf11": "Ethernet1/41"}, [{"ip_address": IP["leaf11"]}], [(SN["leaf11"], "", "Ethernet1/41", True)]),
+            ("replaced", {"leaf11": "Ethernet1/41", "leaf12": ""}, [{"ip_address": IP["leaf12"]}], [(SN["leaf11"], "Ethernet1/41", "", False)]),
+        )
+        for state, seeded, attach, items in cases:
+            with self.subTest(state=state, seeded=seeded, attach=attach):
+                self.ndfc.networks, self.ndfc.rows = {}, {}
+                self.seed_regular_l2(seeded)
+                self.run_module(state, [self.regular_l2(attach)])
+                self.assertEqual([item[1:] for item in self.port_items()], items)
+        self.ndfc.networks, self.ndfc.rows = {}, {}
+        self.seed_regular_l2({"leaf11": "Ethernet1/41"})
+        self.run_module("deleted", [{"net_name": "reg-l2"}])
+        self.assertEqual(self.port_items(), [("reg-l2", SN["leaf11"], "Ethernet1/41", "", False)])
+
+    def test_regular_vpc_one_peer_change_check_mode_and_deploy(self):
+        """A one-peer port change re-sends the other peer without ports; check mode sends nothing; save then deploy."""
+        self.seed_regular_l2({"leaf13": "Port-channel543", "leaf14": "Port-channel544"})
+        config = [self.regular_l2([{"ip_address": IP["leaf13"], "ports": ["Port-channel543"]}, {"ip_address": IP["leaf14"], "ports": ["Port-channel545"]}])]
+        self.assertTrue(self.run_module("replaced", config, check_mode=True)["changed"])
+        self.assert_no_writes()
+        self.run_module("replaced", config)
+        self.assertEqual(sorted(i[1:4] for i in self.port_items()), sorted([(SN["leaf13"], "", ""), (SN["leaf14"], "Port-channel545", "Port-channel544")]))
+        self.assertEqual(self.ports_on("reg-l2", "leaf13"), "Port-channel543")
+
+        self.ndfc.networks, self.ndfc.rows = {}, {}
+        saved = [self.regular_l2([{"ip_address": IP["leaf11"], "ports": ["Ethernet1/41"]}], deploy=False)]
+        self.run_module("merged", saved)
+        self.assertEqual([r for r in self.ndfc.writes() if "deploy" in r[1]], [])
+        self.run_module("merged", [dict(saved[0], deploy=True)])
+        self.assertEqual(self.bodies("POST", ATTACH), [])
+        self.assertEqual(self.ndfc.rows[("reg-l2", SN["leaf11"])]["state"], "DEPLOYED")
+
+    # PVLAN networks
+
+    def test_ports_isolated_ethernet_host(self):
+        """Isolated on an Ethernet host port: one item, the controller adds the primary; repeats write nothing."""
+        self.seed_family()
+        config = [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/41"]}])]
+        self.assertTrue(self.run_module("merged", config)["changed"])
+        self.assertEqual(self.port_items(), [("pv-isolated", SN["leaf11"], "Ethernet1/41", "", True)])
+        self.assert_port_fields(self.bodies("POST", ATTACH)[0][0]["lanAttachList"][0], "ethernet_host")
+        self.assertEqual(self.ndfc.attached("pv-primary"), [SN["leaf11"]])
+        for state in ("merged", "replaced"):
+            self.assertFalse(self.run_module(state, config)["changed"], state)
+
+    def test_ports_community_port_channel(self):
+        self.seed_family()
+        config = [self.existing_net("pv-community", 2433, [{"ip_address": IP["leaf11"], "ports": ["port-channel541"]}])]
+        self.assertTrue(self.run_module("merged", config)["changed"])
+        self.assertEqual(self.port_items(), [("pv-community", SN["leaf11"], "Port-channel541", "", True)])
+        self.assertFalse(self.run_module("replaced", config)["changed"])
+
+    def test_ports_vpc_unequal_port_channels(self):
+        """One POST, one item per vPC peer with its own port-channel number."""
+        self.seed_family()
+        config = [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf13"], "ports": ["Port-channel543"]},
+                                                          {"ip_address": IP["leaf14"], "ports": ["Port-channel544"]}])]
+        self.assertTrue(self.run_module("merged", config)["changed"])
+        self.assertEqual(len(self.bodies("POST", ATTACH)), 1)
+        sent = {item["serialNumber"]: item for item in self.bodies("POST", ATTACH)[0][0]["lanAttachList"]}
+        self.assert_port_fields(sent[SN["leaf13"]], "vpc_peer1")
+        self.assert_port_fields(sent[SN["leaf14"]], "vpc_peer2")
+        for state in ("merged", "replaced"):
+            self.assertFalse(self.run_module(state, config)["changed"], state)
+
+    def test_ports_primary_promiscuous_order(self):
+        """A primary port item is sent before secondary port items."""
+        self.seed_family()
+        config = [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/41"]}]),
+                  self.existing_net("pv-primary", 2431, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/44"]}])]
+        self.assertTrue(self.run_module("merged", config)["changed"])
+        self.assertEqual(self.port_posts(), [[("pv-primary", SN["leaf11"], "Ethernet1/44", "", True)],
+                                             [("pv-isolated", SN["leaf11"], "Ethernet1/41", "", True)]])
+        self.assertFalse(self.run_module("merged", config)["changed"])
+
+    def test_ports_without_switch_attach(self):
+        self.seed_family()
+        self.run_module("merged", [self.existing_net("pv-community", 2433, [{"ip_address": IP["leaf12"], "ports": ["Ethernet1/41"]}])])
+        self.assertEqual(self.port_items(), [("pv-community", SN["leaf12"], "Ethernet1/41", "", True)])
+        self.assert_port_fields(self.bodies("POST", ATTACH)[0][0]["lanAttachList"][0], "without_switch_attach")
+
+    def test_ports_port_detach_keeps_switch_and_primary(self):
+        """Removing one port or every port of a switch sends a port detach; the switch row and the implicit primary stay."""
+        for kept, want in ((["Ethernet1/42"], ("", "Ethernet1/41")), ([], ("", "Ethernet1/41,Ethernet1/42"))):
+            with self.subTest(kept=kept):
+                self.ndfc.networks, self.ndfc.rows = {}, {}
+                self.seed_family()
+                self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41,Ethernet1/42")
+                attach = {"ip_address": IP["leaf11"]}
+                if kept:
+                    attach["ports"] = kept
+                self.run_module("replaced", [self.existing_net("pv-isolated", 2432, [attach])])
+                items = self.port_items()
+                self.assertEqual(len(items), 1)
+                self.assertEqual((items[0][2], sorted(items[0][3].split(",")), items[0][4]), (want[0], sorted(want[1].split(",")), True))
+                self.assertEqual(self.ndfc.attached("pv-isolated"), [SN["leaf11"]])
+                self.assertEqual(self.ndfc.attached("pv-primary"), [SN["leaf11"]])
+        self.assert_port_fields(dict(self.bodies("POST", ATTACH)[0][0]["lanAttachList"][0], detachSwitchPorts="Ethernet1/41"), "port_detach")
+
+    def test_ports_switch_detach_sends_port_detach_first(self):
+        """A switch detach of a row that holds a port: a port detach POST, then the switch detach without ports."""
+        self.seed_family()
+        self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41")
+        self.ndfc.attach("pv-isolated", "leaf12")
+        # The primary is listed on leaf-12 only, so the family rule does not keep the leaf-11 row.
+        self.run_module("replaced", [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf12"]}]),
+                                     self.existing_net("pv-primary", 2431, [{"ip_address": IP["leaf12"]}])])
+        self.assertEqual(self.port_posts()[:2], [[("pv-isolated", SN["leaf11"], "", "Ethernet1/41", True)],
+                                                 [("pv-isolated", SN["leaf11"], "", "", False)]])
+        self.assertEqual(self.ndfc.attached("pv-isolated"), [SN["leaf12"]])
+
+    def test_ports_deleted_and_overridden_family(self):
+        """deleted and overridden: every port detach precedes the switch detaches; the primary is deleted last."""
+        for state in ("deleted", "overridden"):
+            with self.subTest(state=state):
+                self.ndfc.networks, self.ndfc.rows = {}, {}
+                self.seed_family()
+                self.ndfc.attach("pv-isolated", "leaf13", ports="Port-channel543")
+                self.ndfc.attach("pv-isolated", "leaf14", ports="Port-channel544")
+                self.ndfc.attach("pv-community", "leaf11", ports="Port-channel541")
+                config = ([{"net_name": "pv-isolated"}, {"net_name": "pv-community"}, {"net_name": "pv-primary"}] if state == "deleted"
+                          else [self.regular_l2()])
+                self.run_module(state, config)
+                self.assertEqual(sorted(self.port_posts()[0]), sorted([("pv-isolated", SN["leaf13"], "", "Port-channel543", True),
+                                                                       ("pv-isolated", SN["leaf14"], "", "Port-channel544", True),
+                                                                       ("pv-community", SN["leaf11"], "", "Port-channel541", True)]))
+                self.assertTrue(all(item[2] == "" for item in self.port_items(deployment=False)))
+                deletes = [path.rsplit("/", 1)[-1] for method, path, body in self.ndfc.writes() if method == "DELETE"]
+                self.assertEqual(deletes[-1], "pv-primary")
+                self.assertEqual(self.ndfc.networks.keys() & {"pv-isolated", "pv-community", "pv-primary"}, set())
+
+    def test_ports_kept_family_row_keeps_its_ports(self):
+        """The family rule: a secondary row kept on a switch where its primary stays is not detached, and its ports are not
+        reconciled."""
+        self.seed_family(primary_on=("leaf11",))
+        self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41")
+        self.ndfc.attach("pv-isolated", "leaf12")
+        config = [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf12"]}]),
+                  self.existing_net("pv-primary", 2431, [{"ip_address": IP["leaf11"]}, {"ip_address": IP["leaf12"]}])]
+        result = self.run_module("replaced", config)
+        self.assertFalse(result["changed"], result)
+        self.assertEqual(self.ports_on("pv-isolated", "leaf11"), "Ethernet1/41")
+
+    def test_ports_item_refused_inside_http_200(self):
+        """A port in the wrong PVLAN mode: the per-item refusal fails the task, no rollback, the write is reported."""
+        self.seed_family()
+        self.ndfc.inject.append(("POST", ATTACH, ok("POST", ATTACH, {"pv-isolated-[PVL0000011/leaf-11]": self.fixtures["port_refusal_text"]})))
+        result = self.run_module("merged", [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/44"]}])], failed=True)
+        self.assertIn("Invalid Interfaces", json.dumps(result["msg"]["FAILED_ITEMS"]))
+        self.assertIn("NOT ATTEMPTED", result["msg"]["ROLLBACK_RESULT"])
+        self.assertEqual([request for request in self.ndfc.writes() if request[0] == "DELETE"], [])
+
+    def test_ports_port_detach_refused_stops_before_switch_detach(self):
+        """The switch detach depends on the port detach: a refused port detach fails the run before the switch detach
+        is sent, and the acknowledged write lists the refused item."""
+        self.seed_family()
+        self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41")
+        self.ndfc.attach("pv-isolated", "leaf12")
+        self.ndfc.inject.append(("POST", ATTACH, ok("POST", ATTACH, {"pv-isolated-[PVL0000011/leaf-11]": "Invalid Interfaces in leaf-11"})))
+        result = self.run_module("replaced", [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf12"]}]),
+                                              self.existing_net("pv-primary", 2431, [{"ip_address": IP["leaf12"]}])], failed=True)
+        self.assertEqual(self.port_posts(), [[("pv-isolated", SN["leaf11"], "", "Ethernet1/41", True)]])
+        self.assertEqual([request for request in self.ndfc.writes() if "deploy" in request[1]], [])
+        outcomes = [write["outcome"] for write in result["acknowledged_writes"]]
+        self.assertEqual(outcomes, ["items_refused"])
+        self.assertEqual(self.ports_on("pv-isolated", "leaf11"), "Ethernet1/41")
+
+    def test_ports_split_does_not_change_the_planned_rows(self):
+        """The port detach and the portless switch detach are copies; the planned rows keep their ports."""
+        self.seed_family()
+        self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41")
+        self.ndfc.attach("pv-isolated", "leaf12")
+        seen = []
+        push = dcnm_network.DcnmNetwork.pvlan_push_attachments
+
+        def spy(module_self, payload, detach_step):
+            before = [(item["serialNumber"], item.get("switchPorts"), item.get("deployment")) for entry in payload for item in entry["lanAttachList"]]
+            push(module_self, payload, detach_step)
+            after = [(item["serialNumber"], item.get("switchPorts"), item.get("deployment")) for entry in payload for item in entry["lanAttachList"]]
+            seen.append((before, after))
+
+        with patch.object(dcnm_network.DcnmNetwork, "pvlan_push_attachments", autospec=True, side_effect=spy):
+            self.run_module("replaced", [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf12"]}]),
+                                         self.existing_net("pv-primary", 2431, [{"ip_address": IP["leaf12"]}])])
+        self.assertTrue(any((SN["leaf11"], "Ethernet1/41", False) in before for before, after in seen))
+        for before, after in seen:
+            self.assertEqual(before, after)
+
+    def test_ports_check_mode_save_and_deploy(self):
+        self.seed_family()
+        entry = self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/41"]}])
+        self.assertTrue(self.run_module("merged", [entry], check_mode=True)["changed"])
+        self.assert_no_writes()
+        self.run_module("merged", [dict(entry, deploy=False)])
+        self.assertEqual([r for r in self.ndfc.writes() if "deploy" in r[1]], [])
+        self.run_module("merged", [dict(entry, deploy=True)])
+        self.assertEqual([method for method, path, body in self.ndfc.writes()], ["POST"])
+        self.assertIn("config-deploy", self.ndfc.writes()[0][1])
+        self.assertFalse(self.run_module("merged", [dict(entry, deploy=True)])["changed"])
+
+    def test_ports_vpc_one_peer_change_and_deploy_scope(self):
+        """One peer's port-channel changes: the other peer is re-sent without ports and keeps its port, and both peers are
+        deployed (config-deploy of both serials, or a network deploy naming the network on both)."""
+        scopes = {}
+        for deploy_mode in (None, "resource"):
+            self.ndfc.networks, self.ndfc.rows = {}, {}
+            self.seed_family()
+            self.ndfc.attach("pv-isolated", "leaf13", ports="Port-channel543")
+            self.ndfc.attach("pv-isolated", "leaf14", ports="Port-channel544")
+            self.run_module("replaced", [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf13"], "ports": ["Port-channel543"]},
+                                                                                 {"ip_address": IP["leaf14"], "ports": ["Port-channel545"]}])],
+                            deploy_mode=deploy_mode)
+            self.assertEqual(sorted(i[1:4] for i in self.port_items()), sorted([(SN["leaf13"], "", ""), (SN["leaf14"], "Port-channel545", "Port-channel544")]))
+            self.assertEqual(self.ports_on("pv-isolated", "leaf13"), "Port-channel543")
+            scopes[deploy_mode or "switch"] = [(path, body) for method, path, body in self.ndfc.writes() if "deploy" in path]
+        self.assertEqual(len(scopes["switch"]), 1)
+        self.assertEqual(set(scopes["switch"][0][0].split("/config-deploy/")[1].split("?")[0].split(",")), {SN["leaf13"], SN["leaf14"]})
+        self.assertEqual(len(scopes["resource"]), 1)
+        self.assertEqual(set(scopes["resource"][0][1]), {SN["leaf13"], SN["leaf14"]})
+
+    def test_ports_overlay_policies_are_not_freeform(self):
+        """The OVERLAY policy an attachment creates on its port (templateName NA) is not read as attachment freeform."""
+        self.seed_family()
+        self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41")
+        self.ndfc.policies[SN["leaf11"]] = [dict(policy, serialNumber=SN["leaf11"]) for policy in self.fixtures["port_policies"]["policies"]]
+        config = [self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/41"]}])]
+        for state in ("merged", "replaced"):
+            self.assertFalse(self.run_module(state, config)["changed"], state)
+
+    def test_ports_identity_is_per_switch(self):
+        """The same port name on two switches is two attachments; a mixed request keeps the regular item."""
+        self.seed_family()
+        self.ndfc.attach("pv-isolated", "leaf11", ports="Ethernet1/41")
+        self.ndfc.attach("pv-isolated", "leaf12", ports="Ethernet1/41")
+        attach = [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/41"]}, {"ip_address": IP["leaf12"]}]
+        self.run_module("replaced", [self.existing_net("pv-isolated", 2432, attach)])
+        self.assertEqual(self.port_items(), [("pv-isolated", SN["leaf12"], "", "Ethernet1/41", True)])
+        self.assertEqual(self.ports_on("pv-isolated", "leaf11"), "Ethernet1/41")
+
+        self.run_module("merged", [self.regular_l2([{"ip_address": IP["leaf12"], "ports": ["Ethernet1/10"]}]),
+                                   self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/42"]}])])
+        self.assertIn(("reg-l2", SN["leaf12"], "Ethernet1/10", "", True), self.port_items())
+        self.assertIn(("pv-isolated", SN["leaf11"], "Ethernet1/42", "", True), self.port_items())
 
 
 def dcnm_network_exit():
