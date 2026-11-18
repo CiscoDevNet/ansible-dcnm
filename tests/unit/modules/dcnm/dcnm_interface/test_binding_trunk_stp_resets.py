@@ -102,11 +102,12 @@ def test_the_four_rows_declare_the_measured_reset():
 
 
 def test_no_other_parent_gained_a_spanning_tree_reset():
-    """The reset measured on the two trunk parents does not move to access, dot1q-tunnel or vPC."""
+    """The reset measured on the two trunk parents does not move to access, dot1q-tunnel or vPC. The dot1q-tunnel
+    port-channel link type has its own measured reset (test_binding_dot1q_po_resets.py); its BPDU filter has none."""
     rows = {(b["parent_template"], b["parent_nvpair"]): b for b in BINDING_TABLE
             if b["parent_nvpair"] in NVPAIRS + ("ENABLE_ERRDISABLE_ACL", "ENABLE_ORPHAN_PORT")}
     with_reset = {k for k, b in rows.items() if b.get("reset_wire") is not None}
-    assert with_reset == {(p, n) for p in PARENTS for n in NVPAIRS}, sorted(with_reset)
+    assert with_reset == {(p, n) for p in PARENTS for n in NVPAIRS} | {(h.PC_DOT1Q, "LINK_TYPE")}, sorted(with_reset)
     assert len(rows) == 9 * 2 + 3 + 2
     for p in ("int_dot1q_tunnel_host", "int_port_channel_dot1q_tunnel_host", "int_vpc_dot1q_tunnel"):
         assert rows[(p, "BPDUFILTER_ENABLED")]["default_template"] == "enable", p
@@ -302,11 +303,12 @@ def test_the_port_channel_reset_is_sent_on_the_parent_only(state):
 
 
 # ------------------------------------------------------------------ parents without a measured reset
+# None: the field has its own measured reset on that parent and is tested elsewhere.
 UNCHANGED = (
     (h.ACCESS, "enable", "point-to-point"),
     (h.PC_ACCESS, "enable", "point-to-point"),
     (h.ETH_DOT1Q, "disable", "point-to-point"),
-    (h.PC_DOT1Q, "disable", "point-to-point"),
+    (h.PC_DOT1Q, "disable", None),
     (h.VPC_TRUNK, "enable", "point-to-point"),
     (h.VPC_ACCESS, "enable", "point-to-point"),
     (h.VPC_DOT1Q, "disable", "point-to-point"),
@@ -317,6 +319,8 @@ UNCHANGED = (
 def test_a_parent_without_a_measured_reset_still_refuses_the_omission(parent, bpdu, link):
     pkw = {"parent": parent} if parent in h.NON_ETH_PARENTS else {}
     for key, value in (("bpdu_filter", bpdu), ("spanning_tree_link_type", link)):
+        if value is None:
+            continue
         have = h.build_have(parent, key, value)
         result, calls = h.run(h.want_omitting(parent, key), "replaced", have, **pkw)
         assert result.get("failed") is True and "%s on %s" % (key, parent) in result["msg"], result.get("msg")

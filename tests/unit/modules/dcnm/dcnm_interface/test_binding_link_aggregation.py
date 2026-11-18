@@ -4,7 +4,8 @@ Every route is driven through the real ``main()`` with the controller doubled at
 (``helpers/binding_harness.py``). Only the routes in ``MEASURED`` carry a ``reset_wire``: their explicit withdrawal
 was measured live on that parent. The omission cases of the routed port-channel discovery rows are in
 ``test_binding_l3po_measured_resets.py``, those of the trunk BPDU filter and link type rows in
-``test_binding_trunk_stp_resets.py``. No reset is measured for the other routes, so an authoritative
+``test_binding_trunk_stp_resets.py``, and those of the dot1q-tunnel port-channel LACP, CDP and link type rows in
+``test_binding_dot1q_po_resets.py``. No reset is measured for the other routes, so an authoritative
 withdrawal of a stored value that differs from the template default must be refused before any write, and the
 explicit template default stays the only clear.
 The CLI these values produce (inline, on a member, or on a vPC peer's port-channel) is the
@@ -147,7 +148,9 @@ ROUTES = {
 # Routes with a reset_wire, measured live on this parent, and that wire value.
 MEASURED = {(PC_L3, "CDP_ENABLE"): "true", (PC_L3, "lldpTransmit"): "false", (PC_L3, "lldpReceive"): "false",
             (TRUNK, "BPDUFILTER_ENABLED"): "no", (TRUNK, "LINK_TYPE"): "auto",
-            (PC_TRUNK, "BPDUFILTER_ENABLED"): "no", (PC_TRUNK, "LINK_TYPE"): "auto"}
+            (PC_TRUNK, "BPDUFILTER_ENABLED"): "no", (PC_TRUNK, "LINK_TYPE"): "auto",
+            (PC_DOT1Q, "DISABLE_LACP_SUSPEND"): "false", (PC_DOT1Q, "LACP_PORT_PRIO"): "32768",
+            (PC_DOT1Q, "LACP_RATE"): "normal", (PC_DOT1Q, "CDP_ENABLE"): "true", (PC_DOT1Q, "LINK_TYPE"): "auto"}
 
 ITEMS = [(p, n, k, a, d, e) for (p, n), (k, a, d, e) in sorted(ROUTES.items())]
 IDS = ["%s::%s" % (p, n) for p, n, _k, _a, _d, _e in ITEMS]

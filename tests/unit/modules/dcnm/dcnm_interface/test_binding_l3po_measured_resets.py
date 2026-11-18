@@ -108,7 +108,8 @@ def test_the_nine_rows_declare_the_measured_reset_and_nothing_else_changed_on_th
 
 
 # Every row of the nine nvPairs on another parent, with its reset (None: no reset) exactly as on the parent commit
-# c5237776. A reset measured on the routed port-channel does not move to another parent.
+# c5237776, except the dot1q-tunnel port-channel CDP row, whose own reset was measured later on that parent
+# (test_binding_dot1q_po_resets.py). A reset measured on the routed port-channel does not move to another parent.
 OTHER_PARENTS = {
     ("int_access_host", "lldpReceive"): "false",
     ("int_access_host", "lldpTransmit"): "false",
@@ -116,7 +117,7 @@ OTHER_PARENTS = {
     ("int_dot1q_tunnel_host", "lldpTransmit"): None,
     ("int_port_channel_access_host", "lldpReceive"): "false",
     ("int_port_channel_access_host", "lldpTransmit"): "false",
-    ("int_port_channel_dot1q_tunnel_host", "CDP_ENABLE"): None,
+    ("int_port_channel_dot1q_tunnel_host", "CDP_ENABLE"): "true",
     ("int_port_channel_dot1q_tunnel_host", "lldpReceive"): "false",
     ("int_port_channel_dot1q_tunnel_host", "lldpTransmit"): "false",
     ("int_port_channel_pvlan_host", "lldpReceive"): "false",
@@ -164,10 +165,9 @@ def test_other_parents_keep_their_own_reset_state():
 
 
 @pytest.mark.parametrize("parent,key,value", [
-    (h.PC_DOT1Q, "enable_cdp", False),
     (h.ETH_DOT1Q, "disable_lldp_transmit", True),
     (h.ETH_DOT1Q, "disable_lldp_receive", True),
-], ids=["dot1q_port_channel_cdp", "dot1q_ethernet_lldp_transmit", "dot1q_ethernet_lldp_receive"])
+], ids=["dot1q_ethernet_lldp_transmit", "dot1q_ethernet_lldp_receive"])
 def test_a_parent_without_a_measured_reset_still_refuses_the_omission(parent, key, value):
     have = h.build_have(parent, key, value)
     pkw = {"parent": parent} if parent in h.NON_ETH_PARENTS else {}

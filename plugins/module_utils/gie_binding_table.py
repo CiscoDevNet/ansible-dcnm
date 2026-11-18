@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 259ac54c2233e0c3e1de93926b79a19a114e2640a9ae2ae8086c38fae2e75df1
+# provenance_sha256 = 3221a6f9d5c7d9d5c3154f728348aed0d19079fa219e57aa01f81260055b6c70
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "259ac54c2233e0c3e1de93926b79a19a114e2640a9ae2ae8086c38fae2e75df1"
+PROVENANCE_SHA256 = "3221a6f9d5c7d9d5c3154f728348aed0d19079fa219e57aa01f81260055b6c70"
 
 BINDING_TABLE = (
     {
@@ -2085,6 +2085,7 @@ BINDING_TABLE = (
         'applicable_mode': 'dot1q',
         'type': 'boolean',
         'default_template': True,
+        'reset_wire': 'true',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -2097,6 +2098,7 @@ BINDING_TABLE = (
         'applicable_mode': 'dot1q',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -2158,6 +2160,7 @@ BINDING_TABLE = (
         'applicable_mode': 'dot1q',
         'type': 'integer',
         'default_template': 32768,
+        'reset_wire': '32768',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'min_value': 1,
@@ -2173,6 +2176,7 @@ BINDING_TABLE = (
         'type': 'enum',
         'valid_values': ('normal', 'fast'),
         'default_template': 'normal',
+        'reset_wire': 'normal',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
@@ -2186,6 +2190,7 @@ BINDING_TABLE = (
         'type': 'enum',
         'valid_values': ('auto', 'point-to-point', 'shared'),
         'default_template': 'auto',
+        'reset_wire': 'auto',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,

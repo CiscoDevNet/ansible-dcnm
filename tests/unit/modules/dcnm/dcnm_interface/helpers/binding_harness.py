@@ -998,6 +998,12 @@ PILOT_PC = {
     (PC_DOT1Q, "qosStatsSuppressed"): ("disable_qos_stats", True, "false", dict(QOS)),
     (PC_DOT1Q, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (PC_DOT1Q, "spanningTreePortType"): ("spanning_tree_port_type", "network", "no", dict(NOFAST)),
+    # LACP, CDP and link type: explicit withdrawal measured live on the dot1q-tunnel port-channel parent.
+    (PC_DOT1Q, "DISABLE_LACP_SUSPEND"): ("disable_lacp_suspend_individual", True, "false", {}),
+    (PC_DOT1Q, "LACP_PORT_PRIO"): ("lacp_port_priority", 100, "32768", {}),
+    (PC_DOT1Q, "LACP_RATE"): ("lacp_rate", "fast", "normal", {}),
+    (PC_DOT1Q, "CDP_ENABLE"): ("enable_cdp", False, "true", {}),
+    (PC_DOT1Q, "LINK_TYPE"): ("spanning_tree_link_type", "point-to-point", "auto", {}),
 }
 PILOT_PC_IDS = ["%s::%s" % (p, n) for (p, n) in PILOT_PC]
 PILOT_PC_ITEMS = [(p, n, k, applied, reset, extra)

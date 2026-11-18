@@ -606,14 +606,11 @@ options:
           enable_cdp:
             description:
             - State of CDP protocol on the interface
-            - In modes 'l3' and 'dot1q' this is a registered field (live tested in mode 'l3' on NDFC
-              12.6.0.267; NOT LIVE TESTED in mode 'dot1q', read from the installed template body).
-              It needs an approved C(patch_version), has no default, and
-              the template sends it to each member policy, where 'false' renders C(no cdp enable).
-              'merged' keeps an omitted value. In mode 'l3' an explicit 'true' was live tested to remove
-              that line, and 'replaced' and 'overridden' send 'true' for an omitted stored 'false' (NOT LIVE
-              TESTED). In mode 'dot1q' they refuse to withdraw a stored 'false', because no reset is verified
-              there; set 'true' explicitly instead.
+            - In modes 'l3' and 'dot1q' this is a registered field (live tested in both modes on NDFC
+              12.6.0.267). It needs an approved C(patch_version), has no default, and the template sends it to
+              each member policy, where 'false' renders C(no cdp enable). 'merged' keeps an omitted value. An
+              explicit 'true' was live tested to remove that line, and 'replaced' and 'overridden' send 'true' for
+              an omitted stored 'false' (NOT LIVE TESTED).
             type: bool
             default: true
           disable_lldp_transmit:
@@ -665,11 +662,11 @@ options:
               interface. Normal rate (30 seconds), fast rate (1 second), rate is set on member
               interfaces, default is normal
             - In mode 'dot1q', disable_lacp_suspend_individual, lacp_port_priority and lacp_rate are
-              registered fields (NOT LIVE TESTED; read from the installed template body). They need an
-              approved C(patch_version) and have no default there. Under 'merged' an omitted value is kept;
-              no reset is verified on that policy, so 'replaced' and 'overridden' refuse to withdraw a stored
-              value that differs from the template default; false, 32768 and normal are the explicit
-              neutral values.
+              registered fields (live tested on NDFC 12.6.0.267). They need an approved C(patch_version) and have
+              no default there. The template renders the suspend setting on the port-channel and copies the
+              priority and the rate into each member policy. Under 'merged' an omitted value is kept. The explicit
+              values false, 32768 and normal were live tested to remove the non-default lines, and 'replaced' and
+              'overridden' send them for an omitted stored value that differs (NOT LIVE TESTED).
             type: str
             choices: ['normal', 'fast']
             default: normal
@@ -752,11 +749,11 @@ options:
             description:
             - Spanning-tree link type - C(auto) (the template default, which renders nothing), C(point-to-point) or
               C(shared). Same registration contract as bpdu_filter.
-            - In mode C(trunk) the three values were live tested on NDFC 12.6.0.267, and an explicit C(auto) removed
-              the C(spanning-tree link-type) line. 'replaced' and 'overridden' send C(auto) for an omitted stored
-              value (NOT LIVE TESTED).
-            - In modes C(access) and C(dot1q) (NOT LIVE TESTED) no reset is verified, so 'replaced' and 'overridden'
-              refuse to withdraw a stored value other than C(auto); set C(auto) explicitly instead.
+            - In modes C(trunk) and C(dot1q) the three values were live tested on NDFC 12.6.0.267, and an explicit
+              C(auto) removed the C(spanning-tree link-type) line. 'replaced' and 'overridden' send C(auto) for an
+              omitted stored value (NOT LIVE TESTED).
+            - In mode C(access) (NOT LIVE TESTED) no reset is verified, so 'replaced' and 'overridden' refuse to
+              withdraw a stored value other than C(auto); set C(auto) explicitly instead.
             type: str
             choices: ['auto', 'point-to-point', 'shared']
           spanning_tree_port_type:

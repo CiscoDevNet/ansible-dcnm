@@ -1948,7 +1948,7 @@ Parameters
                 </td>
                 <td>
                         <div>State of CDP protocol on the interface</div>
-                        <div>In modes &#x27;l3&#x27; and &#x27;dot1q&#x27; this is a registered field (live tested in mode &#x27;l3&#x27; on NDFC 12.6.0.267; NOT LIVE TESTED in mode &#x27;dot1q&#x27;, read from the installed template body). It needs an approved <code>patch_version</code>, has no default, and the template sends it to each member policy, where &#x27;false&#x27; renders <code>no cdp enable</code>. &#x27;merged&#x27; keeps an omitted value. In mode &#x27;l3&#x27; an explicit &#x27;true&#x27; was live tested to remove that line, and &#x27;replaced&#x27; and &#x27;overridden&#x27; send &#x27;true&#x27; for an omitted stored &#x27;false&#x27; (NOT LIVE TESTED). In mode &#x27;dot1q&#x27; they refuse to withdraw a stored &#x27;false&#x27;, because no reset is verified there; set &#x27;true&#x27; explicitly instead.</div>
+                        <div>In modes &#x27;l3&#x27; and &#x27;dot1q&#x27; this is a registered field (live tested in both modes on NDFC 12.6.0.267). It needs an approved <code>patch_version</code>, has no default, and the template sends it to each member policy, where &#x27;false&#x27; renders <code>no cdp enable</code>. &#x27;merged&#x27; keeps an omitted value. An explicit &#x27;true&#x27; was live tested to remove that line, and &#x27;replaced&#x27; and &#x27;overridden&#x27; send &#x27;true&#x27; for an omitted stored &#x27;false&#x27; (NOT LIVE TESTED).</div>
                 </td>
             </tr>
             <tr>
@@ -2170,7 +2170,7 @@ Parameters
                 </td>
                 <td>
                         <div>Set the rate at which LACP control packets are sent to an LACP-supported interface. Normal rate (30 seconds), fast rate (1 second), rate is set on member interfaces, default is normal</div>
-                        <div>In mode &#x27;dot1q&#x27;, disable_lacp_suspend_individual, lacp_port_priority and lacp_rate are registered fields (NOT LIVE TESTED; read from the installed template body). They need an approved <code>patch_version</code> and have no default there. Under &#x27;merged&#x27; an omitted value is kept; no reset is verified on that policy, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value that differs from the template default; false, 32768 and normal are the explicit neutral values.</div>
+                        <div>In mode &#x27;dot1q&#x27;, disable_lacp_suspend_individual, lacp_port_priority and lacp_rate are registered fields (live tested on NDFC 12.6.0.267). They need an approved <code>patch_version</code> and have no default there. The template renders the suspend setting on the port-channel and copies the priority and the rate into each member policy. Under &#x27;merged&#x27; an omitted value is kept. The explicit values false, 32768 and normal were live tested to remove the non-default lines, and &#x27;replaced&#x27; and &#x27;overridden&#x27; send them for an omitted stored value that differs (NOT LIVE TESTED).</div>
                 </td>
             </tr>
             <tr>
@@ -2424,8 +2424,8 @@ Parameters
                 </td>
                 <td>
                         <div>Spanning-tree link type - <code>auto</code> (the template default, which renders nothing), <code>point-to-point</code> or <code>shared</code>. Same registration contract as bpdu_filter.</div>
-                        <div>In mode <code>trunk</code> the three values were live tested on NDFC 12.6.0.267, and an explicit <code>auto</code> removed the <code>spanning-tree link-type</code> line. &#x27;replaced&#x27; and &#x27;overridden&#x27; send <code>auto</code> for an omitted stored value (NOT LIVE TESTED).</div>
-                        <div>In modes <code>access</code> and <code>dot1q</code> (NOT LIVE TESTED) no reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value other than <code>auto</code>; set <code>auto</code> explicitly instead.</div>
+                        <div>In modes <code>trunk</code> and <code>dot1q</code> the three values were live tested on NDFC 12.6.0.267, and an explicit <code>auto</code> removed the <code>spanning-tree link-type</code> line. &#x27;replaced&#x27; and &#x27;overridden&#x27; send <code>auto</code> for an omitted stored value (NOT LIVE TESTED).</div>
+                        <div>In mode <code>access</code> (NOT LIVE TESTED) no reset is verified, so &#x27;replaced&#x27; and &#x27;overridden&#x27; refuse to withdraw a stored value other than <code>auto</code>; set <code>auto</code> explicitly instead.</div>
                 </td>
             </tr>
             <tr>

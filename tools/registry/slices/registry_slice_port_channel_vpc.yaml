@@ -1598,10 +1598,13 @@ bindings:
   # the native port-channel/vPC profiles; disable_lldp_*: slice 0b_17).
   # Read from the captured SMU 4.3.1.0175006017 bodies; not measured live. No reset_wire: none is measured on these
   # parents, so replaced/overridden refuse to withdraw a stored non-default value.
-  # Since then, on int_l3_port_channel only, configuration and explicit withdrawal were measured live (NDFC 12.6.0.267,
+  # Since then, on int_l3_port_channel, configuration and explicit withdrawal were measured live (NDFC 12.6.0.267,
   # body 81c9392e): explicit CDP_ENABLE "true" and lldpTransmit "false" removed `no cdp enable` and `no lldp transmit`
   # from the member, and an explicit lldpReceive "false" under replaced removed `no lldp receive`. Those three rows
   # declare that value as their reset_wire. The automatic reset on omission under replaced/overridden is not tested live.
+  # The same was measured on int_port_channel_dot1q_tunnel_host (body b17631cd): an explicit CDP_ENABLE "true" made
+  # NDFC deploy `cdp enable` on the member, which then showed no CDP line, and the repeat sent nothing. That row
+  # declares "true" as its reset_wire; its reset on omission is not tested live either.
 
   # int_l3_port_channel CDP_ENABLE -> enable_cdp. Declared at L95; member PTI int_l3_port_channel_member.
   - parent_template: int_l3_port_channel
@@ -1680,6 +1683,7 @@ bindings:
     applicable_mode: dot1q
     type: boolean
     default_template: true
+    reset_wire: "true"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1700,7 +1704,12 @@ bindings:
   # and LACP_RATE go to each member policy. The three keys are native on other profiles, so they are listed in
   # GIE_NATIVE_ELSEWHERE_KEYS. LACP_RATE is a string with Enum "normal,fast" in the body; it is registered as that enum.
   # The vPC access parent takes the same four LACP keys natively (its builder already writes them); no registry row.
-  # Read from the captured SMU 4.3.1.0175006017 body; not measured live; no reset_wire.
+  # Read from the captured SMU 4.3.1.0175006017 body. Since then, configuration and explicit withdrawal were measured
+  # live on this parent (NDFC 12.6.0.267, body b17631cd): explicit DISABLE_LACP_SUSPEND "false" made NDFC deploy
+  # `lacp suspend-individual` on the port-channel, and LACP_PORT_PRIO "32768" and LACP_RATE "normal" made it deploy
+  # `no lacp port-priority <n>` and `no lacp rate fast` on the member. No line was left, and the repeat sent nothing.
+  # The three rows declare that value as their reset_wire. The reset on omission under replaced/overridden is not
+  # tested live. The native LACP keys of the other profiles are unchanged.
 
   # int_port_channel_dot1q_tunnel_host DISABLE_LACP_SUSPEND -> disable_lacp_suspend_individual. Declared at L136; Po stanza.
   - parent_template: int_port_channel_dot1q_tunnel_host
@@ -1710,6 +1719,7 @@ bindings:
     applicable_mode: dot1q
     type: boolean
     default_template: false
+    reset_wire: "false"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1729,6 +1739,7 @@ bindings:
     min: 1
     max: 65535
     default_template: 32768
+    reset_wire: "32768"
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1752,6 +1763,7 @@ bindings:
     type: enum
     valid_values: ['normal', 'fast']
     default_template: 'normal'
+    reset_wire: 'normal'
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
@@ -1786,7 +1798,11 @@ bindings:
   # measured live (NDFC 12.6.0.267, bodies 99dc8f0a and 25f2582d): explicit BPDUFILTER_ENABLED "no" and LINK_TYPE
   # "auto" removed `spanning-tree bpdufilter <value>` and `spanning-tree link-type <value>`, and the repeat sent
   # nothing. Those four rows declare that value as their reset_wire. The automatic reset on omission under
-  # replaced/overridden is not tested live. The access, dot1q-tunnel and vPC rows keep no reset_wire.
+  # replaced/overridden is not tested live.
+  # On int_port_channel_dot1q_tunnel_host, an explicit LINK_TYPE "auto" was measured the same way (body b17631cd): NDFC
+  # sent `no spanning-tree link-type <value>`, no line was left, and the repeat sent nothing. That row declares "auto"
+  # as its reset_wire, with the same untested omission reset. Its BPDUFILTER_ENABLED row, the other access and
+  # dot1q-tunnel rows and the vPC rows keep no reset_wire.
 
   # int_port_channel_trunk_host BPDUFILTER_ENABLED -> bpdu_filter. Declared at L42; Po stanza.
   # Controller-side rule: dot1q parents: controller refuses a value other than 'enable' on N9K >= 9.3(5).
@@ -1912,6 +1928,7 @@ bindings:
     type: enum
     valid_values: ['auto', 'point-to-point', 'shared']
     default_template: 'auto'
+    reset_wire: 'auto'
     presence_model: two_axis
     emit_when: explicit_only
     mechanism: passthrough
