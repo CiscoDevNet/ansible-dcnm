@@ -374,7 +374,14 @@ options:
           numbers. The interface must already be in the private VLAN mode the
           network type needs (host or trunk secondary for an isolated network,
           host for a community network, promiscuous or trunk promiscuous for a
-          primary network). The module does not change interface modes.
+          primary network), and that mode must already be deployed. The module
+          neither reads nor changes the interface policy.
+        - The interface policy must not configure a private VLAN association or
+          mapping for the networks attached to that port. The network
+          attachment supplies those lines, and a second source of the same
+          line is not supported.
+        - Remove the port from the network, with O(config[].deploy=true),
+          before changing or deleting the interface.
         - O(config[].attach[].tor_ports) is not supported for private VLAN
           networks.
         - The controller attaches a primary network to every switch where one
