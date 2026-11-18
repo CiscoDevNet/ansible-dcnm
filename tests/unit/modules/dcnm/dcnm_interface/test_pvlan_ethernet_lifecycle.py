@@ -391,10 +391,10 @@ def test_e13_registry_rows_and_resets_are_unchanged_except_the_c1_pvlan_companio
     # on existing routed port-channel rows, measured live on that parent (no PVLAN parent); + 4 resets on existing trunk
     # Ethernet and trunk port-channel rows, measured live on those parents (no PVLAN parent); + 4 resets on existing
     # routed port-channel statistics and Ethernet dot1q-tunnel QoS and PFC rows, measured live on those parents (no PVLAN
-    # parent).
+    # parent); + 1 reset on the existing routed port-channel PFC row, measured live on that parent (no PVLAN parent).
     assert (rows, resets, pvlan) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
                                      + 3 + 4 + 7 + 12 + 37,
-                                     207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 4, 11 + 1)
+                                     207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 4 + 1, 11 + 1)
 
 
 # ===================================================================================== E14

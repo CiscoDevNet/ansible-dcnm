@@ -4,11 +4,11 @@ ENABLE_PFC is registered on the seven parents that declare it without a native f
 dot1q-tunnel, routed port-channel, dot1q-tunnel port-channel and the three vPC host parents. The Ethernet and
 port-channel trunk and access profiles keep their native enable_pfc. The Ethernet dot1q-tunnel parent also takes the
 native QoS keys of the other Ethernet modes, and the routed port-channel the routed Ethernet statistics options.
-Four rows declare the "false" measured live on their parent as reset_wire: the two routed port-channel statistics
-options, and ENABLE_QOS and ENABLE_PFC on the Ethernet dot1q-tunnel parent (test_binding_qos_pfc_resets.py). For the
-other eight, under replaced and overridden an omitted value that differs from the default is refused before any write
-(per route in test_binding_rp_omission.py). A merged QoS disable sends ENABLE_QOS false and keeps the stored policy
-name, which the template ignores while QoS is off.
+Five rows declare the "false" measured live on their parent as reset_wire: the two routed port-channel statistics
+options and its ENABLE_PFC, and ENABLE_QOS and ENABLE_PFC on the Ethernet dot1q-tunnel parent
+(test_binding_qos_pfc_resets.py). For the other seven, under replaced and overridden an omitted value that differs
+from the default is refused before any write (per route in test_binding_rp_omission.py). A merged QoS disable sends
+ENABLE_QOS false and keeps the stored policy name, which the template ignores while QoS is off.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -78,8 +78,8 @@ def test_enable_pfc_is_one_contract_on_every_registered_parent(parent):
     assert (b["parent_nvpair"], b["type"], b["default_template"], b["mechanism"]) == (
         "ENABLE_PFC", "boolean", False, "passthrough")
     assert "inert_when" not in b
-    # Only the Ethernet dot1q-tunnel disable was measured live.
-    assert b.get("reset_wire") == ("false" if parent == h.ETH_DOT1Q else None), parent
+    # Only the Ethernet dot1q-tunnel and routed port-channel disables were measured live.
+    assert b.get("reset_wire") == ("false" if parent in (h.ETH_DOT1Q, h.PC_L3) else None), parent
 
 
 @pytest.mark.parametrize("parent", NATIVE_PFC_PARENTS)

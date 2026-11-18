@@ -933,6 +933,8 @@ PILOT = {
     (PC_L3, "queuingStats"): ("disable_queuing_stats", True, "false", dict(QUEUE)),
     (ETH_DOT1Q, "ENABLE_QOS"): ("enable_qos", True, "false", {"qos_policy": "pilot_qos"}),
     (ETH_DOT1Q, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
+    # Routed port-channel PFC: explicit "false" measured live on this parent.
+    (PC_L3, "ENABLE_PFC"): ("enable_pfc", True, "false", {}),
     # Measured live on an SVI (NDFC 12.6.0.267). An
     # INTEGER: the public empty string stays refused, so the clear was measured through a raw
     # preserving update. Its withdrawal DEGRADES the line: `preempt delay minimum 45` became

@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = 50993415d67fb0bb1392bd968fbbd3f1d1f6d6953a31b94f9aee8e0f6b0d2b93
+# provenance_sha256 = 2a381f86f0fa9835768983047fcb2f63dc24cc2c017c94a203fa297de80cf3c9
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "50993415d67fb0bb1392bd968fbbd3f1d1f6d6953a31b94f9aee8e0f6b0d2b93"
+PROVENANCE_SHA256 = "2a381f86f0fa9835768983047fcb2f63dc24cc2c017c94a203fa297de80cf3c9"
 
 BINDING_TABLE = (
     {
@@ -564,6 +564,7 @@ BINDING_TABLE = (
         'applicable_mode': 'l3',
         'type': 'boolean',
         'default_template': False,
+        'reset_wire': 'false',
         'mechanism': 'passthrough',
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,

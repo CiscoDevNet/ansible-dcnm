@@ -1,8 +1,10 @@
-"""Automatic withdrawal of the four QoS and PFC booleans whose explicit "false" was measured on their own parent.
+"""Automatic withdrawal of the five QoS and PFC booleans whose explicit "false" was measured on their own parent.
 
 Measured live (NDFC 12.6.0.267), each as an explicit value:
   * int_l3_port_channel (body 81c9392e): qosStatsSuppressed "false" and queuingStats "false" in one request. NDFC
-    negated both `service-policy ... no-stats` lines and pushed the plain lines again.
+    negated both `service-policy ... no-stats` lines and pushed the plain lines again. ENABLE_PFC "false", sent in a
+    separate request, made NDFC negate both `priority-flow-control` lines on the port-channel only; the member's
+    `priority-flow-control mode on`, which no member policy carried, was gone afterwards.
   * int_dot1q_tunnel_host (body 33684a76): ENABLE_QOS "false" removed `service-policy type qos input <name>` and kept
     the queuing line; ENABLE_PFC "false" removed both `priority-flow-control` lines.
 Each row now declares "false" as its reset_wire, so replaced and a retained interface of overridden send it when the
@@ -11,7 +13,7 @@ field is omitted over a stored "true". That automatic reset is new and not teste
 The policy names keep no reset. QUEUING_POLICY omitted over a stored name is refused, and so is QOS_POLICY while
 ENABLE_QOS ends true; while ENABLE_QOS ends false its inert_when gate keeps the stored name. A request that omits one
 of them is refused as a whole, before any write, even when it also omits a field that now has a reset. ENABLE_PFC keeps
-no reset on the routed port-channel, whose explicit disable is not measured, nor on the other five parents.
+no reset on the other five parents.
 
 Real main() through helpers/binding_harness: only inventory, transport and sleep are mocked, and every HAVE is the
 payload the module itself emits for a public profile. Values are synthetic. Nothing here is live evidence.
@@ -38,6 +40,8 @@ NAMES = {"qos_policy": "pilot_qos", "queuing_policy": "pilot_queue"}
 ROUTES = {
     (h.PC_L3, "qosStatsSuppressed"): ("disable_qos_stats", dict(PO_QOS)),
     (h.PC_L3, "queuingStats"): ("disable_queuing_stats", dict(PO_QOS)),
+    # The measured request shape: no policy attached.
+    (h.PC_L3, "ENABLE_PFC"): ("enable_pfc", {}),
     (h.ETH_DOT1Q, "ENABLE_QOS"): ("enable_qos", dict(NAMES)),
     (h.ETH_DOT1Q, "ENABLE_PFC"): ("enable_pfc", dict(NAMES, enable_qos=True)),
 }
@@ -99,10 +103,10 @@ def test_the_row_declares_the_measured_false_as_a_string(parent, nvpair, key, ct
 
 
 # Every row of these nvPairs on any parent, with its reset (None: no reset) exactly as on the parent commit 3a271ee2,
-# except the four rows above. A reset measured on one parent does not move to another.
+# except the five rows above. A reset measured on one parent does not move to another.
 EXPECTED_RESETS = {
     ("int_dot1q_tunnel_host", "ENABLE_PFC"): "false",
-    ("int_l3_port_channel", "ENABLE_PFC"): None,
+    ("int_l3_port_channel", "ENABLE_PFC"): "false",
     ("int_port_channel_dot1q_tunnel_host", "ENABLE_PFC"): None,
     ("int_routed_host", "ENABLE_PFC"): None,
     ("int_vpc_access_host", "ENABLE_PFC"): None,
@@ -247,6 +251,25 @@ def test_both_statistics_omitted_reset_together_with_the_policies_attached(state
 
 
 @pytest.mark.parametrize("state", STATES)
+def test_statistics_and_pfc_omitted_reset_together_on_the_routed_port_channel(state):
+    """Both statistics options and PFC stored true with the policies attached, all three omitted: one update with the
+    three resets, the policy names and the native QoS boolean carried, equal to the explicit-false body."""
+    have = h.build_have(h.PC_L3, enable_pfc=True, disable_qos_stats=True, disable_queuing_stats=True, **PO_QOS)
+    stored = have[0]["interfaces"][0]["nvPairs"]
+    result, calls = _run(h.PC_L3, h.base_for(h.PC_L3, **PO_QOS), state, have)
+    assert not result.get("failed"), result.get("msg")
+    sent = _one_update(calls)
+    reset = ("ENABLE_PFC", "qosStatsSuppressed", "queuingStats")
+    assert {k: sent[k] for k in reset} == dict.fromkeys(reset, "false")
+    assert {k: v for k, v in sent.items() if k not in reset} == {k: v for k, v in stored.items() if k not in reset}
+    assert sent["ENABLE_QOS"] is True and (sent["QOS_POLICY"], sent["QUEUING_POLICY"]) == ("pilot_qos", "pilot_queue")
+    assert {k: _reported(result).get(k) for k in reset} == dict.fromkeys(reset, "false")
+    explicit = h.base_for(h.PC_L3, enable_pfc=False, disable_qos_stats=False, disable_queuing_stats=False, **PO_QOS)
+    _r, calls = h.run(explicit, "replaced", have, parent=h.PC_L3)
+    assert sent == _one_update(calls)
+
+
+@pytest.mark.parametrize("state", STATES)
 def test_qos_and_pfc_omitted_reset_together_on_the_dot1q_tunnel_port(state):
     have = h.build_have(h.ETH_DOT1Q, enable_qos=True, enable_pfc=True, **NAMES)
     result, calls = _run(h.ETH_DOT1Q, h.base_for(h.ETH_DOT1Q, **NAMES), state, have)
@@ -324,10 +347,10 @@ def test_explicit_empty_names_are_sent_as_requested():
 
 # ------------------------------------------------------------------ wire types
 def test_the_registered_keys_leave_as_strings_and_the_native_qos_as_a_boolean():
-    have = h.build_have(h.PC_L3, disable_qos_stats=True, disable_queuing_stats=True, **PO_QOS)
+    have = h.build_have(h.PC_L3, enable_pfc=True, disable_qos_stats=True, disable_queuing_stats=True, **PO_QOS)
     _r, calls = h.run(h.base_for(h.PC_L3, **PO_QOS), "replaced", have, parent=h.PC_L3)
     sent = _one_update(calls)
-    assert isinstance(sent["qosStatsSuppressed"], str) and isinstance(sent["queuingStats"], str)
+    assert all(isinstance(sent[k], str) for k in ("ENABLE_PFC", "qosStatsSuppressed", "queuingStats"))
     assert isinstance(sent["ENABLE_QOS"], bool)
     have = h.build_have(h.ETH_DOT1Q, enable_qos=True, enable_pfc=True, **NAMES)
     _r, calls = h.run(h.base_for(h.ETH_DOT1Q, **NAMES), "replaced", have)
@@ -337,13 +360,27 @@ def test_the_registered_keys_leave_as_strings_and_the_native_qos_as_a_boolean():
 
 # ------------------------------------------------------------------ unchanged parents and transitions
 @pytest.mark.parametrize("state", STATES)
-def test_routed_port_channel_pfc_omission_is_still_refused_with_the_statistics(state):
-    """The routed port-channel PFC disable is not measured, so its omission blocks the request, the statistics
-    resets included."""
-    have = h.build_have(h.PC_L3, enable_pfc=True, disable_qos_stats=True, **PO_QOS)
-    result, calls = _run(h.PC_L3, h.base_for(h.PC_L3, **PO_QOS), state, have)
-    msg = _refused(result, calls, "enable_pfc on %s" % h.PC_L3)
-    assert "disable_qos_stats" not in msg
+def test_routed_port_channel_pfc_omission_sends_the_measured_routing_values(state):
+    """The QoS and PFC values of the measured explicit-false body: PFC as a string, the native QoS keys at their
+    defaults with ENABLE_QOS a JSON boolean, the statistics options carried as the controller stores them."""
+    have = _have(h.PC_L3, "enable_pfc", {}, qosStatsSuppressed="false", queuingStats="false")
+    result, calls = _run(h.PC_L3, h.want_omitting(h.PC_L3, "enable_pfc"), state, have)
+    assert not result.get("failed"), result.get("msg")
+    sent = _one_update(calls)
+    assert {k: sent[k] for k in ("ENABLE_PFC", "ENABLE_QOS", "QOS_POLICY", "QUEUING_POLICY", "qosStatsSuppressed",
+                                 "queuingStats")} == {
+        "ENABLE_PFC": "false", "ENABLE_QOS": False, "QOS_POLICY": "", "QUEUING_POLICY": "",
+        "qosStatsSuppressed": "false", "queuingStats": "false"}
+
+
+@pytest.mark.parametrize("state", STATES)
+def test_routed_ethernet_pfc_omission_is_still_refused_with_the_statistics(state):
+    """PFC on the routed Ethernet has no reset, so its omission blocks the request, the statistics resets of that
+    parent included."""
+    have = h.build_have(h.ROUTED, enable_pfc=True, disable_qos_stats=True, disable_queuing_stats=True, **PO_QOS)
+    result, calls = _run(h.ROUTED, h.base_for(h.ROUTED, **PO_QOS), state, have)
+    msg = _refused(result, calls, "enable_pfc on %s" % h.ROUTED)
+    assert "disable_qos_stats" not in msg and "disable_queuing_stats" not in msg
 
 
 @pytest.mark.parametrize("parent", [h.ROUTED, h.PC_DOT1Q, h.VPC_ACCESS, h.VPC_TRUNK, h.VPC_DOT1Q])

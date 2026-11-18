@@ -331,9 +331,9 @@ class TestPV09InventoryInvariants:
         # + 0b_37 to 0b_42, rs1, pl1, ul1, + 9: the routed port-channel resets measured live on that parent,
         # + 4: the trunk Ethernet and trunk port-channel spanning-tree resets measured live on those parents,
         # + 4: the routed port-channel statistics and Ethernet dot1q-tunnel QoS and PFC resets measured live on those
-        # parents
+        # parents, + 1: the routed port-channel PFC reset measured live on that parent
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
-            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 4)
+            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 4 + 1)
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -396,8 +396,9 @@ class TestPV09InventoryInvariants:
         # measured live on those parents (was bc2937d4...).
         # The reset_wire of the int_l3_port_channel qosStatsSuppressed and queuingStats rows and the
         # int_dot1q_tunnel_host ENABLE_QOS and ENABLE_PFC rows, measured live on those parents (was 259ac54c...).
+        # The reset_wire of the int_l3_port_channel ENABLE_PFC row, measured live on that parent (was 50993415...).
         assert PROVENANCE_SHA256 == (
-            "50993415d67fb0bb1392bd968fbbd3f1d1f6d6953a31b94f9aee8e0f6b0d2b93"
+            "2a381f86f0fa9835768983047fcb2f63dc24cc2c017c94a203fa297de80cf3c9"
         )
 
 

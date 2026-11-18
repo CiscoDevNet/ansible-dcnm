@@ -208,20 +208,21 @@ options:
       and access profiles, which keep their native default. The Ethernet dot1q-tunnel profile also accepts
       C(enable_qos), C(qos_policy) and C(queuing_policy) as the other Ethernet modes do; disabling QoS under C(merged)
       keeps the stored policy name, which the template ignores while QoS is off. The routed port-channel also accepts
-      C(disable_qos_stats) and C(disable_queuing_stats) with the routed Ethernet meaning. An omitted value is kept
-      under C(merged). Configuration of the two statistics options on the routed port-channel, and of the three QoS
-      keys and C(enable_pfc) on the Ethernet dot1q-tunnel profile, was live tested on NDFC 12.6.0.267. So were
+      C(disable_qos_stats) and C(disable_queuing_stats) with the routed Ethernet meaning. An omitted value is kept under
+      C(merged). Configuration of the two statistics options and C(enable_pfc) on the routed port-channel, and of the
+      three QoS keys and C(enable_pfc) on the Ethernet dot1q-tunnel profile, was live tested on NDFC 12.6.0.267. So were
       C(disable_qos_stats=false) with C(disable_queuing_stats=false), which restore the plain service-policy lines,
-      and C(enable_qos=false), C(enable_pfc=false) and an empty C(queuing_policy) on the Ethernet dot1q-tunnel
-      profile, which remove their lines. Under C(replaced) and C(overridden) an omitted stored value of those four
-      boolean keys on those two profiles is reset to false the same way (NOT LIVE TESTED). The policy names have no
-      reset, so omitting a stored C(queuing_policy), or a stored C(qos_policy) while QoS stays enabled, fails the
-      task before any change is sent; while QoS ends disabled the stored C(qos_policy) is kept. C(enable_pfc) has no
-      reset on the other profiles, so omitting it stored true fails the task there. The explicit default (false, or
-      an empty name) is sent when given. On the routed port-channel, configuration of C(enable_pfc) was live tested
-      and the member also showed C(priority-flow-control mode on); its removal is NOT LIVE TESTED. Priority flow
-      control on the other profiles is NOT LIVE TESTED. The module never creates the policies, and whether a platform
-      accepts priority flow control is not checked.
+      C(enable_pfc=false) on both profiles, and C(enable_qos=false) and an empty C(queuing_policy) on the Ethernet
+      dot1q-tunnel profile, which remove their lines. With C(enable_pfc) on the routed port-channel the member also
+      showed C(priority-flow-control mode on); after C(enable_pfc=false) no priority flow control line was left on the
+      port-channel or the member. Under C(replaced) and C(overridden) an omitted stored value of those five boolean keys
+      on those two profiles is reset to false the same way (NOT LIVE TESTED). The policy names have no reset, so
+      omitting a stored C(queuing_policy), or a stored C(qos_policy) while QoS stays enabled, fails the task before any
+      change is sent; while QoS ends disabled the stored C(qos_policy) is kept. C(enable_pfc) has no reset on the other
+      profiles, so omitting it stored true fails the task there. The explicit default (false, or an empty name) is sent
+      when given. Priority flow control on the other profiles is NOT LIVE TESTED, and pause or no-drop behavior was not
+      tested on any profile. The module never creates the policies, and whether a platform accepts priority flow control
+      is not checked.
     - C(enable_netflow) (bool), C(netflow_monitor) and C(netflow_sampler) are also accepted on the Ethernet trunk,
       access, routed and dot1q-tunnel profiles, the trunk, access, routed and dot1q-tunnel port-channel profiles, the
       vPC trunk, access and dot1q-tunnel profiles and the subinterface; C(netflow_sampler) also on the SVI, beside its
