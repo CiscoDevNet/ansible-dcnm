@@ -60,7 +60,8 @@ def legs_of(r=None, order=(SN1, SN2)):
         (lambda r: r.update(peer1_pcid=0), "peer1_pcid must be an integer from 1 to 4096"),
         (lambda r: r.update(peer2_pcid=True), "peer2_pcid must be an integer from 1 to 4096"),
         (lambda r: r.update(peer2_pcid=4097), "peer2_pcid must be an integer from 1 to 4096"),
-        (lambda r: r.update(pvlan_association=[]), "empty pvlan_association"),
+        # An empty association is admitted in host mode only (test_pvlan_mode_only.py).
+        (lambda r: r.update(pvlan_mode="trunk secondary", pvlan_association=[]), "empty pvlan_association"),
         (lambda r: r.update(peer1_cmds=["switchport mode trunk"]), "copies to every member"),  # RC1: freeform rule
         (lambda r: r.update(pvlan_mapping=[{"primary_vlan": 1, "secondary_vlans": "2"}]), "pvlan_mapping is not valid for pvlan_mode 'host'"),
         (lambda r: r.update(native_vlan="5"), "not implemented for a vPC"),
@@ -183,8 +184,12 @@ def have_of(**over):
     return nv
 
 
-def test_creation_needs_both_members_and_the_association():
+def test_creation_needs_both_members_and_a_list_outside_host_mode():
     r = raw()
+    r.pop("pvlan_association")
+    out = P.reconcile_vpc("merged", r, VPC, legs_of(r), None, None)
+    assert out["creates"] and out["blocked"] == [] and (out["nv"]["ASSOCIATION_LIST"], out["nv"]["MAPPING_LIST"]) == ("", "")
+    r = raw(pvlan_mode="trunk secondary")
     r.pop("pvlan_association")
     out = P.reconcile_vpc("merged", r, VPC, legs_of(r), None, None)
     assert out["blocked"] and not out["creates"]

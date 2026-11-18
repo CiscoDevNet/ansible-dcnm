@@ -2303,7 +2303,8 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (exactly one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                        <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (at most one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                        <div>In <code>pvlan_mode</code> <code>host</code>, an omitted or empty list creates the port-channel without a direct association, so that a PVLAN network attachment can supply it. While a network attachment supplies the association, an unchanged request writes nothing (result <code>pvlan_network_owned</code>), and a change or deletion of the port-channel is refused. Remove the port from the network, with deploy, first.</div>
                         <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a <code>merged</code> union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>
@@ -4212,7 +4213,9 @@ Parameters
                 <td>
                 </td>
                 <td>
-                        <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (exactly one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                        <div>Primary/secondary VLAN associations for <code>pvlan_mode</code> <code>host</code> (at most one) and <code>trunk secondary</code> (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with the keys <code>primary_vlan</code> and <code>secondary_vlan</code>.</div>
+                        <div>In <code>pvlan_mode</code> <code>host</code>, an omitted or empty list creates the vPC without a direct association, so that a PVLAN network attachment can supply it on each peer port-channel. While a network attachment supplies the association, an unchanged request writes nothing (result <code>pvlan_network_owned</code>), and a change or deletion of the vPC is refused. Remove the ports from the network, with deploy, first.</div>
+                        <div>An existing association of a vPC is not withdrawn, so <code>replaced</code> or <code>overridden</code> without it is refused.</div>
                         <div>A secondary VLAN belongs to one primary VLAN - the resulting list (after a <code>merged</code> union with the current one) that puts one secondary under two primaries is refused before any write.</div>
                 </td>
             </tr>

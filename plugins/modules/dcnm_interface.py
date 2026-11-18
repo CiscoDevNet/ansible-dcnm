@@ -521,9 +521,13 @@ options:
             type: str
           pvlan_association:
             description:
-            - Primary/secondary VLAN associations for C(pvlan_mode) C(host) (exactly one) and C(trunk secondary)
+            - Primary/secondary VLAN associations for C(pvlan_mode) C(host) (at most one) and C(trunk secondary)
               (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with
               the keys C(primary_vlan) and C(secondary_vlan).
+            - In C(pvlan_mode) C(host), an omitted or empty list creates the port-channel without a direct association, so that
+              a PVLAN network attachment can supply it. While a network attachment supplies the association, an unchanged request
+              writes nothing (result C(pvlan_network_owned)), and a change or deletion of the port-channel is refused.
+              Remove the port from the network, with deploy, first.
             - A secondary VLAN belongs to one primary VLAN - the resulting list (after a C(merged) union with the current one)
               that puts one secondary under two primaries is refused before any write.
             type: list
@@ -962,9 +966,14 @@ options:
             type: str
           pvlan_association:
             description:
-            - Primary/secondary VLAN associations for C(pvlan_mode) C(host) (exactly one) and C(trunk secondary)
+            - Primary/secondary VLAN associations for C(pvlan_mode) C(host) (at most one) and C(trunk secondary)
               (one secondary per primary; the secondary must be an isolated VLAN), as a list of dictionaries with
               the keys C(primary_vlan) and C(secondary_vlan).
+            - In C(pvlan_mode) C(host), an omitted or empty list creates the vPC without a direct association, so that a PVLAN
+              network attachment can supply it on each peer port-channel. While a network attachment supplies the association, an
+              unchanged request writes nothing (result C(pvlan_network_owned)), and a change or deletion of the vPC is refused.
+              Remove the ports from the network, with deploy, first.
+            - An existing association of a vPC is not withdrawn, so C(replaced) or C(overridden) without it is refused.
             - A secondary VLAN belongs to one primary VLAN - the resulting list (after a C(merged) union with the current one)
               that puts one secondary under two primaries is refused before any write.
             type: list
@@ -3683,6 +3692,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.interface_pvlan import 
     SUMMARY_UNKNOWN as PVLAN_SUMMARY_UNKNOWN,
     summary_mentions_policy as pvlan_summary_mentions_policy,
     summary_policy as pvlan_summary_policy,
+    is_network_overlay as pvlan_is_network_overlay,
+    network_overlay_problems as pvlan_network_overlay_problems,
+    policy_marked_deleted as pvlan_policy_marked_deleted,
     PO_HOST_POLICY,
     PO_MEMBER_POLICY,
     PO_PROFILE_KEYS,
@@ -9227,7 +9239,7 @@ class DcnmIntf:
         return self.pvlan_policies[sno]
 
     def dcnm_intf_pvlan_check_ownership(self, name, sno, detail_policy, detail_nv=None, if_type="INTERFACE_ETHERNET",
-                                        self_children=frozenset()):
+                                        self_children=frozenset(), network_owned=False):
         """Reason the target is not a standalone, directly owned physical Ethernet, or None.
 
         Two legacy authorities must agree with each other and with the detail read, and each must
@@ -9247,7 +9259,9 @@ class DcnmIntf:
           * the detail intent, when it carries POLICY_ID, names that same policyId.
         Missing or malformed evidence is never read as direct ownership.
         `self_children`: template names of live child policies whose source is THIS interface itself, set aside before the
-        one-policy check (the measured children of a routed member, po_routed_member_self_children); any other policy still refuses."""
+        one-policy check (the measured children of a routed member, po_routed_member_self_children); any other policy still refuses.
+        `network_owned`: the policies whose source is OVERLAY are also set aside; the caller must then judge them itself
+        (dcnm_intf_pvlan_network_policies), so this answer alone never admits a network-owned interface."""
         authority = self._dcnm_intf_authority_key(sno)
         if authority not in self.have_all_cached_snos or authority in self.have_all_failed_snos:
             self.dcnm_intf_get_have_all_with_sno(sno)
@@ -9284,6 +9298,7 @@ class DcnmIntf:
         live = [p for p in policies if str(p.get("entityName", "")).lower() == name.lower() and p.get("deleted") is not True
                 and str(p.get("deleted", "")).lower() != "true"]
         live = [p for p in live if not (p.get("templateName") in self_children and str(p.get("source", "")).lower() == name.lower())]
+        live = [p for p in live if not (network_owned and pvlan_is_network_overlay(p))]
         if len(live) != 1:
             kinds = sorted("{0}/{1}".format(p.get("templateName"), p.get("source")) for p in live)
             return "the switch policy list holds {0} live policies for this interface ({1})".format(len(live), ", ".join(kinds))
@@ -9296,6 +9311,141 @@ class DcnmIntf:
         if policy.get("policyId") != summary["policyId"]:
             return "the switch policy id {0!r} disagrees with the summary policy id {1!r}".format(policy.get("policyId"), summary["policyId"])
         return None
+
+    # ---------------------------------------------------------------- aggregates whose association a network attachment owns
+    # A host port-channel or vPC prepared without a direct list gets its association from the network attachment (one OVERLAY
+    # policy on the port-channel, or on each attached vPC child). The interface module never writes or deploys that line: an
+    # unchanged request is a verified no-op; any change, deletion, pending state or unrecognized owner is refused before a write.
+    @staticmethod
+    def dcnm_intf_pvlan_network_policies(policies, name):
+        """(live, marked deleted): the OVERLAY policies an authoritative policy list holds for `name`."""
+        found = [p for p in policies or [] if pvlan_is_network_overlay(p) and str(p.get("entityName", "")).lower() == str(name).lower()]
+        return [p for p in found if not pvlan_policy_marked_deleted(p)], [p for p in found if pvlan_policy_marked_deleted(p)]
+
+    @staticmethod
+    def dcnm_intf_pvlan_network_names(policies):
+        return ", ".join(sorted(set(str(p.get("secondaryEntityName")) for p in policies)))
+
+    def dcnm_intf_pvlan_network_problems(self, name, live, pending, deleting=False):
+        """Refusals for an operation on `name` from its OVERLAY policies: a saved network detach that is not deployed (the policy
+        is still listed, marked deleted), an OVERLAY policy outside the measured network-attachment shape, more than one, or (when
+        `deleting`) any live one."""
+        problems = []
+        if pending:
+            problems.append(
+                "the removal of network attachment {0} from {1} is saved but not deployed (its OVERLAY policy is marked deleted), so "
+                "the device may still hold the association; deploy the network, then repeat".format(self.dcnm_intf_pvlan_network_names(pending), name))
+        for policy in live:
+            found = pvlan_network_overlay_problems(policy, name)
+            if found:
+                problems.append("the OVERLAY policy {0} of {1} is not a recognized network attachment ({2})".format(
+                    policy.get("policyId"), name, "; ".join(found)))
+        if len(live) > 1:
+            problems.append("{0} holds {1} OVERLAY policies; only one network attachment is recognized as its owner".format(name, len(live)))
+        if deleting and live and not problems:
+            problems.append(self.dcnm_intf_pvlan_network_change_refusal(name, live))
+        return problems
+
+    def dcnm_intf_pvlan_network_change_refusal(self, name, live):
+        return ("{0} holds the association of network attachment {1}: the interface module neither changes nor deletes it while the "
+                "network owns that association. Remove the port from the network with deploy, then repeat".format(
+                    name, self.dcnm_intf_pvlan_network_names(live)))
+
+    def dcnm_intf_pvlan_network_noop_problems(self, name, live, result, have_nv):
+        """Reasons a request on an aggregate owned by a network attachment is not an unchanged request on a mode-only direct
+        policy ([] = it is). Called after dcnm_intf_pvlan_network_problems() found nothing. Required: no change of any kind, and
+        the direct policy in host mode with ASSOCIATION_LIST and MAPPING_LIST present and empty."""
+        if result.get("update") or result.get("creates") or result.get("added") or result.get("removed"):
+            return [self.dcnm_intf_pvlan_network_change_refusal(name, live)]
+        problems = []
+        lists = [have_nv.get(key) if isinstance(have_nv, dict) else None for key in ("ASSOCIATION_LIST", "MAPPING_LIST")]
+        try:
+            empty = all(isinstance(value, str) and pvlan_pairs_from_wire(value, key) == []
+                        for key, value in zip(("ASSOCIATION_LIST", "MAPPING_LIST"), lists))
+        except PvlanError:
+            empty = False
+        if (have_nv or {}).get("PVLAN_MODE") != "host" or not empty:
+            problems.append(
+                "{0} is attached to network {1} but its own policy is not host mode with both direct lists present and empty "
+                "(PVLAN_MODE {2!r}, ASSOCIATION_LIST {3!r}, MAPPING_LIST {4!r}); two owners of the association are not "
+                "supported".format(name, self.dcnm_intf_pvlan_network_names(live), (have_nv or {}).get("PVLAN_MODE"), lists[0], lists[1]))
+        return problems
+
+    def dcnm_intf_pvlan_network_pending_problems(self, name, live, entries):
+        """Every entry of `entries` [(interface, serial, its summary entries)] must be listed once and In-Sync: a pending interface
+        deployment next to a network-owned association is reported, never deployed or called converged."""
+        problems = []
+        for label, serial, found in entries:
+            status = [e.get("complianceStatus") for e in found]
+            if status != ["In-Sync"]:
+                problems.append(
+                    "{0} on {1} is {2} while network attachment {3} owns the association of {4}: the interface module neither deploys "
+                    "network-owned configuration nor reports it converged. Deploy the network attachment, or remove the port from it with "
+                    "deploy, then repeat".format(label, serial, " / ".join(str(s) for s in status) or "not listed",
+                                                 self.dcnm_intf_pvlan_network_names(live), name))
+        return problems
+
+    def dcnm_intf_pvlan_network_noop(self, interface, serial, live):
+        """Report a verified no-op: nothing was written or deployed."""
+        self.result.setdefault("pvlan_network_owned", []).append({
+            "interface": interface, "serial": serial, "networks": sorted(set(str(p.get("secondaryEntityName")) for p in live)),
+            "state": "unchanged; the association belongs to the network attachment (nothing written)"})
+
+    def dcnm_intf_pvlan_summary_entries(self, name, sno):
+        authority = self._dcnm_intf_authority_key(sno)
+        return [h for h in self.have_all if str(h.get("ifName", "")).lower() == str(name).lower()
+                and self._dcnm_intf_authority_key(h.get("serialNo", "")) == authority]
+
+    def dcnm_intf_pvlan_po_network_noop(self, name, sno, result, have_nv, live):
+        """An existing port-channel whose association a network attachment owns: a verified no-op, or a refusal. Never a write.
+        Besides dcnm_intf_pvlan_network_noop_problems(), each member must be this port-channel's int_port_channel_pvlan_member in
+        the intent, with only its own member policy and inherited commands listed, and the port-channel and every member In-Sync."""
+        problems = self.dcnm_intf_pvlan_network_noop_problems(name, live, result, have_nv)
+        entries = [(name, sno, self.dcnm_intf_pvlan_summary_entries(name, sno))]
+        names = pvlan_normalize_member_list(have_nv.get("MEMBER_INTERFACES"))[0] if not problems else []
+        for token in sorted(names):
+            member = self.dcnm_intf_pvlan_po_member_ifname(token, sno)
+            found, m_policy, m_nv = self.dcnm_intf_pvlan_po_member_context(member, sno)
+            if not found and (m_policy != PO_MEMBER_POLICY or str((m_nv or {}).get("PO_ID", "")).lower() != name.lower()):
+                found.append("it is not the member of {0} in the controller's intent ({1})".format(name, m_policy))
+            listed = [p for p in self.pvlan_policies.get(sno) or [] if str(p.get("entityName", "")).lower() == member.lower()
+                      and not pvlan_policy_marked_deleted(p)]
+            owned = [p for p in listed if p.get("templateName") == PO_MEMBER_POLICY and str(p.get("source", "")).lower() == name.lower()]
+            extra = [p for p in listed if p not in owned and not (p.get("templateName") == "int_eth" and str(p.get("source", "")).lower() == name.lower())]
+            if len(owned) != 1 or extra:
+                found.append("the switch policy list does not hold exactly its {0} of {1} and inherited commands ({2})".format(
+                    PO_MEMBER_POLICY, name, ", ".join(sorted("{0}/{1}".format(p.get("templateName"), p.get("source")) for p in listed))))
+            problems += ["member {0}: {1}".format(member, reason) for reason in found]
+            entries.append((member, sno, self.dcnm_intf_pvlan_summary_entries(member, sno)))
+        if not problems:
+            problems = self.dcnm_intf_pvlan_network_pending_problems(name, live, entries)
+        if problems:
+            for reason in problems:
+                self.dcnm_intf_pvlan_block(name, sno, reason)
+            return "done"
+        self.dcnm_intf_pvlan_network_noop(name, sno, live)
+        return "done"
+
+    def dcnm_intf_pvlan_vpc_network_noop(self, name, sno, result, have_nv, legs, snaps, network):
+        """An existing vPC with a network attachment on one or both child port-channels: a verified no-op, or a refusal. Never a
+        write. The parent, children and members were already judged by the vPC checks with the OVERLAY policies set aside; here the
+        request must change nothing, the direct lists must be empty, and every child and member of BOTH peers must be In-Sync."""
+        live = [p for _child, found, _pending in network.values() for p in found]
+        problems = self.dcnm_intf_pvlan_network_noop_problems(name, live, result, have_nv)
+        if not problems:
+            entries = {}
+            for leg, snap in zip(legs, snaps):
+                entries[(leg["po_name"].lower(), leg["serial"])] = (leg["po_name"], leg["serial"], snap["summary"]["po"])
+                entries[(leg["member"].lower(), leg["serial"])] = (leg["member"], leg["serial"], snap["summary"]["member"])
+            problems = self.dcnm_intf_pvlan_network_pending_problems(name, live, [entries[k] for k in sorted(entries)])
+        if problems:
+            for reason in problems:
+                self.dcnm_intf_pvlan_block(name, sno, reason)
+            return "done"
+        for (serial, _key), (child, found, _pending) in sorted(network.items()):
+            if found:
+                self.dcnm_intf_pvlan_network_noop(child, serial, found)
+        return "done"
 
     def dcnm_intf_pvlan_compare(self, state, want, match_have, name, sno, fabric, deploy):
         """Reconcile one int_pvlan_host WANT against authoritative HAVE (all states).
@@ -9440,6 +9590,7 @@ class DcnmIntf:
             self.dcnm_intf_pvlan_block(name, sno, "current state is ambiguous ({0} summary, {1} detail entries)".format(
                 len(entries), len(match_have)))
             return "done"
+        network_live = []
         if not match_have:
             self.dcnm_intf_require_detail_authority(name, sno)
             if entries:
@@ -9465,9 +9616,15 @@ class DcnmIntf:
             if not entries:
                 self.dcnm_intf_pvlan_block(name, sno, "the interface detail holds a policy but the interface summary lists no entry")
                 return "done"
-            owner = self.dcnm_intf_pvlan_check_ownership(name, sno, have_policy, have_nv, "INTERFACE_PORT_CHANNEL")
+            owner = self.dcnm_intf_pvlan_check_ownership(name, sno, have_policy, have_nv, "INTERFACE_PORT_CHANNEL", network_owned=True)
             if owner:
                 self.dcnm_intf_pvlan_block(name, sno, owner)
+                return "done"
+            network_live, network_pending = self.dcnm_intf_pvlan_network_policies(self.pvlan_policies.get(sno), name)
+            problems = self.dcnm_intf_pvlan_network_problems(name, network_live, network_pending)
+            if problems:
+                for reason in problems:
+                    self.dcnm_intf_pvlan_block(name, sno, reason)
                 return "done"
         try:
             result = pvlan_reconcile_po(
@@ -9480,6 +9637,8 @@ class DcnmIntf:
             for reason in result["blocked"]:
                 self.dcnm_intf_pvlan_block(name, sno, reason)
             return "done"
+        if network_live:
+            return self.dcnm_intf_pvlan_po_network_noop(name, sno, result, have_nv, network_live)
         creates = result["creates"]
         if creates:
             unmeasured = pvlan_po_force_unmeasured(result["nv"].get("PVLAN_MODE"))
@@ -9835,9 +9994,12 @@ class DcnmIntf:
                     continue  # not a PVLAN port-channel: the generic deletion is unchanged
                 po_nv = copy.deepcopy((detail.get("interfaces") or [{}])[0].get("nvPairs") or {})
                 problems = []
-                owner = self.dcnm_intf_pvlan_check_ownership(name, sno, PO_HOST_POLICY, po_nv, "INTERFACE_PORT_CHANNEL")
+                owner = self.dcnm_intf_pvlan_check_ownership(name, sno, PO_HOST_POLICY, po_nv, "INTERFACE_PORT_CHANNEL", network_owned=True)
                 if owner:
                     problems.append(owner)
+                else:
+                    problems += self.dcnm_intf_pvlan_network_problems(
+                        name, *self.dcnm_intf_pvlan_network_policies(self.pvlan_policies.get(sno), name), deleting=True)
                 if self.module.check_mode:
                     problems.append("deleting a PVLAN port-channel is refused in check mode: the pre-deploy gate needs the "
                                     "deletion to exist, so its validation could not be shown without writing")
@@ -11356,6 +11518,7 @@ class DcnmIntf:
             if claimed.setdefault(po_key, name.lower()) != name.lower():
                 problems.append((leg["po_name"], leg["serial"], "the playbook also uses this port-channel number for {0}".format(claimed[po_key])))
         removed_legs = []
+        network = {}  # (serial, child) -> (child, live OVERLAY policies, marked-deleted OVERLAY policies)
         snap_reported = set()
 
         def report_snapshot(snap):
@@ -11378,6 +11541,12 @@ class DcnmIntf:
         else:
             problems += [(name, sno, m) for m in self.dcnm_intf_pvlan_vpc_parent_problems(name, snaps, have_policy, have_nv)]
             for leg, snap in zip(legs, snaps):
+                # The OVERLAY policies of a network attachment on this peer's child port-channel are judged apart (below); every other
+                # policy of the child, the member and the parent is judged as before.
+                live, pending = self.dcnm_intf_pvlan_network_policies(snap["policies"], leg["po_name"])
+                network[(leg["serial"], leg["po_name"].lower())] = (leg["po_name"], live, pending)
+                if live:
+                    snap = dict(snap, policies=[p for p in snap["policies"] if not any(p is q for q in live)])
                 # The combined speed + duplex transition is judged on EACH peer's own child (a child that diverged from the parent
                 # may need it although the parent does not); any peer that needs it refuses the whole invocation before a write.
                 child_nv = self.dcnm_intf_pvlan_vpc_nv(snap["po"]) if isinstance(snap["po"], dict) else None
@@ -11400,10 +11569,14 @@ class DcnmIntf:
                     report_snapshot(snap)
             removed_legs, removed_problems = self.dcnm_intf_pvlan_vpc_register_removed(name, sno, legs, result, have_nv, deploy)
             problems += removed_problems
+            for (serial, _key), (po_name, live, pending) in sorted(network.items()):
+                problems += [(po_name, serial, m) for m in self.dcnm_intf_pvlan_network_problems(po_name, live, pending)]
         if problems:
             for label, serial, reason in problems:
                 self.dcnm_intf_pvlan_block(label, serial, reason)
             return "done"
+        if any(live for _po, live, _pending in network.values()):
+            return self.dcnm_intf_pvlan_vpc_network_noop(name, sno, result, have_nv, legs, snaps, network)
         for leg, snap in zip(legs, snaps):
             member_nv = self.dcnm_intf_pvlan_vpc_nv(snap["member"])
             idx = leg["index"]
@@ -11955,6 +12128,11 @@ class DcnmIntf:
                 snaps = [self.dcnm_intf_pvlan_vpc_read_leg(leg["serial"], name, leg["po_name"], leg["member"]) for leg in legs]
                 problems += self.dcnm_intf_pvlan_vpc_parent_problems(name, snaps, detail.get("policy"), nv)
                 for leg, snap in zip(legs, snaps):
+                    live, pending = self.dcnm_intf_pvlan_network_policies(snap["policies"], leg["po_name"])
+                    problems += ["peer {0} ({1}): {2}".format(leg["index"] + 1, leg["serial"], r)
+                                 for r in self.dcnm_intf_pvlan_network_problems(leg["po_name"], live, pending, deleting=True)]
+                    if live:
+                        snap = dict(snap, policies=[p for p in snap["policies"] if not any(p is q for q in live)])
                     expected = pvlan_vpc_leg_po_nv(nv, leg["index"], name)
                     expected_member = pvlan_vpc_leg_models(nv, leg["index"], name, self.dcnm_intf_pvlan_vpc_nv(snap["member"]), True)[1][1]
                     reasons = self.dcnm_intf_pvlan_vpc_present_problems(snap, name, leg["po_name"], leg["member"], expected, expected_member)

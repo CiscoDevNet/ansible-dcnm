@@ -47,6 +47,9 @@ PVLAN_MODES = (MODE_HOST, MODE_PROMISCUOUS, MODE_TRUNK_PROMISCUOUS, MODE_TRUNK_S
 TRUNK_MODES = (MODE_TRUNK_PROMISCUOUS, MODE_TRUNK_SECONDARY)
 ASSOCIATION_MODES = (MODE_HOST, MODE_TRUNK_SECONDARY)
 MAPPING_MODES = (MODE_PROMISCUOUS, MODE_TRUNK_PROMISCUOUS)
+# Port-channel and vPC modes that may be created without a direct list. MEASURED for host only: a legacy REST creation
+# with ASSOCIATION_LIST and MAPPING_LIST both '' is accepted, and a network attachment then owns the association.
+MODE_ONLY_CREATE_MODES = (MODE_HOST,)
 
 ASSOCIATION_LIST = "ASSOCIATION_LIST"
 MAPPING_LIST = "MAPPING_LIST"
@@ -1767,6 +1770,43 @@ def summary_mentions_policy(entry, policy):
     return any(isinstance(u, dict) and u.get("templateName") == policy for u in items)
 
 
+# ------------------------------------------------------------------ network attachment policy
+# MEASURED (NDFC 12.6.0.267, control/policies/switches): attaching a PVLAN network to a host port-channel adds ONE policy to
+# it (on a vPC, to the child port-channel of each attached peer) in the shape checked below. The interface summary keeps
+# listing only the direct policy, and the members get no such policy. After a saved port detach the policy stays listed with
+# deleted true and priority -1525 until the network deploy (measured on an Ethernet port).
+NETWORK_OVERLAY_SOURCE = "OVERLAY"
+_NETWORK_HOST_ASSOCIATION = re.compile(r"^switchport private-vlan host-association [0-9]+ [0-9]+$")
+
+
+def is_network_overlay(policy):
+    """True for a policy listed with the controller's network-attachment source, live or marked deleted."""
+    return isinstance(policy, dict) and policy.get("source") == NETWORK_OVERLAY_SOURCE
+
+
+def policy_marked_deleted(policy):
+    return policy.get("deleted") is True or str(policy.get("deleted", "")).lower() == "true"
+
+
+def network_overlay_problems(policy, ifname):
+    """Reasons a live OVERLAY policy listed for `ifname` is not the measured network attachment of a host port-channel; []
+    when it is. Only one host association is recognized: another generated command, owner type or template is refused."""
+    problems = []
+    if policy.get("templateName") != "NA" or str(policy.get("entityType", "")).lower() != "interface":
+        problems.append("template {0!r}, entity type {1!r}".format(policy.get("templateName"), policy.get("entityType")))
+    if str(policy.get("priority")) != "1525":
+        problems.append("priority {0!r}".format(policy.get("priority")))
+    network = policy.get("secondaryEntityName")
+    if policy.get("secondaryEntityType") != "Config_Profile" or not isinstance(network, str) or not network.strip():
+        problems.append("owner {0!r} of type {1!r}".format(network, policy.get("secondaryEntityType")))
+    config = policy.get("generatedConfig")
+    lines = [line.strip() for line in config.splitlines() if line.strip()] if isinstance(config, str) else []
+    if (len(lines) != 2 or lines[0].lower() != "interface " + str(ifname).lower()
+            or not _NETWORK_HOST_ASSOCIATION.match(lines[1])):
+        problems.append("generated configuration {0!r}".format(config))
+    return problems
+
+
 # ================================================================== regular port-channel, four PVLAN modes
 # Everything below is derived from the
 # captured templates int_port_channel_pvlan_host / int_port_channel_pvlan_member (their template contract and
@@ -2185,7 +2225,9 @@ def reconcile_po(state, raw, ifname, have_policy, have_nv, ndfc_version=None, pa
     The native companions (PO_NATIVE_COMPANIONS) follow the same merged/replaced rule as the other scalars; the
     registry companions follow registry_companions() (ndfc_version/patch_version are used for them only).
 
-      * HAVE absent (have_policy None) -> creation with the explicit payload (members and the active list required);
+      * HAVE absent (have_policy None) -> creation with the explicit payload (members required; the active list required
+        except in host mode, where an omitted or empty association creates the port-channel with both lists '' for a
+        network attachment to own, MODE_ONLY_CREATE_MODES);
       * HAVE is this policy, same pvlan_mode, same member set -> update:
           - `merged`: every omitted field keeps its HAVE value; the active list is the UNION of HAVE and request;
           - `replaced`: the explicit payload (omitted fields = template declarations), members kept from HAVE;
@@ -2201,7 +2243,7 @@ def reconcile_po(state, raw, ifname, have_policy, have_nv, ndfc_version=None, pa
     if have_policy is None:
         if not po_members(raw):
             out["blocked"].append("members is required to create a port-channel: one or more existing physical members")
-        if raw.get(field) is None or not requested_pairs(field, raw[field]):
+        if (raw.get(field) is None or not requested_pairs(field, raw[field])) and mode not in MODE_ONLY_CREATE_MODES:
             out["blocked"].append("%s is required to create a port-channel in pvlan_mode %s" % (field, mode))
         if out["blocked"]:
             return out
@@ -3481,7 +3523,9 @@ def vpc_not_implemented(profile, ifname):
     """Reasons a vPC PVLAN request is outside the delivery (empty = in scope). Decided from the RAW profile, before any default or
     coercion and before any read. The four PVLAN submodes of int_vpc_pvlan_host; per submode only the fields its template
     shows (association: host/trunk secondary; mapping: promiscuous/trunk promiscuous; per-peer native/allowed: the trunk modes) and the
-    template's own list limits. Still deferred: empty member lists, a PCID CHANGE of an existing vPC, an empty list, a mode change.
+    template's own list limits. Still deferred: empty member lists, a PCID CHANGE of an existing vPC, an empty list outside host
+    mode, a mode change. An explicit empty `pvlan_association` in host mode is admitted here; whether it creates the vPC, keeps its
+    list or would withdraw a nonempty one is decided by reconcile_vpc() from the current state.
     RC1: per-peer freeform (`peerN_cmds`) under po_freeform_errors and a non-Auto speed."""
     if not isinstance(profile, dict):
         return ["profile must be a dictionary"]
@@ -3530,7 +3574,7 @@ def vpc_not_implemented(profile, ifname):
         if mode not in allowed_modes:
             reasons.append("%s is not valid for pvlan_mode '%s'" % (field, mode))
             continue
-        if not isinstance(value, list) or not value:
+        if not isinstance(value, list) or (not value and mode not in MODE_ONLY_CREATE_MODES):
             reasons.append("an empty %s is not implemented for a vPC" % field)
             continue
         try:
@@ -3693,11 +3737,13 @@ def reconcile_vpc(state, raw, ifname, legs, have_policy, have_nv, ndfc_version=N
     Native companions (VPC_NATIVE_COMPANIONS, shared by both peers) follow the merged/replaced rule of the other shared
     scalars; registry companions follow registry_companions() (ndfc_version/patch_version are used for them only).
 
-      * HAVE absent -> creation with the explicit payload (one or more members per peer and the submode's list are required);
+      * HAVE absent -> creation with the explicit payload (one or more members per peer required; the submode's list required except
+        in host mode, where an omitted or empty association creates the vPC with both lists '', MODE_ONLY_CREATE_MODES);
       * HAVE is this policy, the SAME submode, explicit physical members per peer, PCID = vPC id, a stored freeform that passes
         po_freeform_errors (RC1) -> update. `merged` keeps
         every omitted field from HAVE (the active list is the union); `replaced` states the complete model (members and PCIDs from
-        HAVE). An equal request is a no-op;
+        HAVE). An equal request is a no-op. An empty desired list is admitted only in host mode and only when the current list is
+        empty too: withdrawing a nonempty vPC list stays refused (unmeasured);
       * another policy, a submode/member/PCID change, stored CONF, unclassifiable HAVE fields, the promiscuous partial removal (the
         protection kept from the measured Ethernet defect), or a change that reaches ONE peer only (the unilateral update of a vPC is
         NOT implemented: its modify behaviour is unmeasured) -> blocked. MM-B: a change of ONE peer's MEMBERSHIP only (add/remove members
@@ -3713,7 +3759,7 @@ def reconcile_vpc(state, raw, ifname, legs, have_policy, have_nv, ndfc_version=N
     if have_policy is None:
         if any(leg["member"] is None for leg in legs):
             out["blocked"].append("peer1_members and peer2_members are required to create a vPC: one or more existing physical members per peer")
-        if not raw.get(field):
+        if not raw.get(field) and mode not in MODE_ONLY_CREATE_MODES:
             out["blocked"].append("%s is required to create a vPC in pvlan_mode %s" % (field, mode))
         if out["blocked"]:
             return out
@@ -3795,8 +3841,9 @@ def reconcile_vpc(state, raw, ifname, legs, have_policy, have_nv, ndfc_version=N
     requested = requested_pairs(field, raw[field]) if raw.get(field) is not None else None
     desired = sorted(set(current) | set(requested or [])) if merged else sorted(set(requested or []))
     out["blocked"] += limit_errors(mode, desired)
-    if not desired:
-        # the host text is kept byte-for-byte; the promiscuous modes name their mapping
+    if not desired and (current or mode not in MODE_ONLY_CREATE_MODES):
+        # A host vPC whose list is already empty stays empty (no write); withdrawing a nonempty list is still refused.
+        # The host text is kept byte-for-byte; the promiscuous modes name their mapping.
         out["blocked"].append("an empty %s is not implemented for a vPC" % ("association" if field == "pvlan_association" else "mapping"))
     if promiscuous_partial_removal(have_mode, mode, current, desired):
         out["blocked"].append(

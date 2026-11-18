@@ -148,7 +148,8 @@ def test_a_vpc_trunk_item_still_takes_the_unchanged_generic_path():
         ({"peer2_members": [M2, "e1/8"]}, "duplicate physical"),
         ({"peer1_pcid": 0}, "peer1_pcid must be an integer from 1 to 4096"),  # CHILD-IDS: 11 is valid now (test_pvlan_vpc_identity.py)
         ({"peer1_pcid": None}, "must not be null"),
-        ({"pvlan_association": []}, "empty pvlan_association"),
+        # An empty host association creates the vPC without a direct list (test_pvlan_mode_only.py); an empty mapping stays refused.
+        ({"pvlan_mode": "promiscuous", "pvlan_association": None, "pvlan_mapping": []}, "empty pvlan_mapping"),
         ({"peer1_cmds": ["no shutdown"]}, "owned by a structured field"),  # RC1: freeform rule
         ({"native_vlan": "5"}, "not implemented for a vPC"),
     ],
