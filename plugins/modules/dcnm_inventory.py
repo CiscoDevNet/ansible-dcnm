@@ -703,15 +703,15 @@ class DcnmInventory:
 
         if "DATA" in response:
             switch = []
+            seed_ips = set(seed_ip.strip() for seed_ip in inv["seedIP"].split(","))
             for sw in response["DATA"]:
-                if inv["seedIP"] == sw["ipaddr"]:
+                if sw.get("ipaddr") in seed_ips:
                     switch.append(sw)
-                    return switch
-            return 0
+            return switch or 0
         else:
             return 0
 
-    def update_create_params(self, inv):
+    def update_create_params(self, inv, discover=True):
         s_ip = "None"
         if inv["seed_ip"]:
             s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
@@ -762,12 +762,55 @@ class DcnmInventory:
                 # Switch already exists in fabric — reuse have data as the
                 # discovery response, no need to call test-reachability
                 inv_upd["switches"] = have_match["switches"]
-            else:
+            elif discover:
                 # Switch is new — must call test-reachability to discover it
                 resp = self.update_discover_params(inv_upd)
                 inv_upd["switches"] = resp
 
         return inv_upd
+
+    def batch_update_create_params(self, create_params):
+        if self.params["state"] not in ["merged", "overridden"]:
+            return create_params
+
+        grouped_by_key = {}
+        for create in create_params:
+            if create.get("switches"):
+                continue
+
+            group_fields = copy.deepcopy(create)
+            group_fields.pop("seedIP", None)
+            group_key = tuple(sorted(group_fields.items()))
+
+            if group_key not in grouped_by_key:
+                group_payload = copy.deepcopy(create)
+                grouped_by_key[group_key] = {
+                    "payload": group_payload,
+                    "create_params": [],
+                    "seed_ips": [],
+                }
+
+            group = grouped_by_key[group_key]
+            group["create_params"].append(create)
+            group["seed_ips"].append(create["seedIP"])
+
+        for group in grouped_by_key.values():
+            discover_payload = copy.deepcopy(group["payload"])
+            discover_payload["seedIP"] = ",".join(group["seed_ips"])
+            switches = self.update_discover_params(discover_payload)
+            switches_by_ip = {}
+
+            if switches:
+                for switch in switches:
+                    ipaddr = switch.get("ipaddr")
+                    if ipaddr:
+                        switches_by_ip[ipaddr] = switch
+
+            for create in group["create_params"]:
+                switch = switches_by_ip.get(create["seedIP"])
+                create["switches"] = [switch] if switch else 0
+
+        return create_params
 
     def iter_create_switches(self, create):
         for switch in create.get("switches", []):
@@ -879,7 +922,9 @@ class DcnmInventory:
                 if create_rma:
                     want_create_rma.append(create_rma)
             else:
-                want_create.append(self.update_create_params(inv))
+                want_create.append(self.update_create_params(inv, discover=False))
+
+        want_create = self.batch_update_create_params(want_create)
 
         if not want_create and not want_create_poap and not want_create_rma:
             return
@@ -1021,7 +1066,7 @@ class DcnmInventory:
 
                         for check in range(1, 120):
                             if not self.all_switches_ok():
-                                time.sleep(5)
+                                time.sleep(30)
                             else:
                                 break
 
@@ -1370,7 +1415,8 @@ class DcnmInventory:
         # It can take a while to rediscover switches if they are reloading
         # while importing them into the fabric.
         attempt = 1
-        total_attempts = 300
+        # 1440 attempts x 5s = 2hr max
+        total_attempts = 1441
         # If all switches to be added have preserve_config set to true then
         # we don't need to loop.
         all_brownfield_switches = True
@@ -1380,7 +1426,7 @@ class DcnmInventory:
 
         while attempt < total_attempts and not all_brownfield_switches and self.switch_snos:
             # Don't error out.  We might miss the status change so worst case
-            # scenario is that we loop 300 times and then bail out.
+            # scenario is that we loop for up to 2 hours and then bail out.
             if attempt == 1:
                 if (
                     self.fabric_details["nvPairs"]["GRFIELD_DEBUG_FLAG"].lower()
@@ -1388,17 +1434,18 @@ class DcnmInventory:
                 ):
                     # It may take a few seconds for switches to enter migration mode when
                     # this flag is set.  Give it a few seconds.
-                    time.sleep(20)
+                    time.sleep(30)
             get_inv = dcnm_send(self.module, method, path)
             if not ready_to_continue(get_inv):
-                time.sleep(5)
+                time.sleep(30)
                 attempt += 1
                 continue
 
             break
 
         attempt = 1
-        total_attempts = 300
+        # 1440 attempts x 5s = 2hr max
+        total_attempts = 1441
 
         while attempt < total_attempts:
             if attempt == total_attempts:
@@ -1408,7 +1455,7 @@ class DcnmInventory:
                 self.module.fail_json(msg=msg)
             get_inv = dcnm_send(self.module, method, path)
             if not switches_managable(get_inv):
-                time.sleep(5)
+                time.sleep(30)
                 attempt += 1
                 continue
 
@@ -1680,7 +1727,7 @@ class DcnmInventory:
                     self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
             else:
-                time.sleep(5)
+                time.sleep(30)
                 success = True
                 break
 
@@ -1709,8 +1756,14 @@ class DcnmInventory:
     def delete_switch(self):
         if self.diff_delete:
             method = "DELETE"
-            for sn in self.diff_delete:
-                path = "/rest/control/fabrics/{0}/switches/{1}".format(self.fabric, sn)
+            batch_size = 50
+            switches_to_delete = list(self.diff_delete)
+            for index in range(0, len(switches_to_delete), batch_size):
+                switch_batch = switches_to_delete[index:index + batch_size]
+                switches = ",".join(switch_batch)
+                path = "/rest/control/fabrics/{0}/switches/{1}".format(
+                    self.fabric, switches
+                )
                 if self.nd:
                     path = self.nd_prefix + path
                 response = dcnm_send(self.module, method, path)
@@ -2130,10 +2183,10 @@ def main():
 
             # Step 3
             # Check all devices are up
-            # V2: Reduced from 300 to 120 max iterations (120 x 5s = 10min max)
-            for check in range(1, 120):
+            # V2: 1440 iterations x 5s = 2hr max
+            for check in range(1, 1441):
                 if not dcnm_inv.all_switches_ok():
-                    time.sleep(5)
+                    time.sleep(30)
                     continue
 
                 break
