@@ -1,4 +1,62 @@
 {
+    "test_image_upgrade_01000a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "DATA.lastOperDataObject.ipAddress is required by the test"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "deviceName": "LE1",
+                    "ethswitchid": 92490,
+                    "fabric": "LAN_10",
+                    "fcoEEnabled": false,
+                    "finalStatus": null,
+                    "group": "LAN_10",
+                    "id": 2,
+                    "imageStaged": "Success",
+                    "imageStagedPercent": 100,
+                    "inProgressMsg": "",
+                    "ipAddress": "192.168.12.151",
+                    "ip_address": "192.168.12.151",
+                    "issuAllowed": "",
+                    "lastUpgAction": "2025-12-15T21:15:54.286Z",
+                    "mds": false,
+                    "mode": "Normal",
+                    "model": "N9K-C9300v",
+                    "modelType": 0,
+                    "peer": null,
+                    "platform": "N9K",
+                    "policy": "OR5F",
+                    "reason": "Upgrade",
+                    "role": "leaf",
+                    "serialNumber": "9FTJDCU90B8",
+                    "status": "In-Sync",
+                    "statusPercent": 100,
+                    "sys_name": "LE1",
+                    "systemMode": "Normal",
+                    "upgGroups": "None",
+                    "upgrade": "Success",
+                    "upgradePercent": 100,
+                    "upgradeType": "Disruptive",
+                    "validated": "Success",
+                    "validatedPercent": 100,
+                    "vdcId": 0,
+                    "vdc_id": -1,
+                    "version": "10.5(3)",
+                    "vpcPeer": null,
+                    "vpcRole": null,
+                    "vpc_role": null
+                }
+            ],
+            "message": ""
+        }
+    },
     "test_image_upgrade_01010a": {
         "DATA": 121,
         "MESSAGE": "OK",

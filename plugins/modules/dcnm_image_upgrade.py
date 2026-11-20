@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # pylint: disable=wrong-import-position
-from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, annotations, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
@@ -404,6 +404,7 @@ import copy
 import inspect
 import json
 import logging
+from typing import Any
 
 from ansible.module_utils.basic import AnsibleModule
 from ..module_utils.common.image_policies import ImagePolicies
@@ -411,12 +412,11 @@ from ..module_utils.common.log_v2 import Log
 from ..module_utils.common.merge_dicts_v2 import MergeDicts
 from ..module_utils.common.params_merge_defaults_v2 import ParamsMergeDefaults
 from ..module_utils.common.params_validate_v2 import ParamsValidate
-from ..module_utils.common.properties import Properties
 from ..module_utils.common.response_handler import ResponseHandler
 from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.results import Results
+from ..module_utils.common.results_v2 import Results
 from ..module_utils.common.sender_dcnm import Sender
-from ..module_utils.common.switch_details import SwitchDetails
+from ..module_utils.common.switch_details_v2 import SwitchDetails
 from ..module_utils.image_upgrade.image_policy_attach import ImagePolicyAttach
 from ..module_utils.image_upgrade.image_policy_detach import ImagePolicyDetach
 from ..module_utils.image_upgrade.image_stage import ImageStage
@@ -427,14 +427,13 @@ from ..module_utils.image_upgrade.params_spec import ParamsSpec
 from ..module_utils.image_upgrade.switch_issu_details import SwitchIssuDetailsByIpAddress
 
 
-def json_pretty(msg):
+def json_pretty(msg) -> str:
     """
     Return a pretty-printed JSON string for logging messages
     """
     return json.dumps(msg, indent=4, sort_keys=True)
 
 
-@Properties.add_rest_send
 class Common:
     """
     ### Summary
@@ -452,37 +451,37 @@ class Common:
                     -   ``query``
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+    def __init__(self, params: dict[str, Any]) -> None:
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.valid_states = ["deleted", "merged", "query"]
-        self.check_mode = None
-        self.config = None
-        self.state = None
-        self.params = params
+        self.valid_states: list[str] = ["deleted", "merged", "query"]
+        self.config: dict[str, Any] = {}
+        self.params: dict[str, Any] = params
         self.validate_params()
+        self.check_mode: bool = self.params["check_mode"]
+        self.state: str = self.params["state"]
 
-        self.results = Results()
+        self.results: Results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
-        self._rest_send = None
-        self.have = None
-        self.idempotent_want = None
+        self._rest_send: RestSend = RestSend(params=self.params)
+        self.have: SwitchIssuDetailsByIpAddress = SwitchIssuDetailsByIpAddress()
+        self.idempotent_want: dict[str, Any] = {}
         # populated in self._merge_global_and_switch_configs()
-        self.switch_configs = []
+        self.switch_configs: list[dict[str, Any]] = []
 
-        self.want = []
-        self.need = []
+        self.want: list[dict[str, Any]] = []
+        self.need: list[dict[str, Any]] = []
 
-        self.switch_details = SwitchDetails()
-        self.image_policies = ImagePolicies()
-        self.install_options = ImageInstallOptions()
-        self.image_policy_attach = ImagePolicyAttach()
-        self.params_spec = ParamsSpec()
+        self.switch_details: SwitchDetails = SwitchDetails()
+        self.image_policies: ImagePolicies = ImagePolicies()
+        self.install_options: ImageInstallOptions = ImageInstallOptions()
+        self.image_policy_attach: ImagePolicyAttach = ImagePolicyAttach()
+        self.params_spec: ParamsSpec = ParamsSpec()
 
         self.image_policies.results = self.results
         self.install_options.results = self.results
@@ -493,7 +492,7 @@ class Common:
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-    def validate_params(self):
+    def validate_params(self) -> None:
         """
         ### Summary
         Validate ``params`` passed to __init__().
@@ -509,20 +508,17 @@ class Common:
                         -   ``merged``
                         -   ``query``
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "check_mode is required."
-            raise ValueError(msg)
-        self.config = self.params.get("config", None)
+        self.config: dict[str, Any] = self.params.get("config", {})
+        msg = f"{self.class_name}.{method_name}: config: {json_pretty(self.config)}"
+        self.log.debug(msg)
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "expected dict type for self.config. "
             msg += f"got {type(self.config).__name__}"
             raise TypeError(msg)
-        self.state = self.params.get("state", None)
+        self.state = self.params.get("state", "")
         if self.state is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "params is missing state parameter."
@@ -539,12 +535,11 @@ class Common:
 
         Determine current switch ISSU state on the controller
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
-        self.have = SwitchIssuDetailsByIpAddress()
-        self.have.rest_send = self.rest_send  # pylint: disable=no-member
+        self.have.rest_send = self._rest_send
         # Set to Results() instead of self.results so as not to clutter
         # the playbook results.
         self.have.results = Results()
@@ -555,7 +550,7 @@ class Common:
         ### Summary
         Update self.want for all switches defined in the playbook.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "Calling _merge_global_and_switch_configs with "
@@ -609,7 +604,7 @@ class Common:
         and values are modified based on results from the have item,
         and the information returned by ImageInstallOptions.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}: "
         msg += f"want: {json.dumps(want, indent=4, sort_keys=True)}"
@@ -623,7 +618,7 @@ class Common:
 
         # The switch does not have an image policy attached.
         # idempotent_want == want with policy_changed = True
-        if self.have.serial_number is None:
+        if not self.have.serial_number:
             return
 
         # The switch has an image policy attached which is
@@ -710,7 +705,7 @@ class Common:
         -   ``True`` if newVersion > oldVersion for any module.
         -   ``False`` otherwise.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"epld_modules: {epld_modules}"
@@ -737,7 +732,7 @@ class Common:
                 return True
         return False
 
-    def _merge_global_and_switch_configs(self, config) -> None:
+    def _merge_global_and_switch_configs(self, config: dict[str, Any]) -> None:
         """
         ### Summary
         Merge the global config with each switch config and
@@ -759,7 +754,7 @@ class Common:
                 -   Playbook is missing list of switches.
                 -   ``MergedDicts()`` raises an error.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         if not config.get("switches"):
             msg = f"{self.class_name}.{method_name}: "
@@ -804,7 +799,7 @@ class Common:
         For any items in config which are not set, apply the default
         value from params_spec (if a default value exists).
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
@@ -838,7 +833,7 @@ class Common:
                         -   ``merged``
                         -   ``query``
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         try:
             self.params_spec.params = self.params
@@ -849,7 +844,7 @@ class Common:
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        validator = ParamsValidate()
+        validator: ParamsValidate = ParamsValidate()
         try:
             validator.params_spec = self.params_spec.params_spec
             for switch in self.switch_configs:
@@ -860,6 +855,42 @@ class Common:
             msg += "Error during ParamsValidate(). "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        ### Summary
+        An instance of the RestSend class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+
+        ### getter
+        Return an instance of the RestSend class.
+
+        ### setter
+        Set an instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        if not value.params:
+            raise ValueError(f"{self.class_name}.{method_name}: RestSend.params must be set.")
+        self._rest_send = value
 
 
 class Merged(Common):
@@ -873,9 +904,9 @@ class Merged(Common):
         -   ``commit()`` is issued before setting mandatory properties
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+    def __init__(self, params) -> None:
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -905,7 +936,7 @@ class Merged(Common):
                 -   ``rest_send`` is not set.
                 -   ``results`` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
@@ -926,7 +957,7 @@ class Merged(Common):
         -   Validate the image if requested.
         -   Upgrade the image if requested.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
@@ -968,8 +999,8 @@ class Merged(Common):
             if switch.get("validate") is not False:
                 validate_devices.append(device["serial_number"])
             if (
-                switch.get("upgrade").get("nxos") is not False
-                or switch.get("upgrade").get("epld") is not False
+                switch.get("upgrade", {}).get("nxos") is not False
+                or switch.get("upgrade", {}).get("epld") is not False
             ):
                 upgrade_devices.append(switch)
 
@@ -994,7 +1025,7 @@ class Merged(Common):
         our want list that are not in our have list.  These items will
         be sent to the controller.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         need: list[dict] = []
 
         msg = f"{self.class_name}.{method_name}: "
@@ -1033,7 +1064,7 @@ class Merged(Common):
                 need.append(copy.deepcopy(self.idempotent_want))
         self.need = copy.copy(need)
 
-    def _stage_images(self, serial_numbers) -> None:
+    def _stage_images(self, serial_numbers: list[str]) -> None:
         """
         Initiate image staging to the switch(es) associated
         with serial_numbers
@@ -1041,7 +1072,7 @@ class Merged(Common):
         Callers:
         - handle_merged_state
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
@@ -1052,14 +1083,14 @@ class Merged(Common):
         stage.serial_numbers = serial_numbers
         stage.commit()
 
-    def _validate_images(self, serial_numbers) -> None:
+    def _validate_images(self, serial_numbers: list[str]) -> None:
         """
         Validate the image staged to the switch(es)
 
         Callers:
         - handle_merged_state
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
@@ -1116,7 +1147,7 @@ class Merged(Common):
         Callers:
         - self.handle_merged_state
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"len(devices): {len(devices)}, "
@@ -1134,7 +1165,7 @@ class Merged(Common):
             msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            self.switch_details.ip_address = device.get("ip_address")
+            self.switch_details.filter = device.get("ip_address")
             self.install_options.serial_number = self.switch_details.serial_number
             self.install_options.policy_name = device.get("policy")
             self.install_options.epld = device.get("upgrade", {}).get("epld", False)
@@ -1179,7 +1210,7 @@ class Merged(Common):
         ### Summary
         Attach image policies to switches.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
 
@@ -1192,7 +1223,7 @@ class Merged(Common):
         self.log.debug(msg)
 
         for switch in self.need:
-            self.switch_details.filter = switch.get("ip_address")
+            self.switch_details.filter = switch.get("ip_address", "")
             self.image_policies.policy_name = switch.get("policy")
             # ImagePolicyAttach wants a policy name and a list of serial_number.
             # Build dictionary, serial_numbers_to_update, keyed on policy name,
@@ -1226,9 +1257,9 @@ class Deleted(Common):
         -   ``commit()`` is issued before setting mandatory properties
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+    def __init__(self, params) -> None:
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -1276,17 +1307,13 @@ class Deleted(Common):
                 -   ``rest_send`` is not set.
                 -   ``results`` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        if self.rest_send is None:
+        if not self._rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit()."
-            raise ValueError(msg)
-        if self.results is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be set before calling commit()."
             raise ValueError(msg)
 
     def commit(self) -> None:
@@ -1294,7 +1321,7 @@ class Deleted(Common):
         ### Summary
         Detach image policies from switches.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
 
@@ -1324,7 +1351,7 @@ class Deleted(Common):
         ### Summary
         Detach image policies from switches.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
 
@@ -1357,9 +1384,9 @@ class Query(Common):
         -   ``commit()`` is issued before setting mandatory properties
     """
 
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
+    def __init__(self, params: dict[str, Any]) -> None:
+        self.class_name: str = self.__class__.__name__
+        method_name: str = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -1385,7 +1412,7 @@ class Query(Common):
                 -   ``rest_send`` is not set.
                 -   ``results`` is not set.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
@@ -1417,7 +1444,7 @@ class Query(Common):
 
         Caller: main()
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
 
@@ -1433,7 +1460,7 @@ class Query(Common):
         self.log.debug(msg)
 
 
-def main():
+def main() -> None:
     """main entry point for module execution"""
 
     argument_spec = {
@@ -1455,15 +1482,14 @@ def main():
     except ValueError as error:
         ansible_module.fail_json(str(error))
 
-    sender = Sender()
+    sender: Sender = Sender()
     sender.ansible_module = ansible_module
-    rest_send = RestSend(params)
+    rest_send: RestSend = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
-    # pylint: disable=attribute-defined-outside-init
+    task = None
     try:
-        task = None
         if params["state"] == "deleted":
             task = Deleted(params)
         if params["state"] == "merged":
@@ -1475,6 +1501,8 @@ def main():
         task.rest_send = rest_send
         task.commit()
     except ValueError as error:
+        if task is None:
+            ansible_module.fail_json(f"{error}")
         ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
     task.results.build_final_result()
