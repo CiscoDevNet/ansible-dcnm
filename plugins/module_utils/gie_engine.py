@@ -56,12 +56,14 @@ GIE_MECH_CHILD_PTI = "child_pti"
 # meeting the floor never substitutes for this capability declaration.
 #
 # Exact approved SMU, or numeric ND >=4.4.1 (the numeric release path is an assumption of the existing
-# selector: its templates were not read). The approved SMUs are 4.3.1.0175006017 and 4.3.1.0175006018.
-# Approving 018 assumes it leaves the 017 interface templates unchanged; its templates were not
-# compared as a whole. The earlier 4.3.1.0175006011 no longer unlocks the
+# selector: its templates were not read). The approved SMUs are 4.3.1.0175006017, 4.3.1.0175006018 and
+# 4.3.1.0175006020. Approving 018 assumes it leaves the 017 interface templates unchanged; its templates
+# were not compared as a whole. 020 changes thirteen interface templates; the complete 018 and 020
+# template sets were compared, and every registered binding has the same declaration status in both
+# (NOT LIVE TESTED on 020). The earlier 4.3.1.0175006011 no longer unlocks the
 # registered capabilities because its templates declare different OSPF nvPair names. Below the ND
 # floor, other SMU builds remain unsupported. No trimming or suffixes.
-GIE_ENABLED_PATCH_VERSIONS = frozenset({"4.3.1.0175006017", "4.3.1.0175006018"})
+GIE_ENABLED_PATCH_VERSIONS = frozenset({"4.3.1.0175006017", "4.3.1.0175006018", "4.3.1.0175006020"})
 GIE_MIN_ND_VERSION = (4, 4, 1)
 
 
@@ -1280,8 +1282,8 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
             # never echoed -- only the public field name -- because a binding may carry a
             # secret (see gie_describe_value_type's reasoning for the same omission).
             return None, (
-                "'{0}' requires caller-supplied patch_version 4.3.1.0175006017, 4.3.1.0175006018 or "
-                "numeric ND >= 4.4.1 for this interface capability; no change was sent.".format(pk)
+                "'{0}' requires caller-supplied patch_version 4.3.1.0175006017, 4.3.1.0175006018, "
+                "4.3.1.0175006020 or numeric ND >= 4.4.1 for this interface capability; no change was sent.".format(pk)
             )
         supported = gie_version_supported(ndfc_version, b["min_ndfc_version"])
         if not supported:

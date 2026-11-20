@@ -84,23 +84,27 @@ options:
     - The same declaration selects the nvPair names of two native SVI fields of C(int_vlan), because the
       installed parent template names them differently in its two bodies - with a supported value
       C(dhcp_server_addr4) and C(dhcp_relay_src_intf) use C(dhcpServerAddress4) and
-      C(dhcpRelaySourceInterface) (the body served with the activated SMU C(4.3.1.0175006017)); without it
+      C(dhcpRelaySourceInterface) (the body served with the activated SMU C(4.3.1.0175006017); the
+      C(4.3.1.0175006020) body declares the same names); without it
       they keep C(dhcpServerAddr4) and C(DHCP_RELAY_SRC_INTF). These two fields stay native (an absent
       value does not reject them), only one family is ever sent, and the controller is not probed. A
       controller that serves the SMU body must be paired with this declaration (NOT LIVE TESTED; C(4.4.1)
       or later is an assumption of the shared selector, not an observation). When an SVI's stored values
       carry the other body's names, setting, clearing or (replaced/overridden) resetting these fields is
       refused before any change is sent.
-    - Accepts the exact SMU strings C(4.3.1.0175006017) and C(4.3.1.0175006018) or a numeric Nexus Dashboard
+    - Accepts the exact SMU strings C(4.3.1.0175006017), C(4.3.1.0175006018) and C(4.3.1.0175006020) or a numeric Nexus Dashboard
       release C(4.4.1) or later, matching the version policy of C(dcnm_network).
       ND release strings require at least three dot-separated numeric components;
       additional build components must also be numeric. The first three components are
       compared numerically. No whitespace or suffixes are accepted. For example,
       C(4.4.1.10) and C(4.10.0) are supported, while C(4.4.0), C(4.4),
       C(4.4.1-rc1) and adjacent unapproved C(4.3.1) SMU builds are rejected.
-    - The supported SMU builds are C(4.3.1.0175006017) and C(4.3.1.0175006018). Support for C(4.3.1.0175006018)
-      assumes that it leaves the C(4.3.1.0175006017) interface templates unchanged; its templates were not
-      compared as a whole. Declare the SMU that is installed. The earlier C(4.3.1.0175006011)
+    - The supported SMU builds are C(4.3.1.0175006017), C(4.3.1.0175006018) and C(4.3.1.0175006020). Support for
+      C(4.3.1.0175006018) assumes that it leaves the C(4.3.1.0175006017) interface templates unchanged; its templates
+      were not compared as a whole. C(4.3.1.0175006020) changes thirteen interface templates, among them C(int_vlan)
+      and C(int_routed_host). Its complete template set was compared with the C(4.3.1.0175006018) set, and every
+      registered field has the same declaration status in both; C(4.3.1.0175006020) is NOT LIVE TESTED. Declare the
+      SMU that is installed. The earlier C(4.3.1.0175006011)
       is not accepted, because its interface templates declare different OSPF nvPair names.
     - On loopbacks and subinterfaces, C(ospf_bfd_mode) (C(no_change), C(enable), C(disable)) and, on subinterfaces,
       C(ospf_passive_mode) (C(no_change), C(passive), C(no_passive)) carry the OSPF BFD and passive settings, as on
@@ -3811,7 +3815,8 @@ SVI_DHCP4_FIELDS = (
 #   f32ef5863d8757759154f5992eba9f009ecdf68425f8be9d58e5a0bb416313e4  dhcpServerAddress4   dhcpRelaySourceInterface  (the tuple below)
 # vrfDhcp4 is unchanged. NDFC reports 12.6.0.267 for both bodies, so the controller version cannot choose; the body that carries the activated SMU
 # 4.3.1.0175006011 (the ND upgrade history lists it with fixDetails naming dcnm-configtemplate) is f32ef586. SMU 4.3.1.0175006017
-# declares the same two names (read from its int_vlan body); SMU 4.3.1.0175006018 is accepted as keeping that body. The existing patch_version
+# declares the same two names (read from its int_vlan body); SMU 4.3.1.0175006018 is accepted as keeping that body. The SMU 4.3.1.0175006020
+# int_vlan body differs, but declares the same two names and no legacy name (read from the captured 018 and 020 bodies). The existing patch_version
 # capability (gie_patch_supported: those SMUs, or a numeric ND release >= 4.4.1 -- the latter is an assumption of the existing selector, not an
 # observation) is what already selects the SMU-schema names of the registered int_vlan fields. The same selector chooses these names. A missing or
 # unapproved patch keeps the legacy names, as for every native field; the module never sends both and never probes the controller.
@@ -15095,7 +15100,7 @@ class DcnmIntf:
         if not gie_patch_supported(getattr(self, "patch_version", None)):
             self.module.fail_json(
                 msg="Interface {0}: mode 'peer_link' requires caller-supplied patch_version 4.3.1.0175006017, "
-                "4.3.1.0175006018 or numeric ND 4.4.1 or later. No change was sent.".format(ifname)
+                "4.3.1.0175006018, 4.3.1.0175006020 or numeric ND 4.4.1 or later. No change was sent.".format(ifname)
             )
         seen = self.__dict__.setdefault("peer_link_items", {})
         if seen.setdefault((str(ifname).lower(), pairs[0]), id(cfg)) != id(cfg):

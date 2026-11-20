@@ -23,7 +23,7 @@ def _bare_action_module():
     return object.__new__(action_module.ActionModule)
 
 
-@pytest.mark.parametrize("patch_version", ["4.3.1.0175006017", "4.4.1"])
+@pytest.mark.parametrize("patch_version", ["4.3.1.0175006017", "4.3.1.0175006020", "4.4.1"])
 def test_patch_version_survives_action_preprocessing_unchanged(patch_version):
     am = _bare_action_module()
     am._task = MagicMock()

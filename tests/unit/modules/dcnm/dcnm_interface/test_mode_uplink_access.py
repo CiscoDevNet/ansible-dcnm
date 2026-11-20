@@ -752,6 +752,12 @@ def test_numeric_nd_441_is_admitted():
     assert _modify(calls)["spanningTreePortType"] == "network"
 
 
+def test_smu_020_is_admitted():
+    result, calls = _run(_cfg(spanning_tree_port_type="network"), "merged", _have(), patch_version="4.3.1.0175006020")
+    assert not result.get("failed"), result.get("msg")
+    assert _modify(calls)["spanningTreePortType"] == "network"
+
+
 # ------------------------------------------------------------------ ordinary paths untouched
 def _created(calls):
     out = []

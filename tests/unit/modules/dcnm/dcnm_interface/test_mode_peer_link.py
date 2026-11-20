@@ -483,6 +483,12 @@ def test_numeric_nd_441_is_admitted():
     assert set(_modifies(calls)) == set(SERIALS)
 
 
+def test_smu_020_is_admitted():
+    result, calls = _run(_cfg(spanning_tree_port_type="network"), "merged", _have(), patch_version="4.3.1.0175006020")
+    assert not result.get("failed"), result.get("msg")
+    assert set(_modifies(calls)) == set(SERIALS)
+
+
 # ------------------------------------------------------------------ ordinary paths untouched
 def test_an_ordinary_port_channel_is_still_not_routed_to_the_peer_link_path():
     result, calls = h.run_configs([h.cfg_for(h.PC_TRUNK, h.BASE_PC_TRUNK)], "merged", [])

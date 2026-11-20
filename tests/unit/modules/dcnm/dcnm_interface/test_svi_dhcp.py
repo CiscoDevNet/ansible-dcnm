@@ -353,7 +353,7 @@ _switch_off_inherited_tests()
 #
 # The EXPECTED names below are NOT taken from the module: they are read out of verbatim excerpts of the two real template bodies
 # (fixtures/dhcp_template_excerpts.yaml, each excerpt headed by the sha256 of the full body), so the mapping cannot be its own oracle. The selector is the
-# module's existing ``patch_version`` capability (approved SMU ``4.3.1.0175006011`` or a numeric ND release >= 4.4.1; see gie_patch_supported):
+# module's existing ``patch_version`` capability (an approved SMU of GIE_ENABLED_PATCH_VERSIONS or a numeric ND release >= 4.4.1; see gie_patch_supported):
 # an approved patch selects the SMU-schema body, a missing or unapproved one keeps the legacy names. 4.4.1 is OFFLINE-ONLY: no capture of an
 # ND >= 4.4.1 exists, so its names are the existing selector's assumption, not an observation.
 #
@@ -610,7 +610,7 @@ def test_registered_and_native_selectors_are_one_and_the_same():
     """The names follow the SAME capability as the registered fields of int_vlan (one parent body, one selector)."""
     from ansible_collections.cisco.dcnm.plugins.module_utils.gie_engine import gie_patch_supported
 
-    for patch in (None, "", APPROVED_SMU, "4.4.1", "4.4.0", "4.3.1.0175006010", "latest"):
+    for patch in (None, "", APPROVED_SMU, "4.3.1.0175006018", "4.3.1.0175006020", "4.4.1", "4.4.0", "4.3.1.0175006010", "latest"):
         assert (dict(module.svi_dhcp4_fields(patch)) == SMU) == gie_patch_supported(patch)
 
 
