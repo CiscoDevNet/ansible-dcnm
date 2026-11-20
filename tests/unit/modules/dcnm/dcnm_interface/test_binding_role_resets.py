@@ -666,8 +666,8 @@ def test_the_previous_lot_is_untouched():
     """
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 234 = 228 + six int_vpc_dot1q_tunnel rows; 245 = 234 + eleven PVLAN companion rows; 246 = + one vPC PVLAN row.
-    # + slices 0b_37 to 0b_42, rs1, pl1, ul1, a4_1 to a4_5, vm1, dr1, rp1 to rp5
-    assert len(BINDING_TABLE) == 456, "the table has {0} identities".format(len(BINDING_TABLE))
+    # + slices 0b_37 to 0b_42, rs1, pl1, ul1, a4_1 to a4_5, vm1, dr1, rp1 to rp5, smu020_routed_bfd
+    assert len(BINDING_TABLE) == 460, "the table has {0} identities".format(len(BINDING_TABLE))
     # 197 integrated + 3 int_vlan rows (test_binding_role_resets.py) = 200, + the six
     # int_vpc_dot1q_tunnel resets = 206, + the existing
     # int_vlan::privateVlanMapping reset = 207. Those rows live on other parents, so the
@@ -861,9 +861,9 @@ def test_the_arithmetic_is_197_plus_three():
     with_reset = [r for r in BINDING_TABLE if r.get("reset_wire") is not None]
     # 228 + six dot1q rows + eleven PVLAN companion rows + one vPC PVLAN row, + slices 0b_37, 0b_38, 0b_39, 0b_40, rs1,
     # pl1, ul1, 0b_41, 0b_42, a4_1 to a4_5, vm1, dr1 and rp1 to rp5 (the measured a4_1, a4_3, a4_4, rp1, rp3 and rp4
-    # resets are counted below; the other rows of these slices declare none).
+    # resets are counted below; the other rows of these slices declare none), + lot smu020_routed_bfd (4, no reset).
     assert len(BINDING_TABLE) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
-                                  + 3 + 4 + 7 + 12 + 37)
+                                  + 3 + 4 + 7 + 12 + 37 + 4)
     # 200 + six dot1q resets + int_vlan::privateVlanMapping = 207, + 11 PVLAN companion resets (inferred) = 218, + 1 vPC PVLAN reset = 219.
     # + 5 SMU 017 resets read from the bodies (slice 0b_37) = 224, + 5 loopback EIGRP resets (slice 0b_38) = 229,
     # + 1 routed port-channel PIM BFD reset (slice 0b_39) = 230, + 16 routed port-channel OSPF resets (slice 0b_40) = 246,

@@ -126,6 +126,18 @@ options:
       single request; C(int_trunk_host) does not declare the field, and the controller removes the line with the
       policy change (measured on NDFC 12.6.0.267 with the C(4.3.1.0175006017) templates). C(enable_cdp) keeps its
       native behaviour on the access, trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles.
+    - On a routed Ethernet, only the C(4.3.1.0175006020) template declares the BFD interval fields that subinterfaces
+      and SVIs accept - C(enable_bfd_interval) (bool), C(bfd_tx_interval) and C(bfd_min_rx_interval) (50-999
+      milliseconds) and C(bfd_multiplier) (1-50); they render C(bfd interval <tx> min_rx <rx> multiplier <n>). On this
+      profile they are accepted only with C(patch_version) C(4.3.1.0175006020); the other SMUs and the numeric ND
+      release path refuse them before any change is sent. The three values are required while C(enable_bfd_interval)
+      is true. The template creates that configuration while the option is true and has no step that removes it, and
+      what the controller does when the option becomes false is not established. The module therefore refuses, before
+      any change is sent, an explicit false over a stored true and, under C(replaced) and C(overridden), an omitted
+      stored true. Under C(merged) an omitted value is kept. A C(deleted) or C(overridden) reset of a leaf port to
+      C(int_trunk_host) proceeds; the routed template removes its interface child policies with the policy change
+      (read from the template body, not measured). A reset that keeps C(int_routed_host) with the option true is
+      refused. NOT LIVE TESTED.
     - On a loopback, the C(4.3.1.0175006017) templates also declare the EIGRP fields that the routed, subinterface and
       SVI profiles already accept (NOT LIVE TESTED; read from the installed template body) -
       C(enable_eigrp_ipv6_routing) (bool; renders C(ipv6 router eigrp <tag>)),
@@ -14398,8 +14410,8 @@ class DcnmIntf:
         if gated:
             # D-3: the gate as this same-parent reset leaves it -- HAVE, then the role default payload, then the verified
             # resets queued above (e.g. ospf "false"). Only verified resets move a gate; an unreadable gate was blocked
-            # above and never reaches `resets`. Every gate of a dependent row is itself a row with a verified reset, so
-            # one pass decides them all. A dependent that is inert under the final gate configures nothing: it stays
+            # above and never reaches `resets`, and a gate without a verified reset (int_routed_host bfdInterval) keeps
+            # its HAVE value, so one pass decides them all. A dependent that is inert under the final gate configures nothing: it stays
             # stored (the controller keeps an inert ospfTag, measured) unless it declares `clear`, in which case key
             # material is cleared rather than kept. Otherwise it is refused exactly as before.
             final_nv = dict(have_nv)
@@ -17360,6 +17372,13 @@ def main():
                 if b["reason"] == "no_paired_clear"
             }
         )
+        unmeasured_disable = sorted(
+            {
+                (b["interface"], b["parent"], b["field"])
+                for b in dcnm_intf.dependency_blocked
+                if b["reason"] == "unmeasured_disable"
+            }
+        )
         parts = []
         if set_off:
             parts.append(
@@ -17389,6 +17408,14 @@ def main():
                 "no supported clear for that value: {0}. The module does not send a clear of only one of the two. "
                 "Keep the field, or remove the interface.".format(
                     ", ".join("{2} (paired with {3}) on {0}, parent {1}".format(*b) for b in no_paired_clear)
+                )
+            )
+        if unmeasured_disable:
+            parts.append(
+                "These fields would disable an option that is enabled on the controller, and what the controller "
+                "does with the configuration the option created is not established for this parent: {0}. The "
+                "module does not send this change; keep the option enabled.".format(
+                    ", ".join("{2} on {0}, parent {1}".format(*b) for b in unmeasured_disable)
                 )
             )
         parts.append("No configuration or deployment request was sent.")

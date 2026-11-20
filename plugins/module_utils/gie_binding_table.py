@@ -1,12 +1,12 @@
 # GENERATED - DO NOT EDIT. Static interface binding table.
 # Generator: tools/gie_generate_binding_table.py, from the approved registry YAML.
 # Runtime imports this module only; it never reads YAML or NDFC templates.
-# provenance_sha256 = cae749350fbc270abe1737752e0ccb7ae8bda28fec0b4e377aade092492182e9
+# provenance_sha256 = badbd6e934832895cf6b7fa153a80646a014e7aa934e3cf52d2d593170cba20a
 
 from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
-PROVENANCE_SHA256 = "cae749350fbc270abe1737752e0ccb7ae8bda28fec0b4e377aade092492182e9"
+PROVENANCE_SHA256 = "badbd6e934832895cf6b7fa153a80646a014e7aa934e3cf52d2d593170cba20a"
 
 BINDING_TABLE = (
     {
@@ -2831,6 +2831,69 @@ BINDING_TABLE = (
         'min_ndfc_version': '12.6.0.267',
         'no_log': False,
         'dropped_on_policy_change': True,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'bfdInterval',
+        'profile_key': 'enable_bfd_interval',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'boolean',
+        'default_template': False,
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'no_log': False,
+        'dropped_on_policy_change': True,
+        'patch_versions': ('4.3.1.0175006020',),
+        'disable_unmeasured': True,
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'bfdMinRxInterval',
+        'profile_key': 'bfd_min_rx_interval',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 50,
+        'max_value': 999,
+        'no_log': False,
+        'inert_when': {'nvpair': 'bfdInterval', 'value': 'false', 'required': True},
+        'dropped_on_policy_change': True,
+        'patch_versions': ('4.3.1.0175006020',),
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'bfdMultiplier',
+        'profile_key': 'bfd_multiplier',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 1,
+        'max_value': 50,
+        'no_log': False,
+        'inert_when': {'nvpair': 'bfdInterval', 'value': 'false', 'required': True},
+        'dropped_on_policy_change': True,
+        'patch_versions': ('4.3.1.0175006020',),
+    },
+    {
+        'parent_template': 'int_routed_host',
+        'parent_nvpair': 'bfdTxInterval',
+        'profile_key': 'bfd_tx_interval',
+        'applicable_interface_type': 'eth',
+        'applicable_mode': 'routed',
+        'type': 'integer',
+        'mechanism': 'passthrough',
+        'min_ndfc_version': '12.6.0.267',
+        'min_value': 50,
+        'max_value': 999,
+        'no_log': False,
+        'inert_when': {'nvpair': 'bfdInterval', 'value': 'false', 'required': True},
+        'dropped_on_policy_change': True,
+        'patch_versions': ('4.3.1.0175006020',),
     },
     {
         'parent_template': 'int_routed_host',

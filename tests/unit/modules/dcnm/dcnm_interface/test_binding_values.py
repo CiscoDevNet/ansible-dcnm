@@ -123,13 +123,14 @@ def test_table_rows_are_unique_and_the_count_is_pinned():
     keys = [(b["parent_template"], b["parent_nvpair"]) for b in BINDING_TABLE]
     # 246 = 245 + the IQ1 vPC PVLAN qosStatsSuppressed row.
     # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row; + 76: lots a4_1 to a4_5;
-    # + 9: slices vm1, dr1; + 63: lots rp1 to rp5
-    assert len(BINDING_TABLE) == 456
+    # + 9: slices vm1, dr1; + 63: lots rp1 to rp5; + 4: lot smu020_routed_bfd
+    assert len(BINDING_TABLE) == 460
     # + slice 0b_37 (5) + slice 0b_38 (5) + slice 0b_39 (1) + slice 0b_40 (19) + slice rs1 (1) + slice pl1 (4) + slice ul1 (12)
     # + slice 0b_41 (2) + slice 0b_42 (13) + lots a4_1 to a4_5 (76) + slice vm1 (6) + slice dr1 (3) + lots rp1 to rp5 (63)
-    assert len(set(keys)) == 456, "duplicate (parent, nvpair) row"
+    # + lot smu020_routed_bfd (4)
+    assert len(set(keys)) == 460, "duplicate (parent, nvpair) row"
     pk_keys = [(b["parent_template"], b["profile_key"]) for b in BINDING_TABLE]
-    assert len(set(pk_keys)) == 456, "duplicate (parent, profile_key) row"
+    assert len(set(pk_keys)) == 460, "duplicate (parent, profile_key) row"
 
 
 def test_provenance_recalculates_from_packaged_rows():
@@ -187,7 +188,7 @@ def test_applicable_type_and_mode_are_literal_argspec_values():
 def test_generator_rejects_duplicate_missing_and_profile_key_mismatch():
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 456   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5
+    assert len(gen.compile_rows(rows)) == 460   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5, smu020
 
     with pytest.raises(ValueError, match="duplicate committed binding"):
         gen.compile_rows(rows + [dict(rows[0])])
@@ -219,7 +220,7 @@ def test_generator_enforces_the_registry_schema_per_row():
     """
     gen = _load_generator()
     rows = _as_slice_rows(BINDING_TABLE)
-    assert len(gen.compile_rows(rows)) == 456   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5
+    assert len(gen.compile_rows(rows)) == 460   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5, smu020
 
     nvpair = rows[0]["parent_nvpair"]
 
@@ -315,7 +316,7 @@ def test_generator_still_ignores_unrelated_uncommitted_rows():
         "mechanism": "child_pti",
         "min_ndfc_version": SUPPORTED,
     })
-    assert len(gen.compile_rows(rows)) == 456   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5
+    assert len(gen.compile_rows(rows)) == 460   # 246 + slices 0b_37 to 0b_42, rs1, pl1, ul1, lots a4_1 to a4_5, vm1, dr1, rp1 to rp5, smu020
 
 
 # ------------------------------------------------------------------ positive transport
@@ -1204,10 +1205,16 @@ def test_the_derived_set_is_not_empty_and_covers_the_known_fields():
     # 163 = 154 + the 9 boolean rows of lot a4_5_link_settings.
     # 166 = 163 + enable_vlan_mapping on the three trunk parents (slice vm1).
     # 194 = 166 + the 28 boolean rows of lots rp1 to rp5.
-    assert len(BOOL_PASSTHROUGH) == 194
+    # 195 = 194 + enable_bfd_interval on int_routed_host (lot smu020_routed_bfd).
+    assert len(BOOL_PASSTHROUGH) == 195
 
 
 # ------------------------------------------------------- what the engine emits --
+
+def _admitting_patch(parent, profile_key):
+    """PATCH, or the first of the row's own patch_versions when it declares them (lot smu020_routed_bfd)."""
+    return (resolve_binding(parent, profile_key).get("patch_versions") or (PATCH,))[0]
+
 
 @pytest.mark.parametrize("parent,profile_key,nvpair", BOOL_SUPPORTED, ids=BOOL_SUPPORTED_IDS)
 @pytest.mark.parametrize(
@@ -1217,7 +1224,7 @@ def test_boolean_passthrough_is_emitted_as_its_wire_form(
     parent, profile_key, nvpair, value, wire
 ):
     """The exact defect: a native bool in nvPairs never matches the controller's string."""
-    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION, PATCH)
+    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION, _admitting_patch(parent, profile_key))
     assert err is None
     assert add[nvpair] == wire
     assert isinstance(add[nvpair], str)
@@ -1275,7 +1282,7 @@ def test_omitted_boolean_still_contributes_nothing():
 
 def _engine_nvpairs(parent, profile_key, value):
     """The nvPairs the module would build for this profile, via the real engine call."""
-    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION, PATCH)
+    add, err = gie_contribute_nvpairs(parent, {profile_key: value}, VERSION, _admitting_patch(parent, profile_key))
     assert err is None, err
     return add
 

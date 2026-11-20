@@ -325,9 +325,10 @@ class TestPV09InventoryInvariants:
     def test_234_identities_and_207_reset_values_unchanged(self):
         # The eleven PVLAN companion rows, each with an inferred reset: 234 + 11, 207 + 11; plus one vPC PVLAN row.
         # + 5: 0b_37, + 5: 0b_38, + 1: 0b_39, + 19: 0b_40, + 1: rs1, + 4: pl1, + 12: ul1, + 2: 0b_41, + 13: 0b_42,
-        # + 76: a4_1 to a4_5, + 6: vm1, + 3: dr1, + 63: rp1 to rp5 (no reset_wire: removal not measured)
+        # + 76: a4_1 to a4_5, + 6: vm1, + 3: dr1, + 63: rp1 to rp5 (no reset_wire: removal not measured),
+        # + 4: smu020_routed_bfd (no reset_wire: withdrawal not established)
         assert len(BINDING_TABLE) == (234 + 11 + 1 + 5 + 5 + 1 + 19 + 1 + 4 + 12 + 2 + 13 + 6 + 7 + 3 + 23 + 37 + 6 + 3
-                                      + 3 + 4 + 7 + 12 + 37)
+                                      + 3 + 4 + 7 + 12 + 37 + 4)
         # + 0b_37 to 0b_42, rs1, pl1, ul1, + 9: the routed port-channel resets measured live on that parent,
         # + 4: the trunk Ethernet and trunk port-channel spanning-tree resets measured live on those parents,
         # + 5: the dot1q-tunnel port-channel LACP, CDP and link-type resets measured live on that parent,
@@ -402,8 +403,10 @@ class TestPV09InventoryInvariants:
         # The reset_wire of the int_l3_port_channel ENABLE_PFC row, measured live on that parent (was 50993415...).
         # Both reset lots merged (was 3221a6f9... with the dot1q-tunnel port-channel resets only, 2a381f86... with
         # the QoS and PFC resets only).
+        # The four int_routed_host BFD interval rows of lot smu020_routed_bfd, with patch_versions and
+        # disable_unmeasured and no reset_wire (was cae74935...).
         assert PROVENANCE_SHA256 == (
-            "cae749350fbc270abe1737752e0ccb7ae8bda28fec0b4e377aade092492182e9"
+            "badbd6e934832895cf6b7fa153a80646a014e7aa934e3cf52d2d593170cba20a"
         )
 
 

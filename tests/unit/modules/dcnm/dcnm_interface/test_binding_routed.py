@@ -283,7 +283,9 @@ def test_the_parent_is_registered_exactly_once_per_nvpair():
              if "eigrp" in b["parent_nvpair"].lower()}
     # dhcpServers is the DHCP relay list of slice dr1, owned by test_binding_dhcp_servers.py. Later lots on this parent,
     # pinned in their own suites: lot rp4 (test_binding_qos_pfc.py) and lot rp5 (test_binding_netflow.py).
-    later = {"ENABLE_PFC", "ENABLE_NETFLOW", "NETFLOW_MONITOR", "NETFLOW_SAMPLER"}
+    # Lot smu020_routed_bfd (test_binding_smu020.py): the four BFD interval rows.
+    later = {"ENABLE_PFC", "ENABLE_NETFLOW", "NETFLOW_MONITOR", "NETFLOW_SAMPLER",
+             "bfdInterval", "bfdTxInterval", "bfdMinRxInterval", "bfdMultiplier"}
     assert set(names) - eigrp - {"dhcpServers"} - later == {nvpair for nvpair, _native in EXPECTED.values()}
     assert "dhcpServers" in names
     assert later <= set(names)

@@ -7,7 +7,7 @@ PVLAN helpers (`plugins/module_utils/interface_pvlan.py`). The original suite in
 
 | Path | Content |
 |---|---|
-| `test_binding_*.py` | Registered nvPair bindings: values, versions, withdrawal, resets, OSPF, SMU 017 fields, registry sources |
+| `test_binding_*.py` | Registered nvPair bindings: values, versions, withdrawal, resets, OSPF, SMU 017 and 020 fields, registry sources |
 | `test_pvlan_*.py` | PVLAN on Ethernet, port-channels and vPCs: input, lifecycle, members, verification, mixed batches |
 | `test_mode_*.py`, `test_svi_*.py` | Interface modes (peer link, uplink access, dot1q) and int_vlan SVI fields |
 | `test_read_*.py`, `test_delete_*.py`, `test_no_log_and_redaction.py` | HAVE reads, read budget, deletion and redaction contracts |

@@ -533,6 +533,14 @@ RP5_ROWS = {
                         ("NETFLOW_SAMPLER", "netflow_sampler"))
 } | {("int_vlan", "NETFLOW_SAMPLER", "netflow_sampler")}
 
+# BFD interval on routed Ethernet, lot smu020_routed_bfd (admitted with patch_version 4.3.1.0175006020 only).
+SMU020_BFD_ROWS = {
+    ("int_routed_host", "bfdInterval", "enable_bfd_interval"),
+    ("int_routed_host", "bfdTxInterval", "bfd_tx_interval"),
+    ("int_routed_host", "bfdMinRxInterval", "bfd_min_rx_interval"),
+    ("int_routed_host", "bfdMultiplier", "bfd_multiplier"),
+}
+
 # The routed port-channel OSPF family, slice 0b_40.
 L3PO_OSPF_ROWS = {
     ("int_l3_port_channel", "ospf", "enable_ospf"),
@@ -691,7 +699,7 @@ def test_package_provenance_and_size():
         | MACSEC_ROWS | BATCH2_ROWS | VPC_DOT1Q_ROWS | PVLAN_C1_ROWS | IQ1_ROWS | BATCH017_ROWS | LOEIGRP017_ROWS | L3PO017_ROWS
         | L3PO_OSPF_ROWS | RS1_ROWS | PL1_ROWS | UL1_ROWS | L3PO_PIM_ROWS | L3PO_EIGRP_ROWS
         | A4_DISCOVERY_ROWS | A4_DAMPENING_ROWS | A4_LACP_ROWS | A4_STP_ROWS | A4_LINK_ROWS | VM1_ROWS
-        | DR1_ROWS | RP1_ROWS | RP2_ROWS | RP3_ROWS | RP4_ROWS | RP5_ROWS
+        | DR1_ROWS | RP1_ROWS | RP2_ROWS | RP3_ROWS | RP4_ROWS | RP5_ROWS | SMU020_BFD_ROWS
     )
     actual_keys = {
         (b["parent_template"], b["parent_nvpair"], b["profile_key"])
@@ -713,7 +721,9 @@ def test_package_provenance_and_size():
     assert len(RP3_ROWS) == 7
     assert len(RP4_ROWS) == 12
     assert len(RP5_ROWS) == 37
-    assert len(BINDING_TABLE) == len(actual_keys) == 456   # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1; + 63: lots rp1 to rp5
+    assert len(SMU020_BFD_ROWS) == 4
+    # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1; + 63: lots rp1 to rp5; + 4: lot smu020_routed_bfd
+    assert len(BINDING_TABLE) == len(actual_keys) == 460
     assert actual_keys == expected_keys
     # The baseline rows must survive verbatim inside the larger table.
     assert BASELINE_ROWS <= actual_keys
@@ -756,8 +766,8 @@ def test_package_provenance_and_size():
 def test_compiler_accepts_exact_committed_binding_set():
     generator = _load_generator()
     rows = generator.compile_rows(_as_slice_rows(BINDING_TABLE))
-    # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1; + 63: lots rp1 to rp5
-    assert len(rows) == 456   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1, vm1, dr1
+    # + 76: lots a4_1 to a4_5; + 9: slices vm1, dr1; + 63: lots rp1 to rp5; + 4: lot smu020_routed_bfd
+    assert len(rows) == 460   # 228 + six int_vpc_dot1q_tunnel rows + eleven PVLAN companion rows + one vPC PVLAN row + 0b_37 to 0b_42, rs1, pl1, ul1, vm1, dr1
 
 
 def test_compiler_rejects_duplicate_or_missing_binding():

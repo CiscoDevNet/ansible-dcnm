@@ -372,6 +372,15 @@ COMMITTED_BINDINGS = {
     ("int_vlan", "bfdMinRxInterval"): "bfd_min_rx_interval",
     ("int_vlan", "bfdMultiplier"): "bfd_multiplier",
     ("int_vlan", "bfdEcho"): "disable_bfd_echo",
+    # --- BFD interval on int_routed_host (lot smu020_routed_bfd) ---
+    #
+    # Declared only by the int_routed_host body served with SMU 4.3.1.0175006020, so the rows carry
+    # `patch_versions` (see below); the 017 and 018 bodies, which report the same NDFC version, lack them.
+    # No reset is established: the parent has no branch that deletes interface_bfd_interval_11_1.
+    ("int_routed_host", "bfdInterval"): "enable_bfd_interval",
+    ("int_routed_host", "bfdTxInterval"): "bfd_tx_interval",
+    ("int_routed_host", "bfdMinRxInterval"): "bfd_min_rx_interval",
+    ("int_routed_host", "bfdMultiplier"): "bfd_multiplier",
     # --- EIGRP on int_loopback (slice 0b_25) ---
     #
     # EIGHT, not the family's thirteen. The INSTALLED parent -- int_loopback.template@27cd9ce7e671b5f3,
@@ -1068,7 +1077,18 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
           "mechanism", "min_ndfc_version", "min_length", "max_length", "min_value",
           "max_value", "no_log", "wire_values", "smu_unsupported", "string_compare",
           "inert_when", "dropped_on_policy_change", "cleared_on_change_to", "struct_contract",
-          "struct_clear_when"]
+          "struct_clear_when", "patch_versions", "disable_unmeasured"]
+
+# `patch_versions` -- the exact caller-declared SMU strings with which this identity is admitted. The parent
+# template of those SMUs was read with the field; other approved patch contexts (other SMUs and the numeric ND
+# release path) are not known to declare it, and they may report the same NDFC version, so min_ndfc_version
+# cannot separate them. Absent means every approved patch context. Each string must also be one of the engine's
+# GIE_ENABLED_PATCH_VERSIONS (a unit test checks it). The engine applies it wherever the patch is checked:
+# explicit contribution, withdrawal of an omitted field and dependency rules.
+
+# `disable_unmeasured` -- an explicit change of this field from a stored non-neutral value to a neutral one
+# (its declared default) is refused before any request, because what the controller does with the
+# configuration the parent created is not measured for that transition. Boolean True or absent.
 
 # `struct_contract` -- required on a `type: struct_list` row and forbidden on any other: the name of the
 # list contract in plugins/module_utils/interface_struct_lists.py that validates, serializes and compares
@@ -1389,6 +1409,19 @@ def _check_registry_schema(r, key):
         raise ValueError(
             "binding {0!r} declares struct_clear_when on type {1!r}; it applies to struct_list "
             "bindings only".format(key, r["type"])
+        )
+    if "patch_versions" in r:
+        pv = r["patch_versions"]
+        if (not isinstance(pv, (list, tuple)) or not pv or len(set(pv)) != len(pv)
+                or not all(isinstance(v, str) and v and all(p.isdigit() for p in v.split(".")) for v in pv)):
+            raise ValueError(
+                "binding {0!r} declares patch_versions {1!r}; it must be a non-empty list of distinct exact "
+                "SMU strings".format(key, pv)
+            )
+    if "disable_unmeasured" in r and (r["disable_unmeasured"] is not True or "default_template" not in r):
+        raise ValueError(
+            "binding {0!r} declares disable_unmeasured {1!r}; the marker is the boolean True or absent, on a "
+            "row that declares its default_template".format(key, r["disable_unmeasured"])
         )
     if "smu_unsupported" in r and r["smu_unsupported"] is not True:
         raise ValueError(

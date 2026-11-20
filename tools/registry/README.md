@@ -34,7 +34,7 @@ on. Within a file, the rows keep the order of the original lots, and each lot's 
 | `registry_slice_hsrp_ipv6_nd.yaml` | HSRP, IPv6 and neighbor-discovery/redirect fields on the overlay and routed port-channel parents | 24 |
 | `registry_slice_interface_common.yaml` | Fields shared by Ethernet, routed, loopback, SVI, port-channel and vPC parents: LLDP, QoS, PFC, ACL, flow control, dampening, ARP, NetFlow and related options | 125 |
 | `registry_slice_macsec.yaml` | MACsec on the routed Ethernet and routed port-channel parents | 8 |
-| `registry_slice_multicast_bfd.yaml` | PIM and BFD parents | 23 |
+| `registry_slice_multicast_bfd.yaml` | PIM and BFD parents | 27 |
 | `registry_slice_ospf.yaml` | OSPF parents, including the routed port-channel | 96 |
 | `registry_slice_port_channel_vpc.yaml` | Port-channel, vPC, peer-link and uplink parents | 103 |
 | `registry_slice_pvlan.yaml` | Private VLAN companion fields | 12 |
@@ -45,7 +45,8 @@ the sources, in the generator and in the tests still cite those lot names, such 
 a family file, introduced by a `# ==== Source lot ... ====` comment, so a lot name can be found with a text search. A lot whose
 rows belong to several families keeps its header in the family that holds most of its rows. The other families point to it. Lot
 `0b_42_l3po_eigrp` came after the grouping and was added directly as a section of its family file, as were the `a4_*`
-and `rp*` lots. Lots `vm1_vlan_mapping` and `dr1_dhcp_relay` came later still and each has a family file of its own.
+and `rp*` lots. Lots `vm1_vlan_mapping` and `dr1_dhcp_relay` came later still and each has a family file of its own. Lot
+`smu020_routed_bfd` was added as a section of `registry_slice_multicast_bfd.yaml`.
 
 | Original lot | Family files (rows) |
 |--------------|---------------------|
@@ -102,6 +103,7 @@ and `rp*` lots. Lots `vm1_vlan_mapping` and `dr1_dhcp_relay` came later still an
 | `rp4_qos_pfc_stats` | `registry_slice_interface_common.yaml` (12) |
 | `rp5_netflow` | `registry_slice_interface_common.yaml` (37) |
 | `rs1_po_link_transmit_reset_skip` | `registry_slice_port_channel_vpc.yaml` (1) |
+| `smu020_routed_bfd` | `registry_slice_multicast_bfd.yaml` (4) |
 | `ul1_uplink_access` | `registry_slice_port_channel_vpc.yaml` (12) |
 | `vm1_vlan_mapping` | `registry_slice_vlan_mapping.yaml` (6) |
 
@@ -143,6 +145,13 @@ The compiled fields are the ones in `FIELDS` in the generator (`reset_wire`, `de
 Other keys in a slice (for example `removal_semantics`, and the comments) are **documentation of the contract and its provenance**
 and are not compiled. In particular, how an omitted binding is withdrawn under `replaced` / `overridden` is decided by the engine
 from the compiled `reset_wire` and `default_template` (`gie_withdrawal_action`), not by `removal_semantics`.
+
+Two compiled fields narrow a row further:
+
+- `patch_versions` lists the exact SMU strings with which the row is admitted, for a field that only some approved SMU
+  templates declare while all of them report the same NDFC version. Without it, a row follows every approved `patch_version`.
+- `disable_unmeasured` makes the module refuse an explicit change from a stored non-default value to the default before any
+  request, where the effect of that change on the controller is not measured.
 
 ## Typed lists
 

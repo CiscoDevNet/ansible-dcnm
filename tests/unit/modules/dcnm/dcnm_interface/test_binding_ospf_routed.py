@@ -268,6 +268,11 @@ def test_every_integer_on_a_generic_carry_forward_parent_is_accounted_for():
         # that representation; registering it required no engine change. This list is
         # sorted by (parent, nvpair), placing each row in its parent's section.
         ("int_routed_host", "arpTimeout"),
+        # Lot smu020_routed_bfd: the three BFD interval integers of the int_subif and int_vlan contract, on the 020
+        # int_routed_host declarations; same exemption (the controller returns them as strings).
+        ("int_routed_host", "bfdMinRxInterval"),
+        ("int_routed_host", "bfdMultiplier"),
+        ("int_routed_host", "bfdTxInterval"),
         ("int_routed_host", "dampeningHalfLife"),
         ("int_routed_host", "dampeningMaxSuppress"),
         ("int_routed_host", "dampeningRestartPenalty"),

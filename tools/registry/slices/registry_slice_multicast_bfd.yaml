@@ -38,6 +38,23 @@ shared_effects:
       - {source_parent_nvpair: bfdMinRxInterval, target_child_nvpair: BFD_MIN_RX_INTERVAL, transform: identity}
       - {source_parent_nvpair: bfdMultiplier,      target_child_nvpair: BFD_MULTIPLIER,      transform: identity}
     evidence_ref: "int_vlan.template#L1050"
+  # shared effect of lot smu020_routed_bfd. The 020 parent creates or updates the child while bfdInterval is true and
+  # has no branch that deletes it when bfdInterval becomes false; what NDFC does with the child then is not measured.
+  - effect_id: bfd_interval@int_routed_host
+    parent_template: int_routed_host
+    child_template: interface_bfd_interval_11_1
+    gate_nvpair: bfdInterval
+    predicate: gate_true
+    ndfc_effect: create_or_update
+    relationship: base
+    phase: current
+    removal_semantics: unresolved
+    required_when_gate: [BFD_TX_INTERVAL, BFD_MIN_RX_INTERVAL, BFD_MULTIPLIER]
+    value_bindings:
+      - {source_parent_nvpair: bfdTxInterval,     target_child_nvpair: BFD_TX_INTERVAL,     transform: identity}
+      - {source_parent_nvpair: bfdMinRxInterval, target_child_nvpair: BFD_MIN_RX_INTERVAL, transform: identity}
+      - {source_parent_nvpair: bfdMultiplier,      target_child_nvpair: BFD_MULTIPLIER,      transform: identity}
+    evidence_ref: "int_routed_host.template(SMU 4.3.1.0175006020)#L1280"
 
 bindings:
 
@@ -680,6 +697,110 @@ bindings:
     effect_role: value_source
     required_when_gate: true
     evidence_ref: "int_vlan.template#L1054"
+
+  # ==== Source lot smu020_routed_bfd (4 of 4 rows) ====
+  # BFD interval on routed Ethernet (int_routed_host). The int_routed_host body served with SMU 4.3.1.0175006020 declares
+  # these four fields; the 017 and 018 bodies do not. Read from the captured 018 and 020 template sets of one controller;
+  # NOT LIVE TESTED. NDFC reports 12.6.0.267 with 018 and with 020, so min_ndfc_version cannot tell them apart:
+  # `patch_versions` admits the rows only with the declared 020 patch. Nothing shows that an ND 4.4.1 or later body
+  # declares them, so the numeric release path does not admit them either.
+  #
+  # Template contract (020): bfdInterval is a boolean with defaultValue false. The three values are integers with
+  # IsMandatory and IsShow "bfdInterval==true", and the parent refuses bfdInterval true with any of them empty. While
+  # bfdInterval is true the parent calls createOrUpdate for interface_bfd_interval_11_1 (entity = source = INTF_NAME)
+  # with the three values. There is no branch that deletes that child when bfdInterval is false, unlike
+  # pim_bfd_instance_interface in the same body.
+  #
+  # Withdrawal is NOT established, so no row declares reset_wire, and the subinterface and SVI resets are not copied.
+  # bfdInterval declares its template default (false) and `disable_unmeasured`: an explicit false over a stored true is
+  # refused before any request, and an omitted stored true under replaced/overridden is refused as a withdrawal without a
+  # verified reset. The three values are inert while bfdInterval is false (IsShow), and required while it is true.
+
+  - parent_template: int_routed_host
+    parent_nvpair: bfdInterval
+    profile_key: enable_bfd_interval
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: boolean
+    default_template: false
+    disable_unmeasured: true
+    patch_versions: ["4.3.1.0175006020"]
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_routed_host
+    effect_role: gate
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template(SMU 4.3.1.0175006020)#L350"
+
+  - parent_template: int_routed_host
+    parent_nvpair: bfdTxInterval
+    profile_key: bfd_tx_interval
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    min: 50
+    max: 999
+    inert_when: {nvpair: bfdInterval, value: "false", required: true}
+    patch_versions: ["4.3.1.0175006020"]
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_routed_host
+    effect_role: value_source
+    required_when_gate: true
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template(SMU 4.3.1.0175006020)#L355"
+
+  - parent_template: int_routed_host
+    parent_nvpair: bfdMinRxInterval
+    profile_key: bfd_min_rx_interval
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    min: 50
+    max: 999
+    inert_when: {nvpair: bfdInterval, value: "false", required: true}
+    patch_versions: ["4.3.1.0175006020"]
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_routed_host
+    effect_role: value_source
+    required_when_gate: true
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template(SMU 4.3.1.0175006020)#L361"
+
+  - parent_template: int_routed_host
+    parent_nvpair: bfdMultiplier
+    profile_key: bfd_multiplier
+    applicable_interface_type: eth
+    applicable_mode: routed
+    type: integer
+    min: 1
+    max: 50
+    inert_when: {nvpair: bfdInterval, value: "false", required: true}
+    patch_versions: ["4.3.1.0175006020"]
+    presence_model: two_axis
+    emit_when: explicit_only
+    mechanism: passthrough
+    no_log: false
+    min_ndfc_version: "12.6.0.267"
+    parent_resolution: desired_parent
+    effect_id: bfd_interval@int_routed_host
+    effect_role: value_source
+    required_when_gate: true
+    removal_semantics: unresolved
+    evidence_ref: "int_routed_host.template(SMU 4.3.1.0175006020)#L367"
 
   # ==== Source lot rp1_l3po_l3_controls (1 of 3 rows) ====
   # The header of this lot is in registry_slice_interface_common.yaml.

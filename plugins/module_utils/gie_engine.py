@@ -89,6 +89,16 @@ def gie_patch_supported(patch_version):
     return current_version >= GIE_MIN_ND_VERSION
 
 
+def gie_binding_patch_supported(binding, patch_version):
+    """The patch boundary of ONE binding: an approved patch context, narrowed to the binding's `patch_versions`
+    when it declares them (identities that only some approved SMUs declare). Every place that checks the patch for
+    a binding uses this, so explicit contribution, withdrawal and dependency rules agree."""
+    if not gie_patch_supported(patch_version):
+        return False
+    allowed = binding.get("patch_versions")
+    return allowed is None or patch_version in allowed
+
+
 # (parent_template, parent_nvpair) pairs WITHHELD rather than failed when the controller is
 # below their minimum version. Withholding drops a key the operator explicitly set, so it is
 # only ever correct when some other layer reconciles that key -- and nothing does any more. The
@@ -643,7 +653,8 @@ def gie_binding_applicable(parent_template, profile_key, ndfc_version, patch_ver
     an unknown or malformed version fails closed (``gie_version_supported`` returns False),
     and an unapproved ``patch_version`` fails closed the
     same way (``gie_patch_supported`` returns False; the default ``None`` is "no caller
-    context", not an enabling value). Callers use this to SELECT before classifying, so an
+    context", not an enabling value), as does an approved patch outside the binding's
+    ``patch_versions`` (``gie_binding_patch_supported``). Callers use this to SELECT before classifying, so an
     inapplicable row is skipped outright -- neither reset nor rejected.
     """
     binding = resolve_binding(parent_template, profile_key)
@@ -651,7 +662,7 @@ def gie_binding_applicable(parent_template, profile_key, ndfc_version, patch_ver
         return False
     return gie_version_supported(
         ndfc_version, binding["min_ndfc_version"]
-    ) and gie_patch_supported(patch_version)
+    ) and gie_binding_patch_supported(binding, patch_version)
 
 
 def _have_comparison_wire(have_value):
@@ -708,7 +719,7 @@ def gie_withdrawal_action(parent_template, profile_key, have_value, ndfc_version
 
     if not (
         gie_version_supported(ndfc_version, binding["min_ndfc_version"])
-        and gie_patch_supported(patch_version)
+        and gie_binding_patch_supported(binding, patch_version)
     ):
         # The controller cannot carry this nvPair at all -- either because its own version
         # floor is not met, or because the caller's patch context is not approved. Emitting
@@ -874,6 +885,8 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
           "no_paired_clear": the first value of a GIE_PAIRED_NVPAIRS pair cleared while the second stays stored.
           "superseded":    an explicit "false" for a GIE_SUPERSEDING_ALIASES dependent while its alias
                            ends at the superseding value.
+          "unmeasured_disable": an explicit neutral value for a `disable_unmeasured` binding whose stored value
+                           is not neutral (int_routed_host bfdInterval true -> false on SMU 020).
     A pair is judged only when the request sets one of its two nvPairs; an absent value counts as empty.
     A gate whose state cannot be established (absent, or "" for a non-empty inert value) is not judged.
     A gate with `unless` whose other nvPair holds one of its values leaves the dependent live: it is neither
@@ -887,7 +900,7 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
     writes, conflicts = {}, []
 
     def applicable(b):
-        return gie_version_supported(ndfc_version, b["min_ndfc_version"]) and gie_patch_supported(patch_version)
+        return gie_version_supported(ndfc_version, b["min_ndfc_version"]) and gie_binding_patch_supported(b, patch_version)
 
     def current(nvpair):
         if nvpair in writes:
@@ -967,6 +980,21 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
                                           or struct_is_empty(b["struct_contract"], stored)))))
             if explicit_empty or stored_empty:
                 conflicts.append(dict(entry, reason="empty_while_on"))
+
+    for b in passthrough:
+        # disable_unmeasured: an explicit move from a stored non-neutral value to a neutral one, whose effect on the
+        # configuration the parent created is not measured. An absent or empty stored value is not a transition.
+        nvpair = b["parent_nvpair"]
+        if not b.get("disable_unmeasured") or nvpair not in explicit_nvpairs or not applicable(b):
+            continue
+        stored = have_nvpairs.get(nvpair)
+        if stored in (None, ""):
+            continue
+        neutral = gie_binding_neutral_wires(b)
+        if (_have_comparison_wire(stored) not in neutral
+                and _have_comparison_wire(want_nvpairs.get(nvpair)) in neutral):
+            conflicts.append({"field": b["profile_key"], "nvpair": nvpair, "gate": b["profile_key"],
+                              "reason": "unmeasured_disable"})
 
     def carried(nvpair):
         b = by_nvpair.get(nvpair)
@@ -1284,6 +1312,13 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
             return None, (
                 "'{0}' requires caller-supplied patch_version 4.3.1.0175006017, 4.3.1.0175006018, "
                 "4.3.1.0175006020 or numeric ND >= 4.4.1 for this interface capability; no change was sent.".format(pk)
+            )
+        if not gie_binding_patch_supported(b, patch_version):
+            # Approved patch, but not one whose template of this parent is known to declare the field.
+            return None, (
+                "'{0}' on {1} requires caller-supplied patch_version {2}: only the {1} template of that SMU "
+                "is known to declare it. No change was sent.".format(
+                    pk, parent_template, " or ".join(b["patch_versions"]))
             )
         supported = gie_version_supported(ndfc_version, b["min_ndfc_version"])
         if not supported:
