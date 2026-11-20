@@ -103,8 +103,12 @@ options:
       C(4.3.1.0175006018) assumes that it leaves the C(4.3.1.0175006017) interface templates unchanged; its templates
       were not compared as a whole. C(4.3.1.0175006020) changes thirteen interface templates, among them C(int_vlan)
       and C(int_routed_host). Its complete template set was compared with the C(4.3.1.0175006018) set, and every
-      registered field has the same declaration status in both; C(4.3.1.0175006020) is NOT LIVE TESTED. Declare the
-      SMU that is installed. The earlier C(4.3.1.0175006011)
+      registered field has the same declaration status in both. With C(4.3.1.0175006020), configuration through this
+      module was measured on NDFC 12.6.0.267 for a routed Ethernet port (including C(macsec_key_chain_name) with and
+      without C(macsec_fallback_key_chain_name)), an SVI in the default VRF (C(dhcp_server_addr4) and
+      C(dhcp_relay_src_intf) sent as C(dhcpServerAddress4) and C(dhcpRelaySourceInterface), and IPv6 HSRP) and an
+      access port-channel with C(enable_monitor). Other profiles and modes, and protocol state, are NOT LIVE TESTED.
+      Declare the SMU that is installed. The earlier C(4.3.1.0175006011)
       is not accepted, because its interface templates declare different OSPF nvPair names.
     - On loopbacks and subinterfaces, C(ospf_bfd_mode) (C(no_change), C(enable), C(disable)) and, on subinterfaces,
       C(ospf_passive_mode) (C(no_change), C(passive), C(no_passive)) carry the OSPF BFD and passive settings, as on
