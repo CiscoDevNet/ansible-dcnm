@@ -376,7 +376,7 @@ COMMITTED_BINDINGS = {
     #
     # Declared only by the int_routed_host body served with SMU 4.3.1.0175006020, so the rows carry
     # `patch_versions` (see below); the 017 and 018 bodies, which report the same NDFC version, lack them.
-    # No reset is established: the parent has no branch that deletes interface_bfd_interval_11_1.
+    # The gate resets with "false" (measured live by a direct request); the three values declare no reset.
     ("int_routed_host", "bfdInterval"): "enable_bfd_interval",
     ("int_routed_host", "bfdTxInterval"): "bfd_tx_interval",
     ("int_routed_host", "bfdMinRxInterval"): "bfd_min_rx_interval",

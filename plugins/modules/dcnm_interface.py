@@ -131,13 +131,14 @@ options:
       milliseconds) and C(bfd_multiplier) (1-50); they render C(bfd interval <tx> min_rx <rx> multiplier <n>). On this
       profile they are accepted only with C(patch_version) C(4.3.1.0175006020); the other SMUs and the numeric ND
       release path refuse them before any change is sent. The three values are required while C(enable_bfd_interval)
-      is true. The template creates that configuration while the option is true and has no step that removes it, and
-      what the controller does when the option becomes false is not established. The module therefore refuses, before
-      any change is sent, an explicit false over a stored true and, under C(replaced) and C(overridden), an omitted
-      stored true. Under C(merged) an omitted value is kept. A C(deleted) or C(overridden) reset of a leaf port to
-      C(int_trunk_host) proceeds; the routed template removes its interface child policies with the policy change
-      (read from the template body, not measured). A reset that keeps C(int_routed_host) with the option true is
-      refused. NOT LIVE TESTED.
+      is true. Setting C(enable_bfd_interval) false removes the configuration; the three values stay stored and render
+      nothing while it is false. Under C(replaced) and C(overridden) an omitted C(enable_bfd_interval) is reset to false
+      and omitted values are kept; under C(merged) an omitted value is kept. A C(deleted) or C(overridden) reset of a
+      leaf port goes to C(int_trunk_host); a reset that keeps C(int_routed_host) sends C(enable_bfd_interval) false.
+      Measured on NDFC 12.6.0.267 with the C(4.3.1.0175006020) templates - enabling, changing one value, keeping the
+      values under C(merged), C(query), the leaf reset, and, with a direct controller request, the removal of the
+      configuration when the option becomes false. The module's disable, the reset on omission and the reset that
+      keeps C(int_routed_host) are NOT LIVE TESTED.
     - On a loopback, the C(4.3.1.0175006017) templates also declare the EIGRP fields that the routed, subinterface and
       SVI profiles already accept (NOT LIVE TESTED; read from the installed template body) -
       C(enable_eigrp_ipv6_routing) (bool; renders C(ipv6 router eigrp <tag>)),
@@ -14410,7 +14411,7 @@ class DcnmIntf:
         if gated:
             # D-3: the gate as this same-parent reset leaves it -- HAVE, then the role default payload, then the verified
             # resets queued above (e.g. ospf "false"). Only verified resets move a gate; an unreadable gate was blocked
-            # above and never reaches `resets`, and a gate without a verified reset (int_routed_host bfdInterval) keeps
+            # above and never reaches `resets`, and a gate without a verified reset (ENABLE_NETFLOW, for example) keeps
             # its HAVE value, so one pass decides them all. A dependent that is inert under the final gate configures nothing: it stays
             # stored (the controller keeps an inert ospfTag, measured) unless it declares `clear`, in which case key
             # material is cleared rather than kept. Otherwise it is refused exactly as before.

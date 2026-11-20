@@ -886,7 +886,7 @@ def gie_dependency_plan(parent_template, want_nvpairs, have_nvpairs, explicit_nv
           "superseded":    an explicit "false" for a GIE_SUPERSEDING_ALIASES dependent while its alias
                            ends at the superseding value.
           "unmeasured_disable": an explicit neutral value for a `disable_unmeasured` binding whose stored value
-                           is not neutral (int_routed_host bfdInterval true -> false on SMU 020).
+                           is not neutral.
     A pair is judged only when the request sets one of its two nvPairs; an absent value counts as empty.
     A gate whose state cannot be established (absent, or "" for a non-empty inert value) is not judged.
     A gate with `unless` whose other nvPair holds one of its values leaves the dependent live: it is neither

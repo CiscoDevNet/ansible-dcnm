@@ -700,21 +700,27 @@ bindings:
 
   # ==== Source lot smu020_routed_bfd (4 of 4 rows) ====
   # BFD interval on routed Ethernet (int_routed_host). The int_routed_host body served with SMU 4.3.1.0175006020 declares
-  # these four fields; the 017 and 018 bodies do not. Read from the captured 018 and 020 template sets of one controller;
-  # NOT LIVE TESTED. NDFC reports 12.6.0.267 with 018 and with 020, so min_ndfc_version cannot tell them apart:
-  # `patch_versions` admits the rows only with the declared 020 patch. Nothing shows that an ND 4.4.1 or later body
-  # declares them, so the numeric release path does not admit them either.
+  # these four fields; the 017 and 018 bodies do not. Read from the captured 018 and 020 template sets of one controller.
+  # NDFC reports 12.6.0.267 with 018 and with 020, so min_ndfc_version cannot tell them apart: `patch_versions` admits
+  # the rows only with the declared 020 patch. Nothing shows that an ND 4.4.1 or later body declares them, so the numeric
+  # release path does not admit them either.
   #
   # Template contract (020): bfdInterval is a boolean with defaultValue false. The three values are integers with
   # IsMandatory and IsShow "bfdInterval==true", and the parent refuses bfdInterval true with any of them empty. While
   # bfdInterval is true the parent calls createOrUpdate for interface_bfd_interval_11_1 (entity = source = INTF_NAME)
-  # with the three values. There is no branch that deletes that child when bfdInterval is false, unlike
-  # pim_bfd_instance_interface in the same body.
+  # with the three values. There is no branch that deletes that child when bfdInterval is false.
   #
-  # Withdrawal is NOT established, so no row declares reset_wire, and the subinterface and SVI resets are not copied.
-  # bfdInterval declares its template default (false) and `disable_unmeasured`: an explicit false over a stored true is
-  # refused before any request, and an omitted stored true under replaced/overridden is refused as a withdrawal without a
-  # verified reset. The three values are inert while bfdInterval is false (IsShow), and required while it is true.
+  # Measured on NDFC 12.6.0.267 with the 020 templates (routed Ethernet of a leaf, module and direct requests):
+  #   - enable, change of one value, repeat, merged omission and query, through the module;
+  #   - bfdInterval "false" in a modify that carried every other stored nvPair, sent directly: the controller recreated
+  #     the port's other children without interface_bfd_interval_11_1, the pending configuration was
+  #     `no bfd interval <tx> min_rx <rx> multiplier <n>`, and after the deploy the line was gone from the device. The
+  #     three values stayed stored next to bfdInterval "false" and rendered nothing;
+  #   - a leaf reset to int_trunk_host through the module removed the child and the line.
+  # So bfdInterval declares reset_wire "false". The three values declare no reset: no clear of them was measured, and
+  # they are inert while bfdInterval is false (IsShow), so a withdrawal keeps them stored. They are required while
+  # bfdInterval is true. The module's own disable and omission paths, and a reset that keeps int_routed_host (a border
+  # port), are NOT LIVE TESTED.
 
   - parent_template: int_routed_host
     parent_nvpair: bfdInterval
@@ -722,8 +728,8 @@ bindings:
     applicable_interface_type: eth
     applicable_mode: routed
     type: boolean
+    reset_wire: 'false'
     default_template: false
-    disable_unmeasured: true
     patch_versions: ["4.3.1.0175006020"]
     presence_model: two_axis
     emit_when: explicit_only

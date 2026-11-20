@@ -155,6 +155,14 @@ def test_the_fixture_matrix_covers_every_registered_reset():
     assert uplink_registered == set(UPLINK_ROUTE_RESET_IDENTITIES), sorted(
         uplink_registered ^ set(UPLINK_ROUTE_RESET_IDENTITIES))
     registered = registered - uplink_registered
+    # And for the rows admitted with one SMU only: their withdrawal is pinned in test_binding_smu020.py.
+    from .helpers.binding_harness import SMU020_ROUTE_RESET_IDENTITIES
+    smu020_registered = {k for k in registered if k in SMU020_ROUTE_RESET_IDENTITIES}
+    assert smu020_registered == set(SMU020_ROUTE_RESET_IDENTITIES), sorted(
+        smu020_registered ^ set(SMU020_ROUTE_RESET_IDENTITIES))
+    by_identity = {(b["parent_template"], b["parent_nvpair"]): b for b in BINDING_TABLE}
+    assert all(by_identity[k].get("patch_versions") == ("4.3.1.0175006020",) for k in smu020_registered)
+    registered = registered - smu020_registered
     assert fixtures, "the fixture matrix collected nothing; every test below is a no-op"
     assert fixtures == registered, (
         "fixture matrix and registry disagree.\n  registered but untested: %s\n"

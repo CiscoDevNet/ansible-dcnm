@@ -1316,7 +1316,7 @@ def _compare_obj(state, parent, profile_key, nvpair, want=_OMITTED, have=_OMITTE
     """
     module = mock.Mock()
     module.params = {"fabric": "FAB1", "config": [], "state": state,
-                     "patch_version": PATCH}
+                     "patch_version": _admitting_patch(parent, profile_key)}
     module.check_mode = False
     with mock.patch.object(
         dcnm_interface, "dcnm_version_supported", return_value=(12, "12.6.0.267")

@@ -163,8 +163,9 @@ def test_only_the_measured_routes_carry_a_reset():
         assert wire(applied) != neutral, (parent, nvpair)
     # 273 resets on the parent commit, plus the nine measured on the routed port-channel (six here, three discovery rows),
     # the four trunk spanning-tree resets (test_binding_trunk_stp_resets.py), the five dot1q-tunnel port-channel
-    # resets (test_binding_dot1q_po_resets.py), the four QoS and PFC resets here and the routed port-channel PFC reset.
-    assert sum(1 for b in BINDING_TABLE if "reset_wire" in b) == 273 + 9 + 4 + 5 + 4 + 1
+    # resets (test_binding_dot1q_po_resets.py), the four QoS and PFC resets here, the routed port-channel PFC reset and
+    # the SMU 020 routed Ethernet BFD interval gate (test_binding_smu020.py).
+    assert sum(1 for b in BINDING_TABLE if "reset_wire" in b) == 273 + 9 + 4 + 5 + 4 + 1 + 1
 
 
 @pytest.mark.parametrize("parent,nvpair,key,applied,neutral,extra", ITEMS, ids=IDS)

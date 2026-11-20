@@ -681,9 +681,10 @@ def test_the_previous_lot_is_untouched():
     # parent = 282, + 4 trunk Ethernet and trunk port-channel spanning-tree resets measured live on those parents = 286,
     # + 5 dot1q-tunnel port-channel LACP, CDP and link-type resets measured live on that parent = 291,
     # + 4 routed port-channel statistics and Ethernet dot1q-tunnel QoS and PFC resets measured live on those parents = 295,
-    # + 1 routed port-channel PFC reset measured live on that parent = 296.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 5 + 4 + 1, (
-        "the integrated table carries {0} resets, expected 296".format(len(with_reset)))
+    # + 1 routed port-channel PFC reset measured live on that parent = 296,
+    # + 1 routed Ethernet BFD interval gate on SMU 020, its "false" measured live by a direct request = 297.
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 5 + 4 + 1 + 1, (
+        "the integrated table carries {0} resets, expected 297".format(len(with_reset)))
     lot_rows = {(r["parent_template"], r["profile_key"]) for r in with_reset
                 if r["parent_template"] in (VPC_ACCESS, VPC_TRUNK) and r.get("reset_wire") is not None}
     assert lot_rows == {(f[0], f[1]) for f in VPC_ROWS}
@@ -873,9 +874,10 @@ def test_the_arithmetic_is_197_plus_three():
     # parent = 282, + 4 trunk Ethernet and trunk port-channel spanning-tree resets measured live on those parents = 286,
     # + 5 dot1q-tunnel port-channel LACP, CDP and link-type resets measured live on that parent = 291,
     # + 4 routed port-channel statistics and Ethernet dot1q-tunnel QoS and PFC resets measured live on those parents = 295,
-    # + 1 routed port-channel PFC reset measured live on that parent = 296.
-    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 5 + 4 + 1, (
-        "the table carries %d resets, expected 296" % len(with_reset))
+    # + 1 routed port-channel PFC reset measured live on that parent = 296,
+    # + 1 routed Ethernet BFD interval gate on SMU 020, its "false" measured live by a direct request = 297.
+    assert len(with_reset) == 197 + 3 + 6 + 1 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 5 + 4 + 1 + 1, (
+        "the table carries %d resets, expected 297" % len(with_reset))
     hsrp = {r["profile_key"] for r in with_reset
             if r["parent_template"] == SVI and r["profile_key"].startswith("hsrp")}
     assert hsrp == set(IDS), sorted(hsrp)

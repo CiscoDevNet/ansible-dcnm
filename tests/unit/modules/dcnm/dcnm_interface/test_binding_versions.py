@@ -333,9 +333,10 @@ class TestPV09InventoryInvariants:
         # + 4: the trunk Ethernet and trunk port-channel spanning-tree resets measured live on those parents,
         # + 5: the dot1q-tunnel port-channel LACP, CDP and link-type resets measured live on that parent,
         # + 4: the routed port-channel statistics and Ethernet dot1q-tunnel QoS and PFC resets measured live on those
-        # parents, + 1: the routed port-channel PFC reset measured live on that parent
+        # parents, + 1: the routed port-channel PFC reset measured live on that parent, + 1: the SMU 020 routed
+        # Ethernet BFD interval gate, its "false" measured live by a direct request
         assert sum(1 for b in BINDING_TABLE if b.get("reset_wire") is not None) == (
-            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 5 + 4 + 1)
+            207 + 11 + 1 + 5 + 5 + 1 + 16 + 1 + 2 + 12 + 2 + 10 + 9 + 4 + 5 + 4 + 1 + 1)
 
     def test_smu_unsupported_exception_unchanged(self):
         smu = [b for b in BINDING_TABLE if b.get("smu_unsupported")]
@@ -405,8 +406,10 @@ class TestPV09InventoryInvariants:
         # the QoS and PFC resets only).
         # The four int_routed_host BFD interval rows of lot smu020_routed_bfd, with patch_versions and
         # disable_unmeasured and no reset_wire (was cae74935...).
+        # Their gate with reset_wire "false" and without disable_unmeasured, measured live by a direct request (was
+        # badbd6e9...).
         assert PROVENANCE_SHA256 == (
-            "badbd6e934832895cf6b7fa153a80646a014e7aa934e3cf52d2d593170cba20a"
+            "3dda05b4426a2bdc53c4de68951bc06c59ce535e33cf8b0b1ecd528dae485866"
         )
 
 
