@@ -32,10 +32,8 @@ __author__ = "Allen Robel"
 import copy
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
-    ParamsSpec
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
-    does_not_raise, params)
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import ParamsSpec
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import does_not_raise, params
 
 
 def test_dcnm_maintenance_mode_params_spec_00000() -> None:
