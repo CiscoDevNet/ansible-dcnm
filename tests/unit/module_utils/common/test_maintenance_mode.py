@@ -1,3 +1,6 @@
+"""
+Unit tests for MaintenanceMode class in module_utils/common/maintenance_mode.py
+"""
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +24,7 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
+# pylint: disable=too-many-lines
 
 from __future__ import absolute_import, division, print_function
 
@@ -34,24 +38,24 @@ import inspect
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import (
-    EpMaintenanceModeDisable, EpMaintenanceModeEnable)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
-    MaintenanceMode
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
+    EpMaintenanceModeDisable,
+    EpMaintenanceModeEnable,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import MaintenanceMode
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    ResponseGenerator, does_not_raise, maintenance_mode_fixture, params,
-    responses_deploy_maintenance_mode, responses_maintenance_mode)
+    ResponseGenerator,
+    does_not_raise,
+    maintenance_mode_fixture,
+    params,
+    responses_deploy_maintenance_mode,
+    responses_maintenance_mode,
+)
 
 FABRIC_NAME = "VXLAN_Fabric"
 CONFIG = [
@@ -68,61 +72,74 @@ CONFIG = [
 
 def test_maintenance_mode_00000(maintenance_mode) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode
-        - __init__()
+    # Summary
 
-    Test
+    Verify MaintenanceMode class attributes are initialized to expected values.
+
+    ## Classes and Methods
+
+    - MaintenanceMode.__init__()
+
+    ## Test
+
     - Class attributes are initialized to expected values
     - Exception is not raised
     """
     with does_not_raise():
         instance = maintenance_mode
 
-    assert instance._config is None
-    assert instance._rest_send is None
-    assert instance._results is None
+    assert instance._config == []
+    assert instance._endpoints == []
+    assert instance._rest_send.class_name == "RestSend"
+    assert instance._rest_send.params == {}
+    assert instance._results.class_name == "Results"
 
     assert instance.action == "maintenance_mode"
-    assert instance.check_mode is False
+    assert instance._check_mode is False
     assert instance.class_name == "MaintenanceMode"
-    assert instance.config is None
-    assert instance.deploy_dict == {}
-    assert instance.rest_send is None
-    assert instance.results is None
+    assert instance._deploy_dict == {}
     assert instance.serial_number_to_ip_address == {}
     assert instance.state == "merged"
-    assert instance.valid_modes == ["maintenance", "normal"]
+    assert instance._valid_modes == ["maintenance", "normal"]
 
-    assert isinstance(instance.conversion, ConversionUtils)
-    assert isinstance(instance.ep_maintenance_mode_disable, EpMaintenanceModeDisable)
-    assert isinstance(instance.ep_maintenance_mode_enable, EpMaintenanceModeEnable)
+    assert isinstance(instance._conversion, ConversionUtils)
+    assert isinstance(instance._ep_maintenance_mode_disable, EpMaintenanceModeDisable)
+    assert isinstance(instance._ep_maintenance_mode_enable, EpMaintenanceModeEnable)
 
 
 def test_maintenance_mode_00010() -> None:
     """
-    Classes and Methods
-    - MaintenanceMode
-        - __init__()
+    # Summary
 
-    Test
-    - ``ValueError`` is raised when params is missing check_mode key.
+    Verify check_mode is set to False when params is missing check_mode key.
+
+    ## Classes and Methods
+
+    - MaintenanceMode.__init__()
+
+    ## Test
+
+    - check_mode is set to False when params is missing check_mode key
     """
     params = {"state": "merged"}
-    match = r"MaintenanceMode\.__init__:\s+"
-    match += r"params is missing mandatory parameter: check_mode\."
-    with pytest.raises(ValueError, match=match):
-        instance = MaintenanceMode(params)  # pylint: disable=unused-variable
+    with does_not_raise():
+        instance = MaintenanceMode(params)
+    assert instance._check_mode is False
 
 
 def test_maintenance_mode_00020() -> None:
     """
-    Classes and Methods
-    - MaintenanceMode
-        - __init__()
+    # Summary
 
-    Test
-    - ``ValueError`` is raised when params is missing state key.
+    Verify `ValueError` is raised when params is missing state key.
+
+    ## Classes and Methods
+
+    - MaintenanceMode.__init__()
+
+    ## Test
+
+    - `ValueError` is raised when params is missing state key
     """
     params = {"check_mode": False}
     match = r"MaintenanceMode\.__init__:\s+"
@@ -133,31 +150,33 @@ def test_maintenance_mode_00020() -> None:
 
 def test_maintenance_mode_00030(maintenance_mode) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_commit_parameters()
-        - commit()
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().commit() raises ``ValueError`` when
-        ``config`` is not set.
+    Verify MaintenanceMode().commit() raises `ValueError` when `config` is not set.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Other required attributes are set
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   ``MaintenanceMode().commit()`` is called without having first set
-        ``MaintenanceMode().config``
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.verify_commit_parameters()
+    - MaintenanceMode.commit()
 
-    Expected Result
-    -   ``ValueError`` is raised
-    -   Exception message matches expected
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Other required attributes are set
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called without having first set MaintenanceMode().config
+
+    ## Expected Result
+
+    - `ValueError` is raised
+    - Exception message matches expected
     """
     with does_not_raise():
         instance = maintenance_mode
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params)
         instance.results = Results()
 
     match = r"MaintenanceMode\.verify_commit_parameters: "
@@ -169,27 +188,29 @@ def test_maintenance_mode_00030(maintenance_mode) -> None:
 
 def test_maintenance_mode_00040(maintenance_mode) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_commit_parameters()
-        - commit()
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().commit() raises ``ValueError``
-        when ``rest_send`` is not set.
+    Verify MaintenanceMode().commit() raises `ValueError` when `rest_send` is not set.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Other required attributes are set
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called without having
-        first set MaintenanceMode().rest_send
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.verify_commit_parameters()
+    - MaintenanceMode.commit()
 
-    Expected Result
-    -   ``ValueError`` is raised
-    -   Exception message matches expected
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Other required attributes are set
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called without having first set MaintenanceMode().rest_send
+
+    ## Expected Result
+
+    - `ValueError` is raised
+    - Exception message matches expected
     """
     with does_not_raise():
         instance = maintenance_mode
@@ -203,42 +224,6 @@ def test_maintenance_mode_00040(maintenance_mode) -> None:
         instance.commit()
 
 
-def test_maintenance_mode_00050(maintenance_mode) -> None:
-    """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_commit_parameters()
-        - commit()
-
-    Summary
-    -   Verify MaintenanceMode().commit() raises ``ValueError``
-        when ``MaintenanceMode().results`` is not set.
-
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Other required attributes are set
-
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called without having
-        first set MaintenanceMode().results
-
-    Expected Result
-    -   ``ValueError`` is raised
-    -   Exception message matches expected
-    """
-    with does_not_raise():
-        instance = maintenance_mode
-        instance.rest_send = RestSend({})
-        instance.config = CONFIG
-
-    match = r"MaintenanceMode\.verify_commit_parameters: "
-    match += r"MaintenanceMode\.results must be set before calling\s+"
-    match += r"commit\."
-    with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-
 @pytest.mark.parametrize(
     "mock_exception, expected_exception, mock_message",
     [
@@ -247,34 +232,39 @@ def test_maintenance_mode_00050(maintenance_mode) -> None:
         (ValueError, ValueError, "Bad value"),
     ],
 )
-def test_maintenance_mode_00200(
-    monkeypatch, maintenance_mode, mock_exception, expected_exception, mock_message
-) -> None:
+def test_maintenance_mode_00200(monkeypatch, maintenance_mode, mock_exception, expected_exception, mock_message) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - commit()
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().commit() raises ``ValueError`` when
-        ``MaintenanceMode().change_system_mode`` raises any of:
-            -   ``ControllerResponseError``
-            -   ``TypeError``
-            -   ``ValueError``
+    Verify MaintenanceMode().commit() raises `ValueError` when change_system_mode raises exceptions.
 
+    ## Classes and Methods
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Required attributes are set
-    -   change_system_mode() is mocked to raise each of the above exceptions
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.commit()
 
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called for each exception
+    ## Test
 
-    Expected Result
-    -   ``ValueError`` is raised
-    -   Exception message matches expected
+    Verify MaintenanceMode().commit() raises `ValueError` when MaintenanceMode().change_system_mode raises any of:
+
+    - `ControllerResponseError`
+    - `TypeError`
+    - `ValueError`
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Required attributes are set
+    - change_system_mode() is mocked to raise each of the above exceptions
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called for each exception
+
+    ## Expected Result
+
+    - `ValueError` is raised
+    - Exception message matches expected
     """
 
     def mock_change_system_mode(*args, **kwargs):
@@ -283,7 +273,7 @@ def test_maintenance_mode_00200(
     with does_not_raise():
         instance = maintenance_mode
         instance.config = CONFIG
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params)
         instance.results = Results()
 
     monkeypatch.setattr(instance, "change_system_mode", mock_change_system_mode)
@@ -298,34 +288,39 @@ def test_maintenance_mode_00200(
         (ValueError, ValueError, "Bad value"),
     ],
 )
-def test_maintenance_mode_00210(
-    monkeypatch, maintenance_mode, mock_exception, expected_exception, mock_message
-) -> None:
+def test_maintenance_mode_00210(monkeypatch, maintenance_mode, mock_exception, expected_exception, mock_message) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - commit()
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().commit() raises ``ValueError`` when
-        ``MaintenanceMode().deploy_switches`` raises any of:
-            -   ``ControllerResponseError``
-            -   ``ValueError``
+    Verify MaintenanceMode().commit() raises `ValueError` when deploy_switches raises exceptions.
 
+    ## Classes and Methods
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Required attributes are set
-    -   change_system_mode() is mocked to do nothing
-    -   deploy_switches() is mocked to raise each of the above exceptions
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.commit()
 
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called for each exception
+    ## Test
 
-    Expected Result
-    -   ``ValueError`` is raised
-    -   Exception message matches expected
+    Verify MaintenanceMode().commit() raises `ValueError` when MaintenanceMode().deploy_switches raises any of:
+
+    - `ControllerResponseError`
+    - `ValueError`
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Required attributes are set
+    - change_system_mode() is mocked to do nothing
+    - deploy_switches() is mocked to raise each of the above exceptions
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called for each exception
+
+    ## Expected Result
+
+    - `ValueError` is raised
+    - Exception message matches expected
     """
 
     def mock_change_system_mode(*args, **kwargs):
@@ -337,7 +332,7 @@ def test_maintenance_mode_00210(
     with does_not_raise():
         instance = maintenance_mode
         instance.config = CONFIG
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params)
         instance.results = Results()
 
     monkeypatch.setattr(instance, "change_system_mode", mock_change_system_mode)
@@ -357,34 +352,41 @@ def test_maintenance_mode_00210(
 )
 def test_maintenance_mode_00220(maintenance_mode, mode, deploy) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - commit()
-        - change_system_mode()
-        - deploy_switches()
+    # Summary
 
-    Summary
-    - Verify commit() success case:
-        -   RETURN_CODE is 200.
-        -   Controller response contains expected structure and values.
+    Verify commit() success case with RETURN_CODE 200.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Sender() is mocked to return expected responses
-    -   Required attributes are set
-    -   MaintenanceMode().commit() is called
-    -   responses_MaintenanceMode contains a dict with:
-        - RETURN_CODE == 200
-        - DATA == {"status": "Success"}
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.commit()
+    - MaintenanceMode.change_system_mode()
+    - MaintenanceMode.deploy_switches()
 
-    Expected Result
-    -   Exception is not raised
-    -   instance.response_data returns expected data
-    -   MaintenanceMode()._properties are updated
+    ## Test
+
+    - RETURN_CODE is 200
+    - Controller response contains expected structure and values
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Sender() is mocked to return expected responses
+    - Required attributes are set
+    - MaintenanceMode().commit() is called
+    - responses_MaintenanceMode contains a dict with:
+      - RETURN_CODE == 200
+      - DATA == {"status": "Success"}
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called
+
+    ## Expected Result
+
+    - Exception is not raised
+    - instance.response_data returns expected data
+    - MaintenanceMode()._properties are updated
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -438,10 +440,7 @@ def test_maintenance_mode_00220(maintenance_mode, mode, deploy) -> None:
         assert instance.results.diff[1].get("deploy_maintenance_mode", None) is True
         assert instance.results.diff[1].get("sequence_number", None) == 2
 
-        assert (
-            instance.results.metadata[1].get("action", None)
-            == "deploy_maintenance_mode"
-        )
+        assert instance.results.metadata[1].get("action", None) == "deploy_maintenance_mode"
         assert instance.results.metadata[1].get("sequence_number", None) == 2
         assert instance.results.metadata[1].get("state", None) == "merged"
 
@@ -464,38 +463,44 @@ def test_maintenance_mode_00220(maintenance_mode, mode, deploy) -> None:
 )
 def test_maintenance_mode_00230(maintenance_mode, mode) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - commit()
-        - change_system_mode()
-        - deploy_switches()
+    # Summary
 
-    Summary
-    - Verify commit() unsuccessful case:
-        -   RETURN_CODE == 500.
-        -   commit raises ``ValueError`` when change_system_mode() raises
-            ``ControllerResponseError``.
-        -   Controller response contains expected structure and values.
+    Verify commit() unsuccessful case with RETURN_CODE 500.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Sender() is mocked to return expected responses
-    -   Required attributes are set
-    -   MaintenanceMode().commit() is called
-    -   responses_MaintenanceMode contains a dict with:
-        - RETURN_CODE == 500
-        - DATA == {"status": "Failure"}
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   ``MaintenanceMode().commit()`` is called
-    -   ``change_system_mode()`` raises ``ControllerResponseError``
-    -   ``commit()`` raises ``ValueError``
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.commit()
+    - MaintenanceMode.change_system_mode()
+    - MaintenanceMode.deploy_switches()
 
-    Expected Result
-    -   ``commit()`` raises ``ValueError``
-    -   instance.response_data returns expected data
-    -   MaintenanceMode()._properties are updated
+    ## Test
+
+    - RETURN_CODE == 500
+    - commit raises `ValueError` when change_system_mode() raises `ControllerResponseError`
+    - Controller response contains expected structure and values
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Sender() is mocked to return expected responses
+    - Required attributes are set
+    - MaintenanceMode().commit() is called
+    - responses_MaintenanceMode contains a dict with:
+      - RETURN_CODE == 500
+      - DATA == {"status": "Failure"}
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called
+    - change_system_mode() raises `ControllerResponseError`
+    - commit() raises `ValueError`
+
+    ## Expected Result
+
+    - commit() raises `ValueError`
+    - instance.response_data returns expected data
+    - MaintenanceMode()._properties are updated
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -550,30 +555,35 @@ def test_maintenance_mode_00230(maintenance_mode, mode) -> None:
 
 def test_maintenance_mode_00300(maintenance_mode) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_config_parameters()
-        - config.setter
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().verify_config_parameters() raises
-            -   ``TypeError`` if:
-                    - value is not a list
-    -   Verify MaintenanceMode().config.setter re-raises:
-            -   ``TypeError`` as ``ValueError``
+    Verify MaintenanceMode().verify_config_parameters() raises `TypeError` if value is not a list.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   config is set to a non-list value
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().config.setter is accessed with non-list
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.verify_config_parameters()
+    - MaintenanceMode.config.setter
 
-    Expected Result
-    -   verify_config_parameters() raises ``TypeError``.
-    -   config.setter re-raises as ``ValueError``.
-    -   Exception message matches expected.
+    ## Test
+
+    - Verify MaintenanceMode().verify_config_parameters() raises `TypeError` if value is not a list
+    - Verify MaintenanceMode().config.setter re-raises `TypeError` as `ValueError`
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - config is set to a non-list value
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().config.setter is accessed with non-list
+
+    ## Expected Result
+
+    - verify_config_parameters() raises `TypeError`
+    - config.setter re-raises as `ValueError`
+    - Exception message matches expected
     """
     with does_not_raise():
         instance = maintenance_mode
@@ -597,33 +607,39 @@ def test_maintenance_mode_00300(maintenance_mode) -> None:
 )
 def test_maintenance_mode_00310(maintenance_mode, remove_param) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_config_parameters()
-        - config.setter
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().verify_config_parameters() raises
-            -   ``ValueError`` if:
-                    - deploy is missing from config
-                    - fabric_name is missing from config
-                    - ip_address is missing from config
-                    - mode is missing from config
-                    - serial_number is missing from config
-                    - wait_for_mode_change is missing from config
+    Verify MaintenanceMode().verify_config_parameters() raises `ValueError` for missing config keys.
 
+    ## Classes and Methods
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.verify_config_parameters()
+    - MaintenanceMode.config.setter
 
-    Code Flow - Test
-    -   MaintenanceMode().config is set to a dict with all of the above
-        keys present, except that each key, in turn, is removed.
+    ## Test
 
-    Expected Result
-    -   ``ValueError`` is raised
-    -   Exception message matches expected
+    Verify MaintenanceMode().verify_config_parameters() raises `ValueError` if:
+
+    - deploy is missing from config
+    - fabric_name is missing from config
+    - ip_address is missing from config
+    - mode is missing from config
+    - serial_number is missing from config
+    - wait_for_mode_change is missing from config
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().config is set to a dict with all of the above keys present, except that each key, in turn, is removed
+
+    ## Expected Result
+
+    - `ValueError` is raised
+    - Exception message matches expected
     """
 
     with does_not_raise():
@@ -650,29 +666,34 @@ def test_maintenance_mode_00310(maintenance_mode, remove_param) -> None:
 )
 def test_maintenance_mode_00400(maintenance_mode, param, raises) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_config_parameters()
-        - config.setter
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().verify_config_parameters() re-raises
-            -   ``ValueError`` if:
-                    - ``deploy`` raises ``TypeError``
+    Verify MaintenanceMode().verify_config_parameters() validates deploy parameter type.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().config is set to a dict.
-    -   The dict is updated with deploy set to valid and invalid
-        values of ``deploy``
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.verify_config_parameters()
+    - MaintenanceMode.config.setter
 
-    Expected Result
-    -   ``ValueError`` is raised when deploy is not a boolean
-    -   Exception message matches expected
-    -   Exception is not raised when deploy is a boolean
+    ## Test
+
+    - Verify MaintenanceMode().verify_config_parameters() re-raises `ValueError` if `deploy` raises `TypeError`
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().config is set to a dict
+    - The dict is updated with deploy set to valid and invalid values of `deploy`
+
+    ## Expected Result
+
+    - `ValueError` is raised when deploy is not a boolean
+    - Exception message matches expected
+    - Exception is not raised when deploy is a boolean
     """
 
     with does_not_raise():
@@ -703,30 +724,34 @@ def test_maintenance_mode_00400(maintenance_mode, param, raises) -> None:
 )
 def test_maintenance_mode_00500(maintenance_mode, param, raises) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_config_parameters()
-        - config.setter
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().verify_config_parameters() re-raises
-            -   ``ValueError`` if:
-                    - ``fabric_name`` raises ``ValueError`` due to being an
-                        invalid value.
+    Verify MaintenanceMode().verify_config_parameters() validates fabric_name parameter.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().config is set to a dict.
-    -   The dict is updated with fabric_name set to valid and invalid
-        values of ``fabric_name``
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.verify_config_parameters()
+    - MaintenanceMode.config.setter
 
-    Expected Result
-    -   ``ValueError`` is raised when fabric_name is not a valid value
-    -   Exception message matches expected
-    -   Exception is not raised when fabric_name is a valid value
+    ## Test
+
+    - Verify MaintenanceMode().verify_config_parameters() re-raises `ValueError` if `fabric_name` raises `ValueError` due to being an invalid value
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().config is set to a dict
+    - The dict is updated with fabric_name set to valid and invalid values of `fabric_name`
+
+    ## Expected Result
+
+    - `ValueError` is raised when fabric_name is not a valid value
+    - Exception message matches expected
+    - Exception is not raised when fabric_name is a valid value
     """
 
     with does_not_raise():
@@ -758,30 +783,34 @@ def test_maintenance_mode_00500(maintenance_mode, param, raises) -> None:
 )
 def test_maintenance_mode_00600(maintenance_mode, param, raises) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_config_parameters()
-        - config.setter
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().verify_config_parameters() re-raises
-            -   ``ValueError`` if:
-                    - ``mode`` raises ``ValueError`` due to being an
-                        invalid value.
+    Verify MaintenanceMode().verify_config_parameters() validates mode parameter.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().config is set to a dict.
-    -   The dict is updated with mode set to valid and invalid
-        values of ``mode``
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.verify_config_parameters()
+    - MaintenanceMode.config.setter
 
-    Expected Result
-    -   ``ValueError`` is raised when mode is not a valid value
-    -   Exception message matches expected
-    -   Exception is not raised when mode is a valid value
+    ## Test
+
+    - Verify MaintenanceMode().verify_config_parameters() re-raises `ValueError` if `mode` raises `ValueError` due to being an invalid value
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().config is set to a dict
+    - The dict is updated with mode set to valid and invalid values of `mode`
+
+    ## Expected Result
+
+    - `ValueError` is raised when mode is not a valid value
+    - Exception message matches expected
+    - Exception is not raised when mode is a valid value
     """
 
     with does_not_raise():
@@ -812,29 +841,34 @@ def test_maintenance_mode_00600(maintenance_mode, param, raises) -> None:
 )
 def test_maintenance_mode_00700(maintenance_mode, param, raises) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - verify_config_parameters()
-        - config.setter
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().verify_config_parameters() re-raises
-            -   ``ValueError`` if:
-                    - ``wait_for_mode_change`` raises ``TypeError``
+    Verify MaintenanceMode().verify_config_parameters() validates wait_for_mode_change parameter type.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().config is set to a dict.
-    -   The dict is updated with wait_for_mode_change set to valid and invalid
-        values of ``wait_for_mode_change``
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.verify_config_parameters()
+    - MaintenanceMode.config.setter
 
-    Expected Result
-    -   ``ValueError`` is raised when wait_for_mode_change is not a boolean
-    -   Exception message matches expected
-    -   Exception is not raised when wait_for_mode_change is a boolean
+    ## Test
+
+    - Verify MaintenanceMode().verify_config_parameters() re-raises `ValueError` if `wait_for_mode_change` raises `TypeError`
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().config is set to a dict
+    - The dict is updated with wait_for_mode_change set to valid and invalid values of `wait_for_mode_change`
+
+    ## Expected Result
+
+    - `ValueError` is raised when wait_for_mode_change is not a boolean
+    - Exception message matches expected
+    - Exception is not raised when wait_for_mode_change is a boolean
     """
 
     with does_not_raise():
@@ -856,10 +890,10 @@ def test_maintenance_mode_00700(maintenance_mode, param, raises) -> None:
 @pytest.mark.parametrize(
     "endpoint_instance, mock_exception, expected_exception, mock_message",
     [
-        ("ep_maintenance_mode_disable", TypeError, ValueError, "Bad type"),
-        ("ep_maintenance_mode_disable", ValueError, ValueError, "Bad value"),
-        ("ep_maintenance_mode_enable", TypeError, ValueError, "Bad type"),
-        ("ep_maintenance_mode_enable", ValueError, ValueError, "Bad value"),
+        ("_ep_maintenance_mode_disable", TypeError, ValueError, "Bad type"),
+        ("_ep_maintenance_mode_disable", ValueError, ValueError, "Bad value"),
+        ("_ep_maintenance_mode_enable", TypeError, ValueError, "Bad type"),
+        ("_ep_maintenance_mode_enable", ValueError, ValueError, "Bad value"),
     ],
 )
 def test_maintenance_mode_00800(
@@ -871,32 +905,37 @@ def test_maintenance_mode_00800(
     mock_message,
 ) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - commit()
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().change_system_mode() raises ``ValueError``
-        when ``EpMaintenanceModeEnable`` or ``EpMaintenanceModeDisable`` raise
-        any of:
-            -   ``TypeError``
-            -   ``ValueError``
+    Verify MaintenanceMode().change_system_mode() raises `ValueError` when endpoint classes raise exceptions.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Required attributes are set
-    -   EpMaintenanceModeEnable() is mocked to raise each
-        of the above exceptions
-    -   EpMaintenanceModeDisable() is mocked to raise each
-        of the above exceptions
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called for each exception
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.commit()
 
-    Expected Result
-    -   ``ValueError`` is raised.
-    -   Exception message matches expected.
+    ## Test
+
+    Verify MaintenanceMode().change_system_mode() raises `ValueError` when `EpMaintenanceModeEnable` or `EpMaintenanceModeDisable` raise any of:
+
+    - `TypeError`
+    - `ValueError`
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Required attributes are set
+    - EpMaintenanceModeEnable() is mocked to raise each of the above exceptions
+    - EpMaintenanceModeDisable() is mocked to raise each of the above exceptions
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called for each exception
+
+    ## Expected Result
+
+    - `ValueError` is raised
+    - Exception message matches expected
     """
 
     class MockEndpoint:
@@ -933,10 +972,10 @@ def test_maintenance_mode_00800(
     with does_not_raise():
         instance = maintenance_mode
         config = copy.deepcopy(CONFIG[0])
-        if endpoint_instance == "ep_maintenance_mode_disable":
+        if endpoint_instance == "_ep_maintenance_mode_disable":
             config["mode"] = "normal"
         instance.config = [config]
-        instance.rest_send = RestSend({})
+        instance.rest_send = RestSend(params=params)
         instance.results = Results()
 
     monkeypatch.setattr(instance, endpoint_instance, MockEndpoint())
@@ -947,8 +986,8 @@ def test_maintenance_mode_00800(
 @pytest.mark.parametrize(
     "endpoint_instance, mock_exception, expected_exception, mock_message",
     [
-        ("ep_maintenance_mode_deploy", TypeError, ValueError, "Bad type"),
-        ("ep_maintenance_mode_deploy", ValueError, ValueError, "Bad value"),
+        ("_ep_maintenance_mode_deploy", TypeError, ValueError, "Bad type"),
+        ("_ep_maintenance_mode_deploy", ValueError, ValueError, "Bad value"),
     ],
 )
 def test_maintenance_mode_00900(
@@ -960,29 +999,36 @@ def test_maintenance_mode_00900(
     mock_message,
 ) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - commit()
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().deploy_switches() raises ``ValueError``
-        when ``EpMaintenanceModeDeploy`` raises any of:
-            -   ``TypeError``
-            -   ``ValueError``
+    Verify MaintenanceMode().deploy_switches() raises `ValueError` when EpMaintenanceModeDeploy raises exceptions.
 
+    ## Classes and Methods
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Required attributes are set
-    -   EpMaintenanceModeDeploy() is mocked to raise each of the above exceptions
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.commit()
 
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called for each exception
+    ## Test
 
-    Expected Result
-    -   ``TypeError`` and ``ValueError`` are raised.
-    -   Exception message matches expected.
+    Verify MaintenanceMode().deploy_switches() raises `ValueError` when `EpMaintenanceModeDeploy` raises any of:
+
+    - `TypeError`
+    - `ValueError`
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Required attributes are set
+    - EpMaintenanceModeDeploy() is mocked to raise each of the above exceptions
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called for each exception
+
+    ## Expected Result
+
+    - `TypeError` and `ValueError` are raised
+    - Exception message matches expected
     """
 
     class MockEndpoint:
@@ -1063,35 +1109,38 @@ def test_maintenance_mode_00900(
         (ValueError, ValueError, r"Converted ValueError to ValueError"),
     ],
 )
-def test_maintenance_mode_01000(
-    maintenance_mode, mock_exception, expected_exception, mock_message
-) -> None:
+def test_maintenance_mode_01000(maintenance_mode, mock_exception, expected_exception, mock_message) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - change_system_mode()
+    # Summary
 
+    Verify MaintenanceMode().change_system_mode() raises `ValueError` when Results() raises exceptions.
 
-    Summary
-    -   Verify MaintenanceMode().change_system_mode() raises ``ValueError``
-        when ``MaintenanceMode().results()`` raises any of:
-            -   ``TypeError``
-            -   ``ValueError``
+    ## Classes and Methods
 
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.change_system_mode()
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Required attributes are set
-    -   Results().response_current.setter is mocked to raise each of the above
-        exceptions
+    ## Test
 
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called for each exception
+    Verify MaintenanceMode().change_system_mode() raises `ValueError` when MaintenanceMode().results() raises any of:
 
-    Expected Result
-    -   ``ValueError`` is raised
-    -   Exception message matches expected
+    - `TypeError`
+    - `ValueError`
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Required attributes are set
+    - Results().response_current.setter is mocked to raise each of the above exceptions
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called for each exception
+
+    ## Expected Result
+
+    - `ValueError` is raised
+    - Exception message matches expected
     """
 
     class MockResults:
@@ -1139,29 +1188,35 @@ def test_maintenance_mode_01000(
 
 def test_maintenance_mode_01100(monkeypatch, maintenance_mode) -> None:
     """
-    Classes and Methods
-    - MaintenanceMode()
-        - __init__()
-        - commit()
+    # Summary
 
-    Summary
-    -   Verify MaintenanceMode().commit() raises ``ValueError`` when
-        ``MaintenanceMode().deploy_switches()`` raises
-        ``ControllerResponseError`` when the RETURN_CODE in the
-        response is not 200.
+    Verify MaintenanceMode().commit() raises `ValueError` when deploy_switches() gets non-200 response.
 
-    Code Flow - Setup
-    -   MaintenanceMode() is instantiated
-    -   Required attributes are set
+    ## Classes and Methods
 
-    Code Flow - Test
-    -   MaintenanceMode().commit() is called with simulated responses:
-            -   200 response for ``change_system_mode()``
-            -   500 response ``deploy_switches()``
+    - MaintenanceMode.__init__()
+    - MaintenanceMode.commit()
 
-    Expected Result
-    -   ``ValueError``is raised.
-    -   Exception message matches expected.
+    ## Test
+
+    - Verify MaintenanceMode().commit() raises `ValueError` when MaintenanceMode().deploy_switches() raises `ControllerResponseError`
+      when the RETURN_CODE in the response is not 200
+
+    ## Code Flow - Setup
+
+    - MaintenanceMode() is instantiated
+    - Required attributes are set
+
+    ## Code Flow - Test
+
+    - MaintenanceMode().commit() is called with simulated responses:
+      - 200 response for `change_system_mode()`
+      - 500 response `deploy_switches()`
+
+    ## Expected Result
+
+    - `ValueError` is raised
+    - Exception message matches expected
     """
 
     def responses():
