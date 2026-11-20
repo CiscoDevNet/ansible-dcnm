@@ -9,8 +9,8 @@
 # Setup for dcnm_maintenance_mode integration tests using read-write fabrics.
 #
 # Create two read-write fabrics and add 1x switch to each.
-# - VXLAN_EVPN_Fabric with 1x leaf.
-# - LAN_CLASSIC_Fabric with 1x leaf.
+# - VXLAN_EVPN with 1x leaf.
+# - LAN_CLASSIC with 1x leaf.
 ################################################################################
 ################################################################################
 # STEPS
@@ -18,16 +18,16 @@
 # SETUP
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_1
-#    - fabric_type_1  # VXLAN_EVPN
-#    - fabric_name_3
-#    - fabric_type_3  # LAN_Classic
+#    - fabric_name_00. # VXLAN_EVPN
+#    - fabric_type_00  # VXLAN_EVPN
+#    - fabric_name_10  # LAN_CLASSIC
+#    - fabric_type_10  # LAN_CLASSIC
 # 2. Create fabrics if they do not exist
-#    - fabric_name_1
-#    - fabric_name_3
-# 3. Add switch to fabric_name_1 if it doesn't exist.
+#    - fabric_name_00
+#    - fabric_name_10
+# 3. Add switch to fabric_name_00 if it doesn't exist.
 #    - leaf_1
-# 4. Add switch to fabric_name_3 if it doesn't exist.
+# 4. Add switch to fabric_name_10 if it doesn't exist.
 #    - leaf_2
 # CLEANUP
 # 5. See 00_cleanup.yaml
@@ -40,10 +40,10 @@
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
 #   testcase: merged_normal_to_maintenance
-#   fabric_name_1: VXLAN_EVPN_Fabric
-#   fabric_type_1: VXLAN_EVPN
-#   fabric_name_3: LAN_CLASSIC_Fabric
-#   fabric_type_3: LAN_CLASSIC
+#   fabric_name_00: VXLAN_EVPN
+#   fabric_type_00: VXLAN_EVPN
+#   fabric_name_10: LAN_CLASSIC
+#   fabric_type_10: LAN_CLASSIC
 #   leaf_1: 172.22.150.103
 #   leaf_2: 172.22.150.104
 #   nxos_username: admin
@@ -51,16 +51,16 @@
 ################################################################################
 # 00_SETUP - Create fabrics if they do not exist.
 ################################################################################
-- name: 00_SETUP - Create fabrics
+- name: 00_SETUP - Create fabric {{ fabric_name_00 }} and {{ fabric_name_10 }} if they do not exist
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_00 }}"
+        FABRIC_TYPE: "{{ fabric_type_00 }}"
         BGP_AS: "65535.65534"
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_3 }}"
-        FABRIC_TYPE: "{{ fabric_type_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_10 }}"
+        FABRIC_TYPE: "{{ fabric_type_10 }}"
         BOOTSTRAP_ENABLE: false
         IS_READ_ONLY: false
         DEPLOY: true
@@ -79,11 +79,11 @@
       - 'item["RETURN_CODE"] == 200'
     loop: '{{ result.response }}'
 ################################################################################
-# 00_SETUP - Add one leaf switch to fabric_1
+# 00_SETUP - Add one leaf switch to fabric_name_00
 ################################################################################
-- name: Merge leaf_1 into fabric_1
+- name: Merge leaf_1 into fabric {{ fabric_name_00 }}
   cisco.dcnm.dcnm_inventory:
-    fabric: "{{ fabric_name_1 }}"
+    fabric: "{{ fabric_name_00 }}"
     state: merged
     config:
       - seed_ip: "{{ leaf_1 }}"
@@ -104,11 +104,11 @@
       - 'result.failed == false'
 
 ################################################################################
-# 00_SETUP - Add one leaf switch to fabric_3
+# 00_SETUP - Add one leaf switch to fabric_name_10
 ################################################################################
-- name: Merge leaf_2 into fabric_3
+- name: Merge leaf_2 into fabric {{ fabric_name_10 }}
   cisco.dcnm.dcnm_inventory:
-    fabric: "{{ fabric_name_3 }}"
+    fabric: "{{ fabric_name_10 }}"
     state: merged
     config:
       - seed_ip: "{{ leaf_2 }}"
