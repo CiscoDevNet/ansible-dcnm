@@ -360,8 +360,8 @@ def test_an_explicit_false_over_a_stored_false_is_not_a_transition(state):
 
 @pytest.mark.parametrize("state", ["merged", "replaced"])
 def test_an_explicit_false_on_a_port_stored_without_the_bfd_nvpairs_sends_only_the_gate(state):
-    """A routed port stored before 020 has no BFD nvPairs (observed on .90). An explicit false is sent, as before this
-    change; nothing is invented for the values."""
+    """A routed port stored before 020 has no BFD nvPairs (observed on a live controller). An explicit false is
+    sent, as before this change; nothing is invented for the values."""
     have = _have()
     for nvpair in TEMPLATE_DEFAULTS:
         del have[0]["interfaces"][0]["nvPairs"][nvpair]

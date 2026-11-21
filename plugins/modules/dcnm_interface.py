@@ -140,9 +140,10 @@ options:
       and omitted values are kept; under C(merged) an omitted value is kept. A C(deleted) or C(overridden) reset of a
       leaf port goes to C(int_trunk_host); a reset that keeps C(int_routed_host) sends C(enable_bfd_interval) false.
       Measured on NDFC 12.6.0.267 with the C(4.3.1.0175006020) templates - enabling, changing one value, keeping the
-      values under C(merged), C(query), the leaf reset, and, with a direct controller request, the removal of the
-      configuration when the option becomes false. The module's disable, the reset on omission and the reset that
-      keeps C(int_routed_host) are NOT LIVE TESTED.
+      values under C(merged), C(query), the leaf reset, an explicit false under C(merged) and an omission under
+      C(replaced) (each removed the configuration and kept the values, the description, the address and the MTU),
+      re-enabling, and unchanged repeats. C(overridden) with these fields was run in check mode only. The reset that
+      keeps C(int_routed_host) is NOT LIVE TESTED.
     - On a loopback, the C(4.3.1.0175006017) templates also declare the EIGRP fields that the routed, subinterface and
       SVI profiles already accept (NOT LIVE TESTED; read from the installed template body) -
       C(enable_eigrp_ipv6_routing) (bool; renders C(ipv6 router eigrp <tag>)),
