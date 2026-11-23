@@ -382,6 +382,10 @@ options:
           line is not supported.
         - Remove the port from the network, with O(config[].deploy=true),
           before changing or deleting the interface.
+        - On NDFC 12.6.0.267, removing a private VLAN network from a regular
+          port-channel that is not part of a vPC also deleted the port-channel
+          on the switch, while the controller kept its configuration and
+          reported it in sync. This removal is not supported.
         - O(config[].attach[].tor_ports) is not supported for private VLAN
           networks.
         - The controller attaches a primary network to every switch where one
@@ -394,6 +398,19 @@ options:
           O(config[].deploy=false). With O(deploy_mode=resource), the deploy
           also names the networks of the same private VLAN family that have
           saved changes on that switch.
+        - To remove a private VLAN family from a promiscuous port and delete
+          it, use O(deploy_mode=switch). On NDFC 12.6.0.267, O(state=deleted)
+          named a routed primary attached to a promiscuous Ethernet port and
+          its isolated and community networks attached to the same switch. The
+          module removed the port mapping and the three networks from the
+          switch at the first attempt, and a repeat made no change. This was
+          measured on one switch.
+        - A switch deployment can apply every pending change on the switch,
+          including changes this task did not make.
+        - With O(deploy_mode=resource), the same withdrawal failed on that
+          controller. The deployment removed the secondary networks from the
+          port mapping one at a time, and the switch rejected the removal of
+          the last one.
         type: str
         choices: [primary, isolated, community]
         required: false
@@ -728,6 +745,40 @@ EXAMPLES = """
         pvlan_type: community
         pvlan_primary: ansible-pvlan-primary
 
+- name: Create a routed private VLAN family with the primary on a promiscuous port
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-fabric
+    state: merged
+    config:
+      - net_name: ansible-pvlan-routed
+        vrf_name: Tenant-1
+        net_id: 30020
+        vlan_id: 2441
+        gw_ip_subnet: '192.168.60.1/24'
+        pvlan_type: primary
+        attach:
+          # Ethernet1/20 is already deployed in private VLAN promiscuous mode,
+          # and its interface policy has no private VLAN mapping.
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/20]
+        deploy: true
+      - net_name: ansible-pvlan-routed-isolated
+        net_id: 30021
+        vlan_id: 2442
+        pvlan_type: isolated
+        pvlan_primary: ansible-pvlan-routed
+        attach:
+          - ip_address: 192.168.1.224
+        deploy: true
+      - net_name: ansible-pvlan-routed-community
+        net_id: 30022
+        vlan_id: 2443
+        pvlan_type: community
+        pvlan_primary: ansible-pvlan-routed
+        attach:
+          - ip_address: 192.168.1.224
+        deploy: true
+
 # ---------------------------------------------------------------------------
 # STATE: REPLACED - Replace Network Configuration
 # ---------------------------------------------------------------------------
@@ -853,6 +904,17 @@ EXAMPLES = """
         vlan_id: 151
         gw_ip_subnet: '192.168.40.1/24'
         deploy: false
+
+# A switch deployment can also apply other pending changes on that switch.
+- name: Remove a private VLAN family from its promiscuous port and delete it
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-fabric
+    state: deleted
+    deploy_mode: switch
+    config:
+      - net_name: ansible-pvlan-routed
+      - net_name: ansible-pvlan-routed-isolated
+      - net_name: ansible-pvlan-routed-community
 
 - name: Delete all the networkss
   cisco.dcnm.dcnm_network:
