@@ -701,9 +701,10 @@ bindings:
   # ==== Source lot smu020_routed_bfd (4 of 4 rows) ====
   # BFD interval on routed Ethernet (int_routed_host). The int_routed_host body served with SMU 4.3.1.0175006020 declares
   # these four fields; the 017 and 018 bodies do not. Read from the captured 018 and 020 template sets of one controller.
-  # NDFC reports 12.6.0.267 with 018 and with 020, so min_ndfc_version cannot tell them apart: `patch_versions` admits
-  # the rows only with the declared 020 patch. Nothing shows that an ND 4.4.1 or later body declares them, so the numeric
-  # release path does not admit them either.
+  # NDFC reports 12.6.0.267 with 018 and with 020, so min_ndfc_version cannot tell them apart: among the SMUs,
+  # `patch_versions` admits the rows only with the declared 020 patch. The SMU delivers these fields ahead of ND 4.4.1,
+  # the release they are intended for, so the numeric release path (4.4.1 or later) admits them as it admits every row.
+  # No 4.4.1 body was read.
   #
   # Template contract (020): bfdInterval is a boolean with defaultValue false. The three values are integers with
   # IsMandatory and IsShow "bfdInterval==true", and the parent refuses bfdInterval true with any of them empty. While

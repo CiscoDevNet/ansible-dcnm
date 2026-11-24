@@ -6,7 +6,8 @@
     int_routed_host  bfdMultiplier     bfd_multiplier       1-50, required while bfdInterval is true, inert while false
 
 Only the int_routed_host body served with SMU 020 declares these fields; the 017 and 018 bodies, which report the same
-NDFC version, do not. The rows are admitted with patch_version 4.3.1.0175006020 only. The 020 parent creates or updates
+NDFC version, do not. Among the SMUs the rows are admitted with patch_version 4.3.1.0175006020 only; a numeric ND release
+4.4.1 or later admits them as it admits every row (no 4.4.1 template was read). The 020 parent creates or updates
 interface_bfd_interval_11_1 while bfdInterval is true. On NDFC 12.6.0.267 with the 020 templates, a modify that set only
 bfdInterval "false" and carried every other stored nvPair removed that child and, after the deploy, the device line; the
 three values stayed stored and rendered nothing. So the gate is withdrawn with "false" (explicitly, by omission under
@@ -35,6 +36,9 @@ SMU_017 = "4.3.1.0175006017"
 SMU_018 = "4.3.1.0175006018"
 SMU_020 = "4.3.1.0175006020"
 VERSION = "12.6.0.267"
+# Numeric ND releases at or above the floor, and values the general gate refuses (below the floor or malformed).
+NUMERIC = ("4.4.1", "4.4.1.10", "4.4.2", "4.10.0", "5.0.0")
+UNSUPPORTED = (None, "", "4.3.1.0175006019", "4.4.0", "4.3.1", "4.3.99", "4.4", "4.4.1-rc1")
 
 FIELDS = {
     "enable_bfd_interval": "bfdInterval",
@@ -118,32 +122,61 @@ def test_the_subinterface_and_svi_rows_are_unchanged():
 
 
 # ====================================================================================================
-# Admission: the new routes need 020; the existing BFD routes keep every approved context
+# Admission: 020 or a numeric ND release; the other SMUs refuse; the existing BFD routes keep every approved context
 # ====================================================================================================
-@pytest.mark.parametrize("patch_version", [SMU_017, SMU_018, "4.4.1"])
+REFUSED_ON_THE_OTHER_SMUS = "'%s' on int_routed_host requires caller-supplied patch_version %s or numeric ND >= 4.4.1"
+
+
+@pytest.mark.parametrize("patch_version", [SMU_020, SMU_017, SMU_018] + list(NUMERIC) + list(UNSUPPORTED))
+def test_the_row_gate_admits_020_and_the_numeric_release_path(patch_version):
+    expected = patch_version == SMU_020 or patch_version in NUMERIC
+    for key in FIELDS:
+        assert gie_engine.gie_binding_patch_supported(resolve_binding(h.ROUTED, key), patch_version) is expected, key
+
+
+@pytest.mark.parametrize("patch_version", [SMU_017, SMU_018, SMU_020] + list(NUMERIC) + list(UNSUPPORTED))
+def test_rows_without_patch_versions_follow_the_general_gate(patch_version):
+    general = gie_engine.gie_patch_supported(patch_version)
+    for b in BINDING_TABLE:
+        if "patch_versions" not in b:
+            assert gie_engine.gie_binding_patch_supported(b, patch_version) is general, b["profile_key"]
+
+
+@pytest.mark.parametrize("patch_version", [SMU_017, SMU_018])
 @pytest.mark.parametrize("key", sorted(FIELDS))
-def test_routed_bfd_is_refused_before_any_request_outside_020(key, patch_version):
+def test_routed_bfd_is_refused_before_any_request_on_the_other_smus(key, patch_version):
     profile = dict(ROUTED_PLAIN, **{key: BFD_ON[key]})
     result, calls = _run(profile, "merged", have=_have(), patch_version=patch_version)
     assert result.get("failed"), result
-    assert "'%s' on int_routed_host requires caller-supplied patch_version %s" % (key, SMU_020) in result["msg"]
+    assert REFUSED_ON_THE_OTHER_SMUS % (key, SMU_020) in result["msg"]
     assert h.writes(calls) == []
 
 
-@pytest.mark.parametrize("patch_version", [SMU_017, SMU_018, "4.4.1"])
-def test_an_explicit_disable_is_refused_before_any_request_outside_020(patch_version):
+@pytest.mark.parametrize("patch_version", [SMU_017, SMU_018])
+def test_an_explicit_disable_is_refused_before_any_request_on_the_other_smus(patch_version):
     result, calls = _run(dict(ROUTED_PLAIN, enable_bfd_interval=False), "merged", have=_have(**BFD_ON_WIRE),
                          patch_version=patch_version)
     assert result.get("failed"), result
-    assert "'enable_bfd_interval' on int_routed_host requires caller-supplied patch_version %s" % SMU_020 in result["msg"]
+    assert REFUSED_ON_THE_OTHER_SMUS % ("enable_bfd_interval", SMU_020) in result["msg"]
     assert h.writes(calls) == []
 
 
-@pytest.mark.parametrize("patch_version", [None, "4.3.1.0175006019"])
+@pytest.mark.parametrize("patch_version", UNSUPPORTED)
 def test_an_unapproved_patch_keeps_the_general_refusal(patch_version):
     result, calls = _run(dict(ROUTED_PLAIN, **BFD_ON), "merged", have=_have(), patch_version=patch_version)
     assert result.get("failed") and "requires caller-supplied patch_version 4.3.1.0175006017" in result["msg"]
     assert h.writes(calls) == []
+
+
+@pytest.mark.parametrize("patch_version", NUMERIC)
+def test_the_numeric_release_path_sends_the_four_nvpairs_and_repeats_quietly(patch_version):
+    result, calls = _run(dict(ROUTED_PLAIN, **BFD_ON), "merged", have=_have(), patch_version=patch_version)
+    assert not result.get("failed"), result.get("msg")
+    assert result["changed"] is True
+    assert [_bfd(nv) for nv in _sent(calls)] == [BFD_ON_WIRE]
+    result, calls = _run(dict(ROUTED_PLAIN, **BFD_ON), "merged", have=_have(**BFD_ON_WIRE), patch_version=patch_version)
+    assert not result.get("failed"), result.get("msg")
+    assert result["changed"] is False and h.writes(calls) == []
 
 
 @pytest.mark.parametrize("patch_version", [SMU_017, SMU_018, SMU_020, "4.4.1"])
@@ -160,9 +193,10 @@ def test_subinterface_bfd_through_main_is_unchanged(patch_version):
     assert _bfd(_sent(calls)[0]) == BFD_ON_WIRE
 
 
-@pytest.mark.parametrize("patch_version", [SMU_017, SMU_018, "4.4.1", None])
+@pytest.mark.parametrize("patch_version", [SMU_017, SMU_018, None, "4.4.0"])
 @pytest.mark.parametrize("key", sorted(FIELDS))
-def test_outside_020_the_routed_rows_are_inapplicable_for_omission_and_dependencies(key, patch_version):
+def test_on_the_other_smus_and_without_support_the_routed_rows_are_inapplicable(key, patch_version):
+    """For omission and dependencies."""
     assert gie_engine.gie_binding_applicable(h.ROUTED, key, VERSION, patch_version) is False
     action, _wire = gie_engine.gie_withdrawal_action(h.ROUTED, key, BFD_ON_WIRE[FIELDS[key]], VERSION, patch_version)
     assert action == gie_engine.GIE_WITHDRAW_INAPPLICABLE
@@ -171,12 +205,22 @@ def test_outside_020_the_routed_rows_are_inapplicable_for_omission_and_dependenc
     assert (writes, conflicts) == ({}, [])
 
 
+@pytest.mark.parametrize("patch_version", (SMU_020,) + NUMERIC)
 @pytest.mark.parametrize("key", sorted(FIELDS))
-def test_with_020_the_routed_rows_are_applicable(key):
-    assert gie_engine.gie_binding_applicable(h.ROUTED, key, VERSION, SMU_020) is True
+def test_with_020_or_a_numeric_release_the_routed_rows_are_applicable(key, patch_version):
+    """Omission and dependencies answer as with 020."""
+    assert gie_engine.gie_binding_applicable(h.ROUTED, key, VERSION, patch_version) is True
+    stored = BFD_ON_WIRE[FIELDS[key]]
+    action = gie_engine.gie_withdrawal_action(h.ROUTED, key, stored, VERSION, patch_version)
+    assert action[0] != gie_engine.GIE_WITHDRAW_INAPPLICABLE
+    assert action == gie_engine.gie_withdrawal_action(h.ROUTED, key, stored, VERSION, SMU_020)
+    plan = gie_engine.gie_dependency_plan(
+        h.ROUTED, {"bfdInterval": "false"}, dict(BFD_ON_WIRE), {"bfdInterval"}, True, VERSION, patch_version)
+    assert plan == gie_engine.gie_dependency_plan(
+        h.ROUTED, {"bfdInterval": "false"}, dict(BFD_ON_WIRE), {"bfdInterval"}, True, VERSION, SMU_020)
 
 
-def test_outside_020_an_unrelated_change_over_stored_bfd_neither_resets_nor_refuses():
+def test_on_018_an_unrelated_change_over_stored_bfd_neither_resets_nor_refuses():
     """A HAVE with the four nvPairs under 018 (it cannot hold them there; this checks the boundary only)."""
     have = _have(**BFD_ON_WIRE)
     result, calls = _run(dict(ROUTED_PLAIN, description="smu018-unrelated"), "replaced", have=have, patch_version=SMU_018)
@@ -498,6 +542,119 @@ def test_the_have_fixture_is_the_module_payload_plus_the_template_defaults():
     have = _have()
     nv = copy.deepcopy(have[0]["interfaces"][0]["nvPairs"])
     assert _bfd(nv) == TEMPLATE_DEFAULTS and have[0]["policy"] == h.ROUTED
+
+
+# ====================================================================================================
+# The numeric release path through main(): the same result and requests as 020, case by case
+# ====================================================================================================
+def _routed(*parts, **kw):
+    """ROUTED_PLAIN updated with each dict in `parts`, then `kw`."""
+    profile = dict(ROUTED_PLAIN)
+    for part in parts:
+        profile.update(part)
+    profile.update(kw)
+    return profile
+
+
+def _no_bfd_have():
+    have = _have()
+    for nvpair in TEMPLATE_DEFAULTS:
+        del have[0]["interfaces"][0]["nvPairs"][nvpair]
+    return have
+
+
+def _two(state, have, profiles):
+    """`have` is a function, so no fixture is built when the module is collected."""
+    return lambda p: h.run_configs([h.cfg(ifname, prof) for ifname, prof in profiles], state, have=have(), patch_version=p)
+
+
+def _lifecycle_cases():
+    """Each case of the sections above, as a function of the patch_version only."""
+    cases = {
+        "create": lambda p: _run(_routed(BFD_ON), "merged", have=_have(), patch_version=p),
+        "update_one_value": lambda p: _run(_routed(bfd_tx_interval=400), "merged", have=_have(**BFD_ON_WIRE),
+                                           patch_version=p),
+        "merged_omission": lambda p: _run(_routed(description="unrelated-change"), "merged", have=_have(**BFD_ON_WIRE),
+                                          patch_version=p),
+        "repeat": lambda p: _run(_routed(BFD_ON), "merged", have=_have(**BFD_ON_WIRE), patch_version=p),
+        "values_with_the_gate_off": lambda p: _run(_routed(bfd_tx_interval=300), "merged", have=_have(), patch_version=p),
+        "check_mode": lambda p: _run(_routed(BFD_ON), "merged", have=_have(), check_mode=True, patch_version=p),
+        "query": lambda p: _run({"mode": "routed"}, "query", have=_have(**BFD_ON_WIRE), patch_version=p),
+        "out_of_range": lambda p: _run(_routed(BFD_ON, bfd_multiplier=51), "merged", have=_have(), patch_version=p),
+        "enabling_over_empty_values": lambda p: _run(_routed(enable_bfd_interval=True), "merged", have=_have(),
+                                                     patch_version=p),
+        "explicit_false_with_values": lambda p: _run(_routed(BFD_ON, enable_bfd_interval=False, bfd_tx_interval=400),
+                                                     "merged", have=_have(**BFD_ON_WIRE), patch_version=p),
+        "replaced_value_without_gate": lambda p: _run(_routed(bfd_tx_interval=400), "replaced", have=_have(**BFD_ON_WIRE),
+                                                      patch_version=p),
+        "check_mode_disable": lambda p: _run(_routed(enable_bfd_interval=False), "merged", have=_have(**BFD_ON_WIRE),
+                                             check_mode=True, patch_version=p),
+        "query_after_withdrawal": lambda p: _run({"mode": "routed"}, "query", have=_have(**BFD_OFF_WIRE), patch_version=p),
+        "two_interfaces_merged": _two("merged", lambda: _have(h.IF_A) + _have(h.IF_B, **BFD_ON_WIRE),
+                                      [(h.IF_A, _routed(BFD_ON)), (h.IF_B, _routed(bfd_multiplier=9))]),
+        "one_withdrawn_one_enabled_replaced": _two("replaced", lambda: _have(h.IF_A, **BFD_ON_WIRE) + _have(h.IF_B),
+                                                   [(h.IF_A, _routed()), (h.IF_B, _routed(BFD_ON))]),
+        "merged_disable_leaves_the_other": _two("merged",
+                                                lambda: _have(h.IF_A, **BFD_ON_WIRE) + _have(h.IF_B, **BFD_ON_WIRE),
+                                                [(h.IF_A, _routed(enable_bfd_interval=False)), (h.IF_B, _routed())]),
+    }
+    for state in ("merged", "replaced", "overridden"):
+        cases["explicit_false_" + state] = (
+            lambda p, s=state: _run(_routed(enable_bfd_interval=False), s, have=_have(**BFD_ON_WIRE), patch_version=p))
+        cases["unreadable_gate_omitted_" + state] = (
+            lambda p, s=state: _run(_routed(), s, have=_have(**BFD_UNREADABLE_WIRE), patch_version=p))
+        for disable in (True, False):
+            profile = _routed(enable_bfd_interval=False) if disable else _routed()
+            cases["repeat_withdrawal_%s_%s" % (state, "explicit_false" if disable else "omitted")] = (
+                lambda p, s=state, prof=profile: _run(prof, s, have=_have(**BFD_OFF_WIRE), patch_version=p))
+    for state in ("replaced", "overridden"):
+        cases["omission_" + state] = lambda p, s=state: _run(_routed(), s, have=_have(**BFD_ON_WIRE), patch_version=p)
+        cases["stored_false_omitted_" + state] = (
+            lambda p, s=state: _run(_routed(description="unrelated"), s, have=_have(), patch_version=p))
+        cases["values_stored_while_off_" + state] = (
+            lambda p, s=state: _run(_routed(description="unrelated"), s,
+                                    have=_have(bfdTxInterval="300", bfdMinRxInterval="350", bfdMultiplier="5"),
+                                    patch_version=p))
+    for state in ("merged", "replaced"):
+        cases["false_over_false_" + state] = (
+            lambda p, s=state: _run(_routed(enable_bfd_interval=False), s, have=_have(), patch_version=p))
+        cases["false_without_the_bfd_nvpairs_" + state] = (
+            lambda p, s=state: _run(_routed(enable_bfd_interval=False), s, have=_no_bfd_have(), patch_version=p))
+    for state in role_reset.STATES:
+        cases["leaf_reset_" + state] = (
+            lambda p, s=state: role_reset.run(s, _role_default_have("border", **BFD_ON_WIRE), "leaf", patch_version=p))
+        cases["border_reset_" + state] = (
+            lambda p, s=state: role_reset.run(s, _role_default_have("border", **BFD_ON_WIRE), "border", patch_version=p))
+        cases["border_reset_bfd_off_" + state] = (
+            lambda p, s=state: role_reset.run(s, _role_default_have("border", bfdTxInterval="300", bfdMinRxInterval="350",
+                                                                    bfdMultiplier="5"), "border", patch_version=p))
+    return cases
+
+
+LIFECYCLE = _lifecycle_cases()
+
+
+def _outcome(result, calls):
+    """The module result without the echo of its own arguments, and every request in order."""
+    return dict((k, v) for k, v in result.items() if k != "invocation"), calls
+
+
+@pytest.mark.parametrize("patch_version", ["4.4.1", "4.10.0"])
+@pytest.mark.parametrize("case", sorted(LIFECYCLE))
+def test_the_numeric_release_path_matches_020(case, patch_version):
+    expected = _outcome(*LIFECYCLE[case](SMU_020))
+    assert _outcome(*LIFECYCLE[case](patch_version)) == expected
+
+
+def test_the_lifecycle_cases_include_writes_refusals_and_quiet_runs():
+    """The comparison above is not vacuous: 020 writes, refuses and stays quiet across the cases."""
+    outcomes = dict((case, _outcome(*run(SMU_020))) for case, run in LIFECYCLE.items())
+    assert outcomes["create"][0]["changed"] is True and h.writes(outcomes["create"][1])
+    assert outcomes["omission_replaced"][0]["changed"] is True and h.writes(outcomes["omission_replaced"][1])
+    assert outcomes["repeat"][0]["changed"] is False and not h.writes(outcomes["repeat"][1])
+    assert outcomes["out_of_range"][0].get("failed") and not h.writes(outcomes["out_of_range"][1])
+    assert outcomes["unreadable_gate_omitted_replaced"][0].get("failed")
+    assert sum(1 for r, _c in outcomes.values() if r.get("failed")) >= 5
 
 
 # ====================================================================================================

@@ -1079,12 +1079,12 @@ FIELDS = ["parent_template", "parent_nvpair", "profile_key", "applicable_interfa
           "inert_when", "dropped_on_policy_change", "cleared_on_change_to", "struct_contract",
           "struct_clear_when", "patch_versions", "disable_unmeasured"]
 
-# `patch_versions` -- the exact caller-declared SMU strings with which this identity is admitted. The parent
-# template of those SMUs was read with the field; other approved patch contexts (other SMUs and the numeric ND
-# release path) are not known to declare it, and they may report the same NDFC version, so min_ndfc_version
-# cannot separate them. Absent means every approved patch context. Each string must also be one of the engine's
-# GIE_ENABLED_PATCH_VERSIONS (a unit test checks it). The engine applies it wherever the patch is checked:
-# explicit contribution, withdrawal of an omitted field and dependency rules.
+# `patch_versions` -- the exact caller-declared SMU strings with which this identity is admitted among the approved
+# SMUs. The parent template of those SMUs was read with the field; the other approved SMUs are not known to declare
+# it, and they may report the same NDFC version, so min_ndfc_version cannot separate them. A numeric ND release at
+# or above the floor admits the identity as it admits every row. Absent means every approved patch context. Each
+# string must also be one of the engine's GIE_ENABLED_PATCH_VERSIONS (a unit test checks it). The engine applies it
+# wherever the patch is checked: explicit contribution, withdrawal of an omitted field and dependency rules.
 
 # `disable_unmeasured` -- an explicit change of this field from a stored non-neutral value to a neutral one
 # (its declared default) is refused before any request, because what the controller does with the

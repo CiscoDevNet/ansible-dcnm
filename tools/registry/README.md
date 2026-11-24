@@ -148,8 +148,9 @@ from the compiled `reset_wire` and `default_template` (`gie_withdrawal_action`),
 
 Two compiled fields narrow a row further:
 
-- `patch_versions` lists the exact SMU strings with which the row is admitted, for a field that only some approved SMU
-  templates declare while all of them report the same NDFC version. Without it, a row follows every approved `patch_version`.
+- `patch_versions` lists the exact SMU strings with which the row is admitted among the approved SMUs, for a field that only
+  some approved SMU templates declare while all of them report the same NDFC version. A numeric ND release at or above the
+  floor still admits the row. Without it, a row follows every approved `patch_version`.
 - `disable_unmeasured` makes the module refuse an explicit change from a stored non-default value to the default before any
   request, where the effect of that change on the controller is not measured. No committed row declares it at present.
 

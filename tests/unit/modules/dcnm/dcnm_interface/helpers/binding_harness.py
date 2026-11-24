@@ -1606,8 +1606,9 @@ UPLINK_ROUTE_RESET_ROWS = (
 )
 UPLINK_ROUTE_RESET_IDENTITIES = frozenset((p, n) for p, n, _k, _h, _r in UPLINK_ROUTE_RESET_ROWS)
 
-# The routed Ethernet BFD interval gate is admitted with patch_version 4.3.1.0175006020 only, so the generic matrix,
-# which runs with SUPPORTED_PATCH, cannot exercise its omission. Its withdrawal is pinned in test_binding_smu020.py.
+# Among the SMUs the routed Ethernet BFD interval gate is admitted with patch_version 4.3.1.0175006020 only, so the
+# generic matrix, which runs with SUPPORTED_PATCH, cannot exercise its omission. Its withdrawal is pinned in
+# test_binding_smu020.py.
 SMU020_ROUTE_RESET_IDENTITIES = frozenset({(ROUTED, "bfdInterval")})
 
 

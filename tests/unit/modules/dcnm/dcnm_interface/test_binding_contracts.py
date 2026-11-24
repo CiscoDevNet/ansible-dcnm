@@ -512,9 +512,9 @@ def test_a_generic_binding_reaches_the_payload_in_wire_form(key, patch_version):
     binding = next(b for b in BINDING_TABLE if _key(b) == key)
     value = _sample_for(binding)
     admitted = binding.get("patch_versions")
-    if admitted and patch_version not in admitted:
-        # A row that only some SMU templates declare is refused in every other approved context; the positive
-        # case below runs with the SMU it names.
+    if admitted and patch_version in GIE_ENABLED_PATCH_VERSIONS and patch_version not in admitted:
+        # A row that only some SMU templates declare is refused with the other SMUs (the numeric release path admits
+        # it); the positive case below runs with the SMU it names.
         nvpairs, error = gie_contribute_nvpairs(
             binding["parent_template"], {binding["profile_key"]: value}, NDFC_VERSION, patch_version)
         assert nvpairs is None and "requires caller-supplied patch_version" in error, key

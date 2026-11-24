@@ -533,7 +533,8 @@ RP5_ROWS = {
                         ("NETFLOW_SAMPLER", "netflow_sampler"))
 } | {("int_vlan", "NETFLOW_SAMPLER", "netflow_sampler")}
 
-# BFD interval on routed Ethernet, lot smu020_routed_bfd (admitted with patch_version 4.3.1.0175006020 only).
+# BFD interval on routed Ethernet, lot smu020_routed_bfd (among the SMUs, admitted with patch_version 4.3.1.0175006020
+# only).
 SMU020_BFD_ROWS = {
     ("int_routed_host", "bfdInterval", "enable_bfd_interval"),
     ("int_routed_host", "bfdTxInterval", "bfd_tx_interval"),

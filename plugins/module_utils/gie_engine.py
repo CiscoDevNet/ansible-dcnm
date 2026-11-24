@@ -90,13 +90,14 @@ def gie_patch_supported(patch_version):
 
 
 def gie_binding_patch_supported(binding, patch_version):
-    """The patch boundary of ONE binding: an approved patch context, narrowed to the binding's `patch_versions`
-    when it declares them (identities that only some approved SMUs declare). Every place that checks the patch for
-    a binding uses this, so explicit contribution, withdrawal and dependency rules agree."""
+    """The patch boundary of ONE binding: an approved patch context. A binding that declares `patch_versions`
+    (identities that only some approved SMUs declare) is admitted with those SMU strings only, and with a numeric ND
+    release at or above the floor, as every binding is. Every place that checks the patch for a binding uses this,
+    so explicit contribution, withdrawal and dependency rules agree."""
     if not gie_patch_supported(patch_version):
         return False
     allowed = binding.get("patch_versions")
-    return allowed is None or patch_version in allowed
+    return allowed is None or patch_version in allowed or patch_version not in GIE_ENABLED_PATCH_VERSIONS
 
 
 # (parent_template, parent_nvpair) pairs WITHHELD rather than failed when the controller is
@@ -653,7 +654,7 @@ def gie_binding_applicable(parent_template, profile_key, ndfc_version, patch_ver
     an unknown or malformed version fails closed (``gie_version_supported`` returns False),
     and an unapproved ``patch_version`` fails closed the
     same way (``gie_patch_supported`` returns False; the default ``None`` is "no caller
-    context", not an enabling value), as does an approved patch outside the binding's
+    context", not an enabling value), as does an approved SMU outside the binding's
     ``patch_versions`` (``gie_binding_patch_supported``). Callers use this to SELECT before classifying, so an
     inapplicable row is skipped outright -- neither reset nor rejected.
     """
@@ -1314,10 +1315,10 @@ def gie_contribute_nvpairs(parent_template, profile_dict, ndfc_version, patch_ve
                 "4.3.1.0175006020 or numeric ND >= 4.4.1 for this interface capability; no change was sent.".format(pk)
             )
         if not gie_binding_patch_supported(b, patch_version):
-            # Approved patch, but not one whose template of this parent is known to declare the field.
+            # An approved SMU whose template of this parent is not known to declare the field.
             return None, (
-                "'{0}' on {1} requires caller-supplied patch_version {2}: only the {1} template of that SMU "
-                "is known to declare it. No change was sent.".format(
+                "'{0}' on {1} requires caller-supplied patch_version {2} or numeric ND >= 4.4.1: of the "
+                "supported SMUs, only the {1} template of {2} is known to declare it. No change was sent.".format(
                     pk, parent_template, " or ".join(b["patch_versions"]))
             )
         supported = gie_version_supported(ndfc_version, b["min_ndfc_version"])

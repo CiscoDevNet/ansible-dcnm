@@ -130,11 +130,12 @@ options:
       single request; C(int_trunk_host) does not declare the field, and the controller removes the line with the
       policy change (measured on NDFC 12.6.0.267 with the C(4.3.1.0175006017) templates). C(enable_cdp) keeps its
       native behaviour on the access, trunk, dot1q-tunnel, PVLAN, port-channel and vPC profiles.
-    - On a routed Ethernet, only the C(4.3.1.0175006020) template declares the BFD interval fields that subinterfaces
-      and SVIs accept - C(enable_bfd_interval) (bool), C(bfd_tx_interval) and C(bfd_min_rx_interval) (50-999
-      milliseconds) and C(bfd_multiplier) (1-50); they render C(bfd interval <tx> min_rx <rx> multiplier <n>). On this
-      profile they are accepted only with C(patch_version) C(4.3.1.0175006020); the other SMUs and the numeric ND
-      release path refuse them before any change is sent. The three values are required while C(enable_bfd_interval)
+    - On a routed Ethernet, of the supported SMUs only the C(4.3.1.0175006020) template declares the BFD interval fields
+      that subinterfaces and SVIs accept - C(enable_bfd_interval) (bool), C(bfd_tx_interval) and C(bfd_min_rx_interval)
+      (50-999 milliseconds) and C(bfd_multiplier) (1-50); they render C(bfd interval <tx> min_rx <rx> multiplier <n>).
+      On this profile they are accepted with C(patch_version) C(4.3.1.0175006020) or a numeric ND release C(4.4.1) or
+      later, the release they are intended for (no ND 4.4.1 template was read; NOT LIVE TESTED on ND 4.4.1). The other
+      SMUs refuse them before any change is sent. The three values are required while C(enable_bfd_interval)
       is true. Setting C(enable_bfd_interval) false removes the configuration; the three values stay stored and render
       nothing while it is false. Under C(replaced) and C(overridden) an omitted C(enable_bfd_interval) is reset to false
       and omitted values are kept; under C(merged) an omitted value is kept. A C(deleted) or C(overridden) reset of a
