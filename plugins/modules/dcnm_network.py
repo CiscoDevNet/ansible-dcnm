@@ -7231,11 +7231,13 @@ class DcnmNetwork:
 
         A PVLAN switch detach of a row that still holds ports is sent as a
         port detach first and then a switch detach without ports, the order
-        measured on the controller.
+        measured on the controller. The port detach of a vPC switch also names
+        its peer (pvlan_port_detach_peers).
 
         A primary row that NDFC added with a secondary reads isLanAttached
         false right after that secondary detach; its detach is not sent.
         """
+        companions = self.pvlan_port_detach_peers(payload)[0]
         items = []
         if detach_step:
             # Pins must precede every secondary detach of this run.
@@ -7253,6 +7255,9 @@ class DcnmNetwork:
                     port_detach = copy.deepcopy(item)
                     port_detach.update({"switchPorts": "", "detachSwitchPorts": item["switchPorts"], "deployment": True})
                     items.append((entry, port_detach, 1))
+                    peer = companions.pop((entry["networkName"], item.get("serialNumber")), None)
+                    if peer is not None:
+                        items.append((entry, peer, 1))
                     item = dict(copy.deepcopy(item), switchPorts="")
                 if item.get("_pvlan_pin"):
                     phase = 0
@@ -7284,6 +7289,68 @@ class DcnmNetwork:
                 by_entry[id(entry)]["lanAttachList"].append(item)
             strict = any(self.pvlan_kind(entry["networkName"]) for entry in entries)
             self.pvlan_send_attachments(entries, detach_step, strict)
+
+    def pvlan_port_detach_peers(self, payload):
+        """
+        # Summary
+
+        Return the vPC peer rows the port detach step must name, keyed by
+        (network, serial of the switch whose ports are detached), and the
+        peer identity problems found.
+
+        The controller refused the port detach of one vPC switch whose peer
+        was not named for the same network in the same request (measured).
+        As in the peer completion of diff_for_attach_deploy, the peer row is
+        re-sent attached, without ports and without a port detach, so its own
+        ports stay. A peer with its own port detach in the step needs no row.
+        A peer that is not attached to the network is not added.
+        """
+        companions, problems = {}, []
+        have_rows = {}
+        for entry in self.have_attach:
+            for row in entry.get("lanAttachList") or []:
+                if row.get("isAttached"):
+                    have_rows.setdefault((entry["networkName"], row.get("serialNumber")), row)
+        for entry in payload:
+            name = entry["networkName"]
+            if self.pvlan_kind(name) is None:
+                continue
+            split = [item for item in entry["lanAttachList"] if not item.get("deployment") and item.get("switchPorts")]
+            for item in split:
+                serial = item.get("serialNumber")
+                inventory = next((self.inventory_data[ip] for ip, sn in self.ip_sn.items() if sn == serial), {})
+                peer = inventory.get("peerSerialNumber") if inventory.get("isVpcConfigured") is True else None
+                listed = item.get("peerSerialNo")
+                if inventory.get("isVpcConfigured") is True and not peer:
+                    problems.append(f"{name} on switch {self.pvlan_switch_label(serial)}: the inventory lists the switch as vPC without a peer serial")
+                    continue
+                if listed and listed != peer:
+                    problems.append(
+                        f"{name} on switch {self.pvlan_switch_label(serial)}: the attachment names vPC peer {listed}, the inventory "
+                        f"names {peer or 'no vPC peer'}"
+                    )
+                    continue
+                if not peer or any(other.get("serialNumber") == peer for other in split):
+                    continue
+                row = next((other for other in entry["lanAttachList"] if other.get("serialNumber") == peer), None) or have_rows.get((name, peer))
+                if row is None:
+                    continue
+                companion = copy.deepcopy(row)
+                for key in ("isAttached", "_pvlan_pin"):
+                    companion.pop(key, None)
+                companion.update({"switchPorts": "", "detachSwitchPorts": "", "deployment": True})
+                companions[(name, serial)] = companion
+        return companions, problems
+
+    def pvlan_check_port_detach_peers(self):
+        """Refuse, before any write, a port detach whose vPC peer identity is missing or inconsistent."""
+        if not getattr(self, "pvlan_request", False):
+            return
+        problems = []
+        for payload in (self.diff_detach, self.diff_attach):
+            problems += self.pvlan_port_detach_peers(payload or [])[1]
+        if problems:
+            self.module.fail_json(msg="PVLAN port detach refused before any write: " + "; ".join(problems))
 
     def pvlan_filter_primary_detaches(self, selected):
         """Drop primary detaches for rows that NDFC already removed with their secondary."""
@@ -7844,6 +7911,9 @@ def main():
     if module.params["state"] == "query":
         dcnm_net.get_diff_query()
         dcnm_net.result["response"] = dcnm_net.query
+
+    if module.params["state"] in ("replaced", "overridden", "deleted"):
+        dcnm_net.pvlan_check_port_detach_peers()
 
     dcnm_net.pvlan_report_deploy_plan()
     dcnm_net.result["warnings"].append(warn_msg) if warn_msg else []

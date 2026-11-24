@@ -282,5 +282,156 @@
             }
         ]
     },
-    "port_refusal_text": "Invalid Interfaces in leaf-11. Invalid interfaces are Ethernet1/44.  The following interfaces are not in a valid host or secondary trunk mode: Ethernet1/44"
+    "port_refusal_text": "Invalid Interfaces in leaf-11. Invalid interfaces are Ethernet1/44.  The following interfaces are not in a valid host or secondary trunk mode: Ethernet1/44",
+    "vpc_pair_measured": {
+        "_comment": "MEASURED (ND 12.6.0.267, config-profile fabric, one vPC pair, 2026-11-24), identities replaced by the synthetic ones of these tests: the family rows before a resource delete, the first port detach the module sent and the controller's per-item answer inside HTTP 200, and an accepted attach naming both peers.",
+        "lone_port_detach": [
+            {
+                "lanAttachList": [
+                    {
+                        "deployment": true,
+                        "detachSwitchPorts": "Ethernet1/44",
+                        "dot1QVlan": 0,
+                        "entityName": "pv-primary",
+                        "extensionValues": "",
+                        "fabric": "test_network",
+                        "freeformConfig": "",
+                        "instanceValues": "{\"isVPC\":\"true\",\"sviEnabled\":\"true\"}",
+                        "networkName": "pv-primary",
+                        "peerSerialNo": "PVL0000014",
+                        "serialNumber": "PVL0000013",
+                        "switchPorts": "",
+                        "untagged": false,
+                        "vlan": 2431
+                    }
+                ],
+                "networkName": "pv-primary"
+            }
+        ],
+        "lone_port_detach_answer": "Attach Response : Failed : VPC details not found for Peer Serial no: {peer}",
+        "pair_attach": [
+            {
+                "lanAttachList": [
+                    {
+                        "deployment": true,
+                        "detachSwitchPorts": "",
+                        "displayName": "pv-primary",
+                        "dot1QVlan": 0,
+                        "extensionValues": "",
+                        "fabric": "test_network",
+                        "freeformConfig": "",
+                        "instanceValues": "{\"isVPC\": \"true\", \"sviEnabled\": \"true\"}",
+                        "networkName": "pv-primary",
+                        "serialNumber": "PVL0000013",
+                        "switchPorts": "Ethernet1/44",
+                        "untagged": false,
+                        "vlan": 2431
+                    },
+                    {
+                        "deployment": true,
+                        "detachSwitchPorts": "",
+                        "dot1QVlan": 0,
+                        "entityName": "pv-primary",
+                        "extensionValues": "",
+                        "fabric": "test_network",
+                        "freeformConfig": "",
+                        "instanceValues": "{\"isVPC\":\"true\",\"sviEnabled\":\"true\"}",
+                        "networkName": "pv-primary",
+                        "peerSerialNo": "PVL0000013",
+                        "serialNumber": "PVL0000014",
+                        "switchPorts": "",
+                        "untagged": false,
+                        "vlan": 2431
+                    }
+                ],
+                "networkName": "pv-primary"
+            }
+        ],
+        "pre_rows": [
+            {
+                "instanceValues": "{\"sviEnabled\":\"true\"}",
+                "interfaceGroups": null,
+                "isLanAttached": true,
+                "lanAttachState": "DEPLOYED",
+                "networkId": 30012,
+                "networkName": "pv-community",
+                "peerSerialNo": "PVL0000013",
+                "portNames": "",
+                "switchName": "leaf-14",
+                "switchRole": "leaf",
+                "switchSerialNo": "PVL0000014",
+                "vlanId": 2433
+            },
+            {
+                "instanceValues": "{\"sviEnabled\":\"true\"}",
+                "interfaceGroups": null,
+                "isLanAttached": true,
+                "lanAttachState": "DEPLOYED",
+                "networkId": 30012,
+                "networkName": "pv-community",
+                "peerSerialNo": "PVL0000014",
+                "portNames": "",
+                "switchName": "leaf-13",
+                "switchRole": "leaf",
+                "switchSerialNo": "PVL0000013",
+                "vlanId": 2433
+            },
+            {
+                "instanceValues": "{\"sviEnabled\":\"true\"}",
+                "interfaceGroups": null,
+                "isLanAttached": true,
+                "lanAttachState": "DEPLOYED",
+                "networkId": 30011,
+                "networkName": "pv-isolated",
+                "peerSerialNo": "PVL0000013",
+                "portNames": "",
+                "switchName": "leaf-14",
+                "switchRole": "leaf",
+                "switchSerialNo": "PVL0000014",
+                "vlanId": 2432
+            },
+            {
+                "instanceValues": "{\"sviEnabled\":\"true\"}",
+                "interfaceGroups": null,
+                "isLanAttached": true,
+                "lanAttachState": "DEPLOYED",
+                "networkId": 30011,
+                "networkName": "pv-isolated",
+                "peerSerialNo": "PVL0000014",
+                "portNames": "",
+                "switchName": "leaf-13",
+                "switchRole": "leaf",
+                "switchSerialNo": "PVL0000013",
+                "vlanId": 2432
+            },
+            {
+                "instanceValues": "{\"isVPC\":\"true\",\"sviEnabled\":\"true\"}",
+                "interfaceGroups": null,
+                "isLanAttached": true,
+                "lanAttachState": "DEPLOYED",
+                "networkId": 30010,
+                "networkName": "pv-primary",
+                "peerSerialNo": "PVL0000013",
+                "portNames": "",
+                "switchName": "leaf-14",
+                "switchRole": "leaf",
+                "switchSerialNo": "PVL0000014",
+                "vlanId": 2431
+            },
+            {
+                "instanceValues": "{\"isVPC\":\"true\",\"sviEnabled\":\"true\"}",
+                "interfaceGroups": null,
+                "isLanAttached": true,
+                "lanAttachState": "DEPLOYED",
+                "networkId": 30010,
+                "networkName": "pv-primary",
+                "peerSerialNo": "PVL0000014",
+                "portNames": "Ethernet1/44",
+                "switchName": "leaf-13",
+                "switchRole": "leaf",
+                "switchSerialNo": "PVL0000013",
+                "vlanId": 2431
+            }
+        ]
+    }
 }
