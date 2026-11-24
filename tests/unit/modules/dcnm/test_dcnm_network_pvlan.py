@@ -2148,17 +2148,66 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
 
     def test_failure_changed_not_reset_by_a_later_response(self):
         """A later response sets the per-response result['changed'] again: an accepted deploy that found nothing
-        pending reads False after the detach before it was applied. The failure reports the whole run."""
+        pending reads False after the detach before it was applied. The failure reports the whole run. The row
+        stays PENDING, so the run exits in the wait before deletion and no DELETE is sent."""
         self.seed_family(isolated_on=("leaf11",))
         nothing = {"RETURN_CODE": 200, "METHOD": "POST", "MESSAGE": "OK", "REQUEST_PATH": self.CONFIG_DEPLOY,
                    "DATA": {"status": "No switches PENDING for deployment"}}
         self.ndfc.inject.append(("POST", "?forceShowRun=false", nothing))
-        self.ndfc.fail_network[("DELETE", "pv-isolated")] = bad("DELETE", NETS + "/pv-isolated", "simulated controller error")
         result = self.run_module("deleted", [{"net_name": "pv-isolated"}], failed=True)
+        self.assertIn("did not reach a state ready for deletion", str(result["msg"]))
+        self.assertNotIn("DELETE", [method for method, _path, _data in self.ndfc.requests])
         self.assertEqual([write["outcome"] for write in result["acknowledged_writes"]], ["acknowledged", "acknowledged"])
         self.assertEqual([write["method"] for write in result["acknowledged_writes"]], ["POST", "POST"])
         self.assertEqual(self.ndfc.rows[("pv-isolated", SN["leaf11"])]["state"], "PENDING", "the detach was applied")
         self.assert_failed_changed(result, True)
+
+    def answer_bulk_delete_with_500(self, refused):
+        """Answer the regular bulk delete as the controller does for a partial deletion: HTTP 500 with successList
+        and failureList. The listed successes are deleted; the names in refused stay."""
+        send = self.ndfc.send
+
+        def traced(module, method, path, data=None):
+            if method == "DELETE" and "/bulk-delete/networks?network-names=" in path:
+                self.ndfc.requests.append((method, path, None))
+                names = path.split("=", 1)[1].split(",")
+                done = [name for name in names if name not in refused]
+                for name in done:
+                    self.ndfc.delete(method, path, name)
+                return {"RETURN_CODE": 500, "METHOD": method, "MESSAGE": "Internal Server Error", "REQUEST_PATH": path,
+                        "DATA": {"successList": done,
+                                 "failureList": [{"name": name, "message": "simulated refusal"} for name in names if name in refused]}}
+            return send(module, method, path, data)
+
+        self.patches[0].stop()
+        self.patches[0] = patch("ansible_collections.cisco.dcnm.plugins.modules.dcnm_network.dcnm_send", side_effect=traced)
+        self.patches[0].start()
+
+    def test_failure_changed_true_after_partial_bulk_delete(self):
+        """A regular bulk delete answered with HTTP 500 and a nonempty successList deleted a network, as
+        bulk_delete_networks_with_retry() records. The mixed request then fails and changed stays true, although
+        acknowledged_writes lists 2xx responses only and the last attempt lists no success."""
+        self.ndfc.seed("regular", "reg-a", 30101, 2101)
+        self.ndfc.seed("regular", "reg-b", 30102, 2102)
+        self.seed_family()
+        self.answer_bulk_delete_with_500({"reg-b"})
+        config = [{"net_name": "reg-a"}, {"net_name": "reg-b"}, {"net_name": "pv-primary"}, {"net_name": "pv-isolated"},
+                  {"net_name": "pv-community"}]
+        result = self.run_module("deleted", config, failed=True)
+        self.assertNotIn("reg-a", self.ndfc.networks, "the bulk delete removed reg-a")
+        self.assertEqual([m for m, _p, _d in self.ndfc.requests if m != "GET"], ["DELETE"] * 3, "only the three bulk attempts")
+        self.assertEqual(result["acknowledged_writes"], [])
+        self.assert_failed_changed(result, True)
+
+    def test_failure_changed_false_when_bulk_delete_lists_no_success(self):
+        """The same 500 with an empty successList on every attempt deleted nothing: changed stays false."""
+        self.ndfc.seed("regular", "reg-a", 30101, 2101)
+        self.seed_family()
+        self.answer_bulk_delete_with_500({"reg-a"})
+        config = [{"net_name": "reg-a"}, {"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}]
+        result = self.run_module("deleted", config, failed=True)
+        self.assertIn("reg-a", self.ndfc.networks)
+        self.assert_failed_changed(result, False)
 
     def test_failure_changed_false_without_an_applied_write(self):
         """No write was applied: the first write is refused, every item of an HTTP 200 attachment POST is refused,

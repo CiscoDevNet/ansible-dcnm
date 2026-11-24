@@ -7692,13 +7692,26 @@ class DcnmNetwork:
         results counts when at least one item reported success, even if other
         items were refused. A response the module judged failed does not count:
         it may or may not have changed anything, and
-        pvlan_acknowledged_writes() lists it as failed. Reads, previews and the
-        bulk capability probe are not responses of the run.
+        pvlan_acknowledged_writes() lists it as failed. The one non-2xx response
+        that counts is the regular bulk delete answered with 500 and a nonempty
+        successList, which bulk_delete_networks_with_retry() already treats as
+        a partial deletion. Reads, previews and the bulk capability probe are
+        not responses of the run.
         """
         for resp in self.result.get("response") or []:
             if not isinstance(resp, dict) or str(resp.get("METHOD", "")).upper() not in ("POST", "PUT", "DELETE"):
                 continue
             code = resp.get("RETURN_CODE")
+            if (
+                code == 500
+                and str(resp.get("METHOD", "")).upper() == "DELETE"
+                and "/bulk-delete/networks" in str(resp.get("REQUEST_PATH", ""))
+                and isinstance(resp.get("DATA"), dict)
+                and resp["DATA"].get("successList")
+            ):
+                # bulk_delete_networks_with_retry() reads this 500 as a partial
+                # deletion and records a change for the listed networks.
+                return True
             if not isinstance(code, int) or not 200 <= code < 300:
                 continue
             op = self.pvlan_write_op(resp)
