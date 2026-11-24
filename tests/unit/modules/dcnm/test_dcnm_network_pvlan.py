@@ -60,7 +60,12 @@ class FakeNdfc(object):
       false / PENDING;
     - a detach of an implicit primary row is refused per item inside HTTP 200,
       also after the row was withdrawn with its last secondary;
-    - a PUT replaces the stored template config.
+    - a PUT replaces the stored template config;
+    - an attach or port-change item (deployment true) of a vPC switch whose
+      peer is not named for the same network in the same POST is refused per
+      item inside HTTP 200 ("VPC details not found for Peer Serial no"), as
+      measured for a port detach of one peer. A detach item (deployment false)
+      of one peer alone is applied: its answer is not measured.
 
     Deploy handling: a deploy makes the named attached rows DEPLOYED and
     removes the named rows that are detached (PENDING or OUT-OF-SYNC), as
@@ -89,6 +94,8 @@ class FakeNdfc(object):
         # network name -> networkStatus returned by the network list instead of the one derived from the rows.
         self.status_override = {}
         self.next_l2vni = 30900
+        # (network name, serial) of every applied detach item whose vPC peer was not in the same POST (not measured).
+        self.lone_vpc_detaches = []
 
     # ----- seeding -----------------------------------------------------------
 
@@ -116,9 +123,9 @@ class FakeNdfc(object):
         self.networks[name] = obj
         return obj
 
-    def attach(self, name, switch, explicit=True, state="DEPLOYED", ports=""):
+    def attach(self, name, switch, explicit=True, state="DEPLOYED", ports="", instance=None):
         serial = SN[switch]
-        self.rows[(name, serial)] = {"attached": True, "state": state, "ports": ports, "explicit": explicit}
+        self.rows[(name, serial)] = {"attached": True, "state": state, "ports": ports, "explicit": explicit, "instance": instance}
         net = self.networks[name]
         if net["type"] in ("Isolated", "Community"):
             primary = self.by_id(net["primaryNetworkId"])
@@ -270,7 +277,7 @@ class FakeNdfc(object):
                 "ipAddress": data["ipAddress"],
                 "networkId": net["networkId"],
                 "vlanId": int(json.loads(net["networkTemplateConfig"]).get("vlanId") or 0),
-                "instanceValues": '{"sviEnabled":"true"}' if row else None,
+                "instanceValues": (row.get("instance") or '{"sviEnabled":"true"}') if row else None,
                 "entityName": name,
                 "interfaceGroups": None,
             })
@@ -343,20 +350,32 @@ class FakeNdfc(object):
             del self.rows[key]
         return ok(method, path, {})
 
+    def peer_of(self, serial):
+        for data in self.inventory.values():
+            if data["serialNumber"] == serial and data.get("isVpcConfigured"):
+                return data.get("peerSerialNumber")
+        return None
+
     def attachments(self, method, path, body):
         data = {}
         for entry in body:
             name = entry["networkName"]
+            named = set(item["serialNumber"] for item in entry["lanAttachList"])
             for item in entry["lanAttachList"]:
                 serial = item["serialNumber"]
                 key = "{0}-[{1}/{2}]".format(name, serial, self.switch_name(serial))
+                peer = self.peer_of(serial)
                 if name not in self.networks:
                     data[key] = "Invalid network " + name
                 elif (name, serial) in self.refuse:
                     data[key] = self.refuse[(name, serial)]
+                elif item.get("deployment") and peer and peer not in named:
+                    data[key] = self.fixtures["vpc_pair_measured"]["lone_port_detach_answer"].format(peer=peer)
                 elif item.get("deployment"):
                     data[key] = self.attach_item(name, serial, item)
                 else:
+                    if peer and peer not in named:
+                        self.lone_vpc_detaches.append((name, serial))
                     data[key] = self.detach_item(name, serial)
         return ok(method, path, data)
 
@@ -2059,6 +2078,209 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
                                    self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/42"]}])])
         self.assertIn(("reg-l2", SN["leaf12"], "Ethernet1/10", "", True), self.port_items())
         self.assertIn(("pv-isolated", SN["leaf11"], "Ethernet1/42", "", True), self.port_items())
+
+    # vPC pairs in the port detach step
+
+    FAMILY_DELETE = [{"net_name": "pv-isolated"}, {"net_name": "pv-community"}, {"net_name": "pv-primary"}]
+    MEASURED_SWITCH = {"PVL0000013": "leaf13", "PVL0000014": "leaf14"}
+
+    def seed_measured_pair(self):
+        """The measured pre-delete family on one vPC pair (fixture vpc_pair_measured.pre_rows): the three networks attached to
+        both peers, the primary with one port on leaf-13 only."""
+        self.seed_family()
+        for row in self.fixtures["vpc_pair_measured"]["pre_rows"]:
+            self.ndfc.attach(row["networkName"], self.MEASURED_SWITCH[row["switchSerialNo"]], state=row["lanAttachState"],
+                             ports=row["portNames"], instance=row["instanceValues"])
+
+    def attach_writes(self):
+        return [(method, path.rsplit("/", 1)[-1] if method == "DELETE" else path) for method, path, body in self.ndfc.writes()]
+
+    def test_vpc_pair_double_matches_the_measured_answers(self):
+        """The double refuses the measured one-peer port detach with the measured text and accepts the measured attach that
+        names both peers."""
+        self.seed_measured_pair()
+        measured = self.fixtures["vpc_pair_measured"]
+        answer = self.ndfc.attachments("POST", ATTACH, copy.deepcopy(measured["lone_port_detach"]))["DATA"]
+        self.assertEqual(answer, {"pv-primary-[PVL0000013/leaf-13]": measured["lone_port_detach_answer"].format(peer=SN["leaf14"])})
+        self.assertEqual(self.ports_on("pv-primary", "leaf13"), "Ethernet1/44")
+        self.ndfc.rows[("pv-primary", SN["leaf13"])]["ports"] = ""
+        answer = self.ndfc.attachments("POST", ATTACH, copy.deepcopy(measured["pair_attach"]))["DATA"]
+        self.assertEqual(set(answer.values()), {"SUCCESS"})
+
+    def test_vpc_port_detach_names_both_peers(self):
+        """Measured case: a delete of a family on a vPC pair whose primary holds a port on one peer only. The port detach
+        names both peers; the other peer is re-sent attached without ports. Then the switch detaches, one deploy and the
+        deletes follow in the same order as before."""
+        measured = self.fixtures["vpc_pair_measured"]["lone_port_detach"][0]["lanAttachList"][0]
+        for deploy_mode in ("resource", None):
+            with self.subTest(deploy_mode=deploy_mode):
+                self.ndfc.networks, self.ndfc.rows = {}, {}
+                self.seed_measured_pair()
+                result = self.run_module("deleted", self.FAMILY_DELETE, deploy_mode=deploy_mode)
+                self.assertTrue(result["changed"])
+                posts = self.port_posts()
+                self.assertEqual(sorted(posts[0]), sorted([("pv-primary", SN["leaf13"], "", "Ethernet1/44", True),
+                                                           ("pv-primary", SN["leaf14"], "", "", True)]))
+                sent = {item["serialNumber"]: item for item in self.bodies("POST", ATTACH)[0][0]["lanAttachList"]}
+                self.assertEqual({key: sent[SN["leaf13"]].get(key) for key in measured}, measured)
+                # The re-sent peer has the fields of the peer row of the measured attach that named both peers.
+                peer = next(item for item in self.fixtures["vpc_pair_measured"]["pair_attach"][0]["lanAttachList"] if item["serialNumber"] == SN["leaf14"])
+                self.assertEqual({key: sent[SN["leaf14"]].get(key) for key in peer}, peer)
+                self.assertTrue(all(item[4] is False and item[2] == "" for post in posts[1:] for item in post))
+                self.assertEqual(sorted(item[:2] for post in posts[1:] for item in post),
+                                 sorted((name, SN[leaf]) for name in ("pv-isolated", "pv-community", "pv-primary") for leaf in ("leaf13", "leaf14")))
+                writes = self.attach_writes()
+                self.assertEqual([w[0] for w in writes].count("DELETE"), 3)
+                self.assertEqual(len([w for w in writes if "deploy" in w[1]]), 1)
+                self.assertEqual(self.ndfc.networks.keys() & {"pv-isolated", "pv-community", "pv-primary"}, set())
+                self.assertEqual(self.ndfc.lone_vpc_detaches, [])
+                self.assertFalse(self.run_module("deleted", self.FAMILY_DELETE, deploy_mode=deploy_mode)["changed"])
+                self.assert_no_writes()
+
+    def test_vpc_port_detach_check_mode_writes_nothing(self):
+        self.seed_measured_pair()
+        self.assertTrue(self.run_module("deleted", self.FAMILY_DELETE, check_mode=True)["changed"])
+        self.assert_no_writes()
+        self.assertEqual(self.ports_on("pv-primary", "leaf13"), "Ethernet1/44")
+
+    def test_vpc_port_detach_when_both_or_neither_peer_has_ports(self):
+        """Both peers with ports (different names): each peer sends its own port detach and no other row. Neither peer
+        with ports: no port detach step."""
+        self.seed_measured_pair()
+        self.ndfc.rows[("pv-primary", SN["leaf14"])]["ports"] = "Ethernet1/45"
+        self.run_module("deleted", self.FAMILY_DELETE)
+        self.assertEqual(sorted(self.port_posts()[0]), sorted([("pv-primary", SN["leaf13"], "", "Ethernet1/44", True),
+                                                               ("pv-primary", SN["leaf14"], "", "Ethernet1/45", True)]))
+        self.ndfc.networks, self.ndfc.rows = {}, {}
+        self.seed_measured_pair()
+        self.ndfc.rows[("pv-primary", SN["leaf13"])]["ports"] = ""
+        self.run_module("deleted", self.FAMILY_DELETE)
+        self.assertEqual(self.port_items(deployment=True), [])
+        self.assertEqual(self.ndfc.networks.keys() & {"pv-isolated", "pv-community", "pv-primary"}, set())
+
+    def test_vpc_port_detach_keeps_the_ports_of_a_peer_that_stays(self):
+        """replaced: the primary leaves leaf-13 (with its port) and stays on leaf-14, where a community network outside the
+        request keeps it. The port detach re-sends leaf-14 without ports; its own port and attachment stay."""
+        self.seed_family()
+        self.ndfc.attach("pv-primary", "leaf13", ports="Ethernet1/44")
+        self.ndfc.attach("pv-primary", "leaf14", ports="Ethernet1/45")
+        self.ndfc.attach("pv-community", "leaf14")
+        mcast = json.loads(self.ndfc.networks["pv-primary"]["networkTemplateConfig"])["mcastGroup"]
+        config = [{"net_name": "pv-primary", "is_l2only": True, "vlan_id": 2431, "multicast_group_address": mcast, "attach": []}]
+        self.run_module("replaced", config)
+        self.assertEqual(sorted(self.port_posts()[0]), sorted([("pv-primary", SN["leaf13"], "", "Ethernet1/44", True),
+                                                               ("pv-primary", SN["leaf14"], "", "", True)]))
+        self.assertEqual(self.ports_on("pv-primary", "leaf14"), "Ethernet1/45")
+        self.assertEqual(self.ndfc.attached("pv-primary"), [SN["leaf14"]])
+        # The switch detach of leaf-13 alone is applied by the double; that answer is not measured.
+        self.assertEqual(self.ndfc.lone_vpc_detaches, [("pv-primary", SN["leaf13"])])
+
+    def test_vpc_peer_that_is_not_attached_is_not_added(self):
+        """A vPC switch whose peer is not attached to the network: no peer row is invented. The controller's refusal is
+        reported and nothing after it is sent."""
+        self.seed_family()
+        self.ndfc.attach("pv-primary", "leaf13", ports="Ethernet1/44")
+        result = self.run_module("deleted", self.FAMILY_DELETE, failed=True)
+        self.assertEqual(self.port_posts(), [[("pv-primary", SN["leaf13"], "", "Ethernet1/44", True)]])
+        self.assertIn("VPC details not found for Peer Serial no: " + SN["leaf14"], json.dumps(result["msg"]["FAILED_ITEMS"]))
+        self.assertEqual([w for w in self.attach_writes() if w[0] == "DELETE" or "deploy" in w[1]], [])
+
+    def test_vpc_peer_identity_problems_refuse_before_any_write(self):
+        """A vPC switch without a peer serial in the inventory, or an attachment that names another peer, is refused before
+        any write."""
+        for case in ("no inventory peer", "other peer"):
+            with self.subTest(case=case):
+                self.ndfc.networks, self.ndfc.rows = {}, {}
+                self.ndfc.inventory = copy.deepcopy(self.fixtures["inventory_pvlan"])
+                self.seed_measured_pair()
+                entry = self.ndfc.attach_entry
+                if case == "no inventory peer":
+                    self.ndfc.inventory[IP["leaf13"]]["peerSerialNumber"] = None
+                else:
+                    def attach_entry(name, entry=entry):
+                        out = entry(name)
+                        for row in out["lanAttachList"]:
+                            if row["switchSerialNo"] == SN["leaf13"]:
+                                row["peerSerialNo"] = "PVL0000099"
+                        return out
+                    self.ndfc.attach_entry = attach_entry
+                result = self.run_module("deleted", self.FAMILY_DELETE, failed=True)
+                self.assertIn("PVLAN port detach refused before any write", result["msg"])
+                self.assert_no_writes()
+                self.ndfc.attach_entry = entry
+
+    def test_vpc_two_pairs_and_a_standalone_switch(self):
+        """Two vPC pairs and a standalone switch in one delete: each pair's port detach names its own peer, the standalone
+        switch is sent alone."""
+        extra = {"leaf15": ("PVL0000015", "192.0.2.15", "PVL0000016"), "leaf16": ("PVL0000016", "192.0.2.16", "PVL0000015")}
+        with patch.dict(SN, {k: v[0] for k, v in extra.items()}), patch.dict(IP, {k: v[1] for k, v in extra.items()}):
+            for switch, (serial, ip, peer) in extra.items():
+                self.ndfc.inventory[ip] = dict(self.ndfc.inventory[IP["leaf13"]], ipAddress=ip, logicalName=switch.replace("leaf", "leaf-"),
+                                               serialNumber=serial, peerSerialNumber=peer)
+            self.seed_measured_pair()
+            self.ndfc.attach("pv-primary", "leaf15", ports="Ethernet1/44")
+            self.ndfc.attach("pv-primary", "leaf16")
+            self.ndfc.attach("pv-community", "leaf11", ports="Ethernet1/41")
+            self.run_module("deleted", self.FAMILY_DELETE)
+            self.assertEqual(sorted(self.port_posts()[0]), sorted([
+                ("pv-primary", SN["leaf13"], "", "Ethernet1/44", True), ("pv-primary", SN["leaf14"], "", "", True),
+                ("pv-primary", SN["leaf15"], "", "Ethernet1/44", True), ("pv-primary", SN["leaf16"], "", "", True),
+                ("pv-community", SN["leaf11"], "", "Ethernet1/41", True)]))
+            self.assertEqual(self.ndfc.networks.keys() & {"pv-isolated", "pv-community", "pv-primary"}, set())
+
+    def test_vpc_port_detach_of_a_secondary_and_the_implicit_primary(self):
+        """A secondary with a port on one peer: the peer is named in the port detach. The implicit primary is removed with
+        its last secondary, or stays under another secondary, as before."""
+        for keep in (False, True):
+            with self.subTest(keep=keep):
+                self.ndfc.networks, self.ndfc.rows = {}, {}
+                self.seed_family()
+                self.ndfc.attach("pv-isolated", "leaf13", ports="Port-channel543")
+                self.ndfc.attach("pv-isolated", "leaf14")
+                if keep:
+                    self.ndfc.attach("pv-community", "leaf13")
+                    self.ndfc.attach("pv-community", "leaf14")
+                self.run_module("deleted", [{"net_name": "pv-isolated"}])
+                self.assertEqual(sorted(self.port_posts()[0]), sorted([("pv-isolated", SN["leaf13"], "", "Port-channel543", True),
+                                                                       ("pv-isolated", SN["leaf14"], "", "", True)]))
+                self.assertNotIn("pv-isolated", self.ndfc.networks)
+                self.assertEqual(self.ndfc.attached("pv-primary"), [SN["leaf13"], SN["leaf14"]] if keep else [])
+
+    def test_vpc_port_detach_with_a_regular_network(self):
+        """A regular network on the same pair is detached as before: its rows keep their ports in one switch detach POST,
+        without a port detach step or a re-sent peer."""
+        self.seed_measured_pair()
+        self.seed_regular_l2({"leaf13": "Ethernet1/10", "leaf14": ""})
+        self.run_module("deleted", self.FAMILY_DELETE + [{"net_name": "reg-l2"}])
+        self.assertEqual(sorted(self.port_posts()[0]), sorted([("pv-primary", SN["leaf13"], "", "Ethernet1/44", True),
+                                                               ("pv-primary", SN["leaf14"], "", "", True)]))
+        regular = [item for post in self.port_posts() for item in post if item[0] == "reg-l2"]
+        self.assertEqual(sorted(regular), sorted([("reg-l2", SN["leaf13"], "Ethernet1/10", "", False), ("reg-l2", SN["leaf14"], "", "", False)]))
+        self.assertEqual(len([post for post in self.port_posts() if any(item[0] == "reg-l2" for item in post)]), 1)
+
+    def test_vpc_overridden_removes_the_measured_family(self):
+        self.seed_measured_pair()
+        self.run_module("overridden", [self.regular_l2()])
+        self.assertEqual(sorted(self.port_posts()[0]), sorted([("pv-primary", SN["leaf13"], "", "Ethernet1/44", True),
+                                                               ("pv-primary", SN["leaf14"], "", "", True)]))
+        self.assertEqual(self.ndfc.networks.keys() & {"pv-isolated", "pv-community", "pv-primary"}, set())
+
+    def test_vpc_port_detach_item_refused_inside_http_200(self):
+        """A refused item of the port detach step (the port's switch or the re-sent peer): the run stops before the switch
+        detaches, the deploy and the deletes, and reports exactly the refused item."""
+        for refused in ("leaf13", "leaf14"):
+            with self.subTest(refused=refused):
+                self.ndfc.networks, self.ndfc.rows = {}, {}
+                self.seed_measured_pair()
+                self.ndfc.refuse = {("pv-primary", SN[refused]): "Attach Response : Failed : simulated"}
+                result = self.run_module("deleted", self.FAMILY_DELETE, failed=True)
+                self.assertEqual(len(self.port_posts()), 1)
+                key = "pv-primary-[{0}/{1}]".format(SN[refused], refused.replace("leaf", "leaf-"))
+                self.assertEqual(result["msg"]["FAILED_ITEMS"], [{key: "Attach Response : Failed : simulated"}])
+                self.assertEqual([w for w in self.attach_writes() if w[0] == "DELETE" or "deploy" in w[1]], [])
+                self.assertEqual([write["outcome"] for write in result["acknowledged_writes"]], ["items_refused"])
+                self.assertEqual(self.ports_on("pv-primary", "leaf13"), "Ethernet1/44" if refused == "leaf13" else "")
+                self.ndfc.refuse = {}
 
 
 def dcnm_network_exit():
