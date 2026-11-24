@@ -419,17 +419,19 @@ def test_po_and_ethernet_vocabularies_are_unchanged_by_the_vpc_tables():
     assert not P.transition_vocabulary((P.PO_HOST_POLICY, {}), (P.PO_MEMBER_POLICY, {})).owns("vpc 10")
 
 
-def test_shared_validator_limit_shutdown_to_no_shutdown_cannot_be_satisfied_even_by_the_ideal_pending():
-    # FINDING (shared engine, unchanged here): `no shutdown` adds a line and withdraws `shutdown` at once, but validate_transition counts a
-    # withdrawal only for a line that starts with "no " AND is not itself an owned post line. An admin_state flip therefore refuses at the gate.
+def test_an_admin_state_change_is_one_line_on_a_regular_po_and_refused_on_an_existing_vpc():
+    # `no shutdown` adds the post state's line and withdraws the pre state's `shutdown` at once (and the reverse). A regular port-channel
+    # accepts that one line; an existing vPC keeps its administrative state, refused before the write in both directions.
     child_down, child_up = have_of(ADMIN_STATE="false"), have_of(ADMIN_STATE="true")
-    pre, post = P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(child_down, 0, VPC)), P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(child_up, 0, VPC))
-    problems = P.vpc_transition_problems(pre, post)
-    assert any("withdrawal of 'shutdown' is absent" in x for x in problems), problems
+    down, up = P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(child_down, 0, VPC)), P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(child_up, 0, VPC))
+    for a, b in ((down, up), (up, down)):
+        problems = P.vpc_transition_problems(a, b)
+        assert len(problems) == 1 and "administrative state of an existing PVLAN vPC is not changed" in problems[0], problems
     po_nv = P.po_host_nvpairs({"pvlan_mode": "host", "pvlan_association": ASSOC, "members": [M1], "admin_state": False}, "Port-channel10")
-    pre_po, post_po = P.render(P.PO_HOST_POLICY, po_nv), P.render(P.PO_HOST_POLICY, dict(po_nv, ADMIN_STATE="true"))
-    body = ["no shutdown"]
-    assert P.validate_transition(body, pre_po, post_po), "the regular Po model has the same limit (not changed by this generation)"
+    po_down, po_up = P.render(P.PO_HOST_POLICY, po_nv), P.render(P.PO_HOST_POLICY, dict(po_nv, ADMIN_STATE="true"))
+    assert P.validate_transition(["no shutdown"], po_down, po_up) == P.validate_transition(["shutdown"], po_up, po_down) == []
+    assert P.validate_transition([], po_down, po_up) == [
+        "intended command 'no shutdown' is absent from the pending", "withdrawal of 'shutdown' is absent from the pending"]
     # a transition the validator CAN satisfy: a new description
     d_pre = P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(have_of(), 0, VPC))
     d_post = P.render(P.VPC_PO_POLICY, P.vpc_leg_po_nv(have_of(PEER1_PO_DESC="x"), 0, VPC))

@@ -409,7 +409,8 @@ options:
               PVLAN port-channel of the sweep's scope that the request no longer wants is deleted through
               the same path and contract as 'state=deleted'; switch scope and override_intf_types are those
               of the generic sweep; MEASURED for host mode on NDFC 12.6.0.267, NOT LIVE TESTED for the other
-              modes). Refused before any change is sent - ranges, vPC, a
+              modes). An 'admin_state' change of an existing port-channel deploys one 'shutdown' or 'no shutdown'
+              line (NOT LIVE TESTED). Refused before any change is sent - ranges, vPC, a
               'pvlan_mode' change, and removing secondaries from a 'promiscuous' mapping
               that keeps others (protection kept from the measured Ethernet defect). Fields for this mode are 'pvlan_mode', 'pvlan_association' (host,
               trunk secondary), 'pvlan_mapping' (promiscuous, trunk promiscuous), 'native_vlan' and
@@ -1709,7 +1710,8 @@ options:
               always wins; an omitted one is kept by 'merged' and, on 'replaced', withdrawn to 'false'
               (inferred) only with an approved C(patch_version), else kept. 'cmds' must not carry private-vlan or switchport
               lines. 'native_vlan' ('' or one VLAN) and 'allowed_vlans' ('', 'none' or VLAN
-              ranges; 'all' is refused) apply to the two trunk submodes only.
+              ranges; 'all' is refused) apply to the two trunk submodes only. An 'admin_state' change of an
+              existing PVLAN port deploys one 'shutdown' or 'no shutdown' line (NOT LIVE TESTED).
             - Before every deployment attempt (including the check_deploy resend and the
               deployment-status retries) the module recomputes the switch pending configuration
               through the legacy config-preview API. Using that answer's device running
@@ -9968,8 +9970,7 @@ class DcnmIntf:
                     decisions.append("refuse")
                     problems.extend("{0}: {1}".format(m["name"], f) for f in found)
                     continue
-            decision, found = pvlan_assess_target(body, entry, m["name"], pvlan_render(*m["post"]), pvlan_transition_vocabulary(m["pre"], m["post"]),
-                                                  release=True)
+            decision, found = pvlan_assess_target(body, entry, m["name"], pvlan_render(*m["post"]), pvlan_transition_vocabulary(m["pre"], m["post"]))
             decisions.append(decision)
             problems.extend("{0}: {1}".format(m["name"], f) for f in found)
         if "refuse" in decisions:
@@ -11017,7 +11018,7 @@ class DcnmIntf:
                     continue
             decision, found = pvlan_assess_target(
                 body, entry, m["name"], pvlan_render(*m["post"]),
-                pvlan_transition_vocabulary(m["pre"], m["post"]), release=True)
+                pvlan_transition_vocabulary(m["pre"], m["post"]))
             decisions.append(decision)
             problems.extend("{0}: {1}".format(m["name"], f) for f in found)
         if problems or "refuse" in decisions:
@@ -11474,7 +11475,7 @@ class DcnmIntf:
         if withdrawn:
             return "refuse", ["{0}: {1}".format(rleg["member"], f) for f in withdrawn]
         decision, found = pvlan_assess_target(body, entry, rleg["member"], pvlan_render(*rleg["post"]),
-                                              pvlan_transition_vocabulary(rleg["pre"], rleg["post"]), release=True)
+                                              pvlan_transition_vocabulary(rleg["pre"], rleg["post"]))
         problems = ["{0}: {1}".format(rleg["member"], f) for f in found]
         return ("refuse", problems) if problems or decision == "refuse" else ("deploy", [])
 
@@ -11760,7 +11761,7 @@ class DcnmIntf:
                 return "refuse", problems + ["{0}: {1}".format(leg["member"], f) for f in withdrawn]
             decision, found = pvlan_assess_target(
                 body, entry, leg["member"], pvlan_render(*leg["post_member"]),
-                pvlan_transition_vocabulary(leg["pre_member"], leg["post_member"]), release=True)
+                pvlan_transition_vocabulary(leg["pre_member"], leg["post_member"]))
             problems.extend("{0}: {1}".format(leg["member"], f) for f in found)
             return ("refuse", problems) if problems or decision == "refuse" else ("deploy", [])
         if which == "pre":
@@ -11795,7 +11796,7 @@ class DcnmIntf:
                 member_force=member_force if is_member else None, member_inherit=member_inherit if is_member else None,
                 member_reassert=member_reassert if is_member else None, member_mtu_inherit=mtu_ctx if is_member else None,
                 # SP1 (DIAG-measured on both peers): the member's `speed 1000` carried by THIS leg's child Po (same serial, same preview)
-                member_speed_inherit=mtu_ctx if is_member else None)
+                member_speed_inherit=mtu_ctx if is_member else None, admin_fixed=True)
             if not is_member and member_reassert is not None:
                 # Measured on a vPC: the member's MTU line
                 # may be carried by THIS leg's child Po

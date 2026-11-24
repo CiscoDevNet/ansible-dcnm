@@ -1330,12 +1330,24 @@ def _line_pairs(match):
     return {(p, s) for s in secondaries}
 
 
-def validate_transition(body, pre, post, release=False):
+# The two values of one administrative state.
+_ADMIN_LINES = ("shutdown", "no shutdown")
+
+
+def admin_change(pre, post):
+    """(old line, new line) when the transition changes the administrative state of the interface, else None."""
+    old = [line for line in _ADMIN_LINES if line in pre.scalars and line not in post.scalars]
+    new = [line for line in _ADMIN_LINES if line in post.scalars and line not in pre.scalars]
+    return (old[0], new[0]) if len(old) == 1 and len(new) == 1 else None
+
+
+def validate_transition(body, pre, post, admin_fixed=False):
     """Problems (empty = deployable) for one PVLAN target's fresh pending body lines, given the
     pre-write and post-write Models. Positive lines must belong to the post state; negations
     must withdraw an OWNED line of the pre state that the post state does not hold (a foreign
     pre line is never removable); every added or removed pair and every changed owned line must
-    be visible. Foreign pre lines create no obligation."""
+    be visible. Foreign pre lines create no obligation. `admin_fixed` refuses any change of the
+    administrative state (a PVLAN vPC keeps it)."""
     problems = []
     if not (pre.modeled and post.modeled):
         return ["the transition from or to this policy is not modeled; deploy refused"]
@@ -1407,10 +1419,13 @@ def validate_transition(body, pre, post, release=False):
     if "no switchport" in pos_scalars and "switchport" in pre.scalars and "switchport" not in post.scalars:
         neg_scalars.add("switchport")
     # Measured (NDFC 12.6.0.267: a down member released up carries ONE `no shutdown` line in the pending): the post state's
-    # own `no shutdown` withdraws the pre state's `shutdown`, exactly like `no switchport` above. ONLY for a member RELEASE (`release`): any
-    # other shutdown -> no shutdown transition keeps the documented limit of this validator.
-    if release and "no shutdown" in pos_scalars and "shutdown" in pre.scalars and "shutdown" not in post.scalars:
-        neg_scalars.add("shutdown")
+    # own administrative line withdraws the opposite line of the pre state, exactly like `no switchport` above. `shutdown` and
+    # `no shutdown` are one state, so this holds in both directions.
+    change = admin_change(pre, post)
+    if change and change[1] in pos_scalars:
+        neg_scalars.add(change[0])
+    if change and admin_fixed:
+        problems.append("the administrative state changes from %r to %r, which this target does not allow" % change)
     missing_add = added_pairs - seen_pos
     if missing_add:
         problems.append("intended pair(s) %s are absent from the pending" % sorted(missing_add))
@@ -1611,7 +1626,7 @@ def _difference(a, b):
 
 
 def assess_target(body, entry, name, desired, vocabulary=None, absent_ok=False, member_force=None, member_inherit=None,
-                  member_reassert=None, member_mtu_inherit=None, member_speed_inherit=None, release=False):
+                  member_reassert=None, member_mtu_inherit=None, member_speed_inherit=None, admin_fixed=False):
     """Decision for one PVLAN target from ONE fresh preview entry.
 
     Authority, all from that entry: `runningConfig` (device), `expectedConfig` (controller
@@ -1641,7 +1656,8 @@ def assess_target(body, entry, name, desired, vocabulary=None, absent_ok=False, 
     `member_speed_inherit` (SP1: the same parent context) applies po_member_speed_inherited_state(), the DIAG-measured `speed 1000`
     addition and withdrawal carried by the port-channel's own pending, before the empty-pending decision; never together with an MTU
     inheritance (that combination is not measured). The same parameter also drives po_member_duplex_inherited_state() (a fixed `speed 1000`
-    that does not change, `duplex full` added or withdrawn); it never runs in the same transition as the MTU or the speed rules."""
+    that does not change, `duplex full` added or withdrawn); it never runs in the same transition as the MTU or the speed rules.
+    `admin_fixed` (validate_transition) refuses a change of the administrative state."""
     if not desired.modeled:
         return "refuse", ["the intended state of %s is not modeled" % name]
     vocabulary = vocabulary or DEFAULT_VOCABULARY
@@ -1702,7 +1718,7 @@ def assess_target(body, entry, name, desired, vocabulary=None, absent_ok=False, 
     body, observed, problems = po_member_force_transition(body, observed, desired, member_force)
     if problems:
         return "refuse", problems
-    problems = validate_transition(body, observed, desired, release=release)
+    problems = validate_transition(body, observed, desired, admin_fixed=admin_fixed)
     return ("refuse", problems) if problems else ("deploy", [])
 
 
@@ -4166,11 +4182,14 @@ def vpc_transition_problems(pre, post):
     """Problems of the IDEAL pending of the transition between two Models of one interface (any list kind): every added line, the
     withdrawal of every removed line, every added or removed pair. The pre-deploy gate validates a real pending with the same rules; when
     even the ideal pending cannot satisfy them, the transition could only be refused AFTER the intent was written, so the caller refuses
-    it BEFORE (known limit of the shared validator: `shutdown` <-> `no shutdown` is one line that adds and withdraws at once)."""
+    it BEFORE. The administrative state of an existing PVLAN vPC is not changed by this module, so such a change is refused here too."""
     if not (pre.modeled and post.modeled):
         return ["the transition is not modeled"]
+    change = admin_change(pre, post)
+    if change:
+        return ["the administrative state of an existing PVLAN vPC is not changed by this module (%r -> %r)" % change]
     # A withdrawn negative-form line is written in its NX-OS positive form (`no lldp transmit` -> `lldp transmit`), unless
-    # that positive form is itself an intended line (`no shutdown` -> `shutdown` keeps its previous treatment, unchanged).
+    # that positive form is itself an intended line.
     body = sorted(post.scalars - pre.scalars) + [
         line[3:] if line.startswith("no ") and line[3:] not in post.scalars else "no " + line
         for line in sorted(pre.scalars - post.scalars)]
@@ -4179,7 +4198,7 @@ def vpc_transition_problems(pre, post):
     if pre.list_kind == post.list_kind and fmt:
         body += [fmt % p for p in sorted(post.pairs - pre.pairs)]
         body += ["no " + fmt % p for p in sorted(pre.pairs - post.pairs)]
-    return validate_transition(body, pre, post)
+    return validate_transition(body, pre, post, admin_fixed=True)
 
 
 _VPC_LIST_FORMAT = {

@@ -238,10 +238,12 @@ def test_withdrawal_of_a_negative_form_line_accepts_only_its_positive_form():
     assert P.validate_transition([], pre, post) == ["withdrawal of 'no lldp transmit' is absent from the pending"]
     # not owned before -> not a withdrawal
     assert P.validate_transition(["lldp transmit"], post, post) == ["unmodeled command 'lldp transmit'"]
-    # the shutdown pair keeps its previous treatment: the ideal pending still writes `no no shutdown` for it
+    # the administrative pair is not a negative-form companion: its own line withdraws the other one; a vPC refuses the change
     a = P.Model({"switchport", "no shutdown"}, None, (), True)
     b = P.Model({"switchport", "shutdown"}, None, (), True)
-    assert P.vpc_transition_problems(a, b) == P.validate_transition(["shutdown", "no no shutdown"], a, b) == []
+    assert P.validate_transition(["shutdown"], a, b) == []
+    assert P.vpc_transition_problems(a, b) == [
+        "the administrative state of an existing PVLAN vPC is not changed by this module ('no shutdown' -> 'shutdown')"]
 
 
 # ================================================================== Ethernet int_pvlan_host: disable_lldp_transmit / _receive

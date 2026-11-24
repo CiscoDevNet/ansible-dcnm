@@ -637,12 +637,13 @@ def test_merged_update_preserves_what_was_omitted_for_each_peer():
     assert ctrl.order() == ["PREVIEW", "PREVIEW", "MODIFY", "PREVIEW", "PREVIEW", "DEPLOY"]
 
 
-def test_an_admin_state_change_is_refused_before_the_intent_changes_because_the_gate_cannot_validate_it():
-    # shared-validator limit: `shutdown` <-> `no shutdown` is one line that adds and withdraws at once, so even the IDEAL pending fails
+def test_an_admin_state_change_is_refused_before_the_intent_changes():
+    # An existing vPC keeps its administrative state (both directions: test_pvlan_admin_transition.py)
     ctrl = created_ctrl()
     converged_previews(ctrl)
     status, result = run_vpc(ctrl, [vpc_item(admin_state=True)], state="merged")
-    assert status == "fail" and "cannot be validated by the pre-deploy gate" in result["msg"] and "shutdown" in result["msg"], result.get("msg")
+    assert status == "fail" and "before the intent changes" in result["msg"], result.get("msg")
+    assert "the administrative state of an existing PVLAN vPC is not changed by this module ('shutdown' -> 'no shutdown')" in result["msg"]
     assert ctrl.writes() == [] and ctrl.modifies() == []
 
 

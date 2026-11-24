@@ -366,9 +366,12 @@ def test_gate_absence_is_accepted_only_with_exactly_one_expected_stanza():
 
 
 def test_gate_running_stanza_present_for_a_new_parent_is_treated_as_unexpected():
-    running = RUNNING_MEMBER + ["interface port-channel10", "  switchport"]
+    # The stanza is not taken as absence: the gate validates the transition from it. A stanza holding only `switchport` was refused by
+    # the former administrative-state limit alone (the pending's `shutdown` now withdraws the NX-OS default `no shutdown`), so this
+    # one holds a line the pending does not withdraw.
+    running = RUNNING_MEMBER + ["interface port-channel10", "  switchport", "  switchport mode trunk"]
     ctrl, status, result = run_with_preview(preview(PENDING_NEW, running=running, expected=PO_STANZA + MEMBER_AFTER))
-    assert status == "fail" and ctrl.deploys() == [], result
+    assert status == "fail" and "switchport mode trunk" in result["msg"] and ctrl.deploys() == [], result
 
 
 # ------------------------------------------------------------------ responses: create and deploy
