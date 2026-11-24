@@ -495,6 +495,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
+    dcnm_canonical_ip,
     dcnm_get_ip_addr_info,
     dcnm_version_supported,
     get_fabric_details,
@@ -567,7 +568,7 @@ class DcnmInventory:
         return self.poap_inventory_by_serial
 
     def discover_poap_params(self, poap_upd, poap):
-        have_c = self.have_create_by_ip.get(poap_upd["ipAddress"])
+        have_c = self.have_create_by_ip.get(dcnm_canonical_ip(poap_upd["ipAddress"]))
         if have_c is not None:
             # Idempotence - Bootstrap but already in inventory
             if (
@@ -608,7 +609,7 @@ class DcnmInventory:
     def update_poap_params(self, inv, poap):
         s_ip = "None"
         if inv["seed_ip"]:
-            s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
+            s_ip = dcnm_canonical_ip(dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None))
 
         state = self.params["state"]
 
@@ -658,7 +659,7 @@ class DcnmInventory:
     def update_rma_params(self, inv, rma):
         s_ip = "None"
         if inv["seed_ip"]:
-            s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
+            s_ip = dcnm_canonical_ip(dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None))
 
         state = self.params["state"]
 
@@ -704,17 +705,19 @@ class DcnmInventory:
         if "DATA" in response:
             switch = []
             for sw in response["DATA"]:
-                if inv["seedIP"] == sw["ipaddr"]:
-                    switch.append(sw)
+                if dcnm_canonical_ip(inv["seedIP"]) == dcnm_canonical_ip(sw["ipaddr"]):
+                    discovered = copy.deepcopy(sw)
+                    discovered["ipaddr"] = dcnm_canonical_ip(sw["ipaddr"])
+                    switch.append(discovered)
                     return switch
-            return 0
+            return []
         else:
-            return 0
+            return []
 
     def update_create_params(self, inv):
         s_ip = "None"
         if inv["seed_ip"]:
-            s_ip = dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None)
+            s_ip = dcnm_canonical_ip(dcnm_get_ip_addr_info(self.module, inv["seed_ip"], None, None))
 
         state = self.params["state"]
 
@@ -842,7 +845,7 @@ class DcnmInventory:
             get_switch = {}
             get_switch.update({"sysName": inv["logicalName"]})
             get_switch.update({"serialNumber": inv["serialNumber"]})
-            get_switch.update({"ipaddr": inv["ipAddress"]})
+            get_switch.update({"ipaddr": dcnm_canonical_ip(inv["ipAddress"])})
             get_switch.update({"platform": inv["model"]})
             get_switch.update({"version": inv["release"]})
             get_switch.update(
@@ -857,7 +860,6 @@ class DcnmInventory:
             switchdict["switches"] = switchlst
             have_switch.append(switchdict)
             have_switch_by_ip[get_switch["ipaddr"]] = switchdict
-
         self.have_create = have_switch
         self.have_create_by_ip = have_switch_by_ip
 
@@ -975,6 +977,11 @@ class DcnmInventory:
         diff_create = []
 
         for want_c in self.want_create:
+            # Validate switch discovery data before processing
+            if not want_c.get("switches") or not isinstance(want_c["switches"], list):
+                msg = "Failed to discover switch with seedIP {0} in fabric {1}. Verify switch is reachable.".format(
+                    want_c.get("seedIP"), self.fabric)
+                self.module.fail_json(changed=False, msg=msg)
             found = False
             match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
             if match is None:
@@ -1505,10 +1512,10 @@ class DcnmInventory:
                     self.fabric
                 )
                 self.module.fail_json(msg=msg)
-            lan_by_ip[lan["ipAddress"]] = lan
+            lan_by_ip[dcnm_canonical_ip(lan["ipAddress"])] = lan
 
         for create in self.want_create:
-            ip = create["switches"][0]["ipaddr"]
+            ip = dcnm_canonical_ip(create["switches"][0]["ipaddr"])
             if ip in lan_by_ip:
                 lan = lan_by_ip[ip]
                 set_lan = {
@@ -1550,7 +1557,7 @@ class DcnmInventory:
                     self.fabric
                 )
                 self.module.fail_json(msg=msg)
-            inv_by_ip[role["ipAddress"]] = role
+            inv_by_ip[dcnm_canonical_ip(role["ipAddress"])] = role
 
         if self.nd:
             # V2: Batch all role assignments into a single POST for ND
@@ -1558,7 +1565,7 @@ class DcnmInventory:
             batch_roles = []
             for create in self.diff_create:
                 for switch in self.iter_create_switches(create):
-                    ip = switch["ipaddr"]
+                    ip = dcnm_canonical_ip(switch["ipaddr"])
                     if ip in inv_by_ip:
                         role_data = inv_by_ip[ip]
                         batch_roles.append(
@@ -1568,7 +1575,7 @@ class DcnmInventory:
                             }
                         )
             for create in self.want_create_poap:
-                ip = create["ipAddress"]
+                ip = dcnm_canonical_ip(create["ipAddress"])
                 if ip in inv_by_ip:
                     role_data = inv_by_ip[ip]
                     batch_roles.append(
@@ -1592,7 +1599,7 @@ class DcnmInventory:
             # Non-ND (DCNM): per-switch PUT with dict lookup
             for create in self.diff_create:
                 for switch in self.iter_create_switches(create):
-                    ip = switch["ipaddr"]
+                    ip = dcnm_canonical_ip(switch["ipaddr"])
                     if ip in inv_by_ip:
                         role_data = inv_by_ip[ip]
                         put_method = "PUT"
@@ -1608,7 +1615,7 @@ class DcnmInventory:
                             self.failure(response)
 
             for create in self.want_create_poap:
-                ip = create["ipAddress"]
+                ip = dcnm_canonical_ip(create["ipAddress"])
                 if ip in inv_by_ip:
                     role_data = inv_by_ip[ip]
                     put_method = "PUT"
@@ -1754,7 +1761,7 @@ class DcnmInventory:
             for want_c in self.want_create:
                 for inv in inv_objects["DATA"]:
                     if want_c["role"] == "None" and want_c["seedIP"] != "None":
-                        if want_c["seedIP"] == inv["ipAddress"]:
+                        if want_c["seedIP"] == dcnm_canonical_ip(inv["ipAddress"]):
                             query.append(inv)
                             continue
                     elif want_c["role"] != "None" and want_c["seedIP"] == "None":
@@ -1762,7 +1769,7 @@ class DcnmInventory:
                             query.append(inv)
                             continue
                     else:
-                        if want_c["seedIP"] == inv["ipAddress"] and want_c[
+                        if want_c["seedIP"] == dcnm_canonical_ip(inv["ipAddress"]) and want_c[
                             "role"
                         ] == inv["switchRole"].replace(" ", "_"):
                             query.append(inv)
