@@ -21,6 +21,7 @@ import copy
 import json
 from unittest.mock import patch
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import dcnm_get_bulk_api_support
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_network
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
@@ -2059,6 +2060,183 @@ class TestDcnmNetworkPvlan(TestDcnmModule):
                                    self.existing_net("pv-isolated", 2432, [{"ip_address": IP["leaf11"], "ports": ["Ethernet1/42"]}])])
         self.assertIn(("reg-l2", SN["leaf12"], "Ethernet1/10", "", True), self.port_items())
         self.assertIn(("pv-isolated", SN["leaf11"], "Ethernet1/42", "", True), self.port_items())
+
+    # ----- changed after a failure -------------------------------------------
+    #
+    # A failed run keeps the writes the controller applied before the failure, so the failure reports changed from
+    # the writes of the whole run, not from the last response. A write the module judged failed may or may not have
+    # changed anything: it does not set changed.
+
+    def assert_failed_changed(self, result, expected):
+        self.assertTrue(result["failed"])
+        self.assertIn("changed", result, "a failed PVLAN run reports changed")
+        self.assertIs(result["changed"], expected, result.get("acknowledged_writes"))
+
+    def test_failure_changed_true_after_earlier_write(self):
+        """A write acknowledged before the failure sets changed: create, update, attach, detach and delete, in
+        PVLAN-only and mixed requests, and a partly accepted attachment POST."""
+
+        # primary created, secondary refused (PVLAN only)
+        def primary_then_secondary():
+            self.ndfc.fail_network[("POST", "pv-isolated")] = bad("POST", NETS, "simulated controller error")
+            return "merged", self.family(), {}
+
+        # regular bulk create and primary created, secondary refused (mixed)
+        def mixed_create():
+            self.ndfc.fail_network[("POST", "pv-isolated")] = bad("POST", NETS, "simulated controller error")
+            regular = {"net_name": "reg-l2", "net_id": 30101, "vlan_id": 2101, "is_l2only": True, "attach": [{"ip_address": IP["leaf12"]}]}
+            return "merged", [regular] + self.family(isolated_attach=("leaf11",)), {}
+
+        # regular bulk create accepted, the first PVLAN write refused: the bulk write is the only earlier write
+        def regular_then_first_pvlan_refused():
+            self.ndfc.fail_network[("POST", "pv-primary")] = bad("POST", NETS, "simulated controller error")
+            regular = {"net_name": "reg-l2", "net_id": 30101, "vlan_id": 2101, "is_l2only": True}
+            return "merged", [regular] + self.family(), {}
+
+        # regular bulk update, then a PVLAN update refused
+        def update_then_refusal():
+            self.seed_family()
+            self.ndfc.seed("regular", "reg-a", 30100, 2100)
+            self.ndfc.inject.append(("PUT", NETS + "/pv-isolated", bad("PUT", NETS + "/pv-isolated", "simulated controller error")))
+            config = [{"net_name": "pv-isolated", "vlan_id": 2432, "is_l2only": True, "vlan_name": "ISO_NEW"},
+                      {"net_name": "reg-a", "is_l2only": True, "vlan_name": "REG_NEW"}]
+            return "merged", config, {}
+
+        # attachment POST: one item applied, one refused inside HTTP 200, and nothing written before it
+        def partly_accepted_attachment():
+            self.seed_family()
+            self.ndfc.refuse[("pv-community", SN["leaf12"])] = "Invalid Interfaces (simulated)"
+            return "merged", self.family(isolated_attach=("leaf11",), community_attach=("leaf12",))[:2], {}
+
+        # detach acknowledged, then the deploy is refused
+        def detach_then_deploy_refused():
+            self.seed_family(isolated_on=("leaf11",), community_on=("leaf12",))
+            self.ndfc.inject.append(("POST", "?forceShowRun=false", bad("POST", self.CONFIG_DEPLOY, "simulated deploy error")))
+            return "deleted", [{"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}], {}
+
+        # regular bulk delete, then a PVLAN delete refused (mixed)
+        def mixed_delete():
+            self.ndfc.seed("regular", "reg-old", 30101, 2101)
+            self.seed_family()
+            self.ndfc.fail_network[("DELETE", "pv-community")] = bad("DELETE", NETS + "/pv-community", "simulated controller error")
+            return "deleted", [{"net_name": "reg-old"}, {"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}], {}
+
+        # a PVLAN delete accepted, then the next one refused
+        def delete_then_refusal():
+            self.seed_family()
+            self.ndfc.fail_network[("DELETE", "pv-community")] = bad("DELETE", NETS + "/pv-community", "simulated controller error")
+            return "deleted", [{"net_name": "pv-primary"}, {"net_name": "pv-isolated"}, {"net_name": "pv-community"}], {}
+
+        for build in (primary_then_secondary, mixed_create, regular_then_first_pvlan_refused, update_then_refusal, partly_accepted_attachment,
+                      detach_then_deploy_refused, mixed_delete, delete_then_refusal):
+            with self.subTest(case=build.__name__):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                self.ndfc.inject.clear()
+                self.ndfc.fail_network.clear()
+                self.ndfc.refuse.clear()
+                state, config, kwargs = build()
+                result = self.run_module(state, config, failed=True, **kwargs)
+                self.assertIn("acknowledged writes remain applied", result["msg"]["ROLLBACK_RESULT"])
+                self.assertTrue(result["acknowledged_writes"], "the run wrote before it failed")
+                self.assert_failed_changed(result, True)
+                if build is partly_accepted_attachment:
+                    self.assertEqual(self.ndfc.attached("pv-isolated"), [SN["leaf11"]], "the accepted item was applied")
+                    self.assertEqual(self.ndfc.attached("pv-community"), [], "the refused item was not")
+                self.assertIn("pvlan_state", result)
+                self.assertIn("response", result)
+
+    def test_failure_changed_not_reset_by_a_later_response(self):
+        """A later response sets the per-response result['changed'] again: an accepted deploy that found nothing
+        pending reads False after the detach before it was applied. The failure reports the whole run."""
+        self.seed_family(isolated_on=("leaf11",))
+        nothing = {"RETURN_CODE": 200, "METHOD": "POST", "MESSAGE": "OK", "REQUEST_PATH": self.CONFIG_DEPLOY,
+                   "DATA": {"status": "No switches PENDING for deployment"}}
+        self.ndfc.inject.append(("POST", "?forceShowRun=false", nothing))
+        self.ndfc.fail_network[("DELETE", "pv-isolated")] = bad("DELETE", NETS + "/pv-isolated", "simulated controller error")
+        result = self.run_module("deleted", [{"net_name": "pv-isolated"}], failed=True)
+        self.assertEqual([write["outcome"] for write in result["acknowledged_writes"]], ["acknowledged", "acknowledged"])
+        self.assertEqual([write["method"] for write in result["acknowledged_writes"]], ["POST", "POST"])
+        self.assertEqual(self.ndfc.rows[("pv-isolated", SN["leaf11"])]["state"], "PENDING", "the detach was applied")
+        self.assert_failed_changed(result, True)
+
+    def test_failure_changed_false_without_an_applied_write(self):
+        """No write was applied: the first write is refused, every item of an HTTP 200 attachment POST is refused,
+        or a read fails before any write."""
+
+        def first_write_refused():
+            self.ndfc.fail_network[("POST", "pv-primary")] = bad("POST", NETS, "simulated controller error")
+            return "merged", self.family()
+
+        def all_items_refused():
+            self.seed_family()
+            self.ndfc.refuse[("pv-community", SN["leaf12"])] = "Invalid Interfaces (simulated)"
+            return "merged", [{"net_name": "pv-community", "is_l2only": True, "attach": [{"ip_address": IP["leaf12"]}]}]
+
+        def read_fails_before_any_write():
+            self.ndfc.inject.append(("GET", self.VLAN_POOL, bad("GET", self.VLAN_POOL, "simulated vlan pool error")))
+            return "merged", [{"net_name": "reg-new", "net_id": 30150, "is_l2only": True}] + self.family()[2:]
+
+        for build in (first_write_refused, all_items_refused, read_fails_before_any_write):
+            with self.subTest(case=build.__name__):
+                self.ndfc.networks.clear()
+                self.ndfc.rows.clear()
+                self.ndfc.inject.clear()
+                self.ndfc.fail_network.clear()
+                self.ndfc.refuse.clear()
+                state, config = build()
+                result = self.run_module(state, config, failed=True)
+                self.assert_failed_changed(result, False)
+                self.assertEqual([write for write in result["acknowledged_writes"] if write["outcome"] == "acknowledged"], [])
+
+    def test_failure_changed_false_after_the_bulk_capability_probe(self):
+        """The empty bulk-capability probe is a POST that changes nothing and is not a response of the run: a run
+        that sent it and then had its first write refused reports changed false."""
+        probes = []
+
+        def send(module, method, path, data=None, *args, **kwargs):
+            if method == "POST" and path.endswith("/v2/bulk-update/networks"):
+                probes.append((method, path, data))
+                return {"RETURN_CODE": 405, "METHOD": method, "MESSAGE": "Method Not Allowed", "REQUEST_PATH": path, "DATA": {}}
+            return self.ndfc.send(module, method, path, data)
+
+        self.ndfc.fail_network[("POST", "pv-primary")] = bad("POST", NETS, "simulated controller error")
+        with patch("ansible_collections.cisco.dcnm.plugins.modules.dcnm_network.dcnm_get_bulk_api_support",
+                   side_effect=dcnm_get_bulk_api_support), \
+                patch("ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm.dcnm_send", side_effect=send):
+            result = self.run_module("merged", self.family(), failed=True)
+        self.assertEqual(len(probes), 1, "the capability probe was sent")
+        self.assertEqual(result["acknowledged_writes"], [], "the probe is not a response of the run")
+        self.assert_failed_changed(result, False)
+
+    def test_failure_changed_false_for_a_write_judged_failed(self):
+        """A response the module judged failed is not counted: HTTP 200 with an ERROR key or an error text in a
+        string DATA may or may not have been applied. It stays listed in acknowledged_writes as failed, which tells
+        it apart from a refusal with a non-2xx status that never appears there."""
+        error = {"RETURN_CODE": 200, "METHOD": "POST", "MESSAGE": "OK", "REQUEST_PATH": NETS, "DATA": {}, "ERROR": "simulated body-level error"}
+        self.ndfc.inject.append(("POST", NETS, error))
+        result = self.run_module("merged", self.family(), failed=True)
+        self.assertEqual([(write["method"], write["outcome"]) for write in result["acknowledged_writes"]], [("POST", "failed")])
+        self.assert_failed_changed(result, False)
+
+        self.ndfc.rows.clear()
+        self.seed_family(isolated_on=("leaf11",))
+        text = {"RETURN_CODE": 200, "METHOD": "POST", "MESSAGE": "OK", "REQUEST_PATH": ATTACH, "DATA": "Invalid interfaces supplied"}
+        self.ndfc.inject.append(("POST", ATTACH, text))
+        result = self.run_module("merged", [{"net_name": "pv-community", "is_l2only": True, "attach": [{"ip_address": IP["leaf12"]}]}], failed=True)
+        self.assertEqual([(write["method"], write["outcome"]) for write in result["acknowledged_writes"]], [("POST", "failed")])
+        self.assert_failed_changed(result, False)
+
+    def test_failure_changed_survives_a_state_read_failure(self):
+        """A failed state read leaves pvlan_state unknown; it does not erase the earlier write or the original error."""
+        self.ndfc.fail_network[("POST", "pv-isolated")] = bad("POST", NETS, "simulated controller error")
+        # the first list read belongs to the request itself, the next one to the state read after the failure
+        self.ndfc.inject.append(("GET", NETS, bad("GET", NETS, "simulated read error"), 1))
+        result = self.run_module("merged", self.family(), failed=True)
+        self.assertIn("RETURN_CODE", result["pvlan_state"]["read_error"])
+        self.assertEqual(result["msg"]["DATA"], {"message": "simulated controller error"})
+        self.assertTrue(result["acknowledged_writes"])
+        self.assert_failed_changed(result, True)
 
 
 def dcnm_network_exit():

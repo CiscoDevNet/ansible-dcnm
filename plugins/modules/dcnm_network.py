@@ -6390,6 +6390,7 @@ class DcnmNetwork:
             res.update({"ROLLBACK_RESULT": "NOT ATTEMPTED - the request contains PVLAN networks; acknowledged writes remain applied"})
             self.module.fail_json(
                 msg=res,
+                changed=self.pvlan_changed(),
                 acknowledged_writes=self.pvlan_acknowledged_writes(),
                 pvlan_state=self.pvlan_read_state(),
                 response=self.result["response"],
@@ -7664,6 +7665,53 @@ class DcnmNetwork:
             state["read_error"] = str(exc)
         return state
 
+    @staticmethod
+    def pvlan_write_op(resp):
+        """Return the operation name handle_response() takes for a write response, from its method and path."""
+        path = str(resp.get("REQUEST_PATH", ""))
+        if path.endswith("/attachments"):
+            return "attach"
+        if "/config-deploy/" in path or path.endswith("/deploy") or path.endswith("/deployments"):
+            return "deploy"
+        if str(resp.get("METHOD")).upper() == "DELETE":
+            return "delete"
+        return "create"
+
+    def pvlan_changed(self):
+        """
+        Return True when a write answered earlier in this run changed the
+        configuration, whatever the last response said.
+
+        self.result["changed"] holds the value of the latest response only, and
+        a failed run keeps its earlier writes. The value is therefore derived
+        from every write response of the run. A response counts when the module
+        judged it not failed and handle_response() reports a change: an
+        accepted deploy counts as the success path counts it (a request the
+        controller accepted, not proof that a switch converged), unless the
+        controller found nothing pending. An attachment POST with per-item
+        results counts when at least one item reported success, even if other
+        items were refused. A response the module judged failed does not count:
+        it may or may not have changed anything, and
+        pvlan_acknowledged_writes() lists it as failed. Reads, previews and the
+        bulk capability probe are not responses of the run.
+        """
+        for resp in self.result.get("response") or []:
+            if not isinstance(resp, dict) or str(resp.get("METHOD", "")).upper() not in ("POST", "PUT", "DELETE"):
+                continue
+            code = resp.get("RETURN_CODE")
+            if not isinstance(code, int) or not 200 <= code < 300:
+                continue
+            op = self.pvlan_write_op(resp)
+            data = resp.get("DATA")
+            if op == "attach" and isinstance(data, dict) and data and not resp.get("ERROR") and resp.get("MESSAGE") in ("OK", "Multi-Status"):
+                if len(data) > len(self.pvlan_failed_items(resp)):
+                    return True
+                continue
+            judged_failed, judged_changed = self.handle_response(resp, op)
+            if not judged_failed and judged_changed:
+                return True
+        return False
+
     def pvlan_acknowledged_writes(self):
         """
         Return the writes the controller answered with 2xx before a failure, in
@@ -7683,15 +7731,7 @@ class DcnmNetwork:
             code = resp.get("RETURN_CODE")
             if not isinstance(code, int) or not 200 <= code < 300:
                 continue
-            path = str(resp.get("REQUEST_PATH", ""))
-            if path.endswith("/attachments"):
-                op = "attach"
-            elif "/config-deploy/" in path or path.endswith("/deploy") or path.endswith("/deployments"):
-                op = "deploy"
-            elif str(resp.get("METHOD")).upper() == "DELETE":
-                op = "delete"
-            else:
-                op = "create"
+            op = self.pvlan_write_op(resp)
             judged_failed = self.handle_response(resp, op)[0]
             write = {"method": resp.get("METHOD"), "path": resp.get("REQUEST_PATH"), "return_code": code, "outcome": "acknowledged"}
             failed = self.pvlan_failed_items(resp) if op == "attach" else []
