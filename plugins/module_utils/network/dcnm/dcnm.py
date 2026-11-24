@@ -16,6 +16,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
+import ipaddress
 import socket
 import json
 import time
@@ -505,9 +506,25 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
             return ip_addr
         if ip_addr in ip_sn.keys():
             return ip_addr
-        else:
-            msg_dict["Error"] = msg.format(sw_elem)
-            raise module.fail_json(msg=json.dumps(msg_dict))
+        # Equivalent notation (expanded vs compressed IPv6): return the key as stored in ip_sn
+        for key in ip_sn.keys():
+            if dcnm_canonical_ip(key) == dcnm_canonical_ip(ip_addr):
+                return key
+        msg_dict["Error"] = msg.format(sw_elem)
+        raise module.fail_json(msg=json.dumps(msg_dict))
+
+
+def dcnm_canonical_ip(value):
+    """
+    Return the canonical text of an IPv4/IPv6 literal (compressed IPv6), so that equivalent
+    spellings compare equal. Any other value is returned unchanged.
+    """
+    if not isinstance(value, str):
+        return value
+    try:
+        return ipaddress.ip_address(value.strip()).compressed
+    except ValueError:
+        return value
 
 
 # This call is used to get the details of the given fabric from the DCNM

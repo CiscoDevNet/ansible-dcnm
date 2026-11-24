@@ -405,11 +405,13 @@ EXAMPLES = """
 #
 
 import copy
+import ipaddress
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
+    dcnm_canonical_ip,
     dcnm_version_supported,
     get_ip_sn_dict,
     get_fabric_inventory_details,
@@ -444,6 +446,25 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_vpc_p
     dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs,
     dcnm_vpc_pair_utils_pairs_match,
 )
+
+
+def dcnm_vpc_pair_invalid_ip_params(info):
+    """
+    Check that peerOneId/peerTwoId (when present) are valid IPv4 or IPv6 addresses.
+    Replaces the former IPv4-only 'type: ipv4' argument spec validation.
+    """
+    invalid = []
+    for key in ("peerOneId", "peerTwoId"):
+        value = info.get(key)
+        if value is None:
+            continue
+        try:
+            ipaddress.ip_address(str(value).strip())
+        except ValueError:
+            # Same wording as the shared address validator (kept for existing consumers)
+            addr_type = "IPv6" if ":" in str(value) else "IPv4"
+            invalid.append("{0} : Invalid {1} address syntax".format(value, addr_type))
+    return invalid
 
 
 # Resource Class object which includes all the required methods and data to configure and maintain Vpc_pair
@@ -829,11 +850,13 @@ class DcnmVpcPair:
         """
 
         arg_spec = {
-            "peerOneId": {"required": "True", "type": "ipv4"},
-            "peerTwoId": {"required": "True", "type": "ipv4"},
+            "peerOneId": {"required": "True", "type": "str"},
+            "peerTwoId": {"required": "True", "type": "str"},
         }
 
         vpc_pair_info, invalid_params = validate_list_of_dicts(cfg, arg_spec)
+        for info in vpc_pair_info or []:
+            invalid_params.extend(dcnm_vpc_pair_invalid_ip_params(info))
         if invalid_params:
             mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
             self.module.fail_json(msg=mesg)
@@ -855,11 +878,13 @@ class DcnmVpcPair:
         """
 
         arg_spec = {
-            "peerOneId": {"type": "ipv4"},
-            "peerTwoId": {"type": "ipv4"},
+            "peerOneId": {"type": "str"},
+            "peerTwoId": {"type": "str"},
         }
 
         vpc_pair_info, invalid_params = validate_list_of_dicts(cfg, arg_spec)
+        for info in vpc_pair_info or []:
+            invalid_params.extend(dcnm_vpc_pair_invalid_ip_params(info))
         if invalid_params:
             mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
             self.module.fail_json(msg=mesg)
@@ -879,8 +904,8 @@ class DcnmVpcPair:
 
         arg_spec = {}
         common_spec = {
-            "peerOneId": {"required": "True", "type": "ipv4"},
-            "peerTwoId": {"required": "True", "type": "ipv4"},
+            "peerOneId": {"required": "True", "type": "str"},
+            "peerTwoId": {"required": "True", "type": "str"},
             "templateName": {"type": "str"},
             "useVirtualPeerlink": {"type": "bool"},
             "profile": {"type": "dict"},
@@ -890,6 +915,8 @@ class DcnmVpcPair:
         dcnm_vpc_pair_utils_update_common_spec(self, common_spec)
 
         vpc_pair_info, invalid_params = validate_list_of_dicts(cfg, common_spec)
+        for info in vpc_pair_info or []:
+            invalid_params.extend(dcnm_vpc_pair_invalid_ip_params(info))
         if invalid_params:
             mesg = "Invalid parameters in playbook: {0}".format(invalid_params)
             self.module.fail_json(msg=mesg)
@@ -992,6 +1019,10 @@ class DcnmVpcPair:
 
         # Based on the updated inventory_data, update ip_sn, hn_sn and sn_hn objects
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        # Canonical IP keys, so that equivalent IPv6 notations resolve to the same switch
+        self.ip_sn = dict(
+            (dcnm_canonical_ip(key), value) for key, value in self.ip_sn.items()
+        )
         self.sn_hn = dict([(value, key) for key, value in self.hn_sn.items()])
         self.sn_ip = dict([(value, key) for key, value in self.ip_sn.items()])
 
@@ -1003,7 +1034,7 @@ class DcnmVpcPair:
 
         # Get all switches which are managable. Deploy must be avoided to all switches which are not part of this list
         managable_ip = [
-            (key, self.inventory_data[key]["serialNumber"])
+            (dcnm_canonical_ip(key), self.inventory_data[key]["serialNumber"])
             for key in self.inventory_data
             if str(self.inventory_data[key]["managable"]).lower() == "true"
         ]
@@ -1064,6 +1095,10 @@ class DcnmVpcPair:
             return
 
         for cfg in config:
+            # Equivalent IPv6 notations must match the (canonical) inventory keys
+            for key in ("peerOneId", "peerTwoId"):
+                if cfg.get(key):
+                    cfg[key] = dcnm_canonical_ip(cfg[key])
             # Add other translations as required
             dcnm_vpc_pair_utils_translate_config(self, cfg)
 
