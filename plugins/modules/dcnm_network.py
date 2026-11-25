@@ -356,6 +356,75 @@ options:
           returned by the controller.
         type: bool
         required: false
+      pvlan_type:
+        description:
+        - Private VLAN role of the network.
+        - C(primary) uses the templates of a regular network. C(isolated) and
+          C(community) use the C(Pvlan_Secondary_Network) template and are
+          Layer 2 only.
+        - Supported on standalone fabrics with C(ENABLE_PVLAN) enabled.
+        - A new private VLAN network requires O(config[].net_id) and
+          O(config[].vlan_id).
+        - The type of an existing network cannot be changed. When this option
+          is omitted, the type returned by the controller is kept in every
+          state.
+        - O(config[].attach[].ports) of a private VLAN network name Ethernet
+          interfaces or port-channels. A vPC is attached by naming the
+          port-channel of each peer; the peers may use different port-channel
+          numbers. The interface must already be in the private VLAN mode the
+          network type needs (host or trunk secondary for an isolated network,
+          host for a community network, promiscuous or trunk promiscuous for a
+          primary network), and that mode must already be deployed. The module
+          neither reads nor changes the interface policy.
+        - The interface policy must not configure a private VLAN association or
+          mapping for the networks attached to that port. The network
+          attachment supplies those lines, and a second source of the same
+          line is not supported.
+        - Remove the port from the network, with O(config[].deploy=true),
+          before changing or deleting the interface.
+        - On NDFC 12.6.0.267, removing a private VLAN network from a regular
+          port-channel that is not part of a vPC also deleted the port-channel
+          on the switch, while the controller kept its configuration and
+          reported it in sync. This removal is not supported.
+        - O(config[].attach[].tor_ports) is not supported for private VLAN
+          networks.
+        - The controller attaches a primary network to every switch where one
+          of its secondary networks is attached, and an attached secondary
+          network to every switch where its primary is attached later.
+          C(replaced) and C(overridden) keep those attachments.
+        - When O(config[].deploy) is true, the module also deploys the removal
+          of a private VLAN network attachment on the switch that holds it,
+          including a removal saved by an earlier run with
+          O(config[].deploy=false). With O(deploy_mode=resource), the deploy
+          also names the networks of the same private VLAN family that have
+          saved changes on that switch.
+        - To remove a private VLAN family from a promiscuous port and delete
+          it, use O(deploy_mode=switch). On NDFC 12.6.0.267, O(state=deleted)
+          named a routed primary attached to a promiscuous Ethernet port and
+          its isolated and community networks attached to the same switch. The
+          module removed the port mapping and the three networks from the
+          switch at the first attempt, and a repeat made no change. This was
+          measured on one switch.
+        - A switch deployment can apply every pending change on the switch,
+          including changes this task did not make.
+        - With O(deploy_mode=resource), the same withdrawal failed on that
+          controller. The deployment removed the secondary networks from the
+          port mapping one at a time, and the switch rejected the removal of
+          the last one.
+        type: str
+        choices: [primary, isolated, community]
+        required: false
+      pvlan_primary:
+        description:
+        - Name of the primary network for an isolated or community network.
+          Required when the network is created.
+        - The primary can be defined in the same task or already exist in the
+          fabric. The module sends its network ID to the controller.
+        - A primary network can have one isolated network and any number of
+          community networks.
+        - The primary of an existing network cannot be changed.
+        type: str
+        required: false
       attach:
         description:
         - List of network attachment details
@@ -653,6 +722,63 @@ EXAMPLES = """
         vrf_name: Tenant-1
         ipv4_acl_in: TENANT-1-IN
 
+- name: Create a private VLAN family and attach the isolated network to a switch
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-fabric
+    state: merged
+    config:
+      - net_name: ansible-pvlan-primary
+        net_id: 30010
+        vlan_id: 2431
+        is_l2only: true
+        pvlan_type: primary
+      - net_name: ansible-pvlan-isolated
+        net_id: 30011
+        vlan_id: 2432
+        pvlan_type: isolated
+        pvlan_primary: ansible-pvlan-primary
+        attach:
+          - ip_address: 192.168.1.224
+      - net_name: ansible-pvlan-community
+        net_id: 30012
+        vlan_id: 2433
+        pvlan_type: community
+        pvlan_primary: ansible-pvlan-primary
+
+- name: Create a routed private VLAN family with the primary on a promiscuous port
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-fabric
+    state: merged
+    config:
+      - net_name: ansible-pvlan-routed
+        vrf_name: Tenant-1
+        net_id: 30020
+        vlan_id: 2441
+        gw_ip_subnet: '192.168.60.1/24'
+        pvlan_type: primary
+        attach:
+          # Ethernet1/20 is already deployed in private VLAN promiscuous mode,
+          # and its interface policy has no private VLAN mapping.
+          - ip_address: 192.168.1.224
+            ports: [Ethernet1/20]
+        deploy: true
+      - net_name: ansible-pvlan-routed-isolated
+        net_id: 30021
+        vlan_id: 2442
+        pvlan_type: isolated
+        pvlan_primary: ansible-pvlan-routed
+        attach:
+          - ip_address: 192.168.1.224
+        deploy: true
+      - net_name: ansible-pvlan-routed-community
+        net_id: 30022
+        vlan_id: 2443
+        pvlan_type: community
+        pvlan_primary: ansible-pvlan-routed
+        attach:
+          - ip_address: 192.168.1.224
+        deploy: true
+
 # ---------------------------------------------------------------------------
 # STATE: REPLACED - Replace Network Configuration
 # ---------------------------------------------------------------------------
@@ -778,6 +904,17 @@ EXAMPLES = """
         vlan_id: 151
         gw_ip_subnet: '192.168.40.1/24'
         deploy: false
+
+# A switch deployment can also apply other pending changes on that switch.
+- name: Remove a private VLAN family from its promiscuous port and delete it
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-fabric
+    state: deleted
+    deploy_mode: switch
+    config:
+      - net_name: ansible-pvlan-routed
+      - net_name: ansible-pvlan-routed-isolated
+      - net_name: ansible-pvlan-routed-community
 
 - name: Delete all the networkss
   cisco.dcnm.dcnm_network:
@@ -1090,6 +1227,26 @@ class DcnmNetwork:
     # the effective value under inboundIpv4Acl.
     IPV4_ACL_IN_TEMPLATE_KEY = "inboundIpv4Acl"
     IPV4_ACL_IN_LEGACY_TEMPLATE_KEY = "IPV4_ACL_IN"
+    # PVLAN network types as NDFC returns them in the top-level "type" field.
+    PVLAN_TYPES = {"primary": "Primary", "isolated": "Isolated", "community": "Community"}
+    PVLAN_SECONDARY_TEMPLATE = "Pvlan_Secondary_Network"
+    # Port names measured on PVLAN attachments: Ethernet ports and port-channels, including the per-peer
+    # port-channel of a vPC. A vPC is attached by naming each peer's port-channel.
+    PVLAN_PORT_NAME = re.compile(r"^(Ethernet\d+(/\d+){1,2}|Port-channel\d+)$")
+    PVLAN_INPUT_KEYS = ("pvlan_type", "pvlan_primary")
+    # States of a row with isLanAttached false whose removal is saved but not
+    # deployed. Such a row keeps its configuration on the switch, also after a
+    # config-preview turns PENDING into OUT-OF-SYNC.
+    PVLAN_SAVED_REMOVAL_STATES = ("PENDING", "OUT-OF-SYNC", "FAILED")
+    # Playbook keys that Pvlan_Secondary_Network does not declare. Omitted,
+    # null, "" and false all mean "not set".
+    PVLAN_SECONDARY_FORBIDDEN_KEYS = (
+        "gw_ip_subnet", "gw_ipv6_subnet", "secondary_ip_gw1", "secondary_ip_gw2", "secondary_ip_gw3",
+        "secondary_ip_gw4", "dhcp_srvr1_ip", "dhcp_srvr2_ip", "dhcp_srvr3_ip", "dhcp_srvr1_vrf",
+        "dhcp_srvr2_vrf", "dhcp_srvr3_vrf", "dhcp_servers", "dhcp_loopback_id", "mtu_l3intf", "int_desc",
+        "routing_tag", "ipv4_acl_in", "intfvlan_nf_monitor", "vlan_nf_monitor", "arp_suppress", "trm_enable",
+        "l3gw_on_border", "netflow_enable", "xconnect",
+    )
 
     dcnm_network_paths = {
         11: {
@@ -1285,6 +1442,18 @@ class DcnmNetwork:
 
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
+
+        # PVLAN state, set by pvlan_prepare() when the request involves a PVLAN network.
+        self.pvlan_request = False
+        self.pvlan_index = {}
+        self.pvlan_have_raw = {}
+        self.pvlan_keep = {}
+        self.pvlan_want_serials = {}
+        self.pvlan_removals = {}
+        self.pvlan_deployed = set()
+        self.pvlan_redetached = set()
+        # (networkName, serial) -> (isLanAttached, lanAttachState) as read by get_have().
+        self.have_attach_state = {}
 
     def get_no_deploy_net_names(self):
         """Return names whose first playbook entry sets deploy: false."""
@@ -2872,6 +3041,11 @@ class DcnmNetwork:
     def normalize_have_network(self, network):
         net = copy.deepcopy(network)
 
+        # The reduced template below drops PVLAN template keys. Keep the
+        # controller copy so a PVLAN update can resend the full template.
+        if self.pvlan_type_of(network):
+            self.__dict__.setdefault("pvlan_have_raw", {})[network.get("networkName")] = copy.deepcopy(network)
+
         json_to_dict = net.get("networkTemplateConfig", {})
         if isinstance(json_to_dict, str):
             json_to_dict = json.loads(json_to_dict)
@@ -3020,10 +3194,21 @@ class DcnmNetwork:
                 continue
 
             candidate_networks = serial_to_networks[serial]
+            # NDFC generates a PVLAN_CONFIG switch_freeform policy (and a
+            # switch_freeform_config child whose source is the parent policy ID)
+            # for each PVLAN primary. It carries the primary as Config_Profile but
+            # is controller-owned association config, not attachment freeform.
+            pvlan_policy_ids = {
+                policy.get("policyId")
+                for policy in data
+                if isinstance(policy, dict) and policy.get("source") == "PVLAN_CONFIG" and policy.get("policyId")
+            }
             for policy in data:
                 if not isinstance(policy, dict):
                     continue
                 if policy.get("templateName") not in ("switch_freeform_config", "switch_freeform"):
+                    continue
+                if policy.get("source") == "PVLAN_CONFIG" or policy.get("source") in pvlan_policy_ids:
                     continue
                 nv_pairs = policy.get("nvPairs") or {}
                 conf = nv_pairs.get("CONF")
@@ -3265,6 +3450,7 @@ class DcnmNetwork:
 
                 sn = attach["switchSerialNo"]
                 vlan = attach.get("vlanId")
+                self.have_attach_state[(attach["networkName"], sn)] = (attach_state, attach["lanAttachState"])
 
                 ports = ""
                 if attach["portNames"]:
@@ -3644,6 +3830,8 @@ class DcnmNetwork:
         for have_a in self.have_attach:
             r_net_list = []
             h_in_w = False
+            # Switches where a surviving PVLAN secondary keeps this primary attached.
+            pvlan_keep = getattr(self, "pvlan_keep", {}).get(have_a["networkName"], set())
             want_a = want_attach_by_name.get(have_a["networkName"])
             if want_a is not None:
                 # This block will take care of deleting any attachments that are present only on DCNM
@@ -3664,7 +3852,7 @@ class DcnmNetwork:
                                 # Have is already in diff, no need to continue looking for it.
                                 a_match = True
                                 break
-                    if not a_match:
+                    if not a_match and a_h["serialNumber"] not in pvlan_keep:
                         del a_h["isAttached"]
                         a_h.update({"deployment": False})
                         r_net_list.append(a_h)
@@ -3676,7 +3864,7 @@ class DcnmNetwork:
                 if have_a["networkName"] in want_create_names:
                     atch_h = have_a["lanAttachList"]
                     for a_h in atch_h:
-                        if not a_h["isAttached"]:
+                        if not a_h["isAttached"] or a_h["serialNumber"] in pvlan_keep:
                             continue
                         del a_h["isAttached"]
                         a_h.update({"deployment": False})
@@ -4249,6 +4437,14 @@ class DcnmNetwork:
                 found_c.update({"ipv4_acl_in": self._get_ipv4_acl_in(json_to_dict)})
             found_c.update({"attach": []})
 
+            pvlan_type = self.pvlan_type_of(found_c)
+            found_c.pop("type", None)
+            primary_id = found_c.pop("primaryNetworkId", None)
+            if pvlan_type:
+                found_c.update({"pvlan_type": pvlan_type.lower()})
+                if pvlan_type != "Primary":
+                    found_c.update({"pvlan_primary": self.pvlan_name_for_id(primary_id)})
+
             del found_c["fabric"]
             del found_c["networkName"]
             del found_c["networkId"]
@@ -4367,46 +4563,51 @@ class DcnmNetwork:
 
         if self.config:
             query = []
-            if self.have_create or self.have_attach:
-                for want_c in self.want_create:
-                    # Query the Network
-                    item = {"parent": {}, "attach": []}
-                    path = self.paths["GET_NET_NAME"].format(self.fabric, want_c["networkName"])
-                    network = dcnm_send(self.module, method, path)
+            # The inventory read above lists VRF-scoped networks only. When it found
+            # none, Layer 2 only networks are still looked up by name, but only
+            # PVLAN networks are returned, so a regular query keeps its result.
+            pvlan_only = not (self.have_create or self.have_attach)
+            for want_c in self.want_create:
+                # Query the Network
+                item = {"parent": {}, "attach": []}
+                path = self.paths["GET_NET_NAME"].format(self.fabric, want_c["networkName"])
+                network = dcnm_send(self.module, method, path)
 
-                    if not network["DATA"]:
-                        continue
-                    missing_network, not_ok = self.handle_response(network, "query_dcnm")
-                    if missing_network or not_ok:
-                        continue
+                if not network["DATA"]:
+                    continue
+                missing_network, not_ok = self.handle_response(network, "query_dcnm")
+                if missing_network or not_ok:
+                    continue
 
-                    net = network["DATA"]
-                    if want_c["networkName"] == net["networkName"]:
-                        item["parent"] = net
-                        item["parent"]["networkTemplateConfig"] = json.loads(net["networkTemplateConfig"])
+                net = network["DATA"]
+                if pvlan_only and not self.pvlan_type_of(net):
+                    continue
+                if want_c["networkName"] == net["networkName"]:
+                    item["parent"] = net
+                    item["parent"]["networkTemplateConfig"] = json.loads(net["networkTemplateConfig"])
 
-                        # Query the Attachment for the found Networks
-                        path = self.paths["GET_NET_ATTACH"].format(self.fabric, want_c["networkName"])
-                        net_attach_objects = dcnm_send(self.module, method, path)
+                    # Query the Attachment for the found Networks
+                    path = self.paths["GET_NET_ATTACH"].format(self.fabric, want_c["networkName"])
+                    net_attach_objects = dcnm_send(self.module, method, path)
 
-                        if not net_attach_objects["DATA"]:
-                            return
+                    if not net_attach_objects["DATA"]:
+                        return
 
-                        if self.fabric_type == "multicluster_parent":
-                            net_attach_objects["DATA"] = sanitize_lan_attach_list(
-                                net_attach_objects.get("DATA")
-                            )
+                    if self.fabric_type == "multicluster_parent":
+                        net_attach_objects["DATA"] = sanitize_lan_attach_list(
+                            net_attach_objects.get("DATA")
+                        )
 
-                        for net_attach in net_attach_objects["DATA"]:
-                            if want_c["networkName"] == net_attach["networkName"]:
-                                if not net_attach.get("lanAttachList"):
-                                    continue
-                                attach_list = net_attach["lanAttachList"]
+                    for net_attach in net_attach_objects["DATA"]:
+                        if want_c["networkName"] == net_attach["networkName"]:
+                            if not net_attach.get("lanAttachList"):
+                                continue
+                            attach_list = net_attach["lanAttachList"]
 
-                                for attach in attach_list:
-                                    # append the attach network details
-                                    item["attach"].append(attach)
-                                query.append(item)
+                            for attach in attach_list:
+                                # append the attach network details
+                                item["attach"].append(attach)
+                            query.append(item)
 
         else:
             query = []
@@ -4587,8 +4788,11 @@ class DcnmNetwork:
                 msg = f"network: {net}, networkStatus: {network_status}"
                 self.log.debug(msg)
 
-                # Check if network is in a terminal state ready for deletion
-                if network_status.upper() in ("OUT-OF-SYNC", "FAILED"):
+                # Check if network is in a terminal state ready for deletion.
+                # For a PVLAN network only NA is: OUT-OF-SYNC can still hold
+                # deployed configuration.
+                pvlan_net = getattr(self, "pvlan_request", False) and self.pvlan_kind(net)
+                if network_status.upper() in ("OUT-OF-SYNC", "FAILED") and not pvlan_net:
                     self.diff_delete.update({net: "OUT-OF-SYNC"})
                     networks_to_remove.append(net)
                 elif network_status.upper() == "NA" or network_status == "":
@@ -4615,7 +4819,7 @@ class DcnmNetwork:
             msg = "Timeout waiting for networks to be ready for deletion. "
             msg += f"Pending networks: {pending_networks}, "
             msg += f"States: {[(net, self.diff_delete.get(net)) for net in pending_networks]}"
-            self.module.fail_json(msg=msg)
+            self.fail_after_writes(msg)
 
         msg = "All networks reached terminal state. Ready for deletion."
         self.log.debug(msg)
@@ -4673,7 +4877,7 @@ class DcnmNetwork:
                 if not isinstance(resp, dict):
                     msg = "Unexpected response while waiting for network attachments. "
                     msg += f"path: {path}, response_type: {type(resp).__name__}, response: {str(resp)[:500]}"
-                    self.module.fail_json(msg=msg)
+                    self.fail_after_writes(msg)
 
                 data = resp.get("DATA")
                 if data is None:
@@ -4684,19 +4888,19 @@ class DcnmNetwork:
                     msg = "Unexpected DATA while waiting for network attachments. "
                     msg += f"path: {path}, return_code: {resp.get('RETURN_CODE')}, "
                     msg += f"data_type: {type(data).__name__}, data: {str(data)[:500]}"
-                    self.module.fail_json(msg=msg)
+                    self.fail_after_writes(msg)
 
                 sanitized_data = sanitize_lan_attach_list(data) if data else []
                 if not isinstance(sanitized_data, list):
                     msg = "Unexpected sanitized DATA while waiting for network attachments. "
                     msg += f"path: {path}, data_type: {type(sanitized_data).__name__}"
-                    self.module.fail_json(msg=msg)
+                    self.fail_after_writes(msg)
 
                 for net_data in sanitized_data:
                     if not isinstance(net_data, dict):
                         msg = "Unexpected network attachment entry while waiting for network attachments. "
                         msg += f"path: {path}, entry_type: {type(net_data).__name__}, entry: {str(net_data)[:500]}"
-                        self.module.fail_json(msg=msg)
+                        self.fail_after_writes(msg)
 
                     network_name = net_data.get("networkName")
                     if network_name:
@@ -4713,6 +4917,8 @@ class DcnmNetwork:
             batch_detach_payload = []
             batch_deploy_payload = {}
             networks_needing_deploy = []
+            pvlan_detach = []
+            pvlan_deploy = set()
 
             for net in pending_networks:
                 net_data = networks_by_name.get(net)
@@ -4721,6 +4927,14 @@ class DcnmNetwork:
                     # Network not found in response, mark as ready
                     self.diff_delete.update({net: "NA"})
                     networks_to_remove.append(net)
+                    continue
+
+                if getattr(self, "pvlan_request", False) and self.pvlan_kind(net):
+                    if self.pvlan_removal_settled(net, net_data.get("lanAttachList") or [], pvlan_detach, pvlan_deploy):
+                        self.diff_delete.update({net: "NA"})
+                        networks_to_remove.append(net)
+                    else:
+                        self.diff_delete.update({net: "DEPLOYED"})
                     continue
 
                 attach_list = net_data.get("lanAttachList", [])
@@ -4780,6 +4994,8 @@ class DcnmNetwork:
                     networks_to_remove.append(net)
                 else:
                     self.diff_delete.update({net: "DEPLOYED"})
+
+            self.pvlan_settle_removals(pvlan_detach, pvlan_deploy)
 
             # Execute batched detach operation once for all networks
             if batch_detach_payload:
@@ -5034,8 +5250,13 @@ class DcnmNetwork:
 
         path = self.paths["GET_NET"].format(self.fabric)
 
+        # PVLAN networks go one at a time through the per-network endpoints so
+        # the family order holds; the bulk endpoints keep handling regular networks.
+        pvlan_updates = [net for net in self.diff_create_update if self.pvlan_type_of(net)]
+        regular_updates = [net for net in self.diff_create_update if not self.pvlan_type_of(net)]
+
         method = "PUT"
-        if self.diff_create_update:
+        if regular_updates:
             # Get skipped attributes for parent fabrics
             skipped_attributes = self.get_skipped_attributes()
             template_mapping = self.get_template_config_mapping()
@@ -5058,7 +5279,7 @@ class DcnmNetwork:
                 base_path = self.paths["GET_NET"].format(self.fabric)
 
             # Process each network
-            for net in self.diff_create_update:
+            for net in regular_updates:
                 # Parse template config
                 json_to_dict = json.loads(net["networkTemplateConfig"])
                 network_name = json_to_dict.get("networkName")
@@ -5111,6 +5332,9 @@ class DcnmNetwork:
                         self.failed_to_rollback = True
                         return
                     self.failure(resp)
+
+        if pvlan_updates:
+            self.pvlan_push_networks(pvlan_updates, "PUT")
         #
         # The detach and un-deploy operations are executed before the create,attach and deploy to particularly
         # address cases where a VLAN of a network being deleted is re-used on a new network being created. This is
@@ -5118,7 +5342,9 @@ class DcnmNetwork:
         #
 
         method = "POST"
-        if self.diff_detach:
+        if self.diff_detach and getattr(self, "pvlan_request", False):
+            self.pvlan_push_attachments(self.diff_detach, detach_step=True)
+        elif self.diff_detach:
             detach_path = path + "/attachments"
 
             # Update the fabric name to specific fabric which the switches are part of.
@@ -5143,7 +5369,9 @@ class DcnmNetwork:
         payload = copy.deepcopy(self.diff_undeploy)
         delete_ready = False
         if self.diff_undeploy:
-            if self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
+            if getattr(self, "pvlan_request", False) and self.fabric_type == "standalone":
+                self.pvlan_deploy(self.pvlan_undeploy_keys(payload))
+            elif self.deploy_mode == "switch" and self.fabric_type != "multicluster_parent":
                 # Use switch-level deploy (undeploy operation)
                 self.deploy_network_switches(payload, is_rollback, is_undeploy=True)
             elif self.dcnm_version >= 12:
@@ -5233,6 +5461,15 @@ class DcnmNetwork:
         else:
             networks_ready = False
 
+        # Below, attachments that never become ready skip the deletion without
+        # an error. Report it for PVLAN requests instead of a successful run.
+        if self.diff_delete and not attachments_ready and not is_rollback and getattr(self, "pvlan_request", False):
+            not_ready = sorted(net for net, state in self.diff_delete.items() if state == "TIMEOUT")
+            self.failure(
+                "Attachments of networks {0} did not reach a state ready for deletion; "
+                "no network was deleted".format(",".join(not_ready))
+            )
+
         if self.diff_delete and networks_ready:
             resp = ""
             networks_to_delete = []
@@ -5242,6 +5479,8 @@ class DcnmNetwork:
                 "multicluster_parent",
             ]
 
+            pvlan_deletes = []
+
             # Separate networks by state
             for net, state in self.diff_delete.items():
                 if state == "TIMEOUT":
@@ -5249,7 +5488,9 @@ class DcnmNetwork:
                     resp = "Timeout waiting for network to be in delete ready state.\n"
                     continue
 
-                if supports_bulk_delete:
+                if self.pvlan_kind(net):
+                    pvlan_deletes.append(net)
+                elif supports_bulk_delete:
                     networks_to_delete.append(net)
                 else:
                     # Fall back to individual deletes for fabric types without bulk-delete support.
@@ -5273,6 +5514,9 @@ class DcnmNetwork:
                     is_rollback
                 )
 
+            if pvlan_deletes:
+                self.pvlan_delete_networks(pvlan_deletes)
+
         if del_failure:
             fail_msg = "Deletion of Networks {0} has failed: {1}".format(del_failure[:-1], resp)
             self.result["response"].append(resp)
@@ -5281,7 +5525,10 @@ class DcnmNetwork:
                 return
             self.failure(fail_msg)
 
-        if self.diff_create:
+        pvlan_creates = [net for net in self.diff_create if self.pvlan_type_of(net)]
+        regular_creates = [net for net in self.diff_create if not self.pvlan_type_of(net)]
+
+        if regular_creates:
             # Get skipped attributes for parent fabrics
             skipped_attributes = self.get_skipped_attributes()
             template_mapping = self.get_template_config_mapping()
@@ -5294,7 +5541,7 @@ class DcnmNetwork:
 
             payload_list = []
 
-            for net in self.diff_create:
+            for net in regular_creates:
                 json_to_dict = json.loads(net["networkTemplateConfig"])
                 vlanId = json_to_dict.get("vlanId", "")
 
@@ -5303,50 +5550,10 @@ class DcnmNetwork:
                     vlan_data = dcnm_send(self.module, "GET", vlan_path)
 
                     if vlan_data["RETURN_CODE"] != 200:
-                        self.module.fail_json(msg="Failure getting autogenerated vlan_id {0}".format(vlan_data))
+                        self.fail_after_writes("Failure getting autogenerated vlan_id {0}".format(vlan_data))
                     vlanId = vlan_data["DATA"]
 
-                t_conf = {
-                    "vlanId": vlanId,
-                    "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
-                    "isLayer2Only": json_to_dict.get("isLayer2Only", False),
-                    "tag": json_to_dict.get("tag", ""),
-                    "vlanName": json_to_dict.get("vlanName", ""),
-                    "intfDescription": json_to_dict.get("intfDescription", ""),
-                    "mtu": json_to_dict.get("mtu", ""),
-                    "suppressArp": json_to_dict.get("suppressArp", False),
-                    "dhcpServers": json_to_dict.get("dhcpServers", ""),
-                    "loopbackId": json_to_dict.get("loopbackId", ""),
-                    "mcastGroup": json_to_dict.get("mcastGroup", ""),
-                    "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
-                    "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
-                    "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
-                    "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
-                    "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
-                    "trmEnabled": json_to_dict.get("trmEnabled", False),
-                    "rtBothAuto": json_to_dict.get("rtBothAuto", False),
-                    "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
-                    "networkName": json_to_dict.get("networkName", False),
-                }
-
-                if self.dcnm_version > 11:
-                    t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
-                    t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                    t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
-                if "xconnect" in json_to_dict:
-                    t_conf.update(xconnect=json_to_dict["xconnect"])
-                if self._has_ipv4_acl_in(json_to_dict):
-                    t_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
-                        json_to_dict
-                    )
-
-                if self.fabric_type not in ["multisite_child", "multicluster_child"]:
-                    self.apply_secondary_gws_compat(t_conf)
-
-                # Remove skipped attributes from template config for parent fabrics
-                for key in list(t_conf.keys()):
-                    if key in skipped_template_keys:
-                        del t_conf[key]
+                t_conf = self.build_create_template_config(json_to_dict, vlanId, skipped_template_keys)
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
 
@@ -5378,8 +5585,13 @@ class DcnmNetwork:
                         return
                     self.failure(resp)
 
+        if pvlan_creates:
+            self.pvlan_push_networks(pvlan_creates, "POST")
+
         method = "POST"
-        if self.diff_attach:
+        if self.diff_attach and getattr(self, "pvlan_request", False):
+            self.pvlan_push_attachments(self.diff_attach, detach_step=False)
+        elif self.diff_attach:
             attach_path = path + "/attachments"
 
             # Update the fabric name to specific fabric which the switches are part of.
@@ -5433,6 +5645,15 @@ class DcnmNetwork:
                 self.failure(resp)
 
         method = "POST"
+        if getattr(self, "pvlan_request", False) and self.fabric_type == "standalone":
+            # The saved removals of the run go with the deploy of the diff, and
+            # only the attach map of each deployed network is taken.
+            keys = {(name, serial) for name, serials in self.pvlan_removals.items() for serial in serials}
+            for name in (self.diff_deploy or {}).get("networkNames", "").split(","):
+                keys |= {(name.strip(), serial) for serial in self.network_sn_attach_map.get(name.strip(), set())}
+            self.pvlan_deploy(keys)
+            return
+
         if self.diff_deploy:
             # For multicluster_parent and multisite_parent, prepare payload for action plugin
             if self.fabric_type == "multicluster_parent" or self.fabric_type == "multisite_parent":
@@ -5481,6 +5702,52 @@ class DcnmNetwork:
                     self.failed_to_rollback = True
                     return
                 self.failure(resp)
+
+    def build_create_template_config(self, json_to_dict, vlanId, skipped_template_keys):
+        """Return the template config sent when a network is created with an explicit networkId."""
+        t_conf = {
+            "vlanId": vlanId,
+            "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
+            "isLayer2Only": json_to_dict.get("isLayer2Only", False),
+            "tag": json_to_dict.get("tag", ""),
+            "vlanName": json_to_dict.get("vlanName", ""),
+            "intfDescription": json_to_dict.get("intfDescription", ""),
+            "mtu": json_to_dict.get("mtu", ""),
+            "suppressArp": json_to_dict.get("suppressArp", False),
+            "dhcpServers": json_to_dict.get("dhcpServers", ""),
+            "loopbackId": json_to_dict.get("loopbackId", ""),
+            "mcastGroup": json_to_dict.get("mcastGroup", ""),
+            "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
+            "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
+            "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
+            "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
+            "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
+            "trmEnabled": json_to_dict.get("trmEnabled", False),
+            "rtBothAuto": json_to_dict.get("rtBothAuto", False),
+            "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+            "networkName": json_to_dict.get("networkName", False),
+        }
+
+        if self.dcnm_version > 11:
+            t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
+            t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
+            t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+        if "xconnect" in json_to_dict:
+            t_conf.update(xconnect=json_to_dict["xconnect"])
+        if self._has_ipv4_acl_in(json_to_dict):
+            t_conf[self.IPV4_ACL_IN_TEMPLATE_KEY] = self._get_ipv4_acl_in(
+                json_to_dict
+            )
+
+        if self.fabric_type not in ["multisite_child", "multicluster_child"]:
+            self.apply_secondary_gws_compat(t_conf)
+
+        # Remove skipped attributes from template config for parent fabrics
+        for key in list(t_conf.keys()):
+            if key in skipped_template_keys:
+                del t_conf[key]
+
+        return t_conf
 
     def get_fabric_multicast_group_address(self) -> str:
         """
@@ -5739,6 +6006,8 @@ class DcnmNetwork:
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
                 ipv4_acl_in=dict(type="str", length_min=1, length_max=64),
+                pvlan_type=dict(type="str", choices=["primary", "isolated", "community"]),
+                pvlan_primary=dict(type="str", length_max=64),
             )
             net_spec["xconnect"] = dict(type="bool")
             # Adjust deploy field for query state
@@ -5755,6 +6024,16 @@ class DcnmNetwork:
         self.log.debug(msg)
 
         """Parse the playbook values, validate to param specs."""
+
+        if self.config and self.fabric_type != "standalone":
+            for net in self.config:
+                if any(net.get(key) is not None for key in self.PVLAN_INPUT_KEYS):
+                    self.module.fail_json(
+                        msg=(
+                            f"Network '{net.get('net_name', 'unknown')}': pvlan_type and pvlan_primary are "
+                            f"supported only on standalone fabrics (fabric type: {self.fabric_type})."
+                        )
+                    )
 
         # Keep this check ahead of want/diff construction so an unsupported
         # request cannot reach a controller mutation path.
@@ -5890,7 +6169,7 @@ class DcnmNetwork:
                 msg = None
                 # Validate net params
                 valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec, check_extra_params=self.check_extra_params)
-                for net in valid_net:
+                for raw_net, net in zip(self.config, valid_net):
                     # Check for attachment attributes in MSD child fabrics
                     if self.fabric_type in ["multisite_child", "multicluster_child"] and net.get("attach"):
                         self.module.fail_json(
@@ -5898,6 +6177,19 @@ class DcnmNetwork:
                             "not allowed for MSD child networks. MSD child fabrics do not support "
                             "network attachments."
                         )
+
+                    if state != "deleted" and net.get("pvlan_type") in ("isolated", "community"):
+                        # Secondary networks are Layer 2 only. get_have() reads the
+                        # raw config to decide whether a VRF lookup is needed.
+                        if raw_net.get("is_l2only") is None:
+                            raw_net["is_l2only"] = True
+                            net["is_l2only"] = True
+                        elif net.get("is_l2only") is not True:
+                            invalid_params.append(
+                                f"Network '{net.get('net_name', 'unknown')}': {net['pvlan_type']} networks are "
+                                "Layer 2 only; is_l2only must be true"
+                            )
+                            net["is_l2only"] = True
 
                     if net.get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
@@ -6062,6 +6354,16 @@ class DcnmNetwork:
 
         return fail, changed
 
+    def fail_after_writes(self, msg):
+        """
+        Fail from a point that earlier writes of the run may precede. A PVLAN
+        request reports through failure(), with the acknowledged writes and the
+        state read after the failure; other requests keep the plain message.
+        """
+        if getattr(self, "pvlan_request", False):
+            self.failure(msg)
+        self.module.fail_json(msg=msg)
+
     def failure(self, resp):
         caller = inspect.stack()[1][3]
 
@@ -6073,6 +6375,26 @@ class DcnmNetwork:
         if self.is_ms_fabric or self.fabric_type != "standalone":
             self.failed_to_rollback = True
             self.module.fail_json(msg=resp)
+            return
+
+        # The overridden-style rollback below cannot tell implicit PVLAN
+        # attachments from explicit ones, so it is not attempted for any network
+        # of the request. Report the controller response and the current state
+        # of the requested networks instead: the writes the controller
+        # acknowledged and, separately, the state read after the failure.
+        if getattr(self, "pvlan_request", False):
+            self.failed_to_rollback = True
+            res = copy.deepcopy(resp)
+            if not isinstance(res, dict):
+                res = {"DATA": res}
+            res.update({"ROLLBACK_RESULT": "NOT ATTEMPTED - the request contains PVLAN networks; acknowledged writes remain applied"})
+            self.module.fail_json(
+                msg=res,
+                changed=self.pvlan_changed(),
+                acknowledged_writes=self.pvlan_acknowledged_writes(),
+                pvlan_state=self.pvlan_read_state(),
+                response=self.result["response"],
+            )
             return
 
         # Implementing a per task rollback logic here so that we rollback ND to the have state
@@ -6425,6 +6747,1083 @@ class DcnmNetwork:
 
             self.dcnm_update_network_information(net, match_have, match_cfg)
 
+    @classmethod
+    def pvlan_type_of(cls, network):
+        """Return Primary, Isolated or Community for a PVLAN network object, otherwise None."""
+        if not isinstance(network, dict):
+            return None
+        return cls.PVLAN_TYPES.get(str(network.get("type") or "").lower())
+
+    def pvlan_kind(self, name):
+        """Return the PVLAN type of a network known to this request, otherwise None."""
+        info = getattr(self, "pvlan_eff", {}).get(name) or getattr(self, "pvlan_index", {}).get(name)
+        return info.get("type") if info else None
+
+    def pvlan_name_for_id(self, network_id):
+        """Return the name of the network with this networkId, preferring the request."""
+        for table in (getattr(self, "pvlan_eff", {}), getattr(self, "pvlan_index", {})):
+            for name, info in table.items():
+                if network_id is not None and info.get("networkId") == network_id:
+                    return name
+        return None
+
+    def pvlan_primary_name(self, name):
+        """Return the primary network name of a secondary network."""
+        info = getattr(self, "pvlan_eff", {}).get(name)
+        if info and info.get("primary"):
+            return info["primary"]
+        info = info or getattr(self, "pvlan_index", {}).get(name) or {}
+        return self.pvlan_name_for_id(info.get("primaryNetworkId"))
+
+    def pvlan_switch_label(self, serial):
+        for ip_address, ser in self.ip_sn.items():
+            if ser == serial:
+                return f"{ip_address} ({serial})"
+        return serial
+
+    def pvlan_read_attachment_rows(self, names, during_prepare=False):
+        """Return current attachment rows keyed by (networkName, switch serial)."""
+        path = self.paths["GET_NET_ATTACH"].format(self.fabric, ",".join(names))
+        resp = dcnm_send(self.module, "GET", path)
+        missing, not_ok = self.handle_response(resp, "query_dcnm")
+        if missing or not_ok or not isinstance(resp.get("DATA"), list):
+            if during_prepare:
+                self.module.fail_json(msg=f"Unable to read the attachments of PVLAN networks {', '.join(names)}: {resp}")
+            self.failure(resp)
+        rows = {}
+        for entry in resp["DATA"]:
+            for row in entry.get("lanAttachList") or []:
+                rows[(row.get("networkName") or entry.get("networkName"), row.get("switchSerialNo"))] = row
+        return rows
+
+    def pvlan_secondary_violations(self, name, net_type, cfg, raw):
+        """Return the playbook keys that Pvlan_Secondary_Network cannot carry."""
+        violations = []
+        for key in self.PVLAN_SECONDARY_FORBIDDEN_KEYS:
+            if raw.get(key) is None:
+                continue
+            value = cfg.get(key)
+            if value is False or value == "" or value == []:
+                continue
+            violations.append(key)
+        for key in ("net_template", "net_extension_template"):
+            if raw.get(key) not in (None, "", self.PVLAN_SECONDARY_TEMPLATE):
+                violations.append(key)
+        if not violations:
+            return []
+        return [
+            f"Network '{name}': {', '.join(violations)} cannot be set on a {net_type.lower()} network; "
+            f"the {self.PVLAN_SECONDARY_TEMPLATE} template does not declare it"
+        ]
+
+    def pvlan_resolve_primary(self, name, primary, eff, index, regular_requested, delete_names):
+        """Resolve pvlan_primary to the primary networkId. Return (network_id, error)."""
+        if primary == name:
+            return None, f"Network '{name}': pvlan_primary cannot refer to the network itself"
+        if primary in eff:
+            if eff[primary]["type"] != "Primary":
+                return None, f"Network '{name}': pvlan_primary '{primary}' is not a primary network"
+            return eff[primary]["networkId"], None
+        if primary in regular_requested:
+            return None, f"Network '{name}': pvlan_primary '{primary}' is not a primary network"
+        info = index.get(primary)
+        if info is None:
+            return None, f"Network '{name}': pvlan_primary '{primary}' was not found in the request or in fabric {self.fabric}"
+        if info["type"] != "Primary":
+            return None, f"Network '{name}': pvlan_primary '{primary}' is not a primary network"
+        if primary in delete_names:
+            return None, f"Network '{name}': pvlan_primary '{primary}' is removed by this request"
+        return info["networkId"], None
+
+    def pvlan_prepare(self):
+        """
+        # Summary
+
+        Resolve and validate PVLAN intent for the whole request.
+
+        Runs after the read phase and before any diff, so a PVLAN error cannot
+        follow a controller write. A request that touches no PVLAN network
+        returns without an additional controller request.
+        """
+        state = self.params["state"]
+        if state == "query":
+            return
+
+        config_by_name = {}
+        raw_by_name = {}
+        for cfg in self.validated:
+            config_by_name.setdefault(cfg["net_name"], cfg)
+        for cfg in self.config or []:
+            raw_by_name.setdefault(cfg.get("net_name"), cfg)
+        have_by_name = {}
+        for have in self.have_create:
+            have_by_name.setdefault(have["networkName"], have)
+        want_by_name = {}
+        for want in self.want_create:
+            want_by_name.setdefault(want["networkName"], want)
+
+        requested = state != "deleted" and any(
+            cfg.get(key) is not None for cfg in config_by_name.values() for key in self.PVLAN_INPUT_KEYS
+        )
+        if not requested and not any(self.pvlan_type_of(have) for have in self.have_create):
+            return
+
+        # The read phase already covers every network for overridden and for
+        # deleted without config; otherwise read the fabric list once.
+        if state == "overridden" or (state == "deleted" and not self.config):
+            networks = self.have_create
+        else:
+            resp = dcnm_send(self.module, "GET", self.paths["GET_NET"].format(self.fabric))
+            missing_fabric, not_ok = self.handle_response(resp, "query_dcnm")
+            if missing_fabric or not_ok:
+                self.module.fail_json(msg=f"Unable to read the networks of fabric {self.fabric} to resolve PVLAN networks: {resp}")
+            networks = resp.get("DATA") or []
+        index = {}
+        for net in networks:
+            if net.get("networkName"):
+                index[net["networkName"]] = {
+                    "type": self.pvlan_type_of(net),
+                    "networkId": net.get("networkId"),
+                    "primaryNetworkId": net.get("primaryNetworkId"),
+                }
+
+        if state == "deleted":
+            delete_names = set(have_by_name) if not self.config else {name for name in config_by_name if name in have_by_name}
+        elif state == "overridden":
+            delete_names = {name for name in have_by_name if name not in want_by_name}
+        else:
+            delete_names = set()
+
+        errors = []
+        eff = {}
+        regular_requested = set()
+        if state != "deleted":
+            for name, cfg in config_by_name.items():
+                have = have_by_name.get(name)
+                requested_type = self.PVLAN_TYPES.get(cfg.get("pvlan_type") or "")
+                have_type = self.pvlan_type_of(have)
+                if have is None and requested_type is None:
+                    if cfg.get("pvlan_primary") is not None:
+                        errors.append(f"Network '{name}': pvlan_primary requires pvlan_type isolated or community")
+                    regular_requested.add(name)
+                elif have is None:
+                    missing = [key for key in ("net_id", "vlan_id") if cfg.get(key) is None]
+                    if missing:
+                        errors.append(f"Network '{name}': a new PVLAN network requires {' and '.join(missing)}")
+                    eff[name] = {"type": requested_type, "networkId": cfg.get("net_id"), "new": True}
+                elif requested_type is not None and requested_type != have_type:
+                    current = have_type.lower() if have_type else "regular"
+                    errors.append(f"Network '{name}': cannot change the network type from {current} to {requested_type.lower()}")
+                elif have_type is None:
+                    if cfg.get("pvlan_primary") is not None:
+                        errors.append(f"Network '{name}': pvlan_primary is valid only for isolated or community networks")
+                    regular_requested.add(name)
+                else:
+                    eff[name] = {
+                        "type": have_type,
+                        "networkId": have.get("networkId"),
+                        "new": False,
+                        "have_primary_id": have.get("primaryNetworkId"),
+                    }
+
+            for name, info in eff.items():
+                cfg = config_by_name[name]
+                if info["type"] == "Primary":
+                    info["primary"] = None
+                    info["primaryNetworkId"] = -1
+                    if cfg.get("pvlan_primary") is not None:
+                        errors.append(f"Network '{name}': pvlan_primary is valid only for isolated or community networks")
+                    want = want_by_name.get(name, {})
+                    if self.PVLAN_SECONDARY_TEMPLATE in (want.get("networkTemplate"), want.get("networkExtensionTemplate")):
+                        errors.append(f"Network '{name}': a primary network cannot use the {self.PVLAN_SECONDARY_TEMPLATE} template")
+                    continue
+
+                errors.extend(self.pvlan_secondary_violations(name, info["type"], cfg, raw_by_name.get(name, {})))
+                primary = cfg.get("pvlan_primary")
+                if primary is None:
+                    if info["new"]:
+                        errors.append(f"Network '{name}': pvlan_primary is required for {info['type'].lower()} networks")
+                        continue
+                    info["primaryNetworkId"] = info["have_primary_id"]
+                    info["primary"] = None
+                    continue
+                primary_id, error = self.pvlan_resolve_primary(name, primary, eff, index, regular_requested, delete_names)
+                if error:
+                    errors.append(error)
+                    continue
+                if not info["new"] and primary_id != info["have_primary_id"]:
+                    errors.append(
+                        f"Network '{name}': cannot change pvlan_primary of an existing network "
+                        f"(current primary networkId {info['have_primary_id']}, requested '{primary}')"
+                    )
+                    continue
+                info["primary"] = primary
+                info["primaryNetworkId"] = primary_id
+
+        self.pvlan_eff = eff
+        self.pvlan_index = index
+        for info in eff.values():
+            if info["type"] != "Primary" and not info.get("primary"):
+                info["primary"] = self.pvlan_name_for_id(info.get("primaryNetworkId"))
+
+        # Pvlan_Secondary_Network allows one isolated network per primary.
+        isolated = {}
+        for name, info in eff.items():
+            if info["type"] == "Isolated" and info.get("primaryNetworkId") not in (None, -1):
+                isolated.setdefault(info["primaryNetworkId"], set()).add(name)
+        for name, info in index.items():
+            if info["type"] == "Isolated" and name not in eff and name not in delete_names:
+                isolated.setdefault(info["primaryNetworkId"], set()).add(name)
+        for primary_id, names in isolated.items():
+            if len(names) > 1:
+                errors.append(
+                    f"Primary network '{self.pvlan_name_for_id(primary_id) or primary_id}' can have one isolated "
+                    f"network; the request would leave {', '.join(sorted(names))}"
+                )
+
+        if eff and state != "deleted":
+            nv_pairs = (self.fabric_det or {}).get("nvPairs") or {}
+            enable_pvlan = nv_pairs.get("ENABLE_PVLAN")
+            if not (enable_pvlan is True or str(enable_pvlan).strip().lower() == "true"):
+                errors.append(f"Fabric {self.fabric}: PVLAN networks require ENABLE_PVLAN true in the fabric settings (current value: {enable_pvlan!r})")
+
+        want_attach_by_name = {}
+        for entry in self.want_attach:
+            want_attach_by_name.setdefault(entry["networkName"], entry)
+        self.pvlan_want_serials = {}
+        for name in eff:
+            serials = set()
+            for item in (want_attach_by_name.get(name) or {}).get("lanAttachList", []):
+                serials.add(item["serialNumber"])
+                if item.get("torports"):
+                    errors.append(f"Network '{name}': tor_ports are not supported for PVLAN networks")
+                for port in (item.get("switchPorts") or "").split(","):
+                    if port and not self.PVLAN_PORT_NAME.match(port):
+                        errors.append(
+                            f"Network '{name}': port {port} on switch {self.pvlan_switch_label(item['serialNumber'])} is not an "
+                            "Ethernet or Port-channel interface; attach a vPC by naming the port-channel of each peer"
+                        )
+            self.pvlan_want_serials[name] = serials
+
+        have_attach_by_name = {}
+        for entry in self.have_attach:
+            have_attach_by_name.setdefault(entry["networkName"], entry)
+
+        # Family closure. NDFC adds a primary on every switch where one of its
+        # secondaries is attached, and adds an attached secondary on every
+        # switch where its primary is then attached. Neither row is marked, so
+        # replaced/overridden keep them instead of detaching them as extras.
+        keep = {}
+        if state in ("replaced", "overridden"):
+            family = {}
+            for name, info in index.items():
+                if info["type"] in ("Isolated", "Community") and name not in delete_names:
+                    family.setdefault(info["primaryNetworkId"], set()).add(name)
+            for name, info in eff.items():
+                if info["type"] != "Primary":
+                    family.setdefault(info.get("primaryNetworkId"), set()).add(name)
+            involved = set()
+            for name, info in eff.items():
+                primary_id = info["networkId"] if info["type"] == "Primary" else info.get("primaryNetworkId")
+                involved |= family.get(primary_id, set())
+                involved.add(self.pvlan_name_for_id(primary_id) or name)
+            current = {}
+            unread = sorted(name for name in involved if name not in have_attach_by_name and name in index and name not in delete_names)
+            for name in involved:
+                for row in (have_attach_by_name.get(name) or {}).get("lanAttachList", []):
+                    if row.get("isAttached"):
+                        current.setdefault(name, set()).add(row["serialNumber"])
+            if unread:
+                for (name, serial), row in self.pvlan_read_attachment_rows(unread, during_prepare=True).items():
+                    if row.get("isLanAttached"):
+                        current.setdefault(name, set()).add(serial)
+
+            def desired(name):
+                if name in eff:
+                    return self.pvlan_want_serials.get(name, set())
+                return current.get(name, set())
+
+            for name, info in eff.items():
+                if info["type"] == "Primary":
+                    serials = set()
+                    for secondary in family.get(info["networkId"], set()):
+                        serials |= desired(secondary)
+                    keep[name] = serials
+            for name, info in eff.items():
+                if info["type"] == "Primary" or not self.pvlan_want_serials.get(name):
+                    continue
+                primary = self.pvlan_name_for_id(info.get("primaryNetworkId"))
+                staying = desired(primary) | keep.get(primary, set())
+                keep[name] = current.get(name, set()) & staying
+        self.pvlan_keep = keep
+
+        # NDFC refuses to delete a primary that a secondary still references.
+        for name in sorted(delete_names):
+            info = index.get(name) or {}
+            if info.get("type") != "Primary":
+                continue
+            survivors = sorted(
+                other for other, other_info in index.items()
+                if other_info["type"] in ("Isolated", "Community")
+                and other_info["primaryNetworkId"] == info["networkId"]
+                and other not in delete_names
+            )
+            if survivors:
+                errors.append(f"Network '{name}': cannot delete a primary network while {', '.join(survivors)} reference it")
+
+        # diff_for_create() fails on these after get_diff_merge() may have sent
+        # an automatic-ID POST, so check the whole request here.
+        if state != "deleted":
+            for want in self.want_create:
+                have = have_by_name.get(want["networkName"])
+                if not have:
+                    continue
+                if want.get("networkId") and want["networkId"] != have["networkId"]:
+                    errors.append("networkId can not be updated on existing network: {0}".format(want["networkName"]))
+                if have.get("vrf") != want.get("vrf"):
+                    errors.append(
+                        "The network {0} existing already can not change"
+                        " the VRF association from vrf:{1} to vrf:{2}".format(want["networkName"], have.get("vrf"), want.get("vrf"))
+                    )
+
+        if errors:
+            self.module.fail_json(msg="Invalid PVLAN network configuration:\n{0}".format("\n".join(errors)))
+
+        for want in self.want_create:
+            info = eff.get(want["networkName"])
+            if not info:
+                continue
+            want["type"] = info["type"]
+            want["primaryNetworkId"] = info["primaryNetworkId"]
+            if info["type"] != "Primary":
+                want["networkTemplate"] = self.PVLAN_SECONDARY_TEMPLATE
+                want["networkExtensionTemplate"] = self.PVLAN_SECONDARY_TEMPLATE
+                want["vrf"] = "NA"
+                template_conf = json.loads(want["networkTemplateConfig"])
+                template_conf["tag"] = ""
+                template_conf["isLayer2Only"] = True
+                want["networkTemplateConfig"] = json.dumps(template_conf)
+
+        self.pvlan_delete_names = delete_names
+        self.pvlan_detached = {}
+        self.pvlan_request = True
+
+    def pvlan_plan_pins(self):
+        """
+        Re-attach a primary before a secondary detach on a switch where the
+        primary stays wanted.
+
+        The primary may have been added implicitly with the secondary, and the
+        readback cannot tell. Attaching it first makes it explicit, so the
+        secondary detach cannot take it away.
+        """
+        if not getattr(self, "pvlan_request", False):
+            return
+
+        detached = {}
+        for entry in list(self.diff_attach) + list(self.diff_detach):
+            if self.pvlan_kind(entry["networkName"]) not in ("Isolated", "Community"):
+                continue
+            primary = self.pvlan_primary_name(entry["networkName"])
+            for item in entry["lanAttachList"]:
+                if not item.get("deployment"):
+                    detached.setdefault(primary, set()).add(item["serialNumber"])
+
+        have_attach_by_name = {}
+        for entry in self.have_attach:
+            have_attach_by_name.setdefault(entry["networkName"], entry)
+        diff_attach_by_name = {}
+        for entry in self.diff_attach:
+            diff_attach_by_name.setdefault(entry["networkName"], entry)
+        no_deploy = self.get_no_deploy_net_names()
+
+        for primary in sorted(name for name in detached if name in self.pvlan_eff):
+            for serial in sorted(detached[primary] & self.pvlan_want_serials.get(primary, set())):
+                entry = diff_attach_by_name.get(primary)
+                planned = [
+                    item for item in (entry or {}).get("lanAttachList", [])
+                    if item["serialNumber"] == serial and item.get("deployment")
+                ]
+                if planned:
+                    for item in planned:
+                        item["_pvlan_pin"] = True
+                    continue
+                row = next(
+                    (
+                        row for row in (have_attach_by_name.get(primary) or {}).get("lanAttachList", [])
+                        if row["serialNumber"] == serial and row.get("isAttached")
+                    ),
+                    None,
+                )
+                if row is None:
+                    continue
+                pin = copy.deepcopy(row)
+                pin.pop("isAttached", None)
+                pin.update({"switchPorts": "", "detachSwitchPorts": "", "deployment": True})
+                pin.update({"is_deploy": primary not in no_deploy, "_pvlan_pin": True})
+                if entry is None:
+                    entry = {"networkName": primary, "lanAttachList": []}
+                    self.diff_attach.append(entry)
+                    diff_attach_by_name[primary] = entry
+                entry["lanAttachList"].append(pin)
+
+    def pvlan_failed_items(self, resp):
+        """Return the items of an attachment response that did not succeed, even under HTTP 200."""
+        data = resp.get("DATA") if isinstance(resp, dict) else None
+        failed = []
+        if isinstance(data, dict):
+            for key, value in data.items():
+                text = str(value).strip()
+                upper = text.upper()
+                if not upper.startswith("SUCCESS") or any(marker in upper for marker in ("FAIL", "ERROR", "INVALID", "NOT ALLOWED")):
+                    failed.append({key: text})
+        return failed
+
+    def pvlan_send_attachments(self, entries, detach_step, strict):
+        """Send one attachments POST and stop on any failed item."""
+        path = self.paths["GET_NET"].format(self.fabric) + "/attachments"
+        self.update_ms_fabric(entries)
+        for d_a in entries:
+            for v_a in d_a["lanAttachList"]:
+                v_a.pop("_pvlan_pin", None)
+                if v_a.get("is_deploy"):
+                    del v_a["is_deploy"]
+                if not detach_step:
+                    v_a.pop("_svi_supplied", None)
+                self.normalize_attachment_torports_for_payload(v_a)
+
+        attachment_count = sum(len(entry.get("lanAttachList", [])) for entry in entries)
+        retry_count = 1 if detach_step else max(attachment_count * 30, 500)
+        update_in_progress = False
+        for attempt in range(0, retry_count):
+            resp = dcnm_send(self.module, "POST", path, json.dumps(entries))
+            update_in_progress = False
+            data = resp.get("DATA", {})
+            values = data.values() if isinstance(data, dict) else (data if isinstance(data, list) else [data])
+            for value in values:
+                if re.search(r"Failed.*Please try after some time", str(value)):
+                    update_in_progress = True
+            if not update_in_progress or detach_step:
+                break
+            time.sleep(1)
+
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "attach")
+        failed = self.pvlan_failed_items(resp) if strict else []
+        if fail or failed or (update_in_progress and not detach_step):
+            res = copy.deepcopy(resp)
+            if failed:
+                res["FAILED_ITEMS"] = failed
+            self.failure(res)
+
+    def pvlan_push_attachments(self, payload, detach_step):
+        """
+        # Summary
+
+        Send attachment changes in PVLAN dependency order.
+
+        1. pinned primary attaches
+        2. port detaches of PVLAN switch detaches
+        3. regular items and secondary detaches
+        4. primary detaches still needed after a fresh read
+        5. primary attaches
+        6. secondary attaches
+
+        A PVLAN switch detach of a row that still holds ports is sent as a
+        port detach first and then a switch detach without ports, the order
+        measured on the controller. The port detach of a vPC switch also names
+        its peer (pvlan_port_detach_peers).
+
+        A primary row that NDFC added with a secondary reads isLanAttached
+        false right after that secondary detach; its detach is not sent.
+        """
+        companions = self.pvlan_port_detach_peers(payload)[0]
+        items = []
+        if detach_step:
+            # Pins must precede every secondary detach of this run.
+            for entry in self.diff_attach:
+                for item in [item for item in entry["lanAttachList"] if item.get("_pvlan_pin")]:
+                    items.append((entry, item, 0))
+                    entry["lanAttachList"].remove(item)
+            self.diff_attach[:] = [entry for entry in self.diff_attach if entry["lanAttachList"]]
+
+        for entry in payload:
+            kind = self.pvlan_kind(entry["networkName"])
+            for item in entry["lanAttachList"]:
+                if kind is not None and not item.get("deployment") and item.get("switchPorts"):
+                    # Copies: the planned diff keeps the row as it was read.
+                    port_detach = copy.deepcopy(item)
+                    port_detach.update({"switchPorts": "", "detachSwitchPorts": item["switchPorts"], "deployment": True})
+                    items.append((entry, port_detach, 1))
+                    peer = companions.pop((entry["networkName"], item.get("serialNumber")), None)
+                    if peer is not None:
+                        items.append((entry, peer, 1))
+                    item = dict(copy.deepcopy(item), switchPorts="")
+                if item.get("_pvlan_pin"):
+                    phase = 0
+                elif kind is None:
+                    phase = 2
+                elif kind == "Primary":
+                    phase = 4 if item.get("deployment") else 3
+                else:
+                    phase = 5 if item.get("deployment") else 2
+                    if not item.get("deployment"):
+                        primary = self.pvlan_primary_name(entry["networkName"])
+                        self.pvlan_detached.setdefault(primary, set()).add(item.get("serialNumber"))
+                items.append((entry, item, phase))
+
+        for phase in range(6):
+            selected = [(entry, item) for entry, item, item_phase in items if item_phase == phase]
+            if phase == 3 and selected:
+                selected = self.pvlan_filter_primary_detaches(selected)
+            if not selected:
+                continue
+            entries = []
+            by_entry = {}
+            for entry, item in selected:
+                if id(entry) not in by_entry:
+                    new_entry = {key: value for key, value in entry.items() if key != "lanAttachList"}
+                    new_entry["lanAttachList"] = []
+                    by_entry[id(entry)] = new_entry
+                    entries.append(new_entry)
+                by_entry[id(entry)]["lanAttachList"].append(item)
+            strict = any(self.pvlan_kind(entry["networkName"]) for entry in entries)
+            self.pvlan_send_attachments(entries, detach_step, strict)
+
+    def pvlan_port_detach_peers(self, payload):
+        """
+        # Summary
+
+        Return the vPC peer rows the port detach step must name, keyed by
+        (network, serial of the switch whose ports are detached), and the
+        peer identity problems found.
+
+        The controller refused the port detach of one vPC switch whose peer
+        was not named for the same network in the same request (measured).
+        As in the peer completion of diff_for_attach_deploy, the peer row is
+        re-sent attached, without ports and without a port detach, so its own
+        ports stay. A peer with its own port detach in the step needs no row.
+        A peer that is not attached to the network is not added.
+        """
+        companions, problems = {}, []
+        have_rows = {}
+        for entry in self.have_attach:
+            for row in entry.get("lanAttachList") or []:
+                if row.get("isAttached"):
+                    have_rows.setdefault((entry["networkName"], row.get("serialNumber")), row)
+        for entry in payload:
+            name = entry["networkName"]
+            if self.pvlan_kind(name) is None:
+                continue
+            split = [item for item in entry["lanAttachList"] if not item.get("deployment") and item.get("switchPorts")]
+            for item in split:
+                serial = item.get("serialNumber")
+                inventory = next((self.inventory_data[ip] for ip, sn in self.ip_sn.items() if sn == serial), {})
+                peer = inventory.get("peerSerialNumber") if inventory.get("isVpcConfigured") is True else None
+                listed = item.get("peerSerialNo")
+                if inventory.get("isVpcConfigured") is True and not peer:
+                    problems.append(f"{name} on switch {self.pvlan_switch_label(serial)}: the inventory lists the switch as vPC without a peer serial")
+                    continue
+                if listed and listed != peer:
+                    problems.append(
+                        f"{name} on switch {self.pvlan_switch_label(serial)}: the attachment names vPC peer {listed}, the inventory "
+                        f"names {peer or 'no vPC peer'}"
+                    )
+                    continue
+                if not peer or any(other.get("serialNumber") == peer for other in split):
+                    continue
+                row = next((other for other in entry["lanAttachList"] if other.get("serialNumber") == peer), None) or have_rows.get((name, peer))
+                if row is None:
+                    continue
+                companion = copy.deepcopy(row)
+                for key in ("isAttached", "_pvlan_pin"):
+                    companion.pop(key, None)
+                companion.update({"switchPorts": "", "detachSwitchPorts": "", "deployment": True})
+                companions[(name, serial)] = companion
+        return companions, problems
+
+    def pvlan_check_port_detach_peers(self):
+        """Refuse, before any write, a port detach whose vPC peer identity is missing or inconsistent."""
+        if not getattr(self, "pvlan_request", False):
+            return
+        problems = []
+        for payload in (self.diff_detach, self.diff_attach):
+            problems += self.pvlan_port_detach_peers(payload or [])[1]
+        if problems:
+            self.module.fail_json(msg="PVLAN port detach refused before any write: " + "; ".join(problems))
+
+    def pvlan_filter_primary_detaches(self, selected):
+        """Drop primary detaches for rows that NDFC already removed with their secondary."""
+        checked = sorted({entry["networkName"] for entry, item in selected if item.get("serialNumber") in self.pvlan_detached.get(entry["networkName"], set())})
+        if not checked:
+            return selected
+        rows = self.pvlan_read_attachment_rows(checked)
+        kept = []
+        for entry, item in selected:
+            name = entry["networkName"]
+            serial = item.get("serialNumber")
+            if name in checked and serial in self.pvlan_detached.get(name, set()):
+                row = rows.get((name, serial))
+                if not row or not row.get("isLanAttached"):
+                    self.result["warnings"].append(
+                        f"PVLAN primary {name} on switch {self.pvlan_switch_label(serial)} was removed with its "
+                        "secondary networks; no separate detach was sent."
+                    )
+                    continue
+            kept.append((entry, item))
+        return kept
+
+    def pvlan_family(self, name):
+        """Return the primary of a PVLAN network and every secondary of that primary."""
+        primary = name if self.pvlan_kind(name) == "Primary" else self.pvlan_primary_name(name)
+        if not primary:
+            return {name}
+        primary_id = (self.pvlan_eff.get(primary) or self.pvlan_index.get(primary) or {}).get("networkId")
+        family = {primary, name}
+        for table in (self.pvlan_index, self.pvlan_eff):
+            for other, info in table.items():
+                if info.get("type") in ("Isolated", "Community") and primary_id is not None and info.get("primaryNetworkId") == primary_id:
+                    family.add(other)
+        return family
+
+    def pvlan_saved_removal(self, state):
+        """True for a row whose detach is saved but not deployed."""
+        return bool(state) and not state[0] and str(state[1] or "").upper() in self.PVLAN_SAVED_REMOVAL_STATES
+
+    def pvlan_row_pending(self, state):
+        """True for a row with saved work that a deploy of its network on that switch would push."""
+        if not state:
+            return False
+        if state[0]:
+            return str(state[1] or "").upper() not in ("DEPLOYED", "IN-SYNC", "NA", "")
+        return self.pvlan_saved_removal(state)
+
+    def pvlan_row_states(self, names, during_prepare=False):
+        """Read the attachment rows of these networks as {(networkName, serial): (isLanAttached, lanAttachState)}."""
+        rows = self.pvlan_read_attachment_rows(sorted(names), during_prepare=during_prepare)
+        return {key: (bool(row.get("isLanAttached")), row.get("lanAttachState")) for key, row in rows.items()}
+
+    def pvlan_plan_removal_deploys(self):
+        """
+        # Summary
+
+        Plan the deploy of removals of the PVLAN networks in a merged, replaced
+        or overridden request.
+
+        A detach leaves the row isLanAttached false and PENDING (OUT-OF-SYNC
+        after a config-preview) with its configuration still on the switch
+        until the network is deployed there. The diff does not see that row,
+        so the deploy of the run would not include it. For every requested
+        PVLAN network with deploy true, plan the switches where this run
+        detaches it and the switches where a saved removal is outstanding, and
+        on those switches the saved removals of the same family.
+        """
+        if not getattr(self, "pvlan_request", False):
+            return
+        no_deploy = self.get_no_deploy_net_names()
+        removals = {}
+        for entry in self.diff_attach:
+            if entry["networkName"] not in self.pvlan_eff or entry["networkName"] in no_deploy:
+                continue
+            for item in entry["lanAttachList"]:
+                if not item.get("deployment"):
+                    removals.setdefault(entry["networkName"], set()).add(item["serialNumber"])
+        for (name, serial), state in self.have_attach_state.items():
+            if name not in self.pvlan_eff or name in no_deploy or serial in self.pvlan_want_serials.get(name, set()):
+                continue
+            if self.pvlan_saved_removal(state):
+                removals.setdefault(name, set()).add(serial)
+
+        family = {name: self.pvlan_family(name) for name in removals}
+        known = {name for name, serial in self.have_attach_state}
+        unread = {other for members in family.values() for other in members if other not in known and other in self.pvlan_index}
+        if unread:
+            self.have_attach_state.update(self.pvlan_row_states(unread))
+        for name, serials in list(removals.items()):
+            for other in family[name] - {name}:
+                if other in no_deploy:
+                    continue
+                for serial in serials:
+                    if self.pvlan_saved_removal(self.have_attach_state.get((other, serial))):
+                        removals.setdefault(other, set()).add(serial)
+        self.pvlan_removals = removals
+
+    def pvlan_report_deploy_plan(self):
+        """Report the planned removal deploys and the undeploy switches of removed PVLAN networks."""
+        if not getattr(self, "pvlan_request", False):
+            return
+        plan = set()
+        for name, serials in self.pvlan_removals.items():
+            plan |= {(name, serial) for serial in serials}
+        for name in self.diff_delete or {}:
+            if self.pvlan_kind(name):
+                plan |= {key for key, state in self.have_attach_state.items() if key[0] == name and (state[0] or self.pvlan_saved_removal(state))}
+        if plan:
+            self.result["pvlan_deploy_plan"] = [
+                {"net_name": name, "switch": self.pvlan_switch_label(serial), "lanAttachState": (self.have_attach_state.get((name, serial)) or (None, "NA"))[1]}
+                for name, serial in sorted(plan)
+            ]
+
+    def pvlan_undeploy_keys(self, payload):
+        """
+        Return the (networkName, serial) pairs to undeploy before a delete.
+
+        Regular networks keep the inherited switches. A PVLAN network to delete
+        is undeployed only where its row is attached or holds a saved removal:
+        the inherited map has only the attached rows, or every switch of the
+        attachment list when every row is PENDING.
+        """
+        keys = set()
+        for name in payload["networkNames"].split(","):
+            if not self.pvlan_kind(name):
+                keys |= {(name, serial) for serial in self.network_sn_detach_map.get(name, set())}
+        for name in self.diff_delete:
+            if self.pvlan_kind(name):
+                keys |= {
+                    key for key, state in self.have_attach_state.items()
+                    if key[0] == name and (state[0] or self.pvlan_saved_removal(state))
+                }
+        return keys
+
+    def pvlan_close_family(self, mapping):
+        """
+        Add to a per-switch network deploy the members of the same PVLAN family
+        that hold saved work on that switch, such as a primary that NDFC added
+        or withdrew with its secondaries. A network deploy changes only the
+        networks it names.
+        """
+        names = set()
+        for networks in mapping.values():
+            for name in networks:
+                if self.pvlan_kind(name):
+                    names |= self.pvlan_family(name)
+        if not names:
+            return mapping
+        names = {name for name in names if name in self.pvlan_eff or name in self.pvlan_index}
+        states = self.pvlan_row_states(names)
+        no_deploy = self.get_no_deploy_net_names()
+        closed = {}
+        for serial, networks in mapping.items():
+            closed[serial] = list(networks)
+            for name in networks:
+                if not self.pvlan_kind(name):
+                    continue
+                for other in sorted(self.pvlan_family(name)):
+                    if other not in closed[serial] and other not in no_deploy and self.pvlan_row_pending(states.get((other, serial))):
+                        closed[serial].append(other)
+        return closed
+
+    def pvlan_deploy(self, keys):
+        """
+        # Summary
+
+        Deploy (networkName, serial) pairs of a PVLAN request and nothing else.
+
+        switch mode: one config-deploy of these switches, which also pushes
+        any other saved work on them. resource mode: one network deploy that
+        names these networks per switch, closed over their PVLAN family.
+        """
+        if not keys:
+            return
+        if self.deploy_mode == "switch":
+            serials = sorted({serial for name, serial in keys})
+            path = self.paths["GET_NET_SWITCH_CONFIG_DEPLOY"].format(self.fabric, ",".join(serials))
+            resp = dcnm_send(self.module, "POST", path)
+            self.pvlan_deployed |= set(keys)
+        else:
+            mapping = {}
+            for name, serial in sorted(keys):
+                mapping.setdefault(serial, []).append(name)
+            mapping = self.pvlan_close_family(mapping)
+            path = self.paths["GET_NET"].format(self.fabric).replace(f"/fabrics/{self.fabric}/networks", "/networks/deploy")
+            resp = dcnm_send(self.module, "POST", path, json.dumps({serial: ",".join(names) for serial, names in mapping.items()}))
+            self.pvlan_deployed |= {(name, serial) for serial, names in mapping.items() for name in names}
+        self.result["response"].append(resp)
+        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+        if fail:
+            self.failure(resp)
+
+    def pvlan_removal_settled(self, name, rows, detach, deploy):
+        """
+        Return True when every row of a PVLAN network being deleted is NA.
+
+        A row still attached is queued once for an ordered detach; a saved
+        removal is queued once for a deploy of that row. OUT-OF-SYNC and
+        FAILED are not terminal: after a config-preview they still hold the
+        configuration on the switch.
+        """
+        settled = True
+        for row in rows:
+            key = (name, row.get("switchSerialNo"))
+            state = (bool(row.get("isLanAttached")), row.get("lanAttachState"))
+            if state[0]:
+                settled = False
+                if key not in self.pvlan_redetached:
+                    detach.append(key)
+            elif self.pvlan_saved_removal(state):
+                settled = False
+                if key not in self.pvlan_deployed:
+                    deploy.add(key)
+            elif str(state[1] or "").upper() not in ("NA", ""):
+                settled = False
+        return settled
+
+    def pvlan_settle_removals(self, detach, deploy):
+        """Send the queued detaches through the ordered PVLAN path, then deploy the queued rows."""
+        if detach:
+            self.pvlan_redetached |= set(detach)
+            # The detach saves a new removal that the earlier deploy did not push.
+            self.pvlan_deployed -= set(detach)
+            entries = []
+            for name in dict.fromkeys(name for name, serial in detach):
+                items = [{"serialNumber": serial, "networkName": name, "fabric": self.fabric, "deployment": False} for other, serial in detach if other == name]
+                entries.append({"networkName": name, "lanAttachList": items})
+            self.pvlan_push_attachments(entries, detach_step=True)
+        self.pvlan_deploy(deploy)
+
+    def pvlan_create_payload(self, net):
+        """Return the create body for a PVLAN network."""
+        net_type = self.pvlan_type_of(net)
+        want_conf = json.loads(net["networkTemplateConfig"])
+        if net_type == "Primary":
+            body = copy.deepcopy(net)
+            template_conf = self.build_create_template_config(want_conf, want_conf.get("vlanId", ""), set())
+            template_conf["type"] = net_type
+            body.update({"networkTemplateConfig": json.dumps(template_conf), "type": net_type, "primaryNetworkId": -1})
+            return body
+
+        template_conf = {
+            "networkName": net["networkName"],
+            "vlanId": want_conf.get("vlanId", ""),
+            "vlanName": want_conf.get("vlanName", ""),
+            "type": net_type,
+            "primaryNetworkName": "",
+            "segmentId": net["networkId"],
+            "rtBothAuto": want_conf.get("rtBothAuto", False),
+            "isLayer2Only": True,
+            "networkMode": "layer2",
+            "vrfName": "NA",
+        }
+        for key in ("mcastGroup", "xconnect"):
+            if key in want_conf:
+                template_conf[key] = want_conf[key]
+        return {
+            "fabric": net["fabric"],
+            "networkName": net["networkName"],
+            "displayName": net.get("displayName", net["networkName"]),
+            "networkId": net["networkId"],
+            "networkTemplate": self.PVLAN_SECONDARY_TEMPLATE,
+            "networkExtensionTemplate": self.PVLAN_SECONDARY_TEMPLATE,
+            "vrf": "NA",
+            "type": net_type,
+            "primaryNetworkId": net["primaryNetworkId"],
+            "networkTemplateConfig": json.dumps(template_conf),
+        }
+
+    def pvlan_update_payload(self, net):
+        """
+        Return the update body for a PVLAN network.
+
+        NDFC replaces the stored template config with the one in a PUT, so the
+        body starts from the stored config and overlays the managed keys.
+        """
+        net_type = self.pvlan_type_of(net)
+        raw = getattr(self, "pvlan_have_raw", {}).get(net["networkName"]) or {}
+        stored = raw.get("networkTemplateConfig") or {}
+        if isinstance(stored, str):
+            stored = json.loads(stored) if stored else {}
+        want_conf = json.loads(net["networkTemplateConfig"])
+        template_conf = dict(stored)
+        if net_type == "Primary":
+            # Merged state removes the per-server DHCP keys in favor of dhcpServers.
+            for key in ("dhcpServerAddr1", "dhcpServerAddr2", "dhcpServerAddr3", "vrfDhcp", "vrfDhcp2", "vrfDhcp3"):
+                if key not in want_conf:
+                    template_conf.pop(key, None)
+            template_conf.update(want_conf)
+        else:
+            for key in ("vlanId", "vlanName", "networkName", "rtBothAuto", "mcastGroup", "xconnect"):
+                if key in want_conf:
+                    template_conf[key] = want_conf[key]
+        template_conf["type"] = net_type
+        return {
+            "fabric": net["fabric"],
+            "networkName": net["networkName"],
+            "displayName": net.get("displayName", net["networkName"]),
+            "networkId": net["networkId"],
+            "networkTemplate": net["networkTemplate"],
+            "networkExtensionTemplate": net["networkExtensionTemplate"],
+            "vrf": net["vrf"],
+            "type": net_type,
+            "primaryNetworkId": net["primaryNetworkId"],
+            "networkTemplateConfig": json.dumps(template_conf),
+        }
+
+    def pvlan_push_networks(self, nets, method):
+        """Create (POST) or update (PUT) PVLAN networks one at a time, primaries first."""
+        base_path = self.paths["GET_NET"].format(self.fabric)
+        for net in sorted(nets, key=lambda net: self.pvlan_type_of(net) != "Primary"):
+            if method == "POST":
+                path = base_path
+                body = self.pvlan_create_payload(net)
+            else:
+                path = base_path + "/" + net["networkName"]
+                body = self.pvlan_update_payload(net)
+            resp = dcnm_send(self.module, method, path, json.dumps(body))
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "create")
+            if fail:
+                self.failure(resp)
+
+    def pvlan_delete_networks(self, names):
+        """Delete PVLAN networks one at a time, secondaries before primaries."""
+        base_path = self.paths["GET_NET"].format(self.fabric)
+        for name in sorted(names, key=lambda name: self.pvlan_kind(name) == "Primary"):
+            resp = dcnm_send(self.module, "DELETE", base_path + "/" + name)
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "delete")
+            if fail:
+                self.failure(resp)
+
+    def pvlan_read_state(self):
+        """
+        Read the networks touched by a failed PVLAN request, regular ones
+        included, and their attachments.
+
+        Only a successful read with a list body sets a section. When a read
+        fails, that section and the ones after it stay None (unknown) and
+        read_error says why; a network is reported absent only from a
+        successful network list read.
+        """
+        names = set(getattr(self, "pvlan_eff", {})) | set(getattr(self, "pvlan_delete_names", set()))
+        names |= {net["networkName"] for net in self.want_create} | set(self.diff_delete)
+        names = sorted(names)
+        state = {"networks": None, "attachments": None}
+
+        def read(path):
+            resp = dcnm_send(self.module, "GET", path)
+            if not isinstance(resp, dict) or resp.get("RETURN_CODE") != 200 or not isinstance(resp.get("DATA"), list):
+                code = resp.get("RETURN_CODE") if isinstance(resp, dict) else None
+                raise ValueError("read of {0} failed, RETURN_CODE {1}".format(path, code))
+            return resp["DATA"]
+
+        try:
+            found = {}
+            for net in read(self.paths["GET_NET"].format(self.fabric)):
+                found[net["networkName"]] = net
+            networks = {}
+            for name in names:
+                net = found.get(name)
+                networks[name] = "absent" if net is None else {
+                    key: net.get(key) for key in ("networkId", "type", "primaryNetworkId", "networkStatus")
+                }
+            state["networks"] = networks
+            present = [name for name in names if name in found]
+            attachments = {}
+            if present:
+                for entry in read(self.paths["GET_NET_ATTACH"].format(self.fabric, ",".join(present))):
+                    for row in entry.get("lanAttachList") or []:
+                        if not row.get("isLanAttached") and row.get("lanAttachState") in (None, "", "NA"):
+                            continue
+                        attachments.setdefault(entry["networkName"], []).append(
+                            {key: row.get(key) for key in ("switchSerialNo", "isLanAttached", "lanAttachState", "portNames")}
+                        )
+            state["attachments"] = attachments
+        except Exception as exc:  # pylint: disable=broad-except
+            state["read_error"] = str(exc)
+        return state
+
+    @staticmethod
+    def pvlan_write_op(resp):
+        """Return the operation name handle_response() takes for a write response, from its method and path."""
+        path = str(resp.get("REQUEST_PATH", ""))
+        if path.endswith("/attachments"):
+            return "attach"
+        if "/config-deploy/" in path or path.endswith("/deploy") or path.endswith("/deployments"):
+            return "deploy"
+        if str(resp.get("METHOD")).upper() == "DELETE":
+            return "delete"
+        return "create"
+
+    def pvlan_changed(self):
+        """
+        Return True when a write answered earlier in this run changed the
+        configuration, whatever the last response said.
+
+        self.result["changed"] holds the value of the latest response only, and
+        a failed run keeps its earlier writes. The value is therefore derived
+        from every write response of the run. A response counts when the module
+        judged it not failed and handle_response() reports a change: an
+        accepted deploy counts as the success path counts it (a request the
+        controller accepted, not proof that a switch converged), unless the
+        controller found nothing pending. An attachment POST with per-item
+        results counts when at least one item reported success, even if other
+        items were refused. A response the module judged failed does not count:
+        it may or may not have changed anything, and
+        pvlan_acknowledged_writes() lists it as failed. The one non-2xx response
+        that counts is the regular bulk delete answered with 500 and a nonempty
+        successList, which bulk_delete_networks_with_retry() already treats as
+        a partial deletion. Reads, previews and the bulk capability probe are
+        not responses of the run.
+        """
+        for resp in self.result.get("response") or []:
+            if not isinstance(resp, dict) or str(resp.get("METHOD", "")).upper() not in ("POST", "PUT", "DELETE"):
+                continue
+            code = resp.get("RETURN_CODE")
+            if (
+                code == 500
+                and str(resp.get("METHOD", "")).upper() == "DELETE"
+                and "/bulk-delete/networks" in str(resp.get("REQUEST_PATH", ""))
+                and isinstance(resp.get("DATA"), dict)
+                and resp["DATA"].get("successList")
+            ):
+                # bulk_delete_networks_with_retry() reads this 500 as a partial
+                # deletion and records a change for the listed networks.
+                return True
+            if not isinstance(code, int) or not 200 <= code < 300:
+                continue
+            op = self.pvlan_write_op(resp)
+            data = resp.get("DATA")
+            if op == "attach" and isinstance(data, dict) and data and not resp.get("ERROR") and resp.get("MESSAGE") in ("OK", "Multi-Status"):
+                if len(data) > len(self.pvlan_failed_items(resp)):
+                    return True
+                continue
+            judged_failed, judged_changed = self.handle_response(resp, op)
+            if not judged_failed and judged_changed:
+                return True
+        return False
+
+    def pvlan_acknowledged_writes(self):
+        """
+        Return the writes the controller answered with 2xx before a failure, in
+        order. An acknowledgement is not proof of the resulting state.
+
+        outcome is "acknowledged" when the module found no error in the
+        response, "items_refused" when an attachment POST refused items (listed
+        in refused_items), and "failed" when handle_response() judged the
+        response a failure for another reason, for example an ERROR key, a
+        MESSAGE other than OK or an error text in a string DATA; error keeps
+        that text. A failed write may or may not have changed anything.
+        """
+        writes = []
+        for resp in self.result.get("response") or []:
+            if not isinstance(resp, dict) or str(resp.get("METHOD", "")).upper() not in ("POST", "PUT", "DELETE"):
+                continue
+            code = resp.get("RETURN_CODE")
+            if not isinstance(code, int) or not 200 <= code < 300:
+                continue
+            op = self.pvlan_write_op(resp)
+            judged_failed = self.handle_response(resp, op)[0]
+            write = {"method": resp.get("METHOD"), "path": resp.get("REQUEST_PATH"), "return_code": code, "outcome": "acknowledged"}
+            failed = self.pvlan_failed_items(resp) if op == "attach" else []
+            if failed:
+                write.update({"outcome": "items_refused", "refused_items": failed})
+            if resp.get("ERROR") or resp.get("MESSAGE") not in ("OK", "Multi-Status") or (judged_failed and not failed):
+                data = resp.get("DATA")
+                error = resp.get("ERROR") or (data if isinstance(data, str) and judged_failed else None) or resp.get("MESSAGE")
+                write.update({"outcome": "failed", "error": error})
+            writes.append(write)
+        return writes
+
 
 def main():
     """main entry point for module execution"""
@@ -6487,6 +7886,10 @@ def main():
     dcnm_net.update_want()
     dcnm_net.finalize_secondary_gws_compat()
 
+    # Every PVLAN check runs here, before get_diff_merge() can send its
+    # automatic-ID POST.
+    dcnm_net.pvlan_prepare()
+
     if module.params["state"] == "merged":
         warn_msg = dcnm_net.get_diff_merge()
 
@@ -6496,6 +7899,12 @@ def main():
     if module.params["state"] == "overridden":
         warn_msg = dcnm_net.get_diff_override()
 
+    if module.params["state"] in ("replaced", "overridden"):
+        dcnm_net.pvlan_plan_pins()
+
+    if module.params["state"] in ("merged", "replaced", "overridden"):
+        dcnm_net.pvlan_plan_removal_deploys()
+
     if module.params["state"] == "deleted":
         dcnm_net.get_diff_delete()
 
@@ -6503,6 +7912,10 @@ def main():
         dcnm_net.get_diff_query()
         dcnm_net.result["response"] = dcnm_net.query
 
+    if module.params["state"] in ("replaced", "overridden", "deleted"):
+        dcnm_net.pvlan_check_port_detach_peers()
+
+    dcnm_net.pvlan_report_deploy_plan()
     dcnm_net.result["warnings"].append(warn_msg) if warn_msg else []
 
     if (
@@ -6514,6 +7927,7 @@ def main():
         or dcnm_net.diff_create_update
         or dcnm_net.diff_detach
         or dcnm_net.diff_undeploy
+        or dcnm_net.pvlan_removals
     ):
         dcnm_net.result["changed"] = True
     else:

@@ -1282,6 +1282,60 @@ Parameters
                         <div>In <code>state=merged</code>, omitting this option preserves the value returned by the controller.</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>primary</li>
+                                    <li>isolated</li>
+                                    <li>community</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Private VLAN role of the network.</div>
+                        <div><code>primary</code> uses the templates of a regular network. <code>isolated</code> and <code>community</code> use the <code>Pvlan_Secondary_Network</code> template and are Layer 2 only.</div>
+                        <div>Supported on standalone fabrics with <code>ENABLE_PVLAN</code> enabled.</div>
+                        <div>A new private VLAN network requires <code>config[].net_id</code> and <code>config[].vlan_id</code>.</div>
+                        <div>The type of an existing network cannot be changed. When this option is omitted, the type returned by the controller is kept in every state.</div>
+                        <div><code>config[].attach[].ports</code> of a private VLAN network name Ethernet interfaces or port-channels. A vPC is attached by naming the port-channel of each peer; the peers may use different port-channel numbers. The interface must already be in the private VLAN mode the network type needs (host or trunk secondary for an isolated network, host for a community network, promiscuous or trunk promiscuous for a primary network), and that mode must already be deployed. The module neither reads nor changes the interface policy.</div>
+                        <div>The interface policy must not configure a private VLAN association or mapping for the networks attached to that port. The network attachment supplies those lines, and a second source of the same line is not supported.</div>
+                        <div>Remove the port from the network, with <code>config[].deploy=true</code>, before changing or deleting the interface.</div>
+                        <div>On NDFC 12.6.0.267, removing a private VLAN network from a regular port-channel that is not part of a vPC also deleted the port-channel on the switch, while the controller kept its configuration and reported it in sync. This removal is not supported.</div>
+                        <div><code>config[].attach[].tor_ports</code> is not supported for private VLAN networks.</div>
+                        <div>The controller attaches a primary network to every switch where one of its secondary networks is attached, and an attached secondary network to every switch where its primary is attached later. <code>replaced</code> and <code>overridden</code> keep those attachments.</div>
+                        <div>When <code>config[].deploy</code> is true, the module also deploys the removal of a private VLAN network attachment on the switch that holds it, including a removal saved by an earlier run with <code>config[].deploy=false</code>. With <code>deploy_mode=resource</code>, the deploy also names the networks of the same private VLAN family that have saved changes on that switch.</div>
+                        <div>To remove a private VLAN family from a promiscuous port and delete it, use <code>deploy_mode=switch</code>. On NDFC 12.6.0.267, <code>state=deleted</code> named a routed primary attached to a promiscuous Ethernet port and its isolated and community networks attached to the same switch. The module removed the port mapping and the three networks from the switch at the first attempt, and a repeat made no change. This was measured on one switch.</div>
+                        <div>A switch deployment can apply every pending change on the switch, including changes this task did not make.</div>
+                        <div>With <code>deploy_mode=resource</code>, the same withdrawal failed on that controller. The deployment removed the secondary networks from the port mapping one at a time, and the switch rejected the removal of the last one.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>pvlan_primary</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the primary network for an isolated or community network. Required when the network is created.</div>
+                        <div>The primary can be defined in the same task or already exist in the fabric. The module sends its network ID to the controller.</div>
+                        <div>A primary network can have one isolated network and any number of community networks.</div>
+                        <div>The primary of an existing network cannot be changed.</div>
+                </td>
+            </tr>
 
             <tr>
                 <td colspan="4">
@@ -1482,6 +1536,63 @@ Examples
             vrf_name: Tenant-1
             ipv4_acl_in: TENANT-1-IN
 
+    - name: Create a private VLAN family and attach the isolated network to a switch
+      cisco.dcnm.dcnm_network:
+        fabric: vxlan-fabric
+        state: merged
+        config:
+          - net_name: ansible-pvlan-primary
+            net_id: 30010
+            vlan_id: 2431
+            is_l2only: true
+            pvlan_type: primary
+          - net_name: ansible-pvlan-isolated
+            net_id: 30011
+            vlan_id: 2432
+            pvlan_type: isolated
+            pvlan_primary: ansible-pvlan-primary
+            attach:
+              - ip_address: 192.168.1.224
+          - net_name: ansible-pvlan-community
+            net_id: 30012
+            vlan_id: 2433
+            pvlan_type: community
+            pvlan_primary: ansible-pvlan-primary
+
+    - name: Create a routed private VLAN family with the primary on a promiscuous port
+      cisco.dcnm.dcnm_network:
+        fabric: vxlan-fabric
+        state: merged
+        config:
+          - net_name: ansible-pvlan-routed
+            vrf_name: Tenant-1
+            net_id: 30020
+            vlan_id: 2441
+            gw_ip_subnet: '192.168.60.1/24'
+            pvlan_type: primary
+            attach:
+              # Ethernet1/20 is already deployed in private VLAN promiscuous mode,
+              # and its interface policy has no private VLAN mapping.
+              - ip_address: 192.168.1.224
+                ports: [Ethernet1/20]
+            deploy: true
+          - net_name: ansible-pvlan-routed-isolated
+            net_id: 30021
+            vlan_id: 2442
+            pvlan_type: isolated
+            pvlan_primary: ansible-pvlan-routed
+            attach:
+              - ip_address: 192.168.1.224
+            deploy: true
+          - net_name: ansible-pvlan-routed-community
+            net_id: 30022
+            vlan_id: 2443
+            pvlan_type: community
+            pvlan_primary: ansible-pvlan-routed
+            attach:
+              - ip_address: 192.168.1.224
+            deploy: true
+
     # ---------------------------------------------------------------------------
     # STATE: REPLACED - Replace Network Configuration
     # ---------------------------------------------------------------------------
@@ -1607,6 +1718,17 @@ Examples
             vlan_id: 151
             gw_ip_subnet: '192.168.40.1/24'
             deploy: false
+
+    # A switch deployment can also apply other pending changes on that switch.
+    - name: Remove a private VLAN family from its promiscuous port and delete it
+      cisco.dcnm.dcnm_network:
+        fabric: vxlan-fabric
+        state: deleted
+        deploy_mode: switch
+        config:
+          - net_name: ansible-pvlan-routed
+          - net_name: ansible-pvlan-routed-isolated
+          - net_name: ansible-pvlan-routed-community
 
     - name: Delete all the networkss
       cisco.dcnm.dcnm_network:
