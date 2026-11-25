@@ -659,13 +659,59 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return
 
+        dynamic_choices = param_info.get("dynamic_choices") or []
+        known_values = self.known_dynamic_choice_values(param_info) if dynamic_choices else []
+        if playbook_value in known_values:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Parameter: {self.parameter}, "
+            msg += f"playbook_value ({playbook_value}) "
+            msg += f"is a known member of {dynamic_choices}. "
+            msg += "Returning."
+            self.log.debug(msg)
+            return
+
         # Raise ValueError if the parameter value does not match any of the
         # choices specified in the template for the parameter
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Parameter: {self.parameter}, "
         msg += f"Invalid value: ({playbook_value}). "
-        msg += f"Valid values: {param_info.get('choices', [])}"
+        msg += f"Valid values: {param_info.get('choices', []) + known_values}"
+        if dynamic_choices:
+            msg += ". The template also allows the controller templates in "
+            msg += f"{dynamic_choices}. This module can verify only the "
+            msg += "template default and the value already set on the "
+            msg += "controller for this fabric"
         raise ValueError(msg)
+
+    def known_dynamic_choice_values(self, param_info: dict[str, Any]) -> list[str]:
+        """
+        # Summary
+
+        Return the members of a dynamic template choice
+        (e.g. ``%TEMPLATES.pvlanSecNetwork``) that are known without
+        enumerating controller templates:
+
+        -   The parameter default in the fabric template.
+        -   The value already set on the controller for this parameter
+            (update and replaced only; empty for a new fabric).
+
+        Values that are empty, are not strings, carry leading or trailing
+        whitespace, or start with ``%`` are not template names and are
+        not returned.
+
+        ## Raises
+
+        None
+        """
+        candidates = [param_info.get("default"), self.config_controller.get(self.parameter)]
+        known_values: list[str] = []
+        for value in candidates:
+            if not isinstance(value, str) or not value or value != value.strip():
+                continue
+            if value.startswith("%") or value in known_values:
+                continue
+            known_values.append(value)
+        return known_values
 
     def update_decision_set_for_multi_rules(self, param_rule: dict[str, Any]) -> None:
         """

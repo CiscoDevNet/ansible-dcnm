@@ -24,6 +24,11 @@ import re
 
 from ..common.conversion import ConversionUtils
 
+# An Enum entry that names a set of controller templates instead of a value,
+# for example "%TEMPLATES.pvlanSecNetwork".  The controller resolves the set;
+# the template metadata does not list its members.
+DYNAMIC_TEMPLATE_CHOICE = re.compile(r"^%TEMPLATES\.[A-Za-z][A-Za-z0-9_]*$")
+
 
 class ParamInfo:
     """
@@ -58,6 +63,7 @@ class ParamInfo:
 
     parameter_type = my_parameter_info["type"] # python type: bool, str, int, dict, set, list, None
     parameter_choices = my_parameter_info["choices"] # python list, or None
+    parameter_dynamic_choices = my_parameter_info["dynamic_choices"] # python list, or None
     parameter_min = my_parameter_info["min"] # int, or None
     parameter_max = my_parameter_info["max"] # int, or None
     parameter_default = my_parameter_info["default"] # Any, or None
@@ -178,19 +184,51 @@ class ParamInfo:
         "\\"Multicast,Ingress\\"" -> ["Ingress", "Multicast"]
         "\\"1,2\\"" -> [1,2]
         "\\"true,false\\"" -> [False, True]
+        "\\"%TEMPLATES.pvlanSecNetwork\\"" -> []
         ```
+
+        Entries that match ``DYNAMIC_TEMPLATE_CHOICE`` are not values and
+        are not returned.  See ``_get_dynamic_choices()``.
 
         """
         parameter_type = self._get_type(parameter)
         if parameter_type == "boolean":
             return [False, True]
+        choices = self._split_enum(parameter)
+        if choices is None:
+            return None
+        choices = [choice for choice in choices if not DYNAMIC_TEMPLATE_CHOICE.match(choice.strip())]
+        choices = [self.conversion.make_int(choice) for choice in choices]
+        return sorted(choices)
+
+    def _get_dynamic_choices(self, parameter):
+        """
+        -   Return the ``Enum`` entries that name a set of controller
+            templates, e.g. ``["%TEMPLATES.pvlanSecNetwork"]``.
+        -   Return None if there are none, or if the parameter is boolean.
+
+        Only ``%TEMPLATES.<name>`` is recognized.  Other entries that start
+        with ``%`` remain static choices returned by ``_get_choices()``.
+        """
+        if self._get_type(parameter) == "boolean":
+            return None
+        choices = self._split_enum(parameter)
+        if choices is None:
+            return None
+        dynamic = [choice.strip() for choice in choices if DYNAMIC_TEMPLATE_CHOICE.match(choice.strip())]
+        return dynamic or None
+
+    @staticmethod
+    def _split_enum(parameter):
+        """
+        -   Return the ``Enum`` annotation as a list of strings, with
+            double quotes removed.
+        -   Return None if the annotation is absent.
+        """
         choices = parameter.get("annotations", {}).get("Enum", None)
         if choices is None:
             return None
-        choices = re.sub(r"\"", "", choices)
-        choices = choices.split(",")
-        choices = [self.conversion.make_int(choice) for choice in choices]
-        return sorted(choices)
+        return re.sub(r"\"", "", choices).split(",")
 
     def _get_default(self, parameter):
         """
@@ -281,6 +319,7 @@ class ParamInfo:
 
         - choices: (``list``, or ``None``)
         - default: (``str``, ``int``, etc, or ``None``)
+        - dynamic_choices: (``list``, or ``None``)
         - internal: (``bool``, or ``None``)
         - max: (``int``, or ``None``)
         - min: (``int``, or ``None``)
@@ -325,6 +364,7 @@ class ParamInfo:
             if param_name not in self.info:
                 self.info[param_name] = {}
             self.info[param_name]["choices"] = self._get_choices(parameter)
+            self.info[param_name]["dynamic_choices"] = self._get_dynamic_choices(parameter)
             self.info[param_name]["default"] = self._get_default(parameter)
             self.info[param_name]["max"] = self._get_max(parameter)
             self.info[param_name]["min"] = self._get_min(parameter)

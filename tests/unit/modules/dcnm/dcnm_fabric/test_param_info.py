@@ -505,3 +505,108 @@ def test_param_info_00070() -> None:
     match += r"not appropriate for the fabric type\."
     with pytest.raises(KeyError, match=match):
         instance.parameter("UNDERLAY_IS_V6")
+
+
+def _template_with_enum(enum, parameter_type="string"):
+    """
+    Return a one-parameter template whose Enum annotation is ``enum``.
+    """
+    return {
+        "parameters": [
+            {
+                "name": "TEMPLATE_REFERENCE",
+                "parameterType": parameter_type,
+                "metaProperties": {"defaultValue": "Default_Template"},
+                "annotations": {"Enum": enum},
+            }
+        ]
+    }
+
+
+def test_param_info_00080() -> None:
+    """
+    Classes and Methods
+    - ParamInfo
+        - refresh()
+        - _get_choices()
+        - _get_dynamic_choices()
+
+    Summary
+    -   Verify a ``%TEMPLATES.<name>`` Enum entry is returned in
+        ``dynamic_choices`` and not in ``choices``, using the
+        easy_fabric template parameter default_pvlan_sec_network.
+    -   Verify a static Enum has ``dynamic_choices`` None.
+    """
+    # Reuses the complete easy_fabric template of test_param_info_00030.
+    key = "test_param_info_00030a"
+
+    with does_not_raise():
+        instance = ParamInfo()
+        instance.template = templates_param_info(key)
+        instance.refresh()
+    info = instance.parameter("default_pvlan_sec_network")
+    assert info.get("choices") == []
+    assert info.get("dynamic_choices") == ["%TEMPLATES.pvlanSecNetwork"]
+    assert info.get("default") == "Pvlan_Secondary_Network"
+    assert instance.parameter("REPLICATION_MODE").get("dynamic_choices") is None
+
+
+@pytest.mark.parametrize(
+    "enum, choices, dynamic_choices",
+    [
+        ('"%TEMPLATES.pvlanSecNetwork"', [], ["%TEMPLATES.pvlanSecNetwork"]),
+        ('"Static_A,%TEMPLATES.network"', ["Static_A"], ["%TEMPLATES.network"]),
+        ('"Static_A, %TEMPLATES.network"', ["Static_A"], ["%TEMPLATES.network"]),
+        ('"%TEMPLATES.vrf,%TEMPLATES.vrfExtension"', [], ["%TEMPLATES.vrf", "%TEMPLATES.vrfExtension"]),
+        ('"%TEMPLATES."', ["%TEMPLATES."], None),
+        ('"%TEMPLATES"', ["%TEMPLATES"], None),
+        ('"%TEMPLATES.a.b"', ["%TEMPLATES.a.b"], None),
+        ('"%TEMPLATES.1abc"', ["%TEMPLATES.1abc"], None),
+        ('"%POLICIES.network"', ["%POLICIES.network"], None),
+        ('"%templates.network"', ["%templates.network"], None),
+        ('"50%,%"', ["%", "50%"], None),
+        ('"Multicast,Ingress"', ["Ingress", "Multicast"], None),
+    ],
+)
+def test_param_info_00081(enum, choices, dynamic_choices) -> None:
+    """
+    Classes and Methods
+    - ParamInfo
+        - refresh()
+        - _get_choices()
+        - _get_dynamic_choices()
+
+    Summary
+    -   Verify only well-formed ``%TEMPLATES.<name>`` entries are treated
+        as dynamic.  Malformed markers, other ``%`` namespaces, a
+        lowercase namespace and literal percent values remain static
+        choices.  Static entries keep their existing parsing.
+    """
+    with does_not_raise():
+        instance = ParamInfo()
+        instance.template = _template_with_enum(enum)
+        instance.refresh()
+    info = instance.parameter("TEMPLATE_REFERENCE")
+    assert info.get("choices") == choices
+    assert info.get("dynamic_choices") == dynamic_choices
+
+
+def test_param_info_00082() -> None:
+    """
+    Classes and Methods
+    - ParamInfo
+        - refresh()
+        - _get_choices()
+        - _get_dynamic_choices()
+
+    Summary
+    -   Verify a boolean parameter keeps choices [False, True] and has no
+        dynamic choices, even if its Enum contains a template marker.
+    """
+    with does_not_raise():
+        instance = ParamInfo()
+        instance.template = _template_with_enum('"%TEMPLATES.network"', "boolean")
+        instance.refresh()
+    info = instance.parameter("TEMPLATE_REFERENCE")
+    assert info.get("choices") == [False, True]
+    assert info.get("dynamic_choices") is None
