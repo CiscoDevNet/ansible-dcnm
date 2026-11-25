@@ -642,6 +642,53 @@ def dcnm_send(module, method, path, data=None, data_type="json"):
         return conn.send_txt_request(method, path, data)
 
 
+def dcnm_get_switch_policies(module, serial_numbers, multi_switch_path, single_switch_path, send):
+    """
+    Return the policies of the given switches as one list.
+
+    First tries the multi-switch call (multi_switch_path, e.g.
+    ".../policies/switches?serialNumber={}" with a comma-separated serial
+    list). ND 4.2+ returns HTTP 500 for that call when any of the switches
+    has a policy group attached, because the group appears with a policy ID
+    such as "POLICY-GROUP-683600~<serial>" that ND fails to parse. In that
+    case the policies are read one switch at a time with single_switch_path
+    (".../policies/switches/{}"). 
+
+    :param module: AnsibleModule
+    :param serial_numbers: list of serial numbers, or a comma-separated string
+    :param multi_switch_path: path format with one "{}" for the serial list
+    :param single_switch_path: path format with one "{}" for one serial
+    :param send: request function; modules pass their own dcnm_send so unit
+        tests that patch it keep working
+    :returns: list of policy dicts ([] if nothing could be read)
+    """
+    if isinstance(serial_numbers, str):
+        serial_numbers = [sn for sn in serial_numbers.split(",") if sn]
+    if not serial_numbers:
+        return []
+
+    def _data(resp):
+        if resp and resp.get("RETURN_CODE") == 200 and isinstance(resp.get("DATA"), list):
+            return resp["DATA"]
+        return None
+
+    resp = send(module, "GET", multi_switch_path.format(",".join(serial_numbers)))
+    data = _data(resp)
+    if data is not None:
+        return data
+    # Fall back only on the HTTP 500 that ND returns for a switch with a policy group;
+    # any other answer keeps the previous behaviour (treated as "no policies").
+    if not resp or resp.get("RETURN_CODE") != 500:
+        return []
+
+    policies = []
+    for serial_number in serial_numbers:
+        data = _data(send(module, "GET", single_switch_path.format(serial_number)))
+        if data:
+            policies.extend(data)
+    return policies
+
+
 def dcnm_reset_connection(module):
 
     conn = Connection(module._socket_path)

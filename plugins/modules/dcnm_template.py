@@ -182,6 +182,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_send,
     validate_list_of_dicts,
     dcnm_version_supported,
+    dcnm_get_switch_policies,
 )
 
 
@@ -191,6 +192,7 @@ class DcnmTemplate:
         11: {
             "TEMP_VALIDATE": "/rest/config/templates/validate",
             "TEMP_GET_SWITCHES": "/rest/control/policies/switches?serialNumber={}",
+            "TEMP_GET_SWITCH": "/rest/control/policies/switches/{}",
             "TEMP_GET_SW_ROLES": "/rest/control/switches/roles",
             "TEMPLATE": "/rest/config/templates/template",
             "TEMP_DELETE_BULK": "/rest/config/templates/delete/bulk",
@@ -199,6 +201,7 @@ class DcnmTemplate:
         12: {
             "TEMP_VALIDATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/validate",
             "TEMP_GET_SWITCHES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
+            "TEMP_GET_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}",
             "TEMP_GET_SW_ROLES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches/roles",
             "TEMPLATE": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/template",
             "TEMP_DELETE_BULK": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/delete/bulk",
@@ -410,24 +413,22 @@ class DcnmTemplate:
     def dcnm_template_get_policy_list(self, snos, tlist):
 
         policies = {}
-        path = self.paths["TEMP_GET_SWITCHES"].format(snos)
+        # Falls back to one request per switch when the multi-switch request fails
+        # (ND returns HTTP 500 for switches with a policy group attached).
+        data = dcnm_get_switch_policies(
+            self.module, snos, self.paths["TEMP_GET_SWITCHES"], self.paths["TEMP_GET_SWITCH"], send=dcnm_send
+        )
 
-        resp = dcnm_send(self.module, "GET", path)
-
-        if (
-            resp
-            and (resp["RETURN_CODE"] == 200)
-            and (resp["MESSAGE"] == "OK")
-            and resp["DATA"]
-        ):
-            for p in resp["DATA"]:
+        if data:
+            for p in data:
                 if p["templateName"] in tlist:
                     if policies.get(p["templateName"], None) is None:
                         policies[p["templateName"]] = {}
                     policies[p["templateName"]][p["policyId"]] = {}
-                    policies[p["templateName"]][p["policyId"]]["fabricName"] = p[
-                        "fabricName"
-                    ]
+                    # fabricName is not returned by the single-switch request
+                    policies[p["templateName"]][p["policyId"]]["fabricName"] = p.get(
+                        "fabricName", ""
+                    )
                     policies[p["templateName"]][p["policyId"]]["serialNumber"] = p[
                         "serialNumber"
                     ]

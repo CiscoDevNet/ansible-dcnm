@@ -1096,7 +1096,9 @@ class DcnmNetwork:
             "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
             "GET_VRF_NET": "/rest/top-down/fabrics/{}/networks?vrf-name={}",
             "GET_NET_ATTACH": "/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
-            "GET_SWITCH_POLICIES": "/rest/control/policies/switches?serialNumber={}",
+            # Single-switch request: the ?serialNumber= form returns HTTP 500 on ND when the
+            # switch has a policy group attached.
+            "GET_SWITCH_POLICIES": "/rest/control/policies/switches/{}",
             "GET_NET_ID": "/rest/managed-pool/fabrics/{}/segments/ids",
             "GET_NET": "/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
@@ -1111,7 +1113,9 @@ class DcnmNetwork:
             "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
             "GET_VRF_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
             "GET_NET_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/attachments?network-names={}",
-            "GET_SWITCH_POLICIES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
+            # Single-switch request: the ?serialNumber= form returns HTTP 500 on ND when the
+            # switch has a policy group attached.
+            "GET_SWITCH_POLICIES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}",
             "GET_NET_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/netinfo",
             "GET_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",

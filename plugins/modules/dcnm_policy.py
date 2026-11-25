@@ -405,6 +405,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     validate_list_of_dicts,
     get_ip_sn_dict,
     dcnm_version_supported,
+    dcnm_get_switch_policies,
 )
 
 
@@ -414,6 +415,7 @@ class DcnmPolicy:
         11: {
             "POLICY_WITH_ID": "/rest/control/policies/{}",
             "POLICY_GET_SWITCHES": "/rest/control/policies/switches?serialNumber={}",
+            "POLICY_GET_SWITCH": "/rest/control/policies/switches/{}",
             "POLICY_BULK_CREATE": "/rest/control/policies/bulk-create",
             "POLICY_BULK_UPDATE": "/rest/control/policies/{}/bulk",
             "POLICY_MARK_DELETE": "/rest/control/policies/{}/mark-delete",
@@ -426,6 +428,7 @@ class DcnmPolicy:
         12: {
             "POLICY_WITH_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}",
             "POLICY_GET_SWITCHES": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches?serialNumber={}",
+            "POLICY_GET_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}",
             "POLICY_BULK_CREATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/bulk-create",
             "POLICY_BULK_UPDATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}/bulk",
             "POLICY_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}/mark-delete",
@@ -667,22 +670,22 @@ class DcnmPolicy:
 
     def dcnm_policy_get_all_policies(self, snos):
 
-        path = self.paths["POLICY_GET_SWITCHES"].format(snos)
+        # Get all policies of the ',' separated snos. The caller filters the list based on the
+        # given template name.
+        #
+        # dcnm_get_switch_policies() falls back to one request per switch when the multi-switch
+        # request fails (ND returns HTTP 500 for switches with a policy group attached).
+        policies = dcnm_get_switch_policies(
+            self.module, snos, self.paths["POLICY_GET_SWITCHES"], self.paths["POLICY_GET_SWITCH"], send=dcnm_send
+        )
 
-        # Append ',' separated snos ro the path and get all policies. Then filter the list based on the
-        # given template name
-
-        resp = dcnm_send(self.module, "GET", path)
-
-        if (
-            resp
-            and (resp["RETURN_CODE"] == 200)
-            and (resp["MESSAGE"] == "OK")
-            and resp["DATA"]
-        ):
-            return resp["DATA"]
-        else:
-            return []
+        # Policy groups appear in a switch's policy list as POLICY-GROUP-<id>~<serial> (plus a
+        # generated config entry with the same prefix). They are owned by the policy group, not
+        # by the switch, and must never be matched, merged or deleted as switch policies.
+        return [
+            policy for policy in policies
+            if not str(policy.get("policyId", "")).startswith("POLICY-GROUP-")
+        ]
 
     def dcnm_policy_get_snos_string(self, want):
 
