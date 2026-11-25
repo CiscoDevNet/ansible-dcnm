@@ -8,8 +8,9 @@ import json
 from ansible.utils.display import Display
 from ansible.plugins.action import ActionBase
 from ansible.module_utils.common.text.converters import to_native
+import re
 from ..plugin_utils.tools import load_yaml_file, process_deepdiff
-from ..plugin_utils.pydantic_schemas.dcnm_interface.schemas import DcnmInterfaceQuerySchema
+from ..plugin_utils.pydantic_schemas.dcnm_interface.schemas import DcnmInterfaceQuerySchema, R2_REDACTED, r2_is_sensitive, r2_redact
 
 try:
     from deepdiff import DeepDiff
@@ -55,47 +56,115 @@ class ActionModule(ActionBase):
         test_fabric = test_data['fabric']
 
         expected_data_parsed = None
+        diagnostics = []
         if config_path != "":
             # only parse if config file exists
             expected_config_data = load_yaml_file(config_path)
-            expected_data = DcnmInterfaceQuerySchema.yaml_config_to_dict(expected_config_data, test_fabric, switch_ip_sn_mapping)
+            expected_data = DcnmInterfaceQuerySchema.yaml_config_to_dict(
+                expected_config_data, test_fabric, switch_ip_sn_mapping, diagnostics=diagnostics)
             expected_data_parsed = DcnmInterfaceQuerySchema.model_validate(expected_data).model_dump(exclude_none=True)
 
-        # Parse NDFC data through schema to normalize it (case conversion, tuple handling, etc.)
+        # Parse NDFC data through schema to normalize it (case conversion, tuple handling, etc.). The schema keeps
+        # every nvPair (extra="allow"), so a requested nvPair can no longer vanish from either side before the comparison.
         ndfc_data_parsed = DcnmInterfaceQuerySchema.model_validate(native_ndfc_data).model_dump(exclude_none=True)
 
         if deleted_results := self.verify_deleted(results, check_deleted, expected_data_parsed, ndfc_data_parsed, config_path):
             return deleted_results
 
-        validity = DeepDiff(
-            expected_data_parsed,
-            ndfc_data_parsed,
-            ignore_order=True,
-            cutoff_distance_for_pairs=0,
-            cutoff_intersection_for_pairs=0,
-            report_repetition=True
-        )
+        if diagnostics:
+            # A requested field the checker cannot represent is a FAILURE, never a silent PASS (keys only, no values).
+            results['failed'] = True
+            results['msg'] = 'Data is not valid: requested fields cannot be validated:\n' + "\n".join(diagnostics)
+            return results
 
-        # Process the output of deepdiff to make it easier to read
-        # Effects the iterable_item_added and iterable_item_removed to remove unneeded fields
-        # ignore_extra_fields=True will ignore dictionary_item_added changes
-        # This is useful when the actual data has more fields than the expected data
-        # keys_to_ignore is a list of fields to ignore, useful for auto provisioned fields which are not known
-        processed_validity = process_deepdiff(validity, keys_to_ignore=ignore_fields, ignore_extra_fields=True)
-        if processed_validity == {}:
+        differences = self.compare_interfaces(expected_data_parsed, ndfc_data_parsed, ignore_fields)
+        if not differences:
             results['failed'] = False
-            results['msg'] = f'Data is valid. \n\n Expected data: \n\n{expected_data_parsed}\n\nActual data: \n\n{ndfc_data_parsed}'
+            results['msg'] = 'Data is valid. \n\n Expected data: \n\n{0}\n\nActual data: \n\n{1}'.format(
+                r2_redact(expected_data_parsed), r2_redact(ndfc_data_parsed))
         else:
             results['failed'] = True
             print("\n\nExpected: ")
-            pprint(expected_data_parsed)
+            pprint(r2_redact(expected_data_parsed))
             print("\n\nActual: ")
-            pprint(ndfc_data_parsed)
+            pprint(r2_redact(ndfc_data_parsed))
             print("\n\nDifferences: ")
-            pprint(processed_validity)
-            results['msg'] = 'Data is not valid.'
+            pprint(differences)
+            results['msg'] = 'Data is not valid.\n\nDifferences: \n\n{0}'.format(differences)
 
         return results
+
+    @staticmethod
+    def _interface_key(interface):
+        return (tuple(interface.get("serialNumber") or ()), str(interface.get("ifName", "")).lower())
+
+    def compare_interfaces(self, expected_data, ndfc_data, ignore_fields):
+        """Compare per interface IDENTITY (serial number tuple + ifName), never across interfaces.
+
+        For each expected interface: absent from the readback -> difference; each expected nvPair absent from the
+        readback -> 'missing'; a different normalized value -> 'different'. nvPairs the test did not request, and other
+        controller metadata, are ignored (DeepDiff's dictionary_item_added is dropped by process_deepdiff). Fields in
+        `ignore_fields` are left out of both sides. Sensitive values are never reported, only their key names.
+        When the readback holds several entries for one identity, EVERY entry must hold the requested values: the verdict
+        never depends on which entry comes first. Identical entries, or entries that differ only in nvPairs the test did
+        not request, still pass.
+        Returns {} when everything requested matches.
+        """
+        differences = {}
+        if expected_data is None:
+            # No config_path and no check_deleted: nothing to compare with (the base comparison of None also failed).
+            return {"expected": "no expected data (empty config_path without check_deleted)"}
+        if ndfc_data.get("failed"):
+            differences["readback"] = "the query result is marked failed"
+        actual = {}
+        for policy in ndfc_data.get("response") or []:
+            for interface in policy.get("interfaces") or []:
+                actual.setdefault(self._interface_key(interface), []).append(interface.get("nvPairs") or {})
+        for policy in expected_data.get("response") or []:
+            for interface in policy.get("interfaces") or []:
+                key = self._interface_key(interface)
+                label = "{0} on {1}".format(key[1], "~".join(key[0]))
+                if key not in actual:
+                    differences[label] = "interface not found in the readback"
+                    continue
+                want = dict((k, v) for k, v in (interface.get("nvPairs") or {}).items() if k not in ignore_fields)
+                found = [self._entry_differences(want, nvpairs, ignore_fields) for nvpairs in actual[key]]
+                if len(found) == 1:
+                    if found[0]:
+                        differences[label] = found[0]
+                elif any(found):
+                    differences[label] = {
+                        "ambiguous_readback": "{0} readback entries for this interface; each must hold the requested values".format(len(found)),
+                        "entries": dict(("#{0}".format(index + 1), entry or "matches") for index, entry in enumerate(found)),
+                    }
+        return differences
+
+    def _entry_differences(self, want, nvpairs, ignore_fields):
+        """Differences between the requested nvPairs and ONE readback entry ({} when every requested value matches)."""
+        have = dict((k, v) for k, v in nvpairs.items() if k not in ignore_fields)
+        # The expectation is a few requested nvPairs; the readback is the full template. DeepDiff >= 8 would report the two
+        # dicts as one change at 'root' when they share few keys (threshold_to_diff_deeper, default 0.33); 0 keeps it per key.
+        diff = process_deepdiff(DeepDiff(want, have, threshold_to_diff_deeper=0), keys_to_ignore=ignore_fields, ignore_extra_fields=True)
+        entry = {}
+        if not diff:
+            return entry
+        for path in diff.get("dictionary_item_removed", []):
+            entry.setdefault("missing", []).append(self._path_key(path))
+        for change in ("values_changed", "type_changes"):
+            for path, values in (diff.get(change) or {}).items():
+                nvpair = self._path_key(path)
+                if r2_is_sensitive(nvpair):
+                    entry.setdefault("different", {})[nvpair] = {"expected": R2_REDACTED, "actual": R2_REDACTED}
+                else:
+                    entry.setdefault("different", {})[nvpair] = {"expected": values.get("old_value"), "actual": values.get("new_value")}
+        for other in set(diff) - set(("dictionary_item_removed", "values_changed", "type_changes")):
+            entry.setdefault("other", []).append(other)
+        return entry
+
+    @staticmethod
+    def _path_key(path):
+        m = re.match(r"^root\[['\"](.+)['\"]\]$", str(path))
+        return m.group(1) if m else str(path)
 
     def _normalize_interface_id_fields(self, expected_data, ndfc_data):
         """
