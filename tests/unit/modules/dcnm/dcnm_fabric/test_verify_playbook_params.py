@@ -1130,3 +1130,179 @@ def test_verify_playbook_params_00910(key) -> None:
         instance.config_playbook = payloads_verify_playbook_params(key)
         instance.config_controller = None
         instance.commit()
+
+
+def _verify_easy_fabric(playbook_params, controller_params):
+    """
+    Run VerifyPlaybookParams().commit() with the easy_fabric template.
+    """
+    instance = VerifyPlaybookParams()
+    instance.template = templates_verify_playbook_params("easy_fabric")
+    instance.config_playbook = {"FABRIC_NAME": "f1", "FABRIC_TYPE": "VXLAN_EVPN", **playbook_params}
+    instance.config_controller = controller_params
+    instance.commit()
+
+
+@pytest.mark.parametrize(
+    "playbook_params, controller_params",
+    [
+        ({"ENABLE_PVLAN": True, "default_pvlan_sec_network": "Pvlan_Secondary_Network"}, None),
+        (
+            {"ENABLE_PVLAN": True, "default_pvlan_sec_network": "Pvlan_Secondary_Network"},
+            {"default_pvlan_sec_network": "Custom_Secondary"},
+        ),
+        (
+            {"ENABLE_PVLAN": True, "default_pvlan_sec_network": "Custom_Secondary"},
+            {"default_pvlan_sec_network": "Custom_Secondary"},
+        ),
+        ({"default_network": "Default_Network_Universal"}, None),
+        ({"default_network": "Service_Network_Universal"}, {"default_network": "Service_Network_Universal"}),
+        ({"ENABLE_PVLAN": True}, None),
+    ],
+)
+def test_verify_playbook_params_01000(playbook_params, controller_params) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - verify_parameter_value()
+        - known_dynamic_choice_values()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify a parameter whose Enum is a ``%TEMPLATES.<name>`` marker
+        accepts the template default, and the value already set on the
+        controller for this fabric.
+    -   Verify omitting the parameter is still accepted.
+    """
+    with does_not_raise():
+        _verify_easy_fabric(playbook_params, controller_params)
+
+
+@pytest.mark.parametrize(
+    "playbook_params, controller_params",
+    [
+        ({"ENABLE_PVLAN": True, "default_pvlan_sec_network": "%TEMPLATES.pvlanSecNetwork"}, None),
+        (
+            {"ENABLE_PVLAN": True, "default_pvlan_sec_network": "%TEMPLATES.pvlanSecNetwork"},
+            {"default_pvlan_sec_network": "%TEMPLATES.pvlanSecNetwork"},
+        ),
+        ({"ENABLE_PVLAN": True, "default_pvlan_sec_network": "Custom_Secondary"}, None),
+        (
+            {"ENABLE_PVLAN": True, "default_pvlan_sec_network": "Other_Secondary"},
+            {"default_pvlan_sec_network": "Custom_Secondary"},
+        ),
+        ({"ENABLE_PVLAN": True, "default_pvlan_sec_network": ""}, None),
+        ({"ENABLE_PVLAN": True, "default_pvlan_sec_network": " Pvlan_Secondary_Network"}, None),
+        ({"ENABLE_PVLAN": True, "default_pvlan_sec_network": 5}, None),
+        ({"ENABLE_PVLAN": True, "default_pvlan_sec_network": True}, None),
+        ({"default_network": "Service_Network_Universal"}, None),
+    ],
+)
+def test_verify_playbook_params_01010(playbook_params, controller_params) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - verify_parameter_value()
+        - known_dynamic_choice_values()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify a parameter whose Enum is a ``%TEMPLATES.<name>`` marker
+        rejects the literal marker (also when the controller holds it),
+        a template name that is neither the template default nor the
+        controller value, an empty value, a whitespace-padded value, and
+        non-string values.
+    """
+    match = r"VerifyPlaybookParams\.verify_parameter_value:\s+"
+    match += r"Parameter: (default_pvlan_sec_network|default_network),\s+"
+    match += r"Invalid value: .*\. The template also allows the controller "
+    match += r"templates in \['%TEMPLATES\.(pvlanSecNetwork|network)'\]"
+    with pytest.raises(ValueError, match=match):
+        _verify_easy_fabric(playbook_params, controller_params)
+
+
+@pytest.mark.parametrize("enable_pvlan", [False, None])
+def test_verify_playbook_params_01020(enable_pvlan) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - verify_parameter_value()
+        - verify_parameter()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify the template default of default_pvlan_sec_network passes
+        the value check and is then subject to its dependency rule
+        (ENABLE_PVLAN == true), with ENABLE_PVLAN false or omitted.
+    """
+    playbook_params = {"default_pvlan_sec_network": "Pvlan_Secondary_Network"}
+    if enable_pvlan is not None:
+        playbook_params["ENABLE_PVLAN"] = enable_pvlan
+    match = r"The following parameter\(value\) combination\(s\) are invalid and need to be reviewed:\s+"
+    match += r"Fabric: f1, default_pvlan_sec_network\(Pvlan_Secondary_Network\) requires ENABLE_PVLAN"
+    with pytest.raises(ValueError, match=match):
+        _verify_easy_fabric(playbook_params, None)
+
+
+def test_verify_playbook_params_01030() -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - verify_parameter_value()
+        - commit()
+
+    Template
+    -   Easy_Fabric
+
+    Summary
+    -   Verify a static Enum still rejects a ``%TEMPLATES.<name>`` value
+        with the unchanged error message.
+    """
+    match = r"VerifyPlaybookParams\.verify_parameter_value:\s+"
+    match += r"Parameter: REPLICATION_MODE,\s+"
+    match += r"Invalid value: \(%TEMPLATES\.network\)\.\s+"
+    match += r"Valid values: \['Ingress', 'Multicast'\]$"
+    with pytest.raises(ValueError, match=match):
+        _verify_easy_fabric({"REPLICATION_MODE": "%TEMPLATES.network"}, None)
+
+
+@pytest.mark.parametrize(
+    "default, controller_value, expected",
+    [
+        ("Pvlan_Secondary_Network", None, ["Pvlan_Secondary_Network"]),
+        ("Pvlan_Secondary_Network", "Custom", ["Pvlan_Secondary_Network", "Custom"]),
+        ("Pvlan_Secondary_Network", "Pvlan_Secondary_Network", ["Pvlan_Secondary_Network"]),
+        (None, "Custom", ["Custom"]),
+        ("", "", []),
+        ("%TEMPLATES.pvlanSecNetwork", "%TEMPLATES.pvlanSecNetwork", []),
+        (" Padded", "Padded ", []),
+        (1, True, []),
+    ],
+)
+def test_verify_playbook_params_01040(default, controller_value, expected) -> None:
+    """
+    Classes and Methods
+    - VerifyPlaybookParams
+        - known_dynamic_choice_values()
+
+    Summary
+    -   Verify known_dynamic_choice_values() returns the template default
+        and the controller value, once each, and skips empty, non-string,
+        whitespace-padded and ``%``-prefixed values.
+    """
+    instance = VerifyPlaybookParams()
+    instance.parameter = "default_pvlan_sec_network"
+    controller_params = {}
+    if controller_value is not None:
+        controller_params["default_pvlan_sec_network"] = controller_value
+    instance.config_controller = controller_params
+    assert instance.known_dynamic_choice_values({"default": default}) == expected
